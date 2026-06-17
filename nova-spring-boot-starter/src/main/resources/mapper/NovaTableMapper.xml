@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nova.mapper.NovaTableMapper">
+
+    <select id="count" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM ${tableName}
+        <where>
+            <foreach collection="conditions" item="c" separator=" AND ">
+                <choose>
+                    <when test="c.vague">
+                        ${c.column} LIKE CONCAT('%', #{c.value}, '%')
+                    </when>
+                    <otherwise>
+                        ${c.column} = #{c.value}
+                    </otherwise>
+                </choose>
+            </foreach>
+        </where>
+    </select>
+
+    <select id="selectPage" resultType="java.util.Map">
+        SELECT
+        <foreach collection="columns" item="col" separator=", ">
+            ${col}
+        </foreach>
+        FROM ${tableName}
+        <where>
+            <foreach collection="conditions" item="c" separator=" AND ">
+                <choose>
+                    <when test="c.vague">
+                        ${c.column} LIKE CONCAT('%', #{c.value}, '%')
+                    </when>
+                    <otherwise>
+                        ${c.column} = #{c.value}
+                    </otherwise>
+                </choose>
+            </foreach>
+        </where>
+        ${orderBy}
+        LIMIT #{offset}, #{size}
+    </select>
+
+</mapper>

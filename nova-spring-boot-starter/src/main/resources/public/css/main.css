@@ -1,0 +1,184 @@
+html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+
+.logo-text {
+  font-weight: 700;
+  font-size: 16px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+
+.header-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  gap: 6px;
+}
+.header-action:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+}
+.theme-switch {
+  height: 24px;
+  gap: 6px;
+}
+.user-info {
+  height: 24px;
+}
+
+.tab-bar {
+  background: #fff;
+}
+
+.page-content {
+  background: #f5f7fa !important;
+  overflow: hidden;
+}
+
+
+.page-card {
+  background: #ffffff;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.filter-card .n-card__content {
+  padding: 16px 24px !important;
+}
+.filter-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+.filter-collapsible {
+  max-height: 120px;
+  opacity: 1;
+  transition: max-height 0.25s ease, opacity 0.25s ease, margin-top 0.25s ease;
+  overflow: hidden;
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+.filter-collapsible.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+}
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 24px;
+}
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.table-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.form-label {
+  width: 56px;
+  text-align: right;
+  color: #333;
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* 全局 Naive UI 覆盖 */
+.n-layout { background: #f5f7fa; }
+.n-button { border-radius: 6px !important; }
+.btn-circle { border-radius: 50% !important; }
+.n-input  { border-radius: 6px !important; }
+.n-select { border-radius: 6px !important; }
+.n-data-table { border-radius: 6px !important; }
+.n-data-table-td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+}
+/* 固定列不能裁剪，否则 Naive UI 的阴影伪元素会被 overflow:hidden 截掉 */
+.n-data-table-td--fixed-left,
+.n-data-table-td--fixed-right {
+  overflow: visible;
+}
+.n-data-table-th { white-space: nowrap; }
+
+/* ─── 暗色模式 ─────────────────────────────────────────── */
+.dark { background: #151515; }
+
+.dark .logo-text { color: #e0e0e0; }
+
+.dark .tab-bar {
+  background: #1f1f1f !important;
+  border-color: #333 !important;
+}
+.dark .page-content    { background: #151515 !important; }
+.dark .page-card       { background: #1f1f1f !important; border-color: #333 !important; }
+
+.dark .n-layout        { background: #151515; }
+.dark .n-layout-header { background: #1f1f1f !important; border-color: #333 !important; }
+.dark .n-layout-sider  { background: #1f1f1f !important; border-color: #333 !important; }
+.dark .n-layout-content{ background: #151515; }
+.dark .n-card          { background: #1f1f1f !important; border-color: #333 !important; }
+.dark .n-card__content { background: #1f1f1f; }
+
+.dark .n-data-table    { background: #1f1f1f !important; }
+.dark .n-data-table-tr { background: #1f1f1f; }
+.dark .n-data-table-td { background: #1f1f1f; color: #e0e0e0; }
+.dark .n-data-table-th { background: #252525 !important; color: #e0e0e0; }
+
+.dark .n-input             { background: #252525 !important; }
+.dark .n-input__input-el   { color: #e0e0e0; }
+.dark .n-input__placeholder,
+.dark ::-webkit-input-placeholder { color: #888 !important; }
+
+.dark .n-select            { background: #252525 !important; }
+.dark .n-select__placeholder { color: #888; }
+
+.dark .n-button            { background: #252525; color: #e0e0e0; }
+.dark .n-button--primary   { background: #2563eb; color: #fff; }
+
+.dark .n-modal             { background: #1f1f1f; }
+.dark .n-modal-header      { color: #e0e0e0; }
+.dark .n-modal-footer      { color: #e0e0e0; }
+
+.dark .n-tag--success { background: rgba(37,99,235,0.2); color: #2563eb; }
+.dark .n-tag--error   { background: rgba(208,48,80,0.2); color: #d03050; }
+.dark .n-tag--default { background: #333; color: #e0e0e0; }
+
+.dark .n-breadcrumb-item { color: #b0b0b0 !important; }
+.dark .n-tab             { color: #b0b0b0; }
+.dark .n-tab--active     { color: #2563eb !important; }
+.dark .n-form-item-label { color: #e0e0e0; }
+.dark .n-pagination      { color: #e0e0e0; }
+.dark .n-pagination-item { background: #252525; }
+
+/* ─── 页面切换动画 ──────────────────────────────────────── */
+.page-fade-enter-active {
+  animation: pageFadeIn 0.22s ease;
+}
+.page-fade-leave-active {
+  animation: pageFadeOut 0.15s ease;
+}
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes pageFadeOut {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-16px); }
+}
+
+.dark .header-action:hover { background-color: rgba(37,99,235,0.25); }
+.dark .form-label          { color: #e0e0e0; }
