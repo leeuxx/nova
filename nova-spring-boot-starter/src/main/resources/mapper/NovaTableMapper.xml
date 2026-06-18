@@ -3,12 +3,27 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.nova.mapper.NovaTableMapper">
 
-    <select id="count" resultType="java.lang.Long">
-        SELECT COUNT(*)
-        FROM ${tableName}
+    <sql id="whereClause">
         <where>
             <foreach collection="conditions" item="c" separator=" AND ">
                 <choose>
+                    <when test="c.type == 'CHOICE' and c.vague and c.ext == 'MULTI' and c.value != null and c.value.indexOf(',') >= 0">
+                        (<foreach collection="c.value.split(',')" item="v" separator=" OR ">
+                            FIND_IN_SET(#{v}, ${c.column}) > 0
+                        </foreach>)
+                    </when>
+                    <when test="c.type == 'CHOICE' and c.vague and c.ext == 'MULTI'">
+                        FIND_IN_SET(#{c.value}, ${c.column}) > 0
+                    </when>
+                    <when test="c.type == 'CHOICE' and c.vague and c.ext == 'SINGLE' and c.value != null and c.value.indexOf(',') >= 0">
+                        ${c.column} IN
+                        <foreach collection="c.value.split(',')" item="v" open="(" separator="," close=")">
+                            #{v}
+                        </foreach>
+                    </when>
+                    <when test="c.type == 'DATE' and c.vague and c.ext != null and c.ext != ''">
+                        ${c.column} >= #{c.value} AND ${c.column} &lt;= #{c.ext}
+                    </when>
                     <when test="c.vague">
                         ${c.column} LIKE CONCAT('%', #{c.value}, '%')
                     </when>
@@ -18,6 +33,12 @@
                 </choose>
             </foreach>
         </where>
+    </sql>
+
+    <select id="count" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM ${tableName}
+        <include refid="whereClause"/>
     </select>
 
     <select id="selectPage" resultType="java.util.Map">
@@ -26,20 +47,32 @@
             ${col}
         </foreach>
         FROM ${tableName}
-        <where>
-            <foreach collection="conditions" item="c" separator=" AND ">
-                <choose>
-                    <when test="c.vague">
-                        ${c.column} LIKE CONCAT('%', #{c.value}, '%')
-                    </when>
-                    <otherwise>
-                        ${c.column} = #{c.value}
-                    </otherwise>
-                </choose>
-            </foreach>
-        </where>
+        <include refid="whereClause"/>
         ${orderBy}
         LIMIT #{offset}, #{size}
     </select>
+    <insert id="insert">
+        INSERT INTO ${tableName}
+        (<foreach collection="columns" item="col" separator=", ">${col}</foreach>)
+        VALUES
+        (<foreach collection="values" item="val" separator=", ">#{val}</foreach>)
+    </insert>
+
+    <update id="update">
+        UPDATE ${tableName}
+        <set>
+            <foreach collection="columns" item="col" index="i" separator=", ">
+                ${col} = #{values[${i}]}
+            </foreach>
+        </set>
+        WHERE ${pkColumn} = #{pkValue}
+    </update>
+    <delete id="delete">
+        DELETE FROM ${tableName}
+        WHERE ${pkColumn} IN
+        <foreach collection="pkValues" item="val" open="(" separator="," close=")">
+            #{val}
+        </foreach>
+    </delete>
 
 </mapper>

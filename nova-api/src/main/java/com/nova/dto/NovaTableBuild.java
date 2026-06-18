@@ -27,10 +27,16 @@ public class NovaTableBuild {
         private List<TableColumn> tableColumns;
 
         @Comment("功能布局")
-        private LayoutInfo layout;
+        private Layout layout;
 
         @Comment("编辑信息")
         private List<Edit> edit;
+
+        @Comment("选择组件信息")
+        private Map<String, Choice> choice;
+
+        @Comment("日期时间组件信息")
+        private Map<String, Date> date;
 
         @Data
         @Accessors(chain = true)
@@ -47,21 +53,6 @@ public class NovaTableBuild {
 
             @Comment("是否高级查询")
             private Boolean vague;
-
-            @Comment("选择参数信息")
-            private ChoiceInfo choiceInfo;
-
-            @Data
-            @Accessors(chain = true)
-            public static class ChoiceInfo {
-
-                @Comment("选择类型")
-                private String selectType;
-
-                @Comment("下拉参数")
-                private Map<String, String> values;
-
-            }
 
         }
 
@@ -84,11 +75,14 @@ public class NovaTableBuild {
             @Comment("排序列")
             private Boolean sortable;
 
+            @Comment("类型")
+            private String type;
+
         }
 
         @Data
         @Accessors(chain = true)
-        public static class LayoutInfo {
+        public static class Layout {
 
             @Comment("编辑布局")
             private String editLayout;
@@ -117,21 +111,43 @@ public class NovaTableBuild {
             @Comment("是否必填")
             private Boolean notNull;
 
-            @Comment("选择参数信息")
-            private ChoiceInfo choiceInfo;
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class Choice {
+
+            @Comment("选择类型")
+            private String selectType;
+
+            @Comment("选择值")
+            private List<Value> values;
 
             @Data
             @Accessors(chain = true)
-            public static class ChoiceInfo {
+            public static class Value {
 
-                @Comment("选择类型")
-                private String selectType;
+                @Comment("值")
+                private String value;
 
-                @Comment("下拉参数")
-                private Map<String, String> values;
+                @Comment("标签")
+                private String label;
 
+                @Comment("颜色信息")
+                private String color;
             }
 
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class Date {
+
+            @Comment("格式类型")
+            private String type;
+
+            @Comment("选择模式")
+            private String pickerMode;
         }
     }
 }

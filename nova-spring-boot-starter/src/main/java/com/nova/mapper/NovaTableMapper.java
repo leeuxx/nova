@@ -22,6 +22,20 @@ public interface NovaTableMapper {
                                          @Param("offset") long offset,
                                          @Param("size") long size);
 
+    void insert(@Param("tableName") String tableName,
+                @Param("columns") List<String> columns,
+                @Param("values") List<String> values);
+
+    void update(@Param("tableName") String tableName,
+                @Param("columns") List<String> columns,
+                @Param("values") List<String> values,
+                @Param("pkColumn") String pkColumn,
+                @Param("pkValue") String pkValue);
+
+    void delete(@Param("tableName") String tableName,
+                @Param("pkColumn") String pkColumn,
+                @Param("pkValues") List<String> pkValues);
+
     @Data
     @Accessors(chain = true)
     class Condition {
@@ -30,11 +44,16 @@ public interface NovaTableMapper {
         private String column;
 
         @Comment("字段值")
-        private Object value;
+        private String value;
 
-        @Comment("是否模糊查询")
+        @Comment("类型")
+        private String type;
+
+        @Comment("是否高级查询")
         private boolean vague;
 
+        @Comment("扩展参数")
+        private String ext;
     }
 
 }

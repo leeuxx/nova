@@ -1,7 +1,11 @@
 package com.nova.service;
 
+import com.nova.dto.NovaTableAdd;
 import com.nova.dto.NovaTableBuild;
 import com.nova.dto.NovaTableData;
+import com.nova.dto.NovaTableDelete;
+import com.nova.dto.NovaTableTranslate;
+import com.nova.dto.NovaTableUpdate;
 import com.nova.dto.page.PageBean;
 import com.nova.mapper.NovaTableMapper;
 import com.nova.utils.MixUtils;
@@ -11,6 +15,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,58 +30,79 @@ public class NovaTableServiceImpl implements NovaTableService {
         NovaTableBuild.Vo vo = new NovaTableBuild.Vo();
         // 获取搜索条件
         List<NovaTableBuild.Vo.Search> searchList = new ArrayList<>();
-        List<NovaFieldUtils.SearchInfo> searchInfos = NovaFieldUtils.getSearch(novaTableBuild.getNovaName());
-        for (NovaFieldUtils.SearchInfo searchInfo : searchInfos) {
-            NovaFieldUtils.SearchInfo.ChoiceInfo choiceInfo = searchInfo.getChoiceInfo();
-            NovaTableBuild.Vo.Search.ChoiceInfo choiceInfoVo = new NovaTableBuild.Vo.Search.ChoiceInfo()
-                    .setSelectType(choiceInfo.getSelectType())
-                    .setValues(choiceInfo.getValues());
-            NovaTableBuild.Vo.Search search = new NovaTableBuild.Vo.Search()
-                    .setField(searchInfo.getField())
-                    .setTitle(searchInfo.getTitle())
-                    .setType(searchInfo.getType())
-                    .setVague(searchInfo.getVague())
-                    .setChoiceInfo(choiceInfoVo);
-            searchList.add(search);
+        List<NovaFieldUtils.SearchInfo> searchs = NovaFieldUtils.getSearch(novaTableBuild.getNovaName());
+        for (NovaFieldUtils.SearchInfo search : searchs) {
+            // 构造返回值
+            searchList.add(new NovaTableBuild.Vo.Search()
+                    .setField(search.getField())
+                    .setTitle(search.getTitle())
+                    .setType(search.getType())
+                    .setVague(search.getVague())
+            );
         }
         vo.setSearch(searchList);
         // 获取表头列
         List<NovaTableBuild.Vo.TableColumn> tableColumnList = new ArrayList<>();
-        List<NovaFieldUtils.TableColumnInfo> tableColumnInfos = NovaFieldUtils.getTableColumn(novaTableBuild.getNovaName());
-        for (NovaFieldUtils.TableColumnInfo tableColumnInfo : tableColumnInfos) {
-            NovaTableBuild.Vo.TableColumn tableColumn = new NovaTableBuild.Vo.TableColumn()
-                    .setField(tableColumnInfo.getField())
-                    .setTitle(tableColumnInfo.getTitle())
-                    .setDesc(tableColumnInfo.getDesc())
-                    .setWidth(tableColumnInfo.getWidth())
-                    .setSortable(tableColumnInfo.getSortable());
-            tableColumnList.add(tableColumn);
+        List<NovaFieldUtils.TableColumnInfo> tableColumns = NovaFieldUtils.getTableColumn(novaTableBuild.getNovaName());
+        for (NovaFieldUtils.TableColumnInfo tableColumn : tableColumns) {
+            tableColumnList.add(new NovaTableBuild.Vo.TableColumn()
+                    .setField(tableColumn.getField())
+                    .setTitle(tableColumn.getTitle())
+                    .setDesc(tableColumn.getDesc())
+                    .setWidth(tableColumn.getWidth())
+                    .setSortable(tableColumn.getSortable())
+                    .setType(tableColumn.getType())
+            );
         }
         vo.setTableColumns(tableColumnList);
         // 获取功能布局
         NovaUtils.LayoutInfo layoutInfo = NovaUtils.getLayout(novaTableBuild.getNovaName());
-        NovaTableBuild.Vo.LayoutInfo layout = new NovaTableBuild.Vo.LayoutInfo()
+        vo.setLayout(new NovaTableBuild.Vo.Layout()
                 .setEditLayout(layoutInfo.getEditLayout())
                 .setPageSize(layoutInfo.getPageSize())
-                .setPageSizes(layoutInfo.getPageSizes());
-        vo.setLayout(layout);
+                .setPageSizes(layoutInfo.getPageSizes())
+        );
         // 获取编辑信息
         List<NovaTableBuild.Vo.Edit> editList = new ArrayList<>();
         List<NovaFieldUtils.EditInfo> editInfos = NovaFieldUtils.getEdit(novaTableBuild.getNovaName());
         for (NovaFieldUtils.EditInfo editInfo : editInfos) {
-            NovaFieldUtils.EditInfo.ChoiceInfo choiceInfo = editInfo.getChoiceInfo();
-            NovaTableBuild.Vo.Edit.ChoiceInfo choiceInfoVo = new NovaTableBuild.Vo.Edit.ChoiceInfo()
-                    .setSelectType(choiceInfo.getSelectType())
-                    .setValues(choiceInfo.getValues());
-            NovaTableBuild.Vo.Edit search = new NovaTableBuild.Vo.Edit()
+            editList.add(new NovaTableBuild.Vo.Edit()
                     .setField(editInfo.getField())
                     .setTitle(editInfo.getTitle())
                     .setType(editInfo.getType())
                     .setNotNull(editInfo.getNotNull())
-                    .setChoiceInfo(choiceInfoVo);
-            editList.add(search);
+            );
         }
         vo.setEdit(editList);
+        // 获取选择组件信息
+        Map<String, NovaTableBuild.Vo.Choice> choiceMap = new LinkedHashMap<>();
+        Map<String, NovaFieldUtils.ChoiceInfo> choices = NovaFieldUtils.getChoice(novaTableBuild.getNovaName());
+        choices.forEach((field, choiceInfo) -> {
+            List<NovaTableBuild.Vo.Choice.Value> buildValues = new ArrayList<>();
+            List<NovaFieldUtils.ChoiceInfo.ValueInfo> fieldValues = choiceInfo.getValues();
+            for (NovaFieldUtils.ChoiceInfo.ValueInfo fieldValue : fieldValues) {
+                NovaTableBuild.Vo.Choice.Value value = new NovaTableBuild.Vo.Choice.Value()
+                        .setValue(fieldValue.getValue())
+                        .setLabel(fieldValue.getLabel())
+                        .setColor(fieldValue.getColor());
+                buildValues.add(value);
+            }
+            choiceMap.put(field, new NovaTableBuild.Vo.Choice()
+                    .setSelectType(choiceInfo.getSelectType())
+                    .setValues(buildValues)
+            );
+        });
+        vo.setChoice(choiceMap);
+        // 获取日期时间组件信息
+        Map<String, NovaTableBuild.Vo.Date> dateMap = new LinkedHashMap<>();
+        Map<String, NovaFieldUtils.DateInfo> dates = NovaFieldUtils.getDate(novaTableBuild.getNovaName());
+        dates.forEach((field, dateInfo) -> {
+            NovaTableBuild.Vo.Date date = new NovaTableBuild.Vo.Date()
+                    .setType(dateInfo.getType())
+                    .setPickerMode(dateInfo.getPickerMode());
+            dateMap.put(field, date);
+        });
+        vo.setDate(dateMap);
         return vo;
     }
 
@@ -92,29 +118,85 @@ public class NovaTableServiceImpl implements NovaTableService {
         Long total = novaTableMapper.count(novaSqlInfo.getTableName(), conditions);
         long offset = (pageBean.getCurrent() - 1) * pageBean.getSize();
         List<Map<String, Object>> records = novaTableMapper.selectPage(novaSqlInfo.getTableName(), columnNames, conditions, orderBy, offset, pageBean.getSize());
-        List<Map<String, Object>> datas = MixUtils.convertToCamelCase(records);
-        if (!datas.isEmpty()) {
-            Map<String, Map<String, String>> choiceValues = NovaFieldUtils.getChoiceValues(novaName);
-            // 循环行数据
-            for (Map<String, Object> data : datas) {
-                // 循环列数据
-                data.forEach((key, value) -> {
-                    if (value == null) {
-                        return;
-                    }
-                    Map<String, String> map = choiceValues.get(key);
-                    if (map == null || map.isEmpty()) {
-                        return;
-                    }
-                    String label = map.get(value.toString());
-                    data.put(key, label);
-                });
-            }
-        }
         pageBean.setPkFieldName(NovaFieldUtils.getPkFieldName(novaName))
                 .setTotal(total)
-                .setRecords(datas);
+                .setRecords(MixUtils.convertToCamelCase(records));
         return pageBean;
+    }
+
+    @Override
+    public NovaTableTranslate.Vo translate(NovaTableTranslate novaTableTranslate) {
+        Map<String, List<String>> result = new LinkedHashMap<>();
+        Map<String, NovaTableTranslate.DataInfo> dataInfos = novaTableTranslate.getDataInfos();
+        dataInfos.forEach((field, dataInfo) -> {
+            String type = dataInfo.getType();
+            List<String> datas = dataInfo.getDatas();
+            List<String> values = new ArrayList<>();
+            datas.forEach(data -> {
+                // 空值跳过
+                if (data == null || data.isEmpty()) {
+                    values.add(data);
+                    return;
+                }
+
+            });
+            result.put(field, values);
+        });
+        return new NovaTableTranslate.Vo().setDataInfos(result);
+    }
+
+    @Override
+    public NovaTableAdd.Vo add(NovaTableAdd novaTableAdd) {
+        String novaName = novaTableAdd.getNovaName();
+        NovaUtils.SqlInfo novaSqlInfo = NovaUtils.getSqlInfo(novaName);
+        NovaFieldUtils.SqlInfo novaFieldSqlInfo = NovaFieldUtils.getSqlInfo(novaName);
+        List<String> allowedColumns = novaFieldSqlInfo.getColumnNames();
+        List<String> columns = new ArrayList<>();
+        List<String> values = new ArrayList<>();
+        for (NovaTableAdd.FormInfo formInfo : novaTableAdd.getFormInfo()) {
+            String value = formInfo.getValue();
+            if (value != null && !value.isEmpty()) {
+                String columnName = MixUtils.camelToSnake(formInfo.getField());
+                if (!allowedColumns.contains(columnName)) {
+                    throw new IllegalArgumentException("Invalid column: " + formInfo.getField());
+                }
+                columns.add(columnName);
+                values.add(value);
+            }
+        }
+        novaTableMapper.insert(novaSqlInfo.getTableName(), columns, values);
+        return new NovaTableAdd.Vo();
+    }
+
+    @Override
+    public NovaTableUpdate.Vo update(NovaTableUpdate novaTableUpdate) {
+        String novaName = novaTableUpdate.getNovaName();
+        NovaUtils.SqlInfo novaSqlInfo = NovaUtils.getSqlInfo(novaName);
+        NovaFieldUtils.SqlInfo novaFieldSqlInfo = NovaFieldUtils.getSqlInfo(novaName);
+        List<String> allowedColumns = novaFieldSqlInfo.getColumnNames();
+        String pkColumn = MixUtils.camelToSnake(NovaFieldUtils.getPkFieldName(novaName));
+        List<String> columns = new ArrayList<>();
+        List<String> values = new ArrayList<>();
+        for (NovaTableUpdate.FormInfo formInfo : novaTableUpdate.getFormInfo()) {
+            String columnName = MixUtils.camelToSnake(formInfo.getField());
+            if (!allowedColumns.contains(columnName)) {
+                throw new IllegalArgumentException("Invalid column: " + formInfo.getField());
+            }
+            columns.add(columnName);
+            String value = formInfo.getValue();
+            values.add((value == null || value.isEmpty()) ? null : value);
+        }
+        novaTableMapper.update(novaSqlInfo.getTableName(), columns, values, pkColumn, novaTableUpdate.getPkValue());
+        return new NovaTableUpdate.Vo();
+    }
+
+    @Override
+    public NovaTableDelete.Vo delete(NovaTableDelete novaTableDelete) {
+        String novaName = novaTableDelete.getNovaName();
+        NovaUtils.SqlInfo novaSqlInfo = NovaUtils.getSqlInfo(novaName);
+        String pkColumn = MixUtils.camelToSnake(NovaFieldUtils.getPkFieldName(novaName));
+        novaTableMapper.delete(novaSqlInfo.getTableName(), pkColumn, novaTableDelete.getPkValues());
+        return new NovaTableDelete.Vo();
     }
 
     /**
@@ -131,9 +213,20 @@ public class NovaTableServiceImpl implements NovaTableService {
                 throw new IllegalArgumentException("Invalid column: " + entry.getKey());
             }
             NovaTableData.Search search = entry.getValue();
+            String value = search.getValue();
+            String ext = search.getExt();
+            // DATE+vague 时拆分 "start,end" 分别存入 value 和 ext
+            if ("DATE".equals(search.getType()) && Boolean.TRUE.equals(search.getVague())
+                    && value != null && value.indexOf(',') >= 0) {
+                String[] parts = value.split(",", 2);
+                value = parts[0];
+                ext = parts[1];
+            }
             result.add(new NovaTableMapper.Condition()
                     .setColumn(columnName)
-                    .setValue(search.getValue())
+                    .setValue(value)
+                    .setType(search.getType())
+                    .setExt(ext)
                     .setVague(search.getVague()));
         }
         return result;

@@ -10,4 +10,6 @@ public @interface VL {
     @Comment("标签")
     String label();
 
+    @Comment("表格显示标签颜色（十六进制颜色代码）")
+    String color() default "";
 }

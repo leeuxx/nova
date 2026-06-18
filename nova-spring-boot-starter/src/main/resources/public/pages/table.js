@@ -1,7 +1,7 @@
 // pages/table.js — 通用表格页 Vue 组件，所有表格菜单共用此模板
 ;(function () {
 const { h } = Vue
-const { NPopconfirm, NSpace, NTooltip } = naive
+const { NPopconfirm, NSpace, NTooltip, NTag } = naive
 
 // 将后端百分比宽度（"25%"）转为像素，基准 1200px
 function parseWidth(w) {
@@ -10,14 +10,28 @@ function parseWidth(w) {
   return parseInt(w) || 150
 }
 
+// 将 hex 颜色加深：factor 为加深比例（0~1），返回加深后的 hex
+function darkenHex(hex, factor) {
+  var c = hex.replace('#', '')
+  if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2]
+  var r = Math.max(0, Math.round(parseInt(c.slice(0,2),16) * (1 - factor)))
+  var g = Math.max(0, Math.round(parseInt(c.slice(2,4),16) * (1 - factor)))
+  var b = Math.max(0, Math.round(parseInt(c.slice(4,6),16) * (1 - factor)))
+  return '#' + [r,g,b].map(function(v){ return v.toString(16).padStart(2,'0') }).join('')
+}
+
 const NovaTable = {
   name: 'NovaTable',
 
   data() {
     return {
+      choiceMap:      {},
+      dateMap:        {},
       novaName:       '',
       pkFieldName:    'id',
+      tableRowColors: [],
       tableData:      [],
+      rawTableData:   [],
       tableColumns:   [],
       sortStates:     {},
       filterExpanded: true,
@@ -40,7 +54,7 @@ const NovaTable = {
         itemCount:       0,
         pageSize:        10,
         showSizePicker:  true,
-        pageSizes:       [10, 20, 50, 100],
+        pageSizes:       [10, 20, 50, 100].map(n => ({ label: n + ' 条/页', value: n })),
         showQuickJumper: true
       }
     }
@@ -100,6 +114,29 @@ const NovaTable = {
               style: `display:inline-flex;align-items:center;${col.sortable ? 'cursor:pointer;width:100%' : ''}`,
               onClick: col.sortable ? () => vm.toggleSort(col.field) : undefined
             }, parts)
+          }
+        }
+
+        if (col.type === 'CHOICE') {
+          colDef.render = (row, rowIndex) => {
+            const text = row[col.field]
+            if (text === null || text === undefined || text === '') return text
+            const colorData = vm.tableRowColors[rowIndex] && vm.tableRowColors[rowIndex][col.field]
+            const choice = vm.choiceMap && vm.choiceMap[col.field]
+            const isMulti = choice && choice.selectType === 'MULTI'
+            const makeTag = (label, color) => {
+              const bg = color ? color + '20' : 'rgba(128,128,128,0.1)'
+              const tc = color ? darkenHex(color, 0.35) : 'inherit'
+              return h(NTag, { size: 'small', color: { color: bg, textColor: tc, borderColor: 'transparent' } }, { default: () => label })
+            }
+            if (isMulti) {
+              const labels = String(text).split(',')
+              const colors = Array.isArray(colorData) ? colorData : []
+              return h('span', { style: 'display:inline-flex;gap:4px;flex-wrap:wrap' },
+                labels.map((label, i) => makeTag(label.trim(), colors[i] || null))
+              )
+            }
+            return makeTag(text, colorData)
           }
         }
 
@@ -165,20 +202,48 @@ const NovaTable = {
       window.NovaTableJQ.onSortChange(this.novaName)
     },
     toggleFilter() {
+      if (this.searchFields.length <= 3) return
       this.filterExpanded = !this.filterExpanded
       this.$nextTick(() => window.NovaTableJQ && window.NovaTableJQ.updateTableHeight())
     },
     fieldOptions(field) {
-      if (!field.choiceInfo || !field.choiceInfo.values) return []
-      return Object.entries(field.choiceInfo.values).map(([value, label]) => ({ label, value }))
+      const choice = this.choiceMap[field.field]
+      if (!choice || !choice.values) return []
+      return choice.values.map(v => ({ label: v.label, value: v.value }))
     },
     editFieldOptions(f) {
-      if (!f.choiceInfo || !f.choiceInfo.values) return []
-      return Object.entries(f.choiceInfo.values).map(([value, label]) => ({ label, value }))
+      const choice = this.choiceMap[f.field]
+      if (!choice || !choice.values) return []
+      return choice.values.map(v => ({ label: v.label, value: v.value }))
+    },
+    datePickerType(field, vague, forEdit) {
+      const dateInfo = this.dateMap && this.dateMap[field]
+      const single = { DATE: 'date', TIME: 'time', DATE_TIME: 'datetime', MONTH: 'month', YEAR: 'year' }
+      const range  = { DATE: 'daterange', TIME: 'time', DATE_TIME: 'datetimerange', MONTH: 'monthrange', YEAR: 'yearrange' }
+      const map = vague ? range : single
+      return (dateInfo && map[dateInfo.type]) || (vague ? 'daterange' : 'date')
+    },
+    datePickerDisabled(field, forEdit) {
+      if (!forEdit) return undefined
+      const dateInfo = this.dateMap && this.dateMap[field]
+      if (!dateInfo || dateInfo.pickerMode === 'ALL') return undefined
+      const today = new Date(); today.setHours(0, 0, 0, 0)
+      const todayTs = today.getTime()
+      if (dateInfo.pickerMode === 'FUTURE')  return (ts) => ts < todayTs
+      if (dateInfo.pickerMode === 'HISTORY') return (ts) => ts > todayTs
+      return undefined
     },
     handleCheck(keys)   { this.checkedRowKeys = keys },
     handleReset()       { window.NovaTableJQ.handleReset() },
-    handleQuery()       { window.NovaTableJQ.loadData(this.novaName) },
+    handleQuery() {
+      const t = this
+      const snapshot = JSON.stringify(t.filterForm)
+      if (snapshot !== t._lastFilterSnapshot) {
+        t.paginationConfig.page = 1
+        t._lastFilterSnapshot = snapshot
+      }
+      window.NovaTableJQ.loadData(t.novaName)
+    },
     handleAdd()         { window.NovaTableJQ.handleAdd() },
     handleEdit(row)     { window.NovaTableJQ.handleEdit(row) },
     handleDelete(row)   { window.NovaTableJQ.handleDelete(row) },
@@ -198,20 +263,27 @@ const NovaTable = {
       <!-- 筛选卡片 -->
       <n-card :bordered="false" class="page-card filter-card">
         <div class="filter-grid">
-          <template v-for="field in searchFields" :key="field.field">
-            <div v-if="!field.vague || filterExpanded" style="display:flex;align-items:center;gap:8px;width:100%">
+          <template v-for="(field, index) in searchFields" :key="field.field">
+            <div v-if="filterExpanded || index < 3" style="display:flex;align-items:center;gap:8px;width:100%">
               <span class="form-label">{{ field.title }}</span>
-              <n-select v-if="field.type === 'CHOICE' && field.choiceInfo && field.choiceInfo.selectType === 'SINGLE'"
+              <n-select v-if="field.type === 'CHOICE' && choiceMap[field.field] && choiceMap[field.field].selectType === 'SINGLE' && !field.vague"
                 v-model:value="filterForm[field.field]"
                 :options="fieldOptions(field)"
                 :placeholder="'请选择' + field.title"
                 clearable style="flex:1"
               />
-              <n-select v-else-if="field.type === 'CHOICE' && field.choiceInfo && field.choiceInfo.selectType === 'MULTI'"
+              <n-select v-else-if="field.type === 'CHOICE'"
                 v-model:value="filterForm[field.field]"
                 :options="fieldOptions(field)"
                 :placeholder="'请选择' + field.title"
                 multiple clearable style="flex:1"
+              />
+              <n-date-picker v-else-if="field.type === 'DATE'"
+                v-model:value="filterForm[field.field]"
+                :type="datePickerType(field.field, field.vague, false)"
+                :is-date-disabled="datePickerDisabled(field.field, false)"
+                :placeholder="field.vague ? ['开始时间', '结束时间'] : '请选择' + field.title"
+                clearable style="flex:1"
               />
               <n-input v-else
                 v-model:value="filterForm[field.field]"
@@ -223,7 +295,7 @@ const NovaTable = {
           <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;grid-column:4">
             <n-button @click="handleReset">重 置</n-button>
             <n-button type="primary" @click="handleQuery">查 询</n-button>
-            <n-button dashed @click="toggleFilter">
+            <n-button dashed @click="toggleFilter" :disabled="searchFields.length <= 3">
               <template #icon>
                 <n-icon><iconify-icon :icon="filterExpanded ? 'material-symbols:keyboard-arrow-up' : 'material-symbols:keyboard-arrow-down'"></iconify-icon></n-icon>
               </template>
@@ -246,7 +318,7 @@ const NovaTable = {
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
               新 增
             </n-button>
-            <n-button circle class="btn-circle" style="background:transparent">
+            <n-button circle class="btn-circle" style="background:transparent" @click="handleQuery">
               <template #icon><n-icon size="15"><iconify-icon icon="lucide:refresh-cw" style="font-size:15px"></iconify-icon></n-icon></template>
             </n-button>
             <n-popover trigger="click" placement="bottom-end">
@@ -300,7 +372,7 @@ const NovaTable = {
                 <span v-if="f.notNull" style="color:#d03050;margin-right:2px">*</span>{{ f.title }}
               </span>
               <n-select
-                v-if="f.type === 'CHOICE' && f.choiceInfo && f.choiceInfo.selectType === 'MULTI'"
+                v-if="f.type === 'CHOICE' && choiceMap[f.field] && choiceMap[f.field].selectType === 'MULTI'"
                 v-model:value="formData[f.field]"
                 :options="editFieldOptions(f)"
                 :placeholder="'请选择' + f.title"
@@ -315,6 +387,16 @@ const NovaTable = {
                 :placeholder="'请选择' + f.title"
                 :status="formErrors[f.field] ? 'error' : undefined"
                 clearable
+                @update:value="delete formErrors[f.field]"
+              />
+              <n-date-picker
+                v-else-if="f.type === 'DATE'"
+                v-model:value="formData[f.field]"
+                :type="datePickerType(f.field, false, true)"
+                :is-date-disabled="datePickerDisabled(f.field, true)"
+                :placeholder="'请选择' + f.title"
+                :status="formErrors[f.field] ? 'error' : undefined"
+                clearable style="width:100%"
                 @update:value="delete formErrors[f.field]"
               />
               <n-input

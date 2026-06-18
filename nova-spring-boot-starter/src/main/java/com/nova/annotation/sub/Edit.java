@@ -1,10 +1,7 @@
 package com.nova.annotation.sub;
 
 import com.nova.annotation.Comment;
-import com.nova.annotation.sub.edit.ChoiceType;
-import com.nova.annotation.sub.edit.EditType;
-import com.nova.annotation.sub.edit.Readonly;
-import com.nova.annotation.sub.edit.Search;
+import com.nova.annotation.sub.edit.*;
 
 public @interface Edit {
 
@@ -35,4 +32,6 @@ public @interface Edit {
     @Comment("选择组件配置")
     ChoiceType choiceType() default @ChoiceType;
 
+    @Comment("日期组件配置")
+    DateType dateType() default @DateType;
 }

@@ -11,6 +11,8 @@ public enum EditType {
     INPUT,
 
     @Comment("选择组件")
-    CHOICE
+    CHOICE,
 
+    @Comment("日期时间")
+    DATE
 }

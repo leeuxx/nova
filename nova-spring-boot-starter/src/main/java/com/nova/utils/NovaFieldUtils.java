@@ -4,10 +4,7 @@ import com.nova.annotation.Comment;
 import com.nova.annotation.NovaField;
 import com.nova.annotation.sub.Edit;
 import com.nova.annotation.sub.View;
-import com.nova.annotation.sub.edit.ChoiceType;
-import com.nova.annotation.sub.edit.EditType;
-import com.nova.annotation.sub.edit.Search;
-import com.nova.annotation.sub.edit.VL;
+import com.nova.annotation.sub.edit.*;
 import com.nova.config.NovaApplication;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -39,23 +36,11 @@ public class NovaFieldUtils {
             if (search == null || !search.value()) {
                 return;
             }
-            SearchInfo.ChoiceInfo choiceInfo = new SearchInfo.ChoiceInfo();
-            Map<String, String> choiceValues = new LinkedHashMap<>();
-            if (edit.type() == EditType.CHOICE) {
-                ChoiceType choiceType = edit.choiceType();
-                VL[] vls = choiceType.vl();
-                for (VL vl : vls) {
-                    choiceValues.put(vl.value(), vl.label());
-                }
-                choiceInfo.setSelectType(choiceType.selectType().name())
-                        .setValues(choiceValues);
-            }
             SearchInfo searchInfo = new SearchInfo()
                     .setField(field)
                     .setTitle(edit.title())
                     .setType(edit.type().name())
-                    .setVague(search.vague())
-                    .setChoiceInfo(choiceInfo);
+                    .setVague(search.vague());
             searchInfos.add(searchInfo);
         });
         return searchInfos;
@@ -77,13 +62,16 @@ public class NovaFieldUtils {
         Map<String, NovaField> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaField) -> {
             View[] views = novaField.views();
+            Edit edit = novaField.edit();
+            // 显示列
             for (View view : views) {
                 TableColumnInfo tableColumnInfo = new TableColumnInfo()
                         .setField(field)
                         .setTitle(view.title())
                         .setDesc(view.desc())
                         .setWidth(view.width())
-                        .setSortable(view.sortable());
+                        .setSortable(view.sortable())
+                        .setType(edit.type().name());
                 tableColumnInfos.add(tableColumnInfo);
             }
         });
@@ -122,35 +110,6 @@ public class NovaFieldUtils {
     }
 
     /**
-     * 获取选择参数信息
-     *
-     * @param className 类名
-     * @return 选择参数信息
-     */
-    public static Map<String, Map<String, String>> getChoiceValues(String className) {
-        Map<String, Map<String, String>> choiceValues = new LinkedHashMap<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return choiceValues;
-        }
-        Map<String, NovaField> novaFields = scanNova.getNovaFields();
-        novaFields.forEach((field, novaField) -> {
-            Edit edit = novaField.edit();
-            Map<String, String> map = new LinkedHashMap<>();
-            if (edit.type() == EditType.CHOICE) {
-                ChoiceType choiceType = edit.choiceType();
-                VL[] vls = choiceType.vl();
-                for (VL vl : vls) {
-                    map.put(vl.value(), vl.label());
-                }
-                choiceValues.put(field, map);
-            }
-        });
-        return choiceValues;
-    }
-
-    /**
      * 获取编辑信息
      *
      * @param className 类名
@@ -169,26 +128,94 @@ public class NovaFieldUtils {
             if (!edit.show()) {
                 return;
             }
-            EditInfo.ChoiceInfo choiceInfo = new EditInfo.ChoiceInfo();
-            Map<String, String> choiceValues = new LinkedHashMap<>();
-            if (edit.type() == EditType.CHOICE) {
-                ChoiceType choiceType = edit.choiceType();
-                VL[] vls = choiceType.vl();
-                for (VL vl : vls) {
-                    choiceValues.put(vl.value(), vl.label());
-                }
-                choiceInfo.setSelectType(choiceType.selectType().name())
-                        .setValues(choiceValues);
-            }
             EditInfo searchInfo = new EditInfo()
                     .setField(field)
                     .setTitle(edit.title())
                     .setType(edit.type().name())
-                    .setNotNull(edit.notNull())
-                    .setChoiceInfo(choiceInfo);
+                    .setNotNull(edit.notNull());
             editInfos.add(searchInfo);
         });
         return editInfos;
+    }
+
+    /**
+     * 获取选择参数信息
+     *
+     * @param className 类名
+     * @return 选择参数信息
+     */
+    public static Map<String, ChoiceInfo> getChoice(String className) {
+        Map<String, ChoiceInfo> choiceValues = new LinkedHashMap<>();
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return choiceValues;
+        }
+        Map<String, NovaField> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaField) -> {
+            Edit edit = novaField.edit();
+            if (edit.type() == EditType.CHOICE) {
+                ChoiceType choiceType = edit.choiceType();
+                ChoiceInfo choiceInfo = new ChoiceInfo()
+                        .setSelectType(choiceType.selectType().name());
+                // 静态选择列表
+                VL[] vls = choiceType.vl();
+                List<ChoiceInfo.ValueInfo> values = new ArrayList<>();
+                for (VL vl : vls) {
+                    ChoiceInfo.ValueInfo valueInfo = new ChoiceInfo.ValueInfo()
+                            .setValue(vl.value())
+                            .setLabel(vl.label())
+                            .setColor(vl.color());
+                    values.add(valueInfo);
+                }
+                // 动态选择列表
+                Class<? extends ChoiceType.ChoiceFetchHandler>[] choiceFetchHandlerClass = choiceType.fetchHandler();
+                if (choiceFetchHandlerClass.length > 0) {
+                    String[] fetchHandlerParams = choiceType.fetchHandlerParams();
+                    for (Class<? extends ChoiceType.ChoiceFetchHandler> handlerClass : choiceFetchHandlerClass) {
+                        ChoiceType.ChoiceFetchHandler choiceFetchHandler = SpringBeanUtils.getBean(handlerClass);
+                        List<ChoiceType.ChoiceFetchHandler.VLModel> vlModelList = choiceFetchHandler.fetch(fetchHandlerParams);
+                        vlModelList.forEach(vlModel -> {
+                            ChoiceInfo.ValueInfo valueInfo = new ChoiceInfo.ValueInfo()
+                                    .setValue(vlModel.getValue())
+                                    .setLabel(vlModel.getLabel())
+                                    .setColor(vlModel.getColor());
+                            values.add(valueInfo);
+                        });
+                    }
+                }
+                choiceInfo.setValues(values);
+                choiceValues.put(field, choiceInfo);
+            }
+        });
+        return choiceValues;
+    }
+
+    /**
+     * 获取日期时间参数信息
+     *
+     * @param className 类名
+     * @return 日期参数信息
+     */
+    public static Map<String, DateInfo> getDate(String className) {
+        Map<String, DateInfo> dateInfos = new LinkedHashMap<>();
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return dateInfos;
+        }
+        Map<String, NovaField> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaField) -> {
+            Edit edit = novaField.edit();
+            if (edit.type() == EditType.DATE) {
+                DateInfo dateInfo = new DateInfo();
+                DateType dateType = edit.dateType();
+                dateInfo.setType(dateType.type().name())
+                        .setPickerMode(dateType.pickerMode().name());
+                dateInfos.put(field, dateInfo);
+            }
+        });
+        return dateInfos;
     }
 
     @Data
@@ -207,20 +234,6 @@ public class NovaFieldUtils {
         @Comment("是否高级查询")
         private Boolean vague;
 
-        @Comment("选择参数信息")
-        private ChoiceInfo choiceInfo;
-
-        @Data
-        @Accessors(chain = true)
-        public static class ChoiceInfo {
-
-            @Comment("选择类型")
-            private String selectType;
-
-            @Comment("下拉参数")
-            private Map<String, String> values;
-
-        }
     }
 
     @Data
@@ -241,6 +254,9 @@ public class NovaFieldUtils {
 
         @Comment("排序列")
         private Boolean sortable;
+
+        @Comment("类型")
+        private String type;
 
     }
 
@@ -280,20 +296,42 @@ public class NovaFieldUtils {
         @Comment("是否必填")
         private Boolean notNull;
 
-        @Comment("选择参数信息")
-        private ChoiceInfo choiceInfo;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class ChoiceInfo {
+
+        @Comment("选择类型")
+        private String selectType;
+
+        @Comment("选择值")
+        private List<ValueInfo> values;
 
         @Data
         @Accessors(chain = true)
-        public static class ChoiceInfo {
+        public static class ValueInfo {
 
-            @Comment("选择类型")
-            private String selectType;
+            @Comment("值")
+            private String value;
 
-            @Comment("下拉参数")
-            private Map<String, String> values;
+            @Comment("标签")
+            private String label;
 
+            @Comment("颜色信息")
+            private String color;
         }
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class DateInfo {
+
+        @Comment("格式类型")
+        private String type;
+
+        @Comment("选择模式")
+        private String pickerMode;
 
     }
 }

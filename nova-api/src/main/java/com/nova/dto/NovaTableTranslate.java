@@ -7,39 +7,38 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
 @Accessors(chain = true)
-public class NovaTableData {
+public class NovaTableTranslate {
 
     @Comment("nova名称")
     @NotBlank(message = "novaName不能为空")
     private String novaName;
 
-    @Comment("分页信息")
-    @NotNull(message = "pageBean不能为空")
-    private PageBean<Map<String, Object>> pageBean;
-
-    @Comment("查询条件")
-    private Map<String, Search> conditions;
+    @Comment("待翻译数据")
+    private Map<String, DataInfo> dataInfos;
 
     @Data
     @Accessors(chain = true)
-    public static class Search {
-
-        @Comment("值")
-        private String value;
+    public static class DataInfo {
 
         @Comment("类型")
         private String type;
 
-        @Comment("扩展参数")
-        private String ext;
-
-        @Comment("是否高级查询")
-        private Boolean vague;
+        @Comment("待翻译数据")
+        private List<String> datas;
 
     }
 
+    @Data
+    @Accessors(chain = true)
+    public static class Vo {
+
+        @Comment("已翻译数据")
+        private Map<String, List<String>> dataInfos;
+
+    }
 }

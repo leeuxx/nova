@@ -1,45 +1,47 @@
 package com.nova.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nova.annotation.Comment;
-import com.nova.dto.page.PageBean;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
 @Accessors(chain = true)
-public class NovaTableData {
+public class NovaTableAdd {
 
     @Comment("nova名称")
     @NotBlank(message = "novaName不能为空")
     private String novaName;
 
-    @Comment("分页信息")
-    @NotNull(message = "pageBean不能为空")
-    private PageBean<Map<String, Object>> pageBean;
-
-    @Comment("查询条件")
-    private Map<String, Search> conditions;
+    @Comment("表单信息")
+    @NotEmpty(message = "formInfo不能为空")
+    private List<FormInfo> formInfo;
 
     @Data
     @Accessors(chain = true)
-    public static class Search {
+    public static class FormInfo {
 
-        @Comment("值")
+        @Comment("属性名")
+        private String field;
+
+        @Comment("属性值")
         private String value;
 
         @Comment("类型")
         private String type;
 
-        @Comment("扩展参数")
-        private String ext;
-
-        @Comment("是否高级查询")
-        private Boolean vague;
-
     }
 
+    @Data
+    @Accessors(chain = true)
+    @JsonSerialize
+    public static class Vo {
+
+    }
 }

@@ -75,8 +75,7 @@ function processMenus(list) {
 const themeOverrides = {
   common: {
     borderRadius: '6px', borderRadiusSmall: '4px',
-    primaryColor: '#2563eb', primaryColorHover: '#1d4ed8', primaryColorPressed: '#1e40af',
-    successColor: '#2563eb', successColorHover: '#1d4ed8', successColorPressed: '#1e40af'
+    primaryColor: '#2563eb', primaryColorHover: '#1d4ed8', primaryColorPressed: '#1e40af'
   }
 }
 
@@ -270,6 +269,12 @@ function mountApp(menuList) {
   })
 
   // ── 挂载 ────────────────────────────────────────────────────────
+  const { message, dialog } = naive.createDiscreteApi(
+    ['message', 'dialog'],
+    { configProviderProps: { themeOverrides: themeOverrides } }
+  )
+  window.$message = message
+  window.$dialog  = dialog
   const app = createApp(App)
   app.use(naive)
   app.use(router)
