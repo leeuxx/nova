@@ -2,40 +2,37 @@ package com.nova.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.nova.annotation.Nova;
 import com.nova.annotation.NovaField;
-import com.nova.annotation.sub.Edit;
-import com.nova.annotation.sub.Layout;
-import com.nova.annotation.sub.View;
-import com.nova.annotation.sub.edit.*;
-import lombok.Getter;
-import lombok.Setter;
+import com.nova.annotation.sub.nova.field.Edit;
+import com.nova.annotation.sub.nova.Layout;
+import com.nova.annotation.sub.nova.field.View;
+import com.nova.annotation.sub.nova.field.edit.ChoiceType;
+import com.nova.annotation.sub.nova.field.edit.DateType;
+import com.nova.annotation.sub.nova.field.edit.Search;
+import com.nova.annotation.sub.nova.field.edit.VL;
+import com.nova.service.TestDemoService;
+import lombok.Data;
 import lombok.experimental.Accessors;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
 
-@Getter
-@Setter
-@Service
+@Data
 @Accessors(chain = true)
-@TableName("test_demo")
 @Nova(
         name = "测试功能",
         desc = "测试功能描述",
-        orderBy = "id asc",
+        orderBy = "id desc",
         layout = @Layout(
                 editLayout = Layout.EditLayout.FULL_LINE
-        )
+        ),
+        dataProxy = TestDemoService.class
 )
-public class TestDemo implements ChoiceType.ChoiceFetchHandler {
+public class TestDemo {
 
     @TableId(type = IdType.AUTO)
     @NovaField(
-            views = @View(title = "ID", width = "20%"),
+            views = @View(title = "ID", width = "10%"),
             edit = @Edit(
                     title = "ID",
                     show = false
@@ -44,7 +41,7 @@ public class TestDemo implements ChoiceType.ChoiceFetchHandler {
     private Long id;
 
     @NovaField(
-            views = @View(title = "用户名", width = "10%"),
+            views = @View(title = "用户名", width = "15%"),
             edit = @Edit(
                     title = "用户名",
                     notNull = true,
@@ -54,7 +51,7 @@ public class TestDemo implements ChoiceType.ChoiceFetchHandler {
     private String name;
 
     @NovaField(
-            views = @View(title = "用户昵称", width = "10%"),
+            views = @View(title = "用户昵称", width = "15%"),
             edit = @Edit(
                     title = "用户昵称",
                     search = @Search(vague = true)
@@ -67,7 +64,7 @@ public class TestDemo implements ChoiceType.ChoiceFetchHandler {
             edit = @Edit(
                     title = "性别",
                     notNull = true,
-                    type = EditType.CHOICE,
+                    type = Edit.Type.CHOICE,
                     choiceType = @ChoiceType(
                             vl = {
                                     @VL(value = "1", label = "男", color = "#28f439"),
@@ -88,14 +85,14 @@ public class TestDemo implements ChoiceType.ChoiceFetchHandler {
     private String tel;
 
     @NovaField(
-            views = @View(title = "爱好", width = "20%", sortable = true),
+            views = @View(title = "爱好", width = "25%", sortable = true),
             edit = @Edit(
                     title = "爱好",
                     notNull = true,
-                    type = EditType.CHOICE,
+                    type = Edit.Type.CHOICE,
                     choiceType = @ChoiceType(
                             selectType = ChoiceType.SelectType.MULTI,
-                            fetchHandler = TestDemo.class
+                            fetchHandler = TestDemoService.class
                     ),
                     search = @Search(vague = true)
             )
@@ -103,22 +100,27 @@ public class TestDemo implements ChoiceType.ChoiceFetchHandler {
     private String hobby;
 
     @NovaField(
-            views = @View(title = "创建时间", width = "20%"),
+            views = @View(title = "创建时间", width = "15%"),
             edit = @Edit(
                     title = "创建时间",
-                    type = EditType.DATE,
+                    type = Edit.Type.DATE,
                     dateType = @DateType,
                     search = @Search(vague = true)
             )
     )
     private LocalDateTime createTime;
 
-    @Override
-    public List<VLModel> fetch(String[] params) {
-        return Arrays.asList(
-                new VLModel().setValue("1").setLabel("篮球"),
-                new VLModel().setValue("2").setLabel("羽毛球").setColor("#fe6767"),
-                new VLModel().setValue("3").setLabel("LOL")
-        );
-    }
+    @NovaField(
+            views = @View(title = "绑定时间", width = "10%"),
+            edit = @Edit(
+                    title = "绑定时间",
+                    type = Edit.Type.DATE,
+                    dateType = @DateType(
+                            type = DateType.Type.DATE
+                    ),
+                    search = @Search(vague = true)
+            )
+    )
+    private LocalDateTime bindTime;
+
 }

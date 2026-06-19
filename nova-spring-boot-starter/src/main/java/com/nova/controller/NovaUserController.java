@@ -1,7 +1,7 @@
 package com.nova.controller;
 
-import com.nova.annotation.Comment;
-import com.nova.annotation.RestMappingController;
+import com.nova.annotation.config.Comment;
+import com.nova.annotation.config.RestMappingController;
 import com.nova.dto.NovaUserGetMenu;
 import com.nova.utils.R;
 import lombok.AllArgsConstructor;

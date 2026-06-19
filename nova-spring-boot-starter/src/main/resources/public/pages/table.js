@@ -140,6 +140,24 @@ const NovaTable = {
           }
         }
 
+        if (col.type === 'DATE') {
+          colDef.render = (row) => {
+            const ts = row[col.field]
+            if (ts === null || ts === undefined || ts === '') return ''
+            const dateInfo = vm.dateMap && vm.dateMap[col.field]
+            const type = dateInfo && dateInfo.type
+            const d = new Date(ts)
+            const p = n => String(n).padStart(2, '0')
+            if (type === 'YEAR')       return String(d.getFullYear())
+            if (type === 'MONTH')      return d.getFullYear() + '-' + p(d.getMonth() + 1)
+            if (type === 'DATE')       return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+            if (type === 'TIME')       return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds())
+            // DATE_TIME 及默认
+            return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' +
+                   p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds())
+          }
+        }
+
         cols.push(colDef)
       })
 

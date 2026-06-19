@@ -84,11 +84,8 @@ window.NovaTableJQ = (function ($) {
       if (Array.isArray(val) && val.length === 0) return
       var strVal
       if (fieldDef.type === 'DATE') {
-        if (Array.isArray(val)) {
-          strVal = val.map(function (ts) { return toLocalDateStr(ts) }).join(',')
-        } else {
-          strVal = toLocalDateStr(val)
-        }
+        // 直接发时间戳（ms），后端统一转换
+        strVal = Array.isArray(val) ? val.join(',') : String(val)
       } else {
         strVal = Array.isArray(val) ? val.join(',') : String(val)
       }
@@ -389,8 +386,6 @@ window.NovaTableJQ = (function ($) {
         var strVal
         if (val === null || val === undefined || val === '') {
           strVal = ''
-        } else if (f.type === 'DATE' && typeof val === 'number') {
-          strVal = toLocalDateStr(val)
         } else if (Array.isArray(val)) {
           strVal = val.join(',')
         } else {
@@ -423,8 +418,6 @@ window.NovaTableJQ = (function ($) {
         var strVal
         if (val === null || val === undefined || val === '') {
           strVal = ''
-        } else if (f.type === 'DATE' && typeof val === 'number') {
-          strVal = toLocalDateStr(val)
         } else if (Array.isArray(val)) {
           strVal = val.join(',')
         } else {

@@ -18,9 +18,9 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>nova-api</module>
         <module>nova-spring-boot-starter</module>
         <module>nova-sample</module>
+        <module>nova-core</module>
     </modules>
 
     <properties>
@@ -48,22 +48,12 @@
             <!-- 内部模块版本管理 -->
             <dependency>
                 <groupId>com.nova</groupId>
-                <artifactId>nova-api</artifactId>
-                <version>${nova.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.nova</groupId>
                 <artifactId>nova-core</artifactId>
                 <version>${nova.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.nova</groupId>
                 <artifactId>nova-spring-boot-starter</artifactId>
-                <version>${nova.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.nova</groupId>
-                <artifactId>nova-web</artifactId>
                 <version>${nova.version}</version>
             </dependency>
             <!-- Hutool -->

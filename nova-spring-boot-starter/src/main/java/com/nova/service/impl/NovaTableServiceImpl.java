@@ -1,0 +1,218 @@
+package com.nova.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nova.annotation.fun.DataProxy;
+import com.nova.annotation.fun.FetchRequest;
+import com.nova.annotation.fun.FetchResponse;
+import com.nova.dto.*;
+import com.nova.dto.page.PageBean;
+import com.nova.service.NovaTableService;
+import com.nova.utils.DataProxyUtils;
+import com.nova.utils.MixUtils;
+import com.nova.utils.NovaFieldUtils;
+import com.nova.utils.NovaUtils;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+@AllArgsConstructor
+public class NovaTableServiceImpl implements NovaTableService {
+
+    @Override
+    public NovaTableBuild.Vo build(NovaTableBuild novaTableBuild) {
+        NovaTableBuild.Vo vo = new NovaTableBuild.Vo();
+        // 获取搜索条件
+        List<NovaTableBuild.Vo.Search> searchList = new ArrayList<>();
+        List<NovaFieldUtils.SearchInfo> searchs = NovaFieldUtils.getSearch(novaTableBuild.getNovaName());
+        for (NovaFieldUtils.SearchInfo search : searchs) {
+            // 构造返回值
+            searchList.add(new NovaTableBuild.Vo.Search()
+                    .setField(search.getField())
+                    .setTitle(search.getTitle())
+                    .setType(search.getType().name())
+                    .setVague(search.getVague())
+            );
+        }
+        vo.setSearch(searchList);
+        // 获取表头列
+        List<NovaTableBuild.Vo.TableColumn> tableColumnList = new ArrayList<>();
+        List<NovaFieldUtils.TableColumnInfo> tableColumns = NovaFieldUtils.getTableColumn(novaTableBuild.getNovaName());
+        for (NovaFieldUtils.TableColumnInfo tableColumn : tableColumns) {
+            tableColumnList.add(new NovaTableBuild.Vo.TableColumn()
+                    .setField(tableColumn.getField())
+                    .setTitle(tableColumn.getTitle())
+                    .setDesc(tableColumn.getDesc())
+                    .setWidth(tableColumn.getWidth())
+                    .setSortable(tableColumn.getSortable())
+                    .setType(tableColumn.getType().name())
+            );
+        }
+        vo.setTableColumns(tableColumnList);
+        // 获取功能布局
+        NovaUtils.LayoutInfo layoutInfo = NovaUtils.getLayout(novaTableBuild.getNovaName());
+        vo.setLayout(new NovaTableBuild.Vo.Layout()
+                .setEditLayout(layoutInfo.getEditLayout().name())
+                .setPageSize(layoutInfo.getPageSize())
+                .setPageSizes(layoutInfo.getPageSizes())
+        );
+        // 获取编辑信息
+        List<NovaTableBuild.Vo.Edit> editList = new ArrayList<>();
+        List<NovaFieldUtils.EditInfo> editInfos = NovaFieldUtils.getEdit(novaTableBuild.getNovaName());
+        for (NovaFieldUtils.EditInfo editInfo : editInfos) {
+            editList.add(new NovaTableBuild.Vo.Edit()
+                    .setField(editInfo.getField())
+                    .setTitle(editInfo.getTitle())
+                    .setType(editInfo.getType().name())
+                    .setNotNull(editInfo.getNotNull())
+            );
+        }
+        vo.setEdit(editList);
+        // 获取选择组件信息
+        Map<String, NovaTableBuild.Vo.Choice> choiceMap = new LinkedHashMap<>();
+        Map<String, NovaFieldUtils.ChoiceInfo> choices = NovaFieldUtils.getChoice(novaTableBuild.getNovaName());
+        choices.forEach((field, choiceInfo) -> {
+            List<NovaTableBuild.Vo.Choice.Value> buildValues = new ArrayList<>();
+            List<NovaFieldUtils.ChoiceInfo.ValueInfo> fieldValues = choiceInfo.getValues();
+            for (NovaFieldUtils.ChoiceInfo.ValueInfo fieldValue : fieldValues) {
+                NovaTableBuild.Vo.Choice.Value value = new NovaTableBuild.Vo.Choice.Value()
+                        .setValue(fieldValue.getValue())
+                        .setLabel(fieldValue.getLabel())
+                        .setColor(fieldValue.getColor());
+                buildValues.add(value);
+            }
+            choiceMap.put(field, new NovaTableBuild.Vo.Choice()
+                    .setSelectType(choiceInfo.getSelectType().name())
+                    .setValues(buildValues)
+            );
+        });
+        vo.setChoice(choiceMap);
+        // 获取日期时间组件信息
+        Map<String, NovaTableBuild.Vo.Date> dateMap = new LinkedHashMap<>();
+        Map<String, NovaFieldUtils.DateInfo> dates = NovaFieldUtils.getDate(novaTableBuild.getNovaName());
+        dates.forEach((field, dateInfo) -> {
+            NovaTableBuild.Vo.Date date = new NovaTableBuild.Vo.Date()
+                    .setType(dateInfo.getType().name())
+                    .setPickerMode(dateInfo.getPickerMode().name());
+            dateMap.put(field, date);
+        });
+        vo.setDate(dateMap);
+        return vo;
+    }
+
+    @Override
+    public PageBean<Map<String, Object>> data(NovaTableData novaTableData) {
+        String novaName = novaTableData.getNovaName();
+        PageBean<Map<String, Object>> pageBean = novaTableData.getPageBean();
+        Map<String, NovaTableData.Search> conditions = novaTableData.getConditions();
+        List<PageBean.OrderItemBean> orders = pageBean.getOrders();
+        QueryWrapper<Object> queryWrapper = new QueryWrapper<>();
+        Map<String, FetchRequest.Source.Search> requestConditions = new LinkedHashMap<>();
+        // 搜索条件
+        if (conditions != null) {
+            Map<String, NovaFieldUtils.DateInfo> dateMap = NovaFieldUtils.getDate(novaName);
+            conditions.forEach((field, search) -> {
+                String column = MixUtils.camelToSnake(field);
+                NovaFieldUtils.DateInfo dateInfo = dateMap.get(field);
+                FetchRequest.Source.Search searchBean = DataProxyUtils.buildFetchSearch(
+                        novaName, field, column,
+                        search.getValue(), search.getType(),
+                        Boolean.TRUE.equals(search.getVague()),
+                        dateInfo,
+                        queryWrapper);
+                requestConditions.put(field, searchBean);
+            });
+        }
+        // 排序：前端指定 > @Nova orderBy > 无排序
+        List<FetchRequest.Source.OrderItemBean> requestOrders = new ArrayList<>();
+        if (orders != null && !orders.isEmpty()) {
+            orders.forEach(o -> {
+                String col = MixUtils.camelToSnake(o.getColumn());
+                requestOrders.add(new FetchRequest.Source.OrderItemBean().setColumn(col).setAsc(o.isAsc()));
+                if (o.isAsc()) queryWrapper.orderByAsc(col);
+                else queryWrapper.orderByDesc(col);
+            });
+        } else {
+            String defaultOrderBy = NovaUtils.getOrderBy(novaName);
+            if (defaultOrderBy != null && !defaultOrderBy.isBlank()) {
+                queryWrapper.last("ORDER BY " + defaultOrderBy);
+            }
+        }
+        // 构造对象
+        FetchRequest queryRequest = new FetchRequest()
+                .setSource(new FetchRequest.Source()
+                        .setCurrent(pageBean.getCurrent())
+                        .setSize(pageBean.getSize())
+                        .setConditions(requestConditions)
+                        .setOrders(requestOrders)
+                )
+                .setMybatisPLus(new FetchRequest.MybatisPLus()
+                        .setPage(Page.of(pageBean.getCurrent(), pageBean.getSize()))
+                        .setWrapper(queryWrapper.lambda())
+                );
+        // 调用代理
+        DataProxy<?> dataProxy = DataProxyUtils.getDataProxy(novaName);
+        FetchResponse<?> fetch = dataProxy.fetch(queryRequest);
+        List<Map<String, Object>> maps = new ArrayList<>();
+        fetch.getRecords().forEach(record -> maps.add(DataProxyUtils.toMapWithTimestamp(record)));
+        pageBean.setTotal(fetch.getTotal()).setRecords(maps);
+        return pageBean;
+    }
+
+    @Override
+    public NovaTableAdd.Vo add(NovaTableAdd novaTableAdd) {
+        String novaName = novaTableAdd.getNovaName();
+        List<String> columns = new ArrayList<>();
+        List<String> values = new ArrayList<>();
+        for (NovaTableAdd.FormInfo formInfo : novaTableAdd.getFormInfo()) {
+            String value = formInfo.getValue();
+            if (value != null && !value.isEmpty()) {
+                columns.add(MixUtils.camelToSnake(formInfo.getField()));
+                values.add(value);
+            }
+        }
+        Object model = DataProxyUtils.buildModel(novaName, columns, values);
+        //noinspection unchecked,rawtypes
+        ((DataProxy) DataProxyUtils.getDataProxy(novaName)).add(model);
+        return new NovaTableAdd.Vo();
+    }
+
+    @Override
+    public NovaTableUpdate.Vo update(NovaTableUpdate novaTableUpdate) {
+        String novaName = novaTableUpdate.getNovaName();
+        String pkFieldName = NovaFieldUtils.getPkFieldName(novaName);
+        List<String> columns = new ArrayList<>();
+        List<String> values = new ArrayList<>();
+        columns.add(MixUtils.camelToSnake(pkFieldName));
+        values.add(novaTableUpdate.getPkValue());
+        for (NovaTableUpdate.FormInfo formInfo : novaTableUpdate.getFormInfo()) {
+            columns.add(MixUtils.camelToSnake(formInfo.getField()));
+            String value = formInfo.getValue();
+            values.add((value == null || value.isEmpty()) ? null : value);
+        }
+        Object model = DataProxyUtils.buildModel(novaName, columns, values);
+        //noinspection unchecked,rawtypes
+        ((DataProxy) DataProxyUtils.getDataProxy(novaName)).update(model);
+        return new NovaTableUpdate.Vo();
+    }
+
+    @Override
+    public NovaTableDelete.Vo delete(NovaTableDelete novaTableDelete) {
+        String novaName = novaTableDelete.getNovaName();
+        String pkFieldName = NovaFieldUtils.getPkFieldName(novaName);
+        String pkColumn = MixUtils.camelToSnake(pkFieldName);
+        List<Object> models = new ArrayList<>();
+        for (String pk : novaTableDelete.getPkValues()) {
+            models.add(DataProxyUtils.buildModel(novaName, List.of(pkColumn), List.of(pk)));
+        }
+        //noinspection unchecked,rawtypes
+        ((DataProxy) DataProxyUtils.getDataProxy(novaName)).delete(models);
+        return new NovaTableDelete.Vo();
+    }
+
+}

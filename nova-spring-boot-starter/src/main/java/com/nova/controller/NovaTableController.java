@@ -1,13 +1,8 @@
 package com.nova.controller;
 
-import com.nova.annotation.Comment;
-import com.nova.annotation.RestMappingController;
-import com.nova.dto.NovaTableAdd;
-import com.nova.dto.NovaTableBuild;
-import com.nova.dto.NovaTableData;
-import com.nova.dto.NovaTableDelete;
-import com.nova.dto.NovaTableTranslate;
-import com.nova.dto.NovaTableUpdate;
+import com.nova.annotation.config.Comment;
+import com.nova.annotation.config.RestMappingController;
+import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 import com.nova.service.NovaTableService;
 import com.nova.utils.R;
@@ -15,8 +10,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
-import java.util.Map;
 
 @AllArgsConstructor
 @RestMappingController("nova/table")
@@ -33,16 +26,9 @@ public class NovaTableController {
 
     @Comment("获取表格数据")
     @PostMapping("data")
-    public R<PageBean<Map<String, Object>>> data(@RequestBody @Validated NovaTableData novaTableData) {
-        PageBean<Map<String, Object>> data = novaTableService.data(novaTableData);
+    public R<PageBean<?>> data(@RequestBody @Validated NovaTableData novaTableData) {
+        PageBean<?> data = novaTableService.data(novaTableData);
         return R.ok(data);
-    }
-
-    @Comment("翻译表格数据")
-    @PostMapping("translate")
-    public R<NovaTableTranslate.Vo> translate(@RequestBody @Validated NovaTableTranslate novaTableTranslate) {
-        NovaTableTranslate.Vo translate = novaTableService.translate(novaTableTranslate);
-        return R.ok(translate);
     }
 
     @Comment("新增表格数据")
