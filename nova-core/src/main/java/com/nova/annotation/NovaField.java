@@ -17,7 +17,4 @@ public @interface NovaField {
     @Comment("编辑组件配置")
     Edit edit() default @Edit(title = "");
 
-    @Comment("显示顺序")
-    int sort() default 1000;
-
 }

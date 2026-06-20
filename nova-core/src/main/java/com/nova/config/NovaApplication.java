@@ -1,11 +1,12 @@
 package com.nova.config;
 
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.nova.annotation.config.Comment;
 import com.nova.annotation.Nova;
 import com.nova.annotation.NovaField;
+import com.nova.annotation.config.Comment;
 import com.nova.annotation.config.NovaScan;
 import com.nova.annotation.fun.DataProxy;
+import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.constant.NovaConst;
 import lombok.Data;
 import lombok.Getter;
@@ -22,6 +23,9 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -59,12 +63,16 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
         String pkFieldName = null;
         for (Class<?> clz : novaClasses) {
             log.info("找到 @Nova 注解类: {}", clz.getName());
-            Map<String, NovaField> novaFields = new LinkedHashMap<>();
+            Map<String, ScanNova.NovaFieldInfo> novaFields = new LinkedHashMap<>();
             Field[] fields = clz.getDeclaredFields();
             for (Field field : fields) {
                 if (field.isAnnotationPresent(NovaField.class)) {
                     NovaField novaField = field.getDeclaredAnnotation(NovaField.class);
-                    novaFields.put(field.getName(), novaField);
+                    Edit.Type type = novaFieldAutoTypeChange(field.getType(), novaField.edit().type());
+                    novaFields.put(field.getName(), new ScanNova.NovaFieldInfo()
+                            .setType(type)
+                            .setNovaField(novaField)
+                    );
                 }
                 if (field.isAnnotationPresent(TableId.class)) {
                     pkFieldName = field.getName();
@@ -95,10 +103,44 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
         private Nova nova;
 
         @Comment("NovaField注解")
-        private Map<String, NovaField> novaFields;
+        private Map<String, NovaFieldInfo> novaFields;
 
         @Comment("数据代理类")
         private Class<? extends DataProxy<?>> dataProxyClass;
 
+        @Data
+        @Accessors(chain = true)
+        public static class NovaFieldInfo {
+
+            @Comment("组件类型（自动类型转换）")
+            private Edit.Type type;
+
+            @Comment("NovaField注解")
+            private NovaField novaField;
+
+        }
+    }
+
+    /**
+     * novaField自动转换类型
+     *
+     * @param clz  属性类型
+     * @param type 组件类型
+     * @return 组件类型
+     */
+    private Edit.Type novaFieldAutoTypeChange(Class<?> clz, Edit.Type type) {
+        if (type != Edit.Type.AUTO) {
+            return type;
+        }
+        if (clz == Integer.class || clz == Long.class || clz == Double.class || clz == BigDecimal.class || clz == Float.class) {
+            return Edit.Type.NUMBER;
+        }
+        if (clz == Boolean.class) {
+            return Edit.Type.BOOLEAN;
+        }
+        if (clz == LocalDate.class || clz == LocalDateTime.class || clz == Date.class) {
+            return Edit.Type.DATE;
+        }
+        return Edit.Type.INPUT;
     }
 }

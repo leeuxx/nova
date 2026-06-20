@@ -27,6 +27,9 @@ public class NovaTableServiceImpl implements NovaTableService {
     @Override
     public NovaTableBuild.Vo build(NovaTableBuild novaTableBuild) {
         NovaTableBuild.Vo vo = new NovaTableBuild.Vo();
+        // 获取主键属性名称
+        String pkFieldName = NovaFieldUtils.getPkFieldName(novaTableBuild.getNovaName());
+        vo.setPkFieldName(pkFieldName);
         // 获取搜索条件
         List<NovaTableBuild.Vo.Search> searchList = new ArrayList<>();
         List<NovaFieldUtils.SearchInfo> searchs = NovaFieldUtils.getSearch(novaTableBuild.getNovaName());
@@ -65,11 +68,16 @@ public class NovaTableServiceImpl implements NovaTableService {
         List<NovaTableBuild.Vo.Edit> editList = new ArrayList<>();
         List<NovaFieldUtils.EditInfo> editInfos = NovaFieldUtils.getEdit(novaTableBuild.getNovaName());
         for (NovaFieldUtils.EditInfo editInfo : editInfos) {
+            NovaFieldUtils.EditInfo.ReadonlyInfo ro = editInfo.getReadonly();
             editList.add(new NovaTableBuild.Vo.Edit()
                     .setField(editInfo.getField())
                     .setTitle(editInfo.getTitle())
+                    .setDesc(editInfo.getDesc())
                     .setType(editInfo.getType().name())
                     .setNotNull(editInfo.getNotNull())
+                    .setReadonly(new NovaTableBuild.Vo.Edit.ReadonlyInfo()
+                            .setAdd(ro.getAdd())
+                            .setEdit(ro.getEdit()))
             );
         }
         vo.setEdit(editList);
@@ -88,10 +96,22 @@ public class NovaTableServiceImpl implements NovaTableService {
             }
             choiceMap.put(field, new NovaTableBuild.Vo.Choice()
                     .setSelectType(choiceInfo.getSelectType().name())
+                    .setShowType(choiceInfo.getShowType().name())
                     .setValues(buildValues)
             );
         });
         vo.setChoice(choiceMap);
+        // 获取标签组件信息
+        Map<String, NovaTableBuild.Vo.Tag> tagMap = new LinkedHashMap<>();
+        Map<String, NovaFieldUtils.TagInfo> tags = NovaFieldUtils.getTag(novaTableBuild.getNovaName());
+        tags.forEach((field, tagInfo) -> {
+            NovaTableBuild.Vo.Tag tag = new NovaTableBuild.Vo.Tag()
+                    .setAllowExtension(tagInfo.getAllowExtension())
+                    .setMaxTagCount(tagInfo.getMaxTagCount())
+                    .setTags(tagInfo.getTags());
+            tagMap.put(field, tag);
+        });
+        vo.setTag(tagMap);
         // 获取日期时间组件信息
         Map<String, NovaTableBuild.Vo.Date> dateMap = new LinkedHashMap<>();
         Map<String, NovaFieldUtils.DateInfo> dates = NovaFieldUtils.getDate(novaTableBuild.getNovaName());
@@ -102,6 +122,40 @@ public class NovaTableServiceImpl implements NovaTableService {
             dateMap.put(field, date);
         });
         vo.setDate(dateMap);
+        // 获取数字组件信息
+        Map<String, NovaTableBuild.Vo.Number> numberMap = new LinkedHashMap<>();
+        Map<String, NovaFieldUtils.NumberInfo> numbers = NovaFieldUtils.getNumber(novaTableBuild.getNovaName());
+        numbers.forEach((field, numberInfo) -> {
+            NovaTableBuild.Vo.Number number = new NovaTableBuild.Vo.Number()
+                    .setType(numberInfo.getType().name())
+                    .setMax(numberInfo.getMax())
+                    .setMin(numberInfo.getMin())
+                    .setDecimal(numberInfo.getDecimal());
+            numberMap.put(field, number);
+        });
+        vo.setNumber(numberMap);
+        // 获取布尔值组件信息
+        Map<String, NovaTableBuild.Vo.BooleanInfo> booleanMap = new LinkedHashMap<>();
+        Map<String, NovaFieldUtils.BooleanInfo> booleanInfos = NovaFieldUtils.getBoolean(novaTableBuild.getNovaName());
+        booleanInfos.forEach((field, booleanInfo) -> {
+            NovaTableBuild.Vo.BooleanInfo booleanObj = new NovaTableBuild.Vo.BooleanInfo()
+                    .setType(booleanInfo.getType().name());
+            booleanMap.put(field, booleanObj);
+        });
+        vo.setBooleanInfo(booleanMap);
+        // 获取文件上传组件信息
+        Map<String, NovaTableBuild.Vo.AttachmentType> attachmentMap = new LinkedHashMap<>();
+        Map<String, NovaFieldUtils.AttachmentTypeInfo> attachments = NovaFieldUtils.getAttachment(novaTableBuild.getNovaName());
+        attachments.forEach((field, attachmentInfo) -> {
+            NovaTableBuild.Vo.AttachmentType attachment = new NovaTableBuild.Vo.AttachmentType()
+                    .setType(attachmentInfo.getType().name())
+                    .setMaxLimit(attachmentInfo.getMaxLimit())
+                    .setMinSize(attachmentInfo.getMinSize())
+                    .setMaxSize(attachmentInfo.getMaxSize())
+                    .setFileTypes(attachmentInfo.getFileTypes());
+            attachmentMap.put(field, attachment);
+        });
+        vo.setAttachment(attachmentMap);
         return vo;
     }
 
@@ -185,11 +239,8 @@ public class NovaTableServiceImpl implements NovaTableService {
     @Override
     public NovaTableUpdate.Vo update(NovaTableUpdate novaTableUpdate) {
         String novaName = novaTableUpdate.getNovaName();
-        String pkFieldName = NovaFieldUtils.getPkFieldName(novaName);
         List<String> columns = new ArrayList<>();
         List<String> values = new ArrayList<>();
-        columns.add(MixUtils.camelToSnake(pkFieldName));
-        values.add(novaTableUpdate.getPkValue());
         for (NovaTableUpdate.FormInfo formInfo : novaTableUpdate.getFormInfo()) {
             columns.add(MixUtils.camelToSnake(formInfo.getField()));
             String value = formInfo.getValue();
@@ -204,8 +255,7 @@ public class NovaTableServiceImpl implements NovaTableService {
     @Override
     public NovaTableDelete.Vo delete(NovaTableDelete novaTableDelete) {
         String novaName = novaTableDelete.getNovaName();
-        String pkFieldName = NovaFieldUtils.getPkFieldName(novaName);
-        String pkColumn = MixUtils.camelToSnake(pkFieldName);
+        String pkColumn = MixUtils.camelToSnake(novaTableDelete.getPkFieldName());
         List<Object> models = new ArrayList<>();
         for (String pk : novaTableDelete.getPkValues()) {
             models.add(DataProxyUtils.buildModel(novaName, List.of(pkColumn), List.of(pk)));

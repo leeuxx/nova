@@ -3,11 +3,11 @@
 const { h } = Vue
 const { NPopconfirm, NSpace, NTooltip, NTag } = naive
 
-// 将后端百分比宽度（"25%"）转为像素，基准 1200px
-function parseWidth(w) {
-  if (!w) return 150
-  if (String(w).endsWith('%')) return Math.round(parseFloat(w) * 12)
-  return parseInt(w) || 150
+// 解析列宽：百分比返回浮点数（0~100），像素返回负数表示固定像素
+function parseWidthPct(w) {
+  if (!w) return 10  // 默认 10%
+  if (String(w).endsWith('%')) return parseFloat(w)
+  return -(parseInt(w) || 150)  // 负数 = 固定像素
 }
 
 // 将 hex 颜色加深：factor 为加深比例（0~1），返回加深后的 hex
@@ -26,7 +26,12 @@ const NovaTable = {
   data() {
     return {
       choiceMap:      {},
+      tagMap:         {},
       dateMap:        {},
+      numberMap:      {},
+      booleanMap:     {},
+      attachmentMap:  {},
+      tableWrapperWidth: 0,
       novaName:       '',
       pkFieldName:    'id',
       tableRowColors: [],
@@ -34,11 +39,12 @@ const NovaTable = {
       rawTableData:   [],
       tableColumns:   [],
       sortStates:     {},
-      filterExpanded: true,
+      filterExpanded: false,
       checkedRowKeys: [],
       searchFields:   [],
       filterForm:     {},
       showForm:       false,
+      formMode:       'add',
       currentRow:     null,
       formData:       {},
       editFields:     [],
@@ -61,9 +67,23 @@ const NovaTable = {
   },
 
   computed: {
+    // 固定列像素：checkbox 50 + 操作列 140
+    colPixels() {
+      const fixedPx = 50 + 140
+      const available = (this.tableWrapperWidth || 1200) - fixedPx
+      // 各列宽度（百分比转像素 or 固定像素）
+      return this.tableColumns.map(col => {
+        const w = parseWidthPct(col.width)
+        return w < 0 ? -w : Math.round(w / 100 * available)
+      })
+    },
+
     scrollX() {
-      if (!this.tableColumns.length) return 1200
-      return 50 + 140 + this.tableColumns.reduce((sum, col) => sum + parseWidth(col.width), 0)
+      if (!this.tableColumns.length) return undefined
+      const fixedPx = 50 + 140
+      const total = fixedPx + this.colPixels.reduce((s, w) => s + w, 0)
+      const container = this.tableWrapperWidth || 0
+      return total > container ? total : undefined
     },
 
     filteredData() {
@@ -76,11 +96,13 @@ const NovaTable = {
         { type: 'selection', title: '', key: 'selection', width: 50 }
       ]
 
-      this.tableColumns.forEach(col => {
+      this.tableColumns.forEach((col, index) => {
         const colDef = {
-          key:   col.field,
-          width: parseWidth(col.width),
-          title: col.title
+          key:       col.field,
+          width:     vm.colPixels[index],
+          title:     col.title,
+          resizable: true,
+          ellipsis:  { tooltip: true }
         }
 
         if (col.desc || col.sortable) {
@@ -117,6 +139,53 @@ const NovaTable = {
           }
         }
 
+        if (col.type === 'TAG') {
+          colDef.render = (row) => {
+            const val = row[col.field]
+            if (val === null || val === undefined || val === '') return ''
+            const tags = String(val).split(',').map(t => t.trim()).filter(Boolean)
+            const visible = tags.slice(0, 1)
+            const rest = tags.length - 1
+            const nodes = visible.map(t => h(NTag, { size: 'small', style: 'flex-shrink:0', color: { color: 'rgba(37,99,235,0.08)', textColor: '#2563eb', borderColor: 'transparent' } }, { default: () => t }))
+            if (rest > 0) nodes.push(h(NTooltip, { trigger: 'hover' }, {
+              trigger: () => h('span', { style: 'flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px' }, '+' + rest),
+              default: () => tags.slice(1).join('，')
+            }))
+            return h('span', { style: 'display:inline-flex;gap:4px;align-items:center' }, nodes)
+          }
+        }
+
+        if (col.type === 'BOOLEAN') {
+          colDef.render = (row) => {
+            const val = row[col.field]
+            if (val === null || val === undefined || val === '') return ''
+            const isTrue = String(val).toLowerCase() === 'true'
+            const bInfo = vm.booleanMap && vm.booleanMap[col.field]
+            if (bInfo && bInfo.type === 'SWITCH') {
+              const novaName = vm.novaName
+              const pkField = vm.pkFieldName || 'id'
+              const editField = (vm.editFields || []).find(function(f) { return f.field === col.field })
+              const disabled = !editField || (editField.readonly && editField.readonly.edit)
+              const isDark = document.body.classList.contains('dark')
+              const offBg = isDark ? '#444' : '#d9d9d9'
+              const onClick = disabled ? undefined : () => {
+                const newVal = !isTrue
+                $.ajax({
+                  url: '/nova/table/update', method: 'POST', contentType: 'application/json',
+                  data: JSON.stringify({ novaName, formInfo: [{ field: pkField, value: String(row[pkField]), type: '' }, { field: col.field, value: String(newVal), type: 'BOOLEAN' }] }),
+                  success: (resp) => { if (resp.code === 200) { if (window.$message) window.$message.success('修改成功'); window.NovaTableJQ.loadData(novaName) } }
+                })
+              }
+              return h('span', { style: `display:inline-block;vertical-align:middle;width:44px;height:22px;border-radius:11px;background:${isTrue ? '#006be6' : offBg};position:relative;cursor:${disabled ? 'not-allowed' : 'pointer'};opacity:${disabled ? '0.5' : '1'};flex-shrink:0;transition:background .2s`, onClick }, [
+                h('span', { style: `position:absolute;top:0;${isTrue ? 'left:0;right:20px' : 'right:0;left:20px'};bottom:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;user-select:none` }, isTrue ? '是' : '否'),
+                h('span', { style: `position:absolute;top:3px;left:${isTrue ? '26px' : '3px'};width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)` })
+              ])
+            }
+            const color = isTrue ? '#18a058' : '#d03050'
+            return h(NTag, { size: 'small', color: { color: color + '20', textColor: darkenHex(color, 0.15), borderColor: 'transparent' } }, { default: () => isTrue ? '是' : '否' })
+          }
+        }
+
         if (col.type === 'CHOICE') {
           colDef.render = (row, rowIndex) => {
             const text = row[col.field]
@@ -130,11 +199,16 @@ const NovaTable = {
               return h(NTag, { size: 'small', color: { color: bg, textColor: tc, borderColor: 'transparent' } }, { default: () => label })
             }
             if (isMulti) {
-              const labels = String(text).split(',')
+              const labels = String(text).split(',').map(s => s.trim()).filter(Boolean)
               const colors = Array.isArray(colorData) ? colorData : []
-              return h('span', { style: 'display:inline-flex;gap:4px;flex-wrap:wrap' },
-                labels.map((label, i) => makeTag(label.trim(), colors[i] || null))
-              )
+              const visible = labels.slice(0, 1)
+              const rest = labels.length - 1
+              const nodes = visible.map((label, i) => makeTag(label, colors[i] || null))
+              if (rest > 0) nodes.push(h(NTooltip, { trigger: 'hover' }, {
+                trigger: () => h('span', { style: 'flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px' }, '+' + rest),
+                default: () => labels.slice(1).join('，')
+              }))
+              return h('span', { style: 'display:inline-flex;gap:4px;align-items:center' }, nodes)
             }
             return makeTag(text, colorData)
           }
@@ -213,6 +287,10 @@ const NovaTable = {
   },
 
   methods: {
+    isReadonly(f) {
+      if (!f.readonly) return false
+      return this.formMode === 'add' ? !!f.readonly.add : !!f.readonly.edit
+    },
     toggleSort(field) {
       const cur  = this.sortStates[field]
       const next = cur == null ? 'asc' : cur === 'asc' ? 'desc' : null
@@ -233,6 +311,11 @@ const NovaTable = {
       const choice = this.choiceMap[f.field]
       if (!choice || !choice.values) return []
       return choice.values.map(v => ({ label: v.label, value: v.value }))
+    },
+    tagOptions(field) {
+      const tag = this.tagMap && this.tagMap[field]
+      if (!tag || !tag.tags) return []
+      return tag.tags.map(t => ({ label: t, value: t }))
     },
     datePickerType(field, vague, forEdit) {
       const dateInfo = this.dateMap && this.dateMap[field]
@@ -267,6 +350,40 @@ const NovaTable = {
     handleDelete(row)   { window.NovaTableJQ.handleDelete(row) },
     handleBatchDelete() { window.NovaTableJQ.handleBatchDelete() },
     handleFormSubmit()  { window.NovaTableJQ.handleFormSubmit() },
+    handleAttachmentChange(f, event) {
+      const files = Array.from(event.target.files || [])
+      event.target.value = ''
+      if (!files.length) return
+      const cfg = this.attachmentMap[f.field] || {}
+      const maxLimit = cfg.maxLimit || 1
+      const current = (this.formData[f.field] || []).length
+      const allowed = maxLimit - current
+      if (allowed <= 0) return
+      if (files.length > allowed) {
+        if (window.$message) window.$message.error('最多还能上传 ' + allowed + ' 个文件')
+        return
+      }
+      const toUpload = files.slice(0, allowed)
+      for (const file of toUpload) {
+        if (cfg.fileTypes && cfg.fileTypes.length) {
+          const ext = '.' + file.name.split('.').pop().toLowerCase()
+          if (!cfg.fileTypes.some(t => t.toLowerCase() === ext)) {
+            if (window.$message) window.$message.error('不支持的文件类型：' + ext)
+            return
+          }
+        }
+        const kb = file.size / 1024
+        if (cfg.minSize > 0 && kb < cfg.minSize) {
+          if (window.$message) window.$message.error('文件不能小于 ' + cfg.minSize + ' KB')
+          return
+        }
+        if (cfg.maxSize > 0 && kb > cfg.maxSize) {
+          if (window.$message) window.$message.error('文件不能超过 ' + cfg.maxSize + ' KB')
+          return
+        }
+      }
+      // 上传逻辑待实现：将 toUpload 文件异步上传，返回 url 后 push 到 formData[f.field]
+    },
     handlePageChange(current) {
       window.NovaTableJQ.onPageChange(this.novaName, current)
     },
@@ -295,6 +412,49 @@ const NovaTable = {
                 :options="fieldOptions(field)"
                 :placeholder="'请选择' + field.title"
                 multiple clearable style="flex:1"
+              />
+              <n-select v-else-if="field.type === 'TAG'"
+                v-model:value="filterForm[field.field]"
+                :options="tagOptions(field.field)"
+                :placeholder="'请选择' + field.title"
+                multiple clearable filterable
+                :tag="tagMap[field.field] && tagMap[field.field].allowExtension"
+                style="flex:1"
+              />
+              <n-select v-else-if="field.type === 'BOOLEAN'"
+                v-model:value="filterForm[field.field]"
+                :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"
+                :placeholder="'请选择' + field.title"
+                clearable style="flex:1"
+              />
+              <div v-else-if="field.type === 'NUMBER' && field.vague" style="display:flex;align-items:center;flex:1;height:34px;border:1px solid #e0e0e6;border-radius:3px;overflow:hidden;background:#fff;box-sizing:border-box" @mouseenter="$event.currentTarget.style.borderColor='#b0b0ba'" @mouseleave="$event.currentTarget.style.borderColor='#e0e0e6'">
+                <n-input-number
+                  v-model:value="filterForm[field.field][0]"
+                  placeholder="最小值"
+                  :min="numberMap[field.field] && numberMap[field.field].min"
+                  :max="numberMap[field.field] && numberMap[field.field].max"
+                  :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
+                  :show-button="false" :bordered="false" style="flex:1;min-width:0"
+                />
+                <span style="flex-shrink:0;color:#ccc;font-size:12px;padding:0 4px;line-height:1">—</span>
+                <n-input-number
+                  v-model:value="filterForm[field.field][1]"
+                  placeholder="最大值"
+                  :min="numberMap[field.field] && numberMap[field.field].min"
+                  :max="numberMap[field.field] && numberMap[field.field].max"
+                  :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
+                  :show-button="false" :bordered="false" style="flex:1;min-width:0"
+                />
+                <span style="flex-shrink:0;display:flex;align-items:center;padding-right:8px;color:#c2c2cc"><iconify-icon icon="mdi:numeric" style="font-size:16px;display:block" /></span>
+              </div>
+              <n-input-number v-else-if="field.type === 'NUMBER'"
+                v-model:value="filterForm[field.field]"
+                :placeholder="'请输入' + field.title"
+                :min="numberMap[field.field] && numberMap[field.field].min"
+                :max="numberMap[field.field] && numberMap[field.field].max"
+                :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
+                :show-button="false"
+                clearable style="flex:1"
               />
               <n-date-picker v-else-if="field.type === 'DATE'"
                 v-model:value="filterForm[field.field]"
@@ -382,19 +542,46 @@ const NovaTable = {
       </n-card>
 
       <!-- 新增/编辑弹窗 -->
-      <n-modal v-model:show="showForm" preset="card" :title="currentRow ? '编辑' : '新增'" style="width:760px;margin-top:80px">
+      <n-modal v-model:show="showForm" preset="card" :title="formMode === 'add' ? '新增' : '编辑'" style="width:960px;margin-top:60px">
         <div :style="'display:grid;gap:16px 24px;' + (editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
           <template v-for="f in editFields" :key="f.field">
-            <div style="display:flex;flex-direction:column;gap:4px">
-              <span style="font-size:13px;color:#333">
-                <span v-if="f.notNull" style="color:#d03050;margin-right:2px">*</span>{{ f.title }}
+            <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
+            <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'"></div>
+            <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY'" :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+              <span style="font-size:13px;color:#333;display:inline-flex;align-items:center;gap:2px">
+                <span v-if="f.notNull && !isReadonly(f)" style="color:#d03050;margin-right:2px">*</span>{{ f.title }}
+                <n-tooltip v-if="f.desc" trigger="hover" placement="top">
+                  <template #trigger>
+                    <span style="color:#aaa;cursor:help;display:inline-flex;align-items:center">
+                      <iconify-icon icon="material-symbols:help-outline" style="font-size:15px"></iconify-icon>
+                    </span>
+                  </template>
+                  {{ f.desc }}
+                </n-tooltip>
               </span>
+              <n-checkbox-group
+                v-if="f.type === 'CHOICE' && choiceMap[f.field] && choiceMap[f.field].showType === 'RADIO' && choiceMap[f.field].selectType === 'MULTI'"
+                v-model:value="formData[f.field]"
+                :disabled="isReadonly(f)"
+                @update:value="delete formErrors[f.field]"
+              >
+                <n-space><n-checkbox v-for="o in editFieldOptions(f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
+              </n-checkbox-group>
+              <n-radio-group
+                v-else-if="f.type === 'CHOICE' && choiceMap[f.field] && choiceMap[f.field].showType === 'RADIO'"
+                v-model:value="formData[f.field]"
+                :disabled="isReadonly(f)"
+                @update:value="delete formErrors[f.field]"
+              >
+                <n-space><n-radio v-for="o in editFieldOptions(f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
+              </n-radio-group>
               <n-select
-                v-if="f.type === 'CHOICE' && choiceMap[f.field] && choiceMap[f.field].selectType === 'MULTI'"
+                v-else-if="f.type === 'CHOICE' && choiceMap[f.field] && choiceMap[f.field].selectType === 'MULTI'"
                 v-model:value="formData[f.field]"
                 :options="editFieldOptions(f)"
                 :placeholder="'请选择' + f.title"
                 :status="formErrors[f.field] ? 'error' : undefined"
+                :disabled="isReadonly(f)"
                 multiple clearable
                 @update:value="delete formErrors[f.field]"
               />
@@ -404,7 +591,31 @@ const NovaTable = {
                 :options="editFieldOptions(f)"
                 :placeholder="'请选择' + f.title"
                 :status="formErrors[f.field] ? 'error' : undefined"
+                :disabled="isReadonly(f)"
                 clearable
+                @update:value="delete formErrors[f.field]"
+              />
+              <n-select
+                v-else-if="f.type === 'BOOLEAN'"
+                v-model:value="formData[f.field]"
+                :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"
+                :placeholder="'请选择' + f.title"
+                :status="formErrors[f.field] ? 'error' : undefined"
+                :disabled="isReadonly(f)"
+                clearable
+                @update:value="delete formErrors[f.field]"
+              />
+              <n-input-number
+                v-else-if="f.type === 'NUMBER'"
+                v-model:value="formData[f.field]"
+                :placeholder="'请输入' + f.title"
+                :min="numberMap[f.field] && numberMap[f.field].min"
+                :max="numberMap[f.field] && numberMap[f.field].max"
+                :precision="numberMap[f.field] && numberMap[f.field].type === 'DECIMAL' ? (numberMap[f.field].decimal || 2) : 0"
+                :show-button="false"
+                :status="formErrors[f.field] ? 'error' : undefined"
+                :disabled="isReadonly(f)"
+                clearable style="width:100%"
                 @update:value="delete formErrors[f.field]"
               />
               <n-date-picker
@@ -414,14 +625,57 @@ const NovaTable = {
                 :is-date-disabled="datePickerDisabled(f.field, true)"
                 :placeholder="'请选择' + f.title"
                 :status="formErrors[f.field] ? 'error' : undefined"
+                :disabled="isReadonly(f)"
                 clearable style="width:100%"
                 @update:value="delete formErrors[f.field]"
               />
+              <n-select
+                v-else-if="f.type === 'TAG'"
+                v-model:value="formData[f.field]"
+                :options="tagOptions(f.field)"
+                :placeholder="'请输入或选择' + f.title"
+                :status="formErrors[f.field] ? 'error' : undefined"
+                :disabled="isReadonly(f)"
+                :max-tag-count="tagMap[f.field] && tagMap[f.field].maxTagCount"
+                :tag="tagMap[f.field] && tagMap[f.field].allowExtension"
+                filterable multiple clearable
+                @update:value="delete formErrors[f.field]"
+              />
+              <n-input
+                v-else-if="f.type === 'TEXTAREA'"
+                v-model:value="formData[f.field]"
+                type="textarea"
+                :autosize="{ minRows: 3 }"
+                :placeholder="'请输入' + f.title"
+                :status="formErrors[f.field] ? 'error' : undefined"
+                :disabled="isReadonly(f)"
+                @update:value="delete formErrors[f.field]"
+              />
+              <div v-else-if="f.type === 'ATTACHMENT'" style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start">
+                <template v-for="(url, idx) in (formData[f.field] || [])" :key="idx">
+                  <div style="position:relative;width:80px;height:80px;border:1px solid #e0e0e0;border-radius:4px;overflow:hidden;flex-shrink:0">
+                    <img v-if="attachmentMap[f.field] && attachmentMap[f.field].type === 'IMAGE'" :src="url" style="width:100%;height:100%;object-fit:cover" />
+                    <span v-else style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:11px;color:#666;word-break:break-all;padding:4px;box-sizing:border-box;text-align:center">{{ url.split('/').pop() }}</span>
+                    <span v-if="!isReadonly(f)" @click="formData[f.field].splice(idx,1)" style="position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;font-size:12px;line-height:16px;text-align:center;cursor:pointer">×</span>
+                  </div>
+                </template>
+                <label v-if="!isReadonly(f) && (!attachmentMap[f.field] || !attachmentMap[f.field].maxLimit || (formData[f.field] || []).length < attachmentMap[f.field].maxLimit)"
+                  :for="'upload-' + f.field"
+                  style="width:80px;height:80px;border:1px dashed #c0c0c0;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#999;font-size:12px;gap:4px;flex-shrink:0">
+                  <span style="font-size:20px;line-height:1">+</span>上传
+                  <input :id="'upload-' + f.field" type="file" style="display:none"
+                    :multiple="attachmentMap[f.field] && attachmentMap[f.field].maxLimit > 1"
+                    :accept="attachmentMap[f.field] && attachmentMap[f.field].fileTypes && attachmentMap[f.field].fileTypes.length ? attachmentMap[f.field].fileTypes.join(',') : undefined"
+                    @change="handleAttachmentChange(f, $event)"
+                  />
+                </label>
+              </div>
               <n-input
                 v-else
                 v-model:value="formData[f.field]"
                 :placeholder="'请输入' + f.title"
                 :status="formErrors[f.field] ? 'error' : undefined"
+                :disabled="isReadonly(f)"
                 clearable
                 @update:value="delete formErrors[f.field]"
               />

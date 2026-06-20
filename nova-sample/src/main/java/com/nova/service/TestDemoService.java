@@ -1,5 +1,6 @@
 package com.nova.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yitter.idgen.YitIdHelper;
@@ -31,7 +32,8 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     @Override
     public FetchResponse<TestDemo> fetch(FetchRequest<TestDemo> queryRequest) {
         FetchRequest.MybatisPLus<TestDemo> mybatisPLus = queryRequest.getMybatisPLus();
-        IPage<TestDemo> iPage = page(mybatisPLus.getPage(), mybatisPLus.getWrapper());
+        LambdaQueryWrapper<TestDemo> wrapper = mybatisPLus.getWrapper();
+        IPage<TestDemo> iPage = page(mybatisPLus.getPage(), wrapper);
         List<TestDemo> records = iPage.getRecords();
         return new FetchResponse<TestDemo>()
                 .setTotal(iPage.getTotal())

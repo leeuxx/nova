@@ -182,3 +182,5 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 
 .dark .header-action:hover { background-color: rgba(37,99,235,0.25); }
 .dark .form-label          { color: #e0e0e0; }
+
+.n-modal-scroll-content { padding-bottom: 60px !important; }

@@ -1,23 +1,27 @@
 package com.nova.annotation.sub.nova.field.edit;
 
-import java.beans.Transient;
+import com.nova.annotation.config.Comment;
 
 public @interface Readonly {
 
-    boolean add() default true;
+    @Comment("新增只读")
+    boolean add() default false;
 
-    boolean edit() default true;
+    @Comment("修改只读")
+    boolean edit() default false;
 
-    @Transient
-    String[] params() default {};
-
-    @Transient
+    @Comment("动态只读处理器")
     Class<? extends ReadonlyHandler> exprHandler() default ReadonlyHandler.class;
+
+    @Comment("可被exprHandler接口获取到")
+    String[] params() default {};
 
     interface ReadonlyHandler {
 
+        @Comment("新增只读")
         boolean add(boolean add, String[] params);
 
+        @Comment("修改只读")
         boolean edit(boolean edit, String[] params);
 
     }

@@ -1,7 +1,7 @@
 package com.nova.utils;
 
-import com.nova.annotation.config.Comment;
 import com.nova.annotation.NovaField;
+import com.nova.annotation.config.Comment;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
@@ -9,10 +9,7 @@ import com.nova.config.NovaApplication;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class NovaFieldUtils {
 
@@ -44,8 +41,9 @@ public class NovaFieldUtils {
         if (scanNova == null) {
             return searchInfos;
         }
-        Map<String, NovaField> novaFields = scanNova.getNovaFields();
-        novaFields.forEach((field, novaField) -> {
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
             Search search = edit.search();
             if (search == null || !search.value()) {
@@ -54,10 +52,12 @@ public class NovaFieldUtils {
             SearchInfo searchInfo = new SearchInfo()
                     .setField(field)
                     .setTitle(edit.title())
-                    .setType(edit.type())
-                    .setVague(search.vague());
+                    .setType(novaFieldInfo.getType())
+                    .setVague(search.vague())
+                    .setSort(search.sort());
             searchInfos.add(searchInfo);
         });
+        searchInfos.sort(Comparator.comparingInt(SearchInfo::getSort));
         return searchInfos;
     }
 
@@ -74,20 +74,23 @@ public class NovaFieldUtils {
         if (scanNova == null) {
             return tableColumnInfos;
         }
-        Map<String, NovaField> novaFields = scanNova.getNovaFields();
-        novaFields.forEach((field, novaField) -> {
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
             View[] views = novaField.views();
             Edit edit = novaField.edit();
             // 显示列
             for (View view : views) {
-                TableColumnInfo tableColumnInfo = new TableColumnInfo()
-                        .setField(field)
-                        .setTitle(view.title())
-                        .setDesc(view.desc())
-                        .setWidth(view.width())
-                        .setSortable(view.sortable())
-                        .setType(edit.type());
-                tableColumnInfos.add(tableColumnInfo);
+                if (view.show()) {
+                    TableColumnInfo tableColumnInfo = new TableColumnInfo()
+                            .setField(field)
+                            .setTitle(view.title())
+                            .setDesc(view.desc())
+                            .setWidth(view.width())
+                            .setSortable(view.sortable())
+                            .setType(novaFieldInfo.getType());
+                    tableColumnInfos.add(tableColumnInfo);
+                }
             }
         });
         return tableColumnInfos;
@@ -106,17 +109,24 @@ public class NovaFieldUtils {
         if (scanNova == null) {
             return editInfos;
         }
-        Map<String, NovaField> novaFields = scanNova.getNovaFields();
-        novaFields.forEach((field, novaField) -> {
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
             if (!edit.show()) {
                 return;
             }
+            Readonly readonly = edit.readonly();
             EditInfo searchInfo = new EditInfo()
                     .setField(field)
                     .setTitle(edit.title())
-                    .setType(edit.type())
-                    .setNotNull(edit.notNull());
+                    .setDesc(edit.desc())
+                    .setType(novaFieldInfo.getType())
+                    .setNotNull(edit.notNull())
+                    .setReadonly(new EditInfo.ReadonlyInfo()
+                            .setAdd(readonly.add())
+                            .setEdit(readonly.edit())
+                    );
             editInfos.add(searchInfo);
         });
         return editInfos;
@@ -132,11 +142,13 @@ public class NovaFieldUtils {
     public static ChoiceType.SelectType getChoiceSelectType(String className, String fieldName) {
         Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
         NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) return null;
-        NovaField novaField = scanNova.getNovaFields().get(fieldName);
-        if (novaField == null) return null;
+        if (scanNova == null) {
+            return null;
+        }
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        NovaApplication.ScanNova.NovaFieldInfo novaFieldInfo = novaFields.get(fieldName);
+        NovaField novaField = novaFieldInfo.getNovaField();
         Edit edit = novaField.edit();
-        if (edit.type() != Edit.Type.CHOICE) return null;
         return edit.choiceType().selectType();
     }
 
@@ -153,13 +165,15 @@ public class NovaFieldUtils {
         if (scanNova == null) {
             return choiceValues;
         }
-        Map<String, NovaField> novaFields = scanNova.getNovaFields();
-        novaFields.forEach((field, novaField) -> {
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
             if (edit.type() == Edit.Type.CHOICE) {
                 ChoiceType choiceType = edit.choiceType();
                 ChoiceInfo choiceInfo = new ChoiceInfo()
-                        .setSelectType(choiceType.selectType());
+                        .setSelectType(choiceType.selectType())
+                        .setShowType(choiceType.showType());
                 // 静态选择列表
                 VL[] vls = choiceType.vl();
                 List<ChoiceInfo.ValueInfo> values = new ArrayList<>();
@@ -194,6 +208,48 @@ public class NovaFieldUtils {
     }
 
     /**
+     * 获取标签参数信息
+     *
+     * @param className 类名
+     * @return 标签参数信息
+     */
+    public static Map<String, TagInfo> getTag(String className) {
+        Map<String, TagInfo> tagInfos = new LinkedHashMap<>();
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return tagInfos;
+        }
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
+            Edit edit = novaField.edit();
+            if (edit.type() == Edit.Type.TAG) {
+                TagType tagType = edit.tagType();
+                // 静态选择列表
+                String[] staticTags = tagType.tags();
+                List<String> tags = new ArrayList<>(Arrays.asList(staticTags));
+                // 动态选择列表
+                Class<? extends TagFetchHandler>[] tagFetchHandlerClass = tagType.fetchHandler();
+                if (tagFetchHandlerClass.length > 0) {
+                    String[] strings = tagType.fetchHandlerParams();
+                    for (Class<? extends TagFetchHandler> handlerClass : tagFetchHandlerClass) {
+                        TagFetchHandler tagFetchHandler = SpringBeanUtils.getBean(handlerClass);
+                        List<String> fetchTags = tagFetchHandler.fetchTags(strings);
+                        tags.addAll(fetchTags);
+                    }
+                }
+                TagInfo tagInfo = new TagInfo()
+                        .setAllowExtension(tagType.allowExtension())
+                        .setMaxTagCount(tagType.maxTagCount())
+                        .setTags(tags);
+                tagInfos.put(field, tagInfo);
+            }
+        });
+        return tagInfos;
+    }
+
+    /**
      * 获取日期时间参数信息
      *
      * @param className 类名
@@ -206,18 +262,106 @@ public class NovaFieldUtils {
         if (scanNova == null) {
             return dateInfos;
         }
-        Map<String, NovaField> novaFields = scanNova.getNovaFields();
-        novaFields.forEach((field, novaField) -> {
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
             if (edit.type() == Edit.Type.DATE) {
-                DateInfo dateInfo = new DateInfo();
                 DateType dateType = edit.dateType();
-                dateInfo.setType(dateType.type())
+                DateInfo dateInfo = new DateInfo()
+                        .setType(dateType.type())
                         .setPickerMode(dateType.pickerMode());
                 dateInfos.put(field, dateInfo);
             }
         });
         return dateInfos;
+    }
+
+    /**
+     * 获取数值参数信息
+     *
+     * @param className 类名
+     * @return 数值参数信息
+     */
+    public static Map<String, NumberInfo> getNumber(String className) {
+        Map<String, NumberInfo> numberInfos = new LinkedHashMap<>();
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return numberInfos;
+        }
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
+            Edit edit = novaField.edit();
+            if (edit.type() == Edit.Type.NUMBER) {
+                NumberType numberType = edit.numberType();
+                NumberInfo numberInfo = new NumberInfo()
+                        .setType(numberType.type())
+                        .setMax(numberType.max())
+                        .setMin(numberType.min())
+                        .setDecimal(numberType.decimal());
+                numberInfos.put(field, numberInfo);
+            }
+        });
+        return numberInfos;
+    }
+
+    /**
+     * 获取布尔值参数信息
+     *
+     * @param className 类名
+     * @return 布尔参数信息
+     */
+    public static Map<String, BooleanInfo> getBoolean(String className) {
+        Map<String, BooleanInfo> booleanInfos = new LinkedHashMap<>();
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return booleanInfos;
+        }
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
+            Edit edit = novaField.edit();
+            if (edit.type() == Edit.Type.BOOLEAN) {
+                BooleanType booleanType = edit.booleanType();
+                BooleanInfo booleanInfo = new BooleanInfo()
+                        .setType(booleanType.type());
+                booleanInfos.put(field, booleanInfo);
+            }
+        });
+        return booleanInfos;
+    }
+
+    /**
+     * 获取文件上传参数信息
+     *
+     * @param className 类名
+     * @return 文件上传参数信息
+     */
+    public static Map<String, AttachmentTypeInfo> getAttachment(String className) {
+        Map<String, AttachmentTypeInfo> attachmentTypeInfos = new LinkedHashMap<>();
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return attachmentTypeInfos;
+        }
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
+            Edit edit = novaField.edit();
+            if (edit.type() == Edit.Type.ATTACHMENT) {
+                AttachmentTypeInfo attachmentTypeInfo = new AttachmentTypeInfo()
+                        .setType(edit.attachmentType().type())
+                        .setMaxLimit(edit.attachmentType().maxLimit())
+                        .setMinSize(edit.attachmentType().minSize())
+                        .setMaxSize(edit.attachmentType().maxSize())
+                        .setFileTypes(Arrays.asList(edit.attachmentType().fileTypes()));
+                attachmentTypeInfos.put(field, attachmentTypeInfo);
+            }
+        });
+        return attachmentTypeInfos;
     }
 
     @Data
@@ -235,6 +379,9 @@ public class NovaFieldUtils {
 
         @Comment("是否高级查询")
         private Boolean vague;
+
+        @Comment("显示顺序,正序")
+        private Integer sort;
 
     }
 
@@ -272,11 +419,29 @@ public class NovaFieldUtils {
         @Comment("名称")
         private String title;
 
+        @Comment("详细说明")
+        private String desc;
+
         @Comment("类型")
         private Edit.Type type;
 
         @Comment("是否必填")
         private Boolean notNull;
+
+        @Comment("只读控制信息")
+        private ReadonlyInfo readonly;
+
+        @Data
+        @Accessors(chain = true)
+        public static class ReadonlyInfo {
+
+            @Comment("新增只读")
+            private Boolean add;
+
+            @Comment("修改只读")
+            private Boolean edit;
+
+        }
 
     }
 
@@ -286,6 +451,9 @@ public class NovaFieldUtils {
 
         @Comment("选择类型")
         private ChoiceType.SelectType selectType;
+
+        @Comment("显示类型")
+        private ChoiceType.ShowType showType;
 
         @Comment("选择值")
         private List<ValueInfo> values;
@@ -307,6 +475,21 @@ public class NovaFieldUtils {
 
     @Data
     @Accessors(chain = true)
+    public static class TagInfo {
+
+        @Comment("是否允许自定义标签")
+        private Boolean allowExtension;
+
+        @Comment("最大标签数")
+        private Integer maxTagCount;
+
+        @Comment("标签选择列表")
+        private List<String> tags;
+
+    }
+
+    @Data
+    @Accessors(chain = true)
     public static class DateInfo {
 
         @Comment("格式类型")
@@ -314,6 +497,54 @@ public class NovaFieldUtils {
 
         @Comment("选择模式")
         private DateType.PickerMode pickerMode;
+
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class NumberInfo {
+
+        @Comment("数值类型")
+        private NumberType.Type type;
+
+        @Comment("最大值")
+        private Long max;
+
+        @Comment("最小值")
+        private Long min;
+
+        @Comment("小数位数")
+        private Integer decimal;
+
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class BooleanInfo {
+
+        @Comment("布尔值类型")
+        private BooleanType.Type type;
+
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class AttachmentTypeInfo {
+
+        @Comment("附件类型")
+        private AttachmentType.Type type;
+
+        @Comment("最大上传数")
+        private Integer maxLimit;
+
+        @Comment("单个文件最小文件大小,kb")
+        private Integer minSize;
+
+        @Comment("单个文件最大文件大小,kb")
+        private Integer maxSize;
+
+        @Comment("允许上传的文件类型")
+        private List<String> fileTypes;
 
     }
 }

@@ -1,20 +1,19 @@
 package com.nova.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.nova.annotation.Nova;
 import com.nova.annotation.NovaField;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.Layout;
 import com.nova.annotation.sub.nova.field.View;
-import com.nova.annotation.sub.nova.field.edit.ChoiceType;
-import com.nova.annotation.sub.nova.field.edit.DateType;
-import com.nova.annotation.sub.nova.field.edit.Search;
-import com.nova.annotation.sub.nova.field.edit.VL;
+import com.nova.annotation.sub.nova.field.edit.*;
 import com.nova.service.TestDemoService;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -24,7 +23,7 @@ import java.time.LocalDateTime;
         desc = "测试功能描述",
         orderBy = "id desc",
         layout = @Layout(
-                editLayout = Layout.EditLayout.FULL_LINE
+                editLayout = Layout.EditLayout.DEFAULT
         ),
         dataProxy = TestDemoService.class
 )
@@ -41,7 +40,7 @@ public class TestDemo {
     private Long id;
 
     @NovaField(
-            views = @View(title = "用户名", width = "15%"),
+            views = @View(title = "用户名", width = "10%"),
             edit = @Edit(
                     title = "用户名",
                     notNull = true,
@@ -51,7 +50,7 @@ public class TestDemo {
     private String name;
 
     @NovaField(
-            views = @View(title = "用户昵称", width = "15%"),
+            views = @View(title = "用户昵称", width = "10%"),
             edit = @Edit(
                     title = "用户昵称",
                     search = @Search(vague = true)
@@ -85,7 +84,7 @@ public class TestDemo {
     private String tel;
 
     @NovaField(
-            views = @View(title = "爱好", width = "25%", sortable = true),
+            views = @View(title = "爱好", width = "10%", sortable = true),
             edit = @Edit(
                     title = "爱好",
                     notNull = true,
@@ -98,6 +97,17 @@ public class TestDemo {
             )
     )
     private String hobby;
+
+
+    @TableField(exist = false)
+    @NovaField(
+            edit = @Edit(
+                    title = "华丽分割线1",
+                    type = Edit.Type.DIVIDE
+            )
+    )
+    public String divide1;
+
 
     @NovaField(
             views = @View(title = "创建时间", width = "15%"),
@@ -122,5 +132,94 @@ public class TestDemo {
             )
     )
     private LocalDateTime bindTime;
+
+
+    @TableField(exist = false)
+    @NovaField(
+            edit = @Edit(
+                    title = "华丽分割线2",
+                    type = Edit.Type.DIVIDE
+            )
+    )
+    public String divide2;
+
+
+    @NovaField(
+            views = @View(title = "文本", width = "10%"),
+            edit = @Edit(
+                    title = "文本",
+                    type = Edit.Type.TEXTAREA,
+                    desc = "文本描述"
+            )
+    )
+    private String text;
+
+    @NovaField(
+            views = @View(title = "状态", width = "10%"),
+            edit = @Edit(
+                    title = "状态",
+                    type = Edit.Type.BOOLEAN,
+                    booleanType = @BooleanType(
+                            type = BooleanType.Type.SWITCH
+                    ),
+                    search = @Search
+            )
+    )
+    private Boolean status;
+
+    @NovaField(
+            views = @View(title = "长度", width = "10%"),
+            edit = @Edit(
+                    title = "长度",
+                    type = Edit.Type.NUMBER,
+                    numberType = @NumberType(
+                            type = NumberType.Type.DECIMAL
+                    ),
+                    search = @Search(vague = true)
+            )
+    )
+    private BigDecimal size;
+
+
+    @TableField(exist = false)
+    @NovaField(
+            edit = @Edit(
+                    title = "占位符",
+                    type = Edit.Type.EMPTY
+            )
+    )
+    public String empty;
+
+
+    @NovaField(
+            views = @View(title = "标签", width = "10%"),
+            edit = @Edit(
+                    title = "标签",
+                    type = Edit.Type.TAG,
+                    tagType = @TagType(
+                            tags = {
+                                    "护腕",
+                                    "项链",
+                                    "戒指",
+                                    "手镯"
+                            }
+                    ),
+                    search = @Search(vague = true)
+            )
+    )
+    private String tags;
+
+    @NovaField(
+            views = @View(title = "文件", width = "10%"),
+            edit = @Edit(
+                    title = "文件",
+                    type = Edit.Type.ATTACHMENT,
+                    attachmentType = @AttachmentType(
+                            maxLimit = 5,
+                            type = AttachmentType.Type.BASE
+                    )
+            )
+    )
+    private String file;
 
 }

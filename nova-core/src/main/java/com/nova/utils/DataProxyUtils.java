@@ -86,6 +86,31 @@ public class DataProxyUtils {
                     queryWrapper.eq(column, value);
                 }
             }
+        } else if (Edit.Type.NUMBER.name().equals(type)) {
+            if (vague && value != null && value.contains(",")) {
+                String[] parts = value.split(",", 2);
+                String lo = parts[0].trim(), hi = parts[1].trim();
+                if (!lo.isEmpty()) queryWrapper.ge(column, new java.math.BigDecimal(lo));
+                if (!hi.isEmpty()) queryWrapper.le(column, new java.math.BigDecimal(hi));
+            } else if (value != null && !value.isEmpty()) {
+                queryWrapper.eq(column, new java.math.BigDecimal(value));
+            }
+        } else if (Edit.Type.TAG.name().equals(type)) {
+            List<String> vals = (value != null && !value.isEmpty())
+                    ? Arrays.asList(value.split(",")) : List.of();
+            if (!vals.isEmpty()) {
+                queryWrapper.and(w -> {
+                    for (int i = 0; i < vals.size(); i++) {
+                        String v = vals.get(i).trim();
+                        if (i == 0) w.apply("FIND_IN_SET({0}, " + column + ") > 0", v);
+                        else w.or().apply("FIND_IN_SET({0}, " + column + ") > 0", v);
+                    }
+                });
+            }
+        } else if (Edit.Type.BOOLEAN.name().equals(type)) {
+            if (value != null && !value.isEmpty()) {
+                queryWrapper.eq(column, Boolean.parseBoolean(value));
+            }
         } else {
             // TEXT 及其他：vague=true 模糊，vague=false 精确
             if (vague && value != null && !value.isEmpty()) {

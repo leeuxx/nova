@@ -35,8 +35,12 @@ window.NovaTableJQ = (function ($) {
         // AJAX 回调用 novaName 直接索引，避免切 tab 后写错实例
         var target = window.vmMap && window.vmMap[novaName]
         if (!target) return
-        target.choiceMap = resp.data.choice || {}
-        target.dateMap   = resp.data.date   || {}
+        target.choiceMap  = resp.data.choice  || {}
+        target.tagMap     = resp.data.tag     || {}
+        target.dateMap    = resp.data.date    || {}
+        target.numberMap  = resp.data.number  || {}
+        target.booleanMap = resp.data.booleanInfo || {}
+        target.attachmentMap = resp.data.attachment || {}
         var fields = resp.data.search || []
         target.searchFields = fields
         var form = {}
@@ -45,7 +49,7 @@ window.NovaTableJQ = (function ($) {
           var isMultiChoice = f.type === 'CHOICE' && (choiceInfo && choiceInfo.selectType === 'MULTI' || f.vague)
           var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
           var isDate = f.type === 'DATE'
-          form[f.field] = isMultiChoice ? [] : (isSingleChoice || isDate ? null : '')
+          form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
         })
         target.filterForm = form
         var cols = resp.data.tableColumns || []
@@ -81,10 +85,15 @@ window.NovaTableJQ = (function ($) {
     searchFields.forEach(function (fieldDef) {
       var val = form[fieldDef.field]
       if (val === null || val === undefined || val === '') return
+      if (Array.isArray(val) && val.every(function(v){ return v === null || v === undefined })) return
       if (Array.isArray(val) && val.length === 0) return
       var strVal
-      if (fieldDef.type === 'DATE') {
-        // 直接发时间戳（ms），后端统一转换
+      if (fieldDef.type === 'NUMBER' && fieldDef.vague) {
+        var lo = (val[0] === null || val[0] === undefined) ? '' : String(val[0])
+        var hi = (val[1] === null || val[1] === undefined) ? '' : String(val[1])
+        if (!lo && !hi) return
+        strVal = lo + ',' + hi
+      } else if (fieldDef.type === 'DATE') {
         strVal = Array.isArray(val) ? val.join(',') : String(val)
       } else {
         strVal = Array.isArray(val) ? val.join(',') : String(val)
@@ -177,6 +186,8 @@ window.NovaTableJQ = (function ($) {
     var cardPad    = 68
     var height = winH - headerH - tabBarH - outerPad - filterH - tblHeaderH - cardPad
     $wrapper.height(Math.max(height, 200))
+    var activeVm = window.vmMap && window.vmMap[window.activeNovaName]
+    if (activeVm) activeVm.tableWrapperWidth = $wrapper[0].clientWidth
   }
 
   // ── 翻译 CHOICE 类型列 ────────────────────────────────────────
@@ -256,7 +267,7 @@ window.NovaTableJQ = (function ($) {
       var isMultiChoice = f.type === 'CHOICE' && (choiceInfo && choiceInfo.selectType === 'MULTI' || f.vague)
       var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
       var isDate = f.type === 'DATE'
-      form[f.field] = isMultiChoice ? [] : (isSingleChoice || isDate ? null : '')
+      form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
     })
     target.filterForm = form
     target.paginationConfig.page = 1
@@ -273,9 +284,10 @@ window.NovaTableJQ = (function ($) {
       var isMulti = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'MULTI'
       var isSingle = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE'
       var isDate   = f.type === 'DATE'
-      formData[f.field] = isMulti ? [] : (isSingle || isDate ? null : '')
+      formData[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (isSingle || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
     })
     vm().currentRow = null
+    vm().formMode   = 'add'
     vm().formData   = formData
     vm().formErrors = {}
     vm().showForm   = true
@@ -300,12 +312,25 @@ window.NovaTableJQ = (function ($) {
       if (choice && choice.selectType === 'MULTI') {
         var val = source[f.field]
         source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+      } else if (f.type === 'TAG') {
+        var tv = source[f.field]
+        source[f.field] = (tv && String(tv).length > 0) ? String(tv).split(',') : []
+      } else if (f.type === 'ATTACHMENT') {
+        var av = source[f.field]
+        source[f.field] = (av && String(av).length > 0) ? String(av).split(',') : []
       } else if (f.type === 'DATE' && source[f.field]) {
         var ts = new Date(source[f.field]).getTime()
         source[f.field] = isNaN(ts) ? null : ts
+      } else if (f.type === 'BOOLEAN') {
+        var bv = source[f.field]
+        source[f.field] = (bv === null || bv === undefined) ? null : String(bv)
+      } else if (f.type === 'NUMBER') {
+        var nv = source[f.field]
+        source[f.field] = (nv === null || nv === undefined || nv === '') ? null : Number(nv)
       }
     })
     target.currentRow = source
+    target.formMode   = 'edit'
     target.formData   = $.extend({}, source)
     target.formErrors = {}
     target.showForm   = true
@@ -315,15 +340,16 @@ window.NovaTableJQ = (function ($) {
   function handleDelete(row) {
     var target = vm()
     var pkField = target.pkFieldName || 'id'
-    doDelete(target.novaName, [String(row[pkField])])
+    doDelete(target.novaName, pkField, [String(row[pkField])])
   }
 
   // ── 批量删除 ──────────────────────────────────────────────────
   function handleBatchDelete() {
     var target = vm()
+    var pkField = target.pkFieldName || 'id'
     var keys = target.checkedRowKeys.map(function (k) { return String(k) })
     if (!window.$dialog) {
-      doDelete(target.novaName, keys)
+      doDelete(target.novaName, pkField, keys)
       return
     }
     window.$dialog.create({
@@ -336,18 +362,18 @@ window.NovaTableJQ = (function ($) {
       positiveButtonProps: { type: 'primary', size: 'medium' },
       negativeButtonProps: { size: 'medium' },
       onPositiveClick: function () {
-        doDelete(target.novaName, keys)
+        doDelete(target.novaName, pkField, keys)
       }
     })
   }
 
   // ── 删除公共逻辑 ──────────────────────────────────────────────
-  function doDelete(novaName, pkValues) {
+  function doDelete(novaName, pkFieldName, pkValues) {
     $.ajax({
       url:         '/nova/table/delete',
       method:      'POST',
       contentType: 'application/json',
-      data:        JSON.stringify({ novaName: novaName, pkValues: pkValues }),
+      data:        JSON.stringify({ novaName: novaName, pkFieldName: pkFieldName, pkValues: pkValues }),
       success: function (resp) {
         var t = window.vmMap && window.vmMap[novaName]
         if (!t) return
@@ -369,7 +395,7 @@ window.NovaTableJQ = (function ($) {
     var editFields = target.editFields || []
     var errors     = {}
     editFields.forEach(function (f) {
-      if (!f.notNull) return
+      if (f.type === 'DIVIDE' || f.type === 'EMPTY' || !f.notNull) return
       var val = formData[f.field]
       var empty = val === null || val === undefined || val === '' || (Array.isArray(val) && val.length === 0)
       if (empty) errors[f.field] = f.title + '不能为空'
@@ -381,7 +407,7 @@ window.NovaTableJQ = (function ($) {
       var novaName = target.novaName
       var pkField = target.pkFieldName || 'id'
       var pkValue = String(target.currentRow[pkField])
-      var formInfo = editFields.map(function (f) {
+      var formInfo = editFields.filter(function (f) { return f.type !== 'DIVIDE' && f.type !== 'EMPTY' }).map(function (f) {
         var val = formData[f.field]
         var strVal
         if (val === null || val === undefined || val === '') {
@@ -393,11 +419,12 @@ window.NovaTableJQ = (function ($) {
         }
         return { field: f.field, value: strVal, type: f.type }
       })
+      formInfo.unshift({ field: pkField, value: pkValue, type: '' })
       $.ajax({
         url:         '/nova/table/update',
         method:      'POST',
         contentType: 'application/json',
-        data:        JSON.stringify({ novaName: novaName, pkValue: pkValue, formInfo: formInfo }),
+        data:        JSON.stringify({ novaName: novaName, formInfo: formInfo }),
         success: function (resp) {
           var t = window.vmMap && window.vmMap[novaName]
           if (!t) return
@@ -413,7 +440,7 @@ window.NovaTableJQ = (function ($) {
     } else {
       // 新增
       var novaName = target.novaName
-      var formInfo = editFields.map(function (f) {
+      var formInfo = editFields.filter(function (f) { return f.type !== 'DIVIDE' && f.type !== 'EMPTY' }).map(function (f) {
         var val = formData[f.field]
         var strVal
         if (val === null || val === undefined || val === '') {

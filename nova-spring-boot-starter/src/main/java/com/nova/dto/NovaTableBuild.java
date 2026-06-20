@@ -1,6 +1,7 @@
 package com.nova.dto;
 
 import com.nova.annotation.config.Comment;
+import com.nova.annotation.sub.nova.field.edit.AttachmentType;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -20,6 +21,9 @@ public class NovaTableBuild {
     @Accessors(chain = true)
     public static class Vo {
 
+        @Comment("主键属性名")
+        private String pkFieldName;
+
         @Comment("查询条件")
         private List<Search> search;
 
@@ -35,8 +39,20 @@ public class NovaTableBuild {
         @Comment("选择组件信息")
         private Map<String, Choice> choice;
 
+        @Comment("标签组件信息")
+        private Map<String, Tag> tag;
+
         @Comment("日期时间组件信息")
         private Map<String, Date> date;
+
+        @Comment("数字组件信息")
+        private Map<String, Number> number;
+
+        @Comment("布尔值组件信息")
+        private Map<String, BooleanInfo> booleanInfo;
+
+        @Comment("文件上传组件信息")
+        private Map<String, AttachmentType> attachment;
 
         @Data
         @Accessors(chain = true)
@@ -53,6 +69,9 @@ public class NovaTableBuild {
 
             @Comment("是否高级查询")
             private Boolean vague;
+
+            @Comment("表单提示信息")
+            private String placeHolder;
 
         }
 
@@ -105,11 +124,29 @@ public class NovaTableBuild {
             @Comment("名称")
             private String title;
 
+            @Comment("详细说明")
+            private String desc;
+
             @Comment("类型")
             private String type;
 
             @Comment("是否必填")
             private Boolean notNull;
+
+            @Comment("只读控制信息")
+            private ReadonlyInfo readonly;
+
+            @Data
+            @Accessors(chain = true)
+            public static class ReadonlyInfo {
+
+                @Comment("新增只读")
+                private Boolean add;
+
+                @Comment("修改只读")
+                private Boolean edit;
+
+            }
 
         }
 
@@ -119,6 +156,9 @@ public class NovaTableBuild {
 
             @Comment("选择类型")
             private String selectType;
+
+            @Comment("显示类型")
+            private String showType;
 
             @Comment("选择值")
             private List<Value> values;
@@ -141,6 +181,21 @@ public class NovaTableBuild {
 
         @Data
         @Accessors(chain = true)
+        public static class Tag {
+
+            @Comment("是否允许自定义标签")
+            private Boolean allowExtension;
+
+            @Comment("最大标签数")
+            private Integer maxTagCount;
+
+            @Comment("标签选择列表")
+            private List<String> tags;
+
+        }
+
+        @Data
+        @Accessors(chain = true)
         public static class Date {
 
             @Comment("格式类型")
@@ -148,6 +203,54 @@ public class NovaTableBuild {
 
             @Comment("选择模式")
             private String pickerMode;
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class Number {
+
+            @Comment("数值类型")
+            private String type;
+
+            @Comment("最大值")
+            private Long max;
+
+            @Comment("最小值")
+            private Long min;
+
+            @Comment("小数位数")
+            private Integer decimal;
+
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class BooleanInfo {
+
+            @Comment("布尔值类型")
+            private String type;
+
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class AttachmentType {
+
+            @Comment("附件类型")
+            private String type;
+
+            @Comment("最大上传数")
+            private Integer maxLimit;
+
+            @Comment("单个文件最小文件大小,kb")
+            private Integer minSize;
+
+            @Comment("单个文件最大文件大小,kb")
+            private Integer maxSize;
+
+            @Comment("允许上传的文件类型")
+            private List<String> fileTypes;
+
         }
     }
 }

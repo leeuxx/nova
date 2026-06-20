@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nova.annotation.config.Comment;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -17,10 +16,6 @@ public class NovaTableUpdate {
     @Comment("nova名称")
     @NotBlank(message = "novaName不能为空")
     private String novaName;
-
-    @Comment("主键值")
-    @NotNull(message = "pkValue不能为空")
-    private String pkValue;
 
     @Comment("表单信息")
     @NotEmpty(message = "formInfo不能为空")

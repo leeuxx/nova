@@ -10,7 +10,7 @@ public @interface View {
     @Comment("详细说明")
     String desc() default "";
 
-    @Comment("列宽度（请指定单位如：%、px）")
+    @Comment("列宽度（单位：%）")
     String width() default "";
 
     @Comment("是否显示")
