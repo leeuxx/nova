@@ -58,6 +58,7 @@ const NovaTable = {
       previewModalShow: false,
       previewField:     null,
       previewIndex:     0,
+      slideDirection:  'right',
       attachmentDropdownKey: null,
       paginationConfig: {
         page:            1,
@@ -392,6 +393,29 @@ const NovaTable = {
       this.previewField = f
       this.previewIndex = 0
       this.previewModalShow = true
+    },
+    copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          if (window.$message) window.$message.success('链接已复制')
+        }).catch(function () {
+          var input = document.createElement('textarea')
+          input.value = text
+          document.body.appendChild(input)
+          input.select()
+          try { document.execCommand('copy') } catch (e) {}
+          document.body.removeChild(input)
+          if (window.$message) window.$message.success('链接已复制')
+        })
+      } else {
+        var input = document.createElement('textarea')
+        input.value = text
+        document.body.appendChild(input)
+        input.select()
+        try { document.execCommand('copy') } catch (e) {}
+        document.body.removeChild(input)
+        if (window.$message) window.$message.success('链接已复制')
+      }
     },
     closePreview() {
       this.previewModalShow = false
@@ -734,46 +758,57 @@ const NovaTable = {
       </n-modal>
 
       <!-- 附件预览弹窗 -->
-      <n-modal v-model:show="previewModalShow" preset="card" :title="previewField ? (previewField.title || '附件预览') : '附件预览'" style="width:720px;margin-top:80px">
-        <div v-if="previewField && attachmentMap[previewField.field] && attachmentMap[previewField.field].type === 'IMAGE'" style="display:flex;flex-direction:column;gap:16px">
-          <div style="display:flex;align-items:center;justify-content:center;gap:12px;min-height:360px;background:#f5f5f5;border-radius:4px;padding:16px">
-            <n-button v-if="previewIndex > 0" circle @click="previewIndex--">‹</n-button>
-            <div v-else style="width:32px"></div>
-            <img :src="formData[previewField.field][previewIndex]" style="max-width:480px;max-height:400px;object-fit:contain;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.1)" />
-            <n-button v-if="previewIndex < (formData[previewField.field] || []).length - 1" circle @click="previewIndex++">›</n-button>
-            <div v-else style="width:32px"></div>
+      <n-modal v-model:show="previewModalShow" preset="card" style="width:760px;margin-top:60px;padding:0">
+        <template #header>
+          <div class="gallery-header">
+            <span class="gallery-title">{{ previewField ? (previewField.title || '附件预览') : '附件预览' }}</span>
+            <span v-if="previewField && attachmentMap[previewField.field] && attachmentMap[previewField.field].type === 'IMAGE' && (formData[previewField.field] || []).length > 0" class="gallery-count">
+              {{ previewIndex + 1 }} / {{ (formData[previewField.field] || []).length }}
+            </span>
           </div>
-          <div class="preview-pager">{{ previewIndex + 1 }} / {{ (formData[previewField.field] || []).length }}</div>
-          <div v-if="(formData[previewField.field] || []).length > 0" style="display:flex;flex-direction:column;gap:6px">
-            <div style="display:flex;justify-content:center;gap:12px">
-              <n-button type="error" size="tiny" @click="deleteFromPreview(previewIndex)">删除当前图片</n-button>
+        </template>
+        <div v-if="previewField && attachmentMap[previewField.field] && attachmentMap[previewField.field].type === 'IMAGE'" class="gallery-wrap">
+          <div class="gallery-body">
+            <div class="gallery-stage">
+              <button v-if="previewIndex > 0" class="gallery-nav gallery-nav-prev" @click="slideDirection = 'left'; previewIndex--">‹</button>
+              <transition :name="'slide-' + slideDirection">
+                <img :key="previewIndex" :src="formData[previewField.field][previewIndex]" class="gallery-main-img" />
+              </transition>
+              <button v-if="previewIndex < (formData[previewField.field] || []).length - 1" class="gallery-nav gallery-nav-next" @click="slideDirection = 'right'; previewIndex++">›</button>
             </div>
-            <div v-if="(formData[previewField.field] || []).length > 1" style="display:flex;gap:6px;overflow-x:auto;padding:8px 0">
-              <template v-for="(url, idx) in (formData[previewField.field] || [])" :key="idx">
-                <img :src="url" @click="previewIndex = idx"
-                  :style="'width:60px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;flex-shrink:0;border:2px solid ' + (previewIndex === idx ? '#2080f0' : 'transparent')" />
-              </template>
+            <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-sider">
+              <div class="gallery-thumb-list">
+                <div v-for="(url, idx) in (formData[previewField.field] || [])" :key="idx" class="gallery-thumb-item">
+                  <img :src="url" class="gallery-thumb-img" :class="{active: previewIndex === idx}"
+                    @click="slideDirection = previewIndex < idx ? 'right' : 'left'; previewIndex = idx" />
+                  <span class="gallery-thumb-del" @click.stop="deleteFromPreview(idx)">×</span>
+                </div>
+              </div>
             </div>
           </div>
+          <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-dots">
+            <span v-for="(url, idx) in (formData[previewField.field] || [])" :key="'dot-' + idx"
+              :class="'gallery-dot' + (previewIndex === idx ? ' active' : '')"
+              @click="slideDirection = previewIndex < idx ? 'right' : 'left'; previewIndex = idx"></span>
+          </div>
+          <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-url-wrap" :title="'点击复制: ' + (formData[previewField.field] || [])[previewIndex]" @click="copyText((formData[previewField.field] || [])[previewIndex])">
+            <div class="gallery-url-label">图片地址</div>
+            <div class="gallery-url-text">{{ (formData[previewField.field] || [])[previewIndex] }}</div>
+          </div>
+          <div v-if="(formData[previewField.field] || []).length === 0" class="gallery-empty">暂无图片</div>
         </div>
-        <div v-else-if="previewField" style="display:flex;flex-direction:column;gap:8px">
+        <div v-else-if="previewField" class="preview-file-list">
           <template v-for="(url, idx) in (formData[previewField.field] || [])" :key="idx">
             <div class="preview-file-row">
-              <span class="preview-file-name">{{ url.split('/').pop() }}</span>
+              <span class="preview-file-url">{{ url }}</span>
               <n-space>
-                <n-button size="tiny" @click="window.open(url, '_blank')">打开</n-button>
-                <n-button size="tiny" @click="navigator.clipboard && navigator.clipboard.writeText(url); window.$message && window.$message.success('已复制链接')">复制</n-button>
+                <n-button size="tiny" @click="copyText(url)">复制</n-button>
                 <n-button type="error" size="tiny" @click="deleteFromPreview(idx)">删除</n-button>
               </n-space>
             </div>
           </template>
           <div v-if="(formData[previewField.field] || []).length === 0" class="preview-empty">暂无文件</div>
         </div>
-        <template #footer>
-          <n-space justify="end">
-            <n-button @click="closePreview">关 闭</n-button>
-          </n-space>
-        </template>
       </n-modal>
 
     </div>

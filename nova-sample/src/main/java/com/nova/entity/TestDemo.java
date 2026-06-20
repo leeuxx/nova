@@ -222,4 +222,16 @@ public class TestDemo {
     )
     private String file;
 
+    @NovaField(
+            views = @View(title = "文件2", width = "10%"),
+            edit = @Edit(
+                    title = "文件2",
+                    type = Edit.Type.ATTACHMENT,
+                    attachmentType = @AttachmentType(
+                            maxLimit = 3,
+                            type = AttachmentType.Type.BASE
+                    )
+            )
+    )
+    private String file2;
 }
