@@ -54,7 +54,11 @@ const NovaTable = {
       tableSize:      'medium',
       pageSize:       10,
       pageSizes:      [10, 20, 50, 100],
-      loading:        false,
+      loading:          false,
+      previewModalShow: false,
+      previewField:     null,
+      previewIndex:     0,
+      attachmentDropdownKey: null,
       paginationConfig: {
         page:            1,
         itemCount:       0,
@@ -384,6 +388,28 @@ const NovaTable = {
       }
       // 上传逻辑待实现：将 toUpload 文件异步上传，返回 url 后 push 到 formData[f.field]
     },
+    openPreview(f) {
+      this.previewField = f
+      this.previewIndex = 0
+      this.previewModalShow = true
+    },
+    closePreview() {
+      this.previewModalShow = false
+      this.previewField = null
+      this.previewIndex = 0
+    },
+    deleteFromPreview(idx) {
+      if (!this.previewField) return
+      this.formData[this.previewField.field].splice(idx, 1)
+      const total = (this.formData[this.previewField.field] || []).length
+      if (this.previewIndex >= total) this.previewIndex = Math.max(0, total - 1)
+    },
+    setAttachmentDropdown(fieldKey) {
+      this.attachmentDropdownKey = fieldKey
+    },
+    clearAttachmentDropdown() {
+      this.attachmentDropdownKey = null
+    },
     handlePageChange(current) {
       window.NovaTableJQ.onPageChange(this.novaName, current)
     },
@@ -427,7 +453,7 @@ const NovaTable = {
                 :placeholder="'请选择' + field.title"
                 clearable style="flex:1"
               />
-              <div v-else-if="field.type === 'NUMBER' && field.vague" style="display:flex;align-items:center;flex:1;height:34px;border:1px solid #e0e0e6;border-radius:3px;overflow:hidden;background:#fff;box-sizing:border-box" @mouseenter="$event.currentTarget.style.borderColor='#b0b0ba'" @mouseleave="$event.currentTarget.style.borderColor='#e0e0e6'">
+              <div v-else-if="field.type === 'NUMBER' && field.vague" class="number-vague-field">
                 <n-input-number
                   v-model:value="filterForm[field.field][0]"
                   placeholder="最小值"
@@ -436,7 +462,7 @@ const NovaTable = {
                   :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
                   :show-button="false" :bordered="false" style="flex:1;min-width:0"
                 />
-                <span style="flex-shrink:0;color:#ccc;font-size:12px;padding:0 4px;line-height:1">—</span>
+                <span class="number-vague-sep">—</span>
                 <n-input-number
                   v-model:value="filterForm[field.field][1]"
                   placeholder="最大值"
@@ -445,7 +471,7 @@ const NovaTable = {
                   :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
                   :show-button="false" :bordered="false" style="flex:1;min-width:0"
                 />
-                <span style="flex-shrink:0;display:flex;align-items:center;padding-right:8px;color:#c2c2cc"><iconify-icon icon="mdi:numeric" style="font-size:16px;display:block" /></span>
+                <span class="number-vague-icon"><iconify-icon icon="mdi:numeric" style="font-size:16px;display:block" /></span>
               </div>
               <n-input-number v-else-if="field.type === 'NUMBER'"
                 v-model:value="filterForm[field.field]"
@@ -548,11 +574,11 @@ const NovaTable = {
             <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
             <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'"></div>
             <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY'" :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
-              <span style="font-size:13px;color:#333;display:inline-flex;align-items:center;gap:2px">
-                <span v-if="f.notNull && !isReadonly(f)" style="color:#d03050;margin-right:2px">*</span>{{ f.title }}
+              <span class="edit-form-label">
+                <span v-if="f.notNull && !isReadonly(f)" class="form-label-required">*</span>{{ f.title }}
                 <n-tooltip v-if="f.desc" trigger="hover" placement="top">
                   <template #trigger>
-                    <span style="color:#aaa;cursor:help;display:inline-flex;align-items:center">
+                    <span class="form-label-help">
                       <iconify-icon icon="material-symbols:help-outline" style="font-size:15px"></iconify-icon>
                     </span>
                   </template>
@@ -651,24 +677,40 @@ const NovaTable = {
                 :disabled="isReadonly(f)"
                 @update:value="delete formErrors[f.field]"
               />
-              <div v-else-if="f.type === 'ATTACHMENT'" style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start">
-                <template v-for="(url, idx) in (formData[f.field] || [])" :key="idx">
-                  <div style="position:relative;width:80px;height:80px;border:1px solid #e0e0e0;border-radius:4px;overflow:hidden;flex-shrink:0">
-                    <img v-if="attachmentMap[f.field] && attachmentMap[f.field].type === 'IMAGE'" :src="url" style="width:100%;height:100%;object-fit:cover" />
-                    <span v-else style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:11px;color:#666;word-break:break-all;padding:4px;box-sizing:border-box;text-align:center">{{ url.split('/').pop() }}</span>
-                    <span v-if="!isReadonly(f)" @click="formData[f.field].splice(idx,1)" style="position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;font-size:12px;line-height:16px;text-align:center;cursor:pointer">×</span>
+              <div v-else-if="f.type === 'ATTACHMENT'" class="attachment-field"
+                @mouseenter="setAttachmentDropdown(f.field)" @mouseleave="clearAttachmentDropdown">
+                <div class="attachment-btn">
+                  <iconify-icon icon="mdi:paperclip" style="font-size:13px"></iconify-icon>
+                  附件管理
+                  <iconify-icon icon="mdi:chevron-down" :style="'font-size:12px;transition:transform .2s ease;transform:' + (attachmentDropdownKey === f.field ? 'rotate(180deg)' : 'rotate(0deg)')"></iconify-icon>
+                </div>
+                <transition name="dropdown-fade">
+                  <div v-if="attachmentDropdownKey === f.field" class="attachment-dropdown">
+                    <div class="attachment-dropdown-inner">
+                      <label v-if="!isReadonly(f) && (!attachmentMap[f.field] || !attachmentMap[f.field].maxLimit || (formData[f.field] || []).length < attachmentMap[f.field].maxLimit)"
+                        class="attachment-dropdown-item"
+                        :for="'upload-dd-' + f.field">
+                        <iconify-icon icon="mdi:upload" style="font-size:13px"></iconify-icon>
+                        上传文件{{ attachmentMap[f.field] && attachmentMap[f.field].maxLimit ? '（共' + (attachmentMap[f.field].maxLimit - (formData[f.field] || []).length) + '个）' : '' }}
+                        <input :id="'upload-dd-' + f.field" type="file" style="display:none"
+                          :multiple="attachmentMap[f.field] && attachmentMap[f.field].maxLimit > 1"
+                          :accept="attachmentMap[f.field] && attachmentMap[f.field].fileTypes && attachmentMap[f.field].fileTypes.length ? attachmentMap[f.field].fileTypes.join(',') : undefined"
+                          @change="handleAttachmentChange(f, $event)"
+                        />
+                      </label>
+                      <div v-if="(formData[f.field] || []).length > 0"
+                        class="attachment-dropdown-item"
+                        @click="openPreview(f)">
+                        <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>
+                        查看文件（共{{ (formData[f.field] || []).length }}个）
+                      </div>
+                      <div v-else class="attachment-dropdown-item attachment-disabled">
+                        <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>
+                        查看文件（共0个）
+                      </div>
+                    </div>
                   </div>
-                </template>
-                <label v-if="!isReadonly(f) && (!attachmentMap[f.field] || !attachmentMap[f.field].maxLimit || (formData[f.field] || []).length < attachmentMap[f.field].maxLimit)"
-                  :for="'upload-' + f.field"
-                  style="width:80px;height:80px;border:1px dashed #c0c0c0;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:#999;font-size:12px;gap:4px;flex-shrink:0">
-                  <span style="font-size:20px;line-height:1">+</span>上传
-                  <input :id="'upload-' + f.field" type="file" style="display:none"
-                    :multiple="attachmentMap[f.field] && attachmentMap[f.field].maxLimit > 1"
-                    :accept="attachmentMap[f.field] && attachmentMap[f.field].fileTypes && attachmentMap[f.field].fileTypes.length ? attachmentMap[f.field].fileTypes.join(',') : undefined"
-                    @change="handleAttachmentChange(f, $event)"
-                  />
-                </label>
+                </transition>
               </div>
               <n-input
                 v-else
@@ -679,7 +721,7 @@ const NovaTable = {
                 clearable
                 @update:value="delete formErrors[f.field]"
               />
-              <span v-if="formErrors[f.field]" style="font-size:12px;color:#d03050">{{ formErrors[f.field] }}</span>
+              <span v-if="formErrors[f.field]" class="form-error-tip">{{ formErrors[f.field] }}</span>
             </div>
           </template>
         </div>
@@ -687,6 +729,49 @@ const NovaTable = {
           <n-space justify="end">
             <n-button @click="showForm = false">取 消</n-button>
             <n-button type="primary" @click="handleFormSubmit">确 定</n-button>
+          </n-space>
+        </template>
+      </n-modal>
+
+      <!-- 附件预览弹窗 -->
+      <n-modal v-model:show="previewModalShow" preset="card" :title="previewField ? (previewField.title || '附件预览') : '附件预览'" style="width:720px;margin-top:80px">
+        <div v-if="previewField && attachmentMap[previewField.field] && attachmentMap[previewField.field].type === 'IMAGE'" style="display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;align-items:center;justify-content:center;gap:12px;min-height:360px;background:#f5f5f5;border-radius:4px;padding:16px">
+            <n-button v-if="previewIndex > 0" circle @click="previewIndex--">‹</n-button>
+            <div v-else style="width:32px"></div>
+            <img :src="formData[previewField.field][previewIndex]" style="max-width:480px;max-height:400px;object-fit:contain;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.1)" />
+            <n-button v-if="previewIndex < (formData[previewField.field] || []).length - 1" circle @click="previewIndex++">›</n-button>
+            <div v-else style="width:32px"></div>
+          </div>
+          <div class="preview-pager">{{ previewIndex + 1 }} / {{ (formData[previewField.field] || []).length }}</div>
+          <div v-if="(formData[previewField.field] || []).length > 0" style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:center;gap:12px">
+              <n-button type="error" size="tiny" @click="deleteFromPreview(previewIndex)">删除当前图片</n-button>
+            </div>
+            <div v-if="(formData[previewField.field] || []).length > 1" style="display:flex;gap:6px;overflow-x:auto;padding:8px 0">
+              <template v-for="(url, idx) in (formData[previewField.field] || [])" :key="idx">
+                <img :src="url" @click="previewIndex = idx"
+                  :style="'width:60px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;flex-shrink:0;border:2px solid ' + (previewIndex === idx ? '#2080f0' : 'transparent')" />
+              </template>
+            </div>
+          </div>
+        </div>
+        <div v-else-if="previewField" style="display:flex;flex-direction:column;gap:8px">
+          <template v-for="(url, idx) in (formData[previewField.field] || [])" :key="idx">
+            <div class="preview-file-row">
+              <span class="preview-file-name">{{ url.split('/').pop() }}</span>
+              <n-space>
+                <n-button size="tiny" @click="window.open(url, '_blank')">打开</n-button>
+                <n-button size="tiny" @click="navigator.clipboard && navigator.clipboard.writeText(url); window.$message && window.$message.success('已复制链接')">复制</n-button>
+                <n-button type="error" size="tiny" @click="deleteFromPreview(idx)">删除</n-button>
+              </n-space>
+            </div>
+          </template>
+          <div v-if="(formData[previewField.field] || []).length === 0" class="preview-empty">暂无文件</div>
+        </div>
+        <template #footer>
+          <n-space justify="end">
+            <n-button @click="closePreview">关 闭</n-button>
           </n-space>
         </template>
       </n-modal>

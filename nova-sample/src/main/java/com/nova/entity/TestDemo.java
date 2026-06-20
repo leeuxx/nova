@@ -215,8 +215,8 @@ public class TestDemo {
                     title = "文件",
                     type = Edit.Type.ATTACHMENT,
                     attachmentType = @AttachmentType(
-                            maxLimit = 5,
-                            type = AttachmentType.Type.BASE
+                            maxLimit = 7,
+                            type = AttachmentType.Type.IMAGE
                     )
             )
     )

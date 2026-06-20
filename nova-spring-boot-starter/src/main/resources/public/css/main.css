@@ -184,3 +184,70 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 .dark .form-label          { color: #e0e0e0; }
 
 .n-modal-scroll-content { padding-bottom: 60px !important; }
+
+/* ─── 附件下拉动画 ────────────────────────────────────────── */
+.dropdown-fade-enter-active { animation: dropdown-fade-in .2s ease; }
+.dropdown-fade-leave-active { animation: dropdown-fade-in .15s ease reverse; }
+@keyframes dropdown-fade-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── 附件管理按钮/下拉列表（亮色） ─────────────────────────── */
+.attachment-field                    { position: relative; height: 34px; }
+.attachment-btn                      { display: flex; align-items: center; justify-content: center; gap: 6px; height: 34px; padding: 0 14px; box-sizing: border-box; border: 1px solid #d5dce3; border-radius: 4px; background: #fff; cursor: pointer; font-size: 12px; color: #333; transition: border-color .15s, color .15s; }
+.attachment-btn:hover                { border-color: #2080f0; color: #2080f0; }
+.attachment-dropdown                 { position: absolute; top: calc(100% - 4px); left: 0; right: 0; padding-top: 4px; z-index: 1000; }
+.attachment-dropdown-inner           { background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 4px; }
+.attachment-dropdown-item            { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; font-size: 12px; color: #333; cursor: pointer; border-radius: 4px; transition: background .15s, color .15s; }
+.attachment-dropdown-item:hover      { background: #f0f7ff; color: #2080f0; }
+.attachment-disabled                 { color: #bbb; cursor: not-allowed; }
+.attachment-disabled:hover           { background: transparent; color: #bbb; }
+
+/* ─── 附件管理按钮/下拉列表（暗色） ─────────────────────────── */
+.dark .attachment-btn                { background: #252525; border-color: #333; color: #e0e0e0; }
+.dark .attachment-btn:hover          { border-color: #2080f0; color: #2080f0; }
+.dark .attachment-dropdown-inner     { background: #1f1f1f; border-color: #333; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+.dark .attachment-dropdown-item      { color: #e0e0e0; }
+.dark .attachment-dropdown-item:hover{ background: rgba(37,99,235,0.2); color: #2080f0; }
+.dark .attachment-disabled           { color: #888; cursor: not-allowed; }
+.dark .attachment-disabled:hover     { background: transparent; color: #888; }
+
+/* ─── NUMBER vague 自定义输入框（搜索条件区） ─────────────── */
+.number-vague-field      { display: flex; align-items: center; flex: 1; height: 34px; border: 1px solid #e0e0e6; border-radius: 3px; overflow: hidden; background: #fff; box-sizing: border-box; transition: border-color .15s; }
+.number-vague-field:hover{ border-color: #b0b0ba; }
+.number-vague-sep        { flex-shrink: 0; color: #ccc; font-size: 12px; padding: 0 4px; line-height: 1; }
+.number-vague-icon       { flex-shrink: 0; display: flex; align-items: center; padding-right: 8px; color: #c2c2cc; }
+
+/* ─── NUMBER vague 自定义输入框（暗色） ─────────────────────── */
+.dark .number-vague-field      { background: #252525; border-color: #333; }
+.dark .number-vague-field:hover{ border-color: #555; }
+.dark .number-vague-sep        { color: #888; }
+.dark .number-vague-icon       { color: #888; }
+
+/* ─── 弹窗表单字段标签（title） ──────────────────────── */
+.edit-form-label       { font-size: 13px; color: #333; display: inline-flex; align-items: center; gap: 2px; }
+.edit-form-label .form-label-required { color: #d03050; margin-right: 2px; }
+.edit-form-label .form-label-help     { color: #aaa; cursor: help; display: inline-flex; align-items: center; }
+
+/* ─── 弹窗表单字段标签（title）—— 暗色 ─────────────── */
+.dark .edit-form-label { color: #e0e0e0; }
+.dark .edit-form-label .form-label-required { color: #f56c6c; }
+.dark .edit-form-label .form-label-help { color: #888; }
+
+/* ─── 弹窗表单错误提示 ─────────────────────────────── */
+.form-error-tip          { font-size: 12px; color: #d03050; }
+.dark .form-error-tip    { color: #f56c6c; }
+
+/* ─── 附件预览弹窗通用样式 ────────────────────────────── */
+.preview-pager           { text-align: center; font-size: 12px; color: #888; }
+.dark .preview-pager     { color: #b0b0b0; }
+
+.preview-file-row        { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border: 1px solid #eee; border-radius: 4px; }
+.dark .preview-file-row  { border-color: #333; }
+
+.preview-file-name       { font-size: 13px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.dark .preview-file-name { color: #e0e0e0; }
+
+.preview-empty           { text-align: center; color: #888; padding: 40px 0; font-size: 13px; }
+.dark .preview-empty     { color: #888; }
