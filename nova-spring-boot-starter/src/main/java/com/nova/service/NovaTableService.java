@@ -1,11 +1,9 @@
 package com.nova.service;
 
 import com.nova.annotation.config.Comment;
-import com.nova.annotation.config.RestMappingController;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 
-@RestMappingController("nova/table")
 public interface NovaTableService {
 
     @Comment("构建表格页")

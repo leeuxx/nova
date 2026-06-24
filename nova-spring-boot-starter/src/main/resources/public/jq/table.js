@@ -22,6 +22,19 @@ window.NovaTableJQ = (function ($) {
     $(window).on('resize.novaTable', updateTableHeight)
   }
 
+  // ── 路由切换（同一组件实例复用，novaName 变了）────────────────
+  function onRouteChange(novaName) {
+    var target = window.vmMap && window.vmMap[window.activeNovaName]
+    if (target) {
+      // 从旧 key 迁移到新 key
+      delete window.vmMap[window.activeNovaName]
+      window.vmMap[novaName] = target
+    }
+    window.activeNovaName = novaName
+    buildTable(novaName)
+    setTimeout(updateTableHeight, 80)
+  }
+
   // ── 动态构建查询条件 + 表头列 ─────────────────────────────────
   function buildTable(novaName) {
     if (!novaName) return
@@ -80,9 +93,12 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── 加载表格数据 ──────────────────────────────────────────────
-  function loadData(novaName) {
-    var target = window.vmMap && window.vmMap[novaName]
+  // vmKey: vmMap 中的 key（普通表格 = novaName，picker = __picker_xxx）
+  function loadData(vmKey) {
+    var target = window.vmMap && window.vmMap[vmKey]
     if (!target) return
+    // 实际请求后端用的表名，picker 模式下 vmKey 不等于 novaName
+    var queryName = target.novaName || vmKey
     // 过滤空值条件，按后端结构组装
     var conditions = {}
     var form = target.filterForm || {}
@@ -126,9 +142,9 @@ window.NovaTableJQ = (function ($) {
       url:         '/nova/table/data',
       method:      'POST',
       contentType: 'application/json',
-      data:        JSON.stringify({ novaName: novaName, pageBean: pageBean, conditions: conditions }),
+      data:        JSON.stringify({ novaName: queryName, pageBean: pageBean, conditions: conditions }),
       success: function (resp) {
-        var t = window.vmMap && window.vmMap[novaName]
+        var t = window.vmMap && window.vmMap[vmKey]
         if (!t) return
         t.loading = false
         if (resp.code !== 200) return
@@ -138,12 +154,12 @@ window.NovaTableJQ = (function ($) {
         t.paginationConfig.page        = resp.data.current    || pageBean.current
         t.paginationConfig.pageSize    = resp.data.size       || pageBean.size
         if (resp.data.pkFieldName)     t.pkFieldName          = resp.data.pkFieldName
-        translateData(novaName)
+        translateData(vmKey)
       },
       error: function () {
-        var t = window.vmMap && window.vmMap[novaName]
+        var t = window.vmMap && window.vmMap[vmKey]
         if (t) t.loading = false
-        console.info('[Nova] data接口未就绪，novaName:', novaName)
+        console.info('[Nova] data接口未就绪，novaName:', queryName)
       }
     })
   }
@@ -163,25 +179,25 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── 分页变化时重新加载 ────────────────────────────────────────
-  function onPageChange(novaName, current) {
-    var target = window.vmMap && window.vmMap[novaName]
+  function onPageChange(vmKey, current) {
+    var target = window.vmMap && window.vmMap[vmKey]
     if (!target) return
     target.paginationConfig.page = current
-    loadData(novaName)
+    loadData(vmKey)
   }
 
   // ── 每页数量变化时重新加载 ────────────────────────────────────
-  function onPageSizeChange(novaName, pageSize) {
-    var target = window.vmMap && window.vmMap[novaName]
+  function onPageSizeChange(vmKey, pageSize) {
+    var target = window.vmMap && window.vmMap[vmKey]
     if (!target) return
     target.paginationConfig.pageSize = pageSize
     target.paginationConfig.page     = 1
-    loadData(novaName)
+    loadData(vmKey)
   }
 
   // ── 排序变化时重新加载 ───────────────────────────────────────
-  function onSortChange(novaName) {
-    loadData(novaName)
+  function onSortChange(vmKey) {
+    loadData(vmKey)
   }
 
   // ── 动态计算表格高度 ──────────────────────────────────────────
@@ -525,11 +541,68 @@ window.NovaTableJQ = (function ($) {
     }
   }
 
+  // ── picker 模式初始化（不更新 tableHeight，不绑 resize） ────────
+  function onPickerMounted(novaName, vmKey) {
+    buildTableForKey(novaName, vmKey)
+  }
+
+  // ── picker 专用 buildTable，用 vmKey 索引而非 novaName ─────────
+  function buildTableForKey(novaName, vmKey) {
+    if (!novaName || !vmKey) return
+    $.ajax({
+      url:         '/nova/table/build',
+      method:      'POST',
+      contentType: 'application/json',
+      data:        JSON.stringify({ novaName: novaName }),
+      success: function (resp) {
+        if (resp.code !== 200) return
+        var target = window.vmMap && window.vmMap[vmKey]
+        if (!target) return
+        target.choiceMap     = resp.data.choice      || {}
+        target.tagMap        = resp.data.tag         || {}
+        target.dateMap       = resp.data.date        || {}
+        target.numberMap     = resp.data.number      || {}
+        target.booleanMap    = resp.data.booleanInfo || {}
+        target.attachmentMap = resp.data.attachment  || {}
+        target.referenceMap  = resp.data.reference   || {}
+        var fields = resp.data.search || []
+        target.searchFields = fields
+        var form = {}
+        fields.forEach(function (f) {
+          var choiceInfo = target.choiceMap[f.field]
+          var isMultiChoice = f.type === 'CHOICE' && (choiceInfo && choiceInfo.selectType === 'MULTI' || f.vague)
+          var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
+          var isDate = f.type === 'DATE'
+          form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
+          if (f.type === 'REFERENCE') form[f.field + '_display'] = ''
+        })
+        target.filterForm = form
+        var cols = resp.data.tableColumns || []
+        target.tableColumns = cols
+        var states = {}
+        cols.forEach(function (c) { if (c.sortable) states[c.field] = null })
+        target.sortStates = states
+        var layout = resp.data.layout || {}
+        if (layout.pageSize)  { target.pageSize = layout.pageSize; target.paginationConfig.pageSize = layout.pageSize }
+        if (layout.pageSizes) {
+          target.pageSizes = layout.pageSizes
+          target.paginationConfig.pageSizes = layout.pageSizes.map(function (n) { return { label: n + ' 条/页', value: n } })
+        }
+        if (resp.data.pkFieldName) target.pkFieldName = resp.data.pkFieldName
+        loadData(vmKey)
+      },
+      error: function () {
+        console.info('[Nova Picker] build接口未就绪，novaName:', novaName)
+      }
+    })
+  }
+
   return {
-    onMounted, buildTable, updateTableHeight,
+    onMounted, onRouteChange, buildTable, updateTableHeight,
     handleReset, handleAdd, handleEdit, handleDelete,
     handleBatchDelete, handleFormSubmit,
-    loadData, onPageChange, onPageSizeChange, onSortChange
+    loadData, onPageChange, onPageSizeChange, onSortChange,
+    onPickerMounted
   }
 
 })(jQuery)

@@ -1,7 +1,7 @@
 // pages/table.js — 通用表格页 Vue 组件，所有表格菜单共用此模板
 ;(function () {
 const { h } = Vue
-const { NPopconfirm, NSpace, NTooltip, NTag } = naive
+const { NPopconfirm, NSpace, NTooltip, NTag, NRadio } = naive
 
 // 解析列宽：百分比返回浮点数（0~100），像素返回负数表示固定像素
 function parseWidthPct(w) {
@@ -23,6 +23,13 @@ function darkenHex(hex, factor) {
 const NovaTable = {
   name: 'NovaTable',
 
+  props: {
+    pickerMode: { type: Boolean, default: false },
+    novaNameProp: { type: String, default: '' }
+  },
+
+  emits: ['pick'],
+
   data() {
     return {
       choiceMap:      {},
@@ -37,7 +44,6 @@ const NovaTable = {
       refPickerData:  [],
       refPickerLoading: false,
       refPickerColumns: [],
-      refPickerPkField: 'id',
       refPickerStack: [],
       tableWrapperWidth: 0,
       novaName:       '',
@@ -49,6 +55,7 @@ const NovaTable = {
       sortStates:     {},
       filterExpanded: false,
       checkedRowKeys: [],
+      selectedRowKey: null,
       searchFields:   [],
       filterForm:     {},
       showForm:       false,
@@ -108,9 +115,25 @@ const NovaTable = {
 
     columns() {
       const vm   = this
-      const cols = [
-        { type: 'selection', title: '', key: 'selection', width: 50 }
-      ]
+      const cols = []
+
+      if (vm.pickerMode) {
+        cols.push({
+          key: '__radio__', width: 50, title: '',
+          render(row) {
+            return h('div', { style: 'display:flex;align-items:center;justify-content:center;width:100%;height:100%' }, [
+              h(NRadio, {
+                value: row[vm.pkFieldName],
+                checked: vm.selectedRowKey === row[vm.pkFieldName],
+                onClick: () => vm.selectRow(row),
+                style: { transform: 'scale(1.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+              })
+            ])
+          }
+        })
+      } else {
+        cols.push({ type: 'selection', title: '', key: 'selection', width: 50 })
+      }
 
       this.tableColumns.forEach((col, index) => {
         const colDef = {
@@ -264,57 +287,79 @@ const NovaTable = {
         cols.push(colDef)
       })
 
-      cols.push({
-        title: '操作', key: 'actions', width: 140, fixed: 'right',
-        render(row) {
-          return h(NSpace, { size: 8 }, {
-            default: () => [
-              h('span', { style: { color: '#2080f0', cursor: 'pointer', fontSize: '13px' }, onClick: () => vm.handleEdit(row) }, '编辑'),
-              h(NPopconfirm,
-                { onPositiveClick: () => vm.handleDelete(row), positiveText: '确定', negativeText: '取消' },
-                {
-                  default: () => '确定删除吗？',
-                  trigger:  () => h('span', { style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除')
-                }
-              )
+      if (!vm.pickerMode) {
+        cols.push({
+          title: '操作', key: 'actions', width: 140, fixed: 'right',
+          render(row) {
+            return h(NSpace, { size: 8 }, {
+              default: () => [
+                h('span', { style: { color: '#2080f0', cursor: 'pointer', fontSize: '13px' }, onClick: () => vm.handleEdit(row) }, '编辑'),
+                h(NPopconfirm,
+                  { onPositiveClick: () => vm.handleDelete(row), positiveText: '确定', negativeText: '取消' },
+                  {
+                    default: () => '确定删除吗？',
+                    trigger:  () => h('span', { style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除')
+                  }
+                )
             ]
           })
         }
       })
+      }
 
       return cols
     }
   },
 
-  watch: {
-    '$route.params.novaName'(newVal) {
-      if (newVal && window.NovaTableJQ) window.NovaTableJQ.onRouteChange(newVal)
+  beforeRouteUpdate() {},
+
+  watch: {},
+
+  mounted() {
+    this._isActive = true
+    window.vmMap = window.vmMap || {}
+    if (this.pickerMode) {
+      this.novaName = this.novaNameProp || ''
+      this._vmKey = '__picker_' + (this.novaName) + '_' + Date.now()
+      window.vmMap[this._vmKey] = this
+      this.paginationConfig.onUpdatePage     = this.handlePageChange
+      this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
+      this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
+      if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onPickerMounted(this.novaName, this._vmKey)
+    } else {
+      this.novaName = this.$route.params.novaName || ''
+      window.vmMap[this.novaName] = this
+      window.activeNovaName = this.novaName
+      this.paginationConfig.onUpdatePage     = this.handlePageChange
+      this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
+      this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
+      if (window.NovaTableJQ) window.NovaTableJQ.onMounted(this.novaName)
     }
   },
 
-  mounted() {
-    window.vmMap = window.vmMap || {}
-    this.novaName = this.$route.params.novaName || ''
-    window.vmMap[this.novaName] = this
-    window.activeNovaName = this.novaName
-    this.paginationConfig.onUpdatePage     = this.handlePageChange
-    this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
-    this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
-    if (window.NovaTableJQ) window.NovaTableJQ.onMounted(this.novaName)
-    this._pickerMsgHandler = (e) => this.onPickerMessage(e)
-    window.addEventListener('message', this._pickerMsgHandler)
-  },
-
   activated() {
-    window.activeNovaName = this.novaName
+    this._isActive = true
+    if (!this.pickerMode) {
+      window.vmMap = window.vmMap || {}
+      window.vmMap[this.novaName] = this
+      window.activeNovaName = this.novaName
+    }
     setTimeout(() => window.NovaTableJQ && window.NovaTableJQ.updateTableHeight(), 80)
   },
 
+  deactivated() {
+    this._isActive = false
+  },
+
   beforeUnmount() {
-    if (window.vmMap) delete window.vmMap[this.novaName]
-    if (window.activeNovaName === this.novaName) window.activeNovaName = null
-    $(window).off('resize.novaTable')
-    if (this._pickerMsgHandler) window.removeEventListener('message', this._pickerMsgHandler)
+    this._isActive = false
+    if (this.pickerMode) {
+      if (this._vmKey && window.vmMap) delete window.vmMap[this._vmKey]
+    } else {
+      if (window.vmMap) delete window.vmMap[this.novaName]
+      if (window.activeNovaName === this.novaName) window.activeNovaName = null
+      $(window).off('resize.novaTable')
+    }
   },
 
   methods: {
@@ -326,7 +371,8 @@ const NovaTable = {
       const cur  = this.sortStates[field]
       const next = cur == null ? 'asc' : cur === 'asc' ? 'desc' : null
       this.sortStates = Object.assign({}, this.sortStates, { [field]: next })
-      window.NovaTableJQ.onSortChange(this.novaName)
+      const key = this.pickerMode ? this._vmKey : this.novaName
+      window.NovaTableJQ.onSortChange(key)
     },
     toggleFilter() {
       if (this.searchFields.length <= 3) return
@@ -366,7 +412,13 @@ const NovaTable = {
       return undefined
     },
     handleCheck(keys)   { this.checkedRowKeys = keys },
-    handleReset()       { window.NovaTableJQ.handleReset() },
+    handleReset() {
+      if (this.pickerMode) {
+        window.NovaTableJQ.loadData(this._vmKey)
+      } else {
+        window.NovaTableJQ.handleReset()
+      }
+    },
     handleQuery() {
       const t = this
       const snapshot = JSON.stringify(t.filterForm)
@@ -374,7 +426,8 @@ const NovaTable = {
         t.paginationConfig.page = 1
         t._lastFilterSnapshot = snapshot
       }
-      window.NovaTableJQ.loadData(t.novaName)
+      const key = t.pickerMode ? t._vmKey : t.novaName
+      window.NovaTableJQ.loadData(key)
     },
     handleAdd()         { window.NovaTableJQ.handleAdd() },
     handleEdit(row)     { window.NovaTableJQ.handleEdit(row) },
@@ -413,7 +466,31 @@ const NovaTable = {
           return
         }
       }
-      // 上传逻辑待实现：将 toUpload 文件异步上传，返回 url 后 push 到 formData[f.field]
+      const formData = new FormData()
+      formData.append('novaName', this.novaName)
+      toUpload.forEach(file => formData.append('files', file))
+      const field = f.field
+      const vm = this
+      $.ajax({
+        url: '/nova/attachment/upload',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success(resp) {
+          if (resp.code !== 200) {
+            if (window.$message) window.$message.error(resp.msg || '上传失败')
+            return
+          }
+          if (!vm.formData[field]) vm.formData[field] = []
+          ;(resp.data || []).forEach(url => vm.formData[field].push(url))
+          if (window.$message) window.$message.success('上传成功')
+          vm.openPreview(f)
+        },
+        error() {
+          if (window.$message) window.$message.error('上传请求失败')
+        }
+      })
     },
     openPreview(f) {
       this.previewField = f
@@ -465,103 +542,52 @@ const NovaTable = {
       const refInfo = this.referenceMap[f.field]
       if (!refInfo || !refInfo.referenceName) return
 
-      this.refPickerStack.push({
-        level: 1,
-        novaName: refInfo.referenceName,
-        field: f,
-        row: null,
-        isForFilter: false
-      })
+      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, visible: true })
     },
     openReferenceModalForFilter(f) {
       const refInfo = this.referenceMap[f.field]
       if (!refInfo || !refInfo.referenceName) return
 
-      this.refPickerStack.push({
-        level: 1,
-        novaName: refInfo.referenceName,
-        field: f,
-        row: null,
-        isForFilter: true
-      })
-    },
-    getPickerUrl(picker) {
-      const isDark = typeof document !== 'undefined' && document.body && document.body.classList.contains('dark')
-      const ts = Date.now()
-      return '/picker.html?novaName=' + picker.novaName + '&level=' + picker.level + (isDark ? '&dark=1' : '') + '&_t=' + ts
+      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: true, visible: true })
     },
     closePickerAtLevel(level) {
-      // 关闭指定层级及之后的所有弹窗
-      this.refPickerStack = this.refPickerStack.filter(p => p.level < level)
+      const picker = this.refPickerStack.find(p => p.level === level)
+      if (picker) {
+        picker.visible = false
+        setTimeout(() => {
+          this.refPickerStack = this.refPickerStack.filter(p => p.level < level)
+        }, 300)
+      } else {
+        this.refPickerStack = this.refPickerStack.filter(p => p.level < level)
+      }
+    },
+    onPickerPick(level, row) {
+      const picker = this.refPickerStack.find(p => p.level === level)
+      if (picker) picker.selectedRow = row
     },
     confirmPickerSelect(level) {
       const picker = this.refPickerStack.find(p => p.level === level)
       if (!picker) return
 
-      if (!picker.row) {
+      if (!picker.selectedRow) {
         if (window.$message) window.$message.warning('请先选择一行')
         return
       }
 
       const refInfo = this.referenceMap[picker.field.field]
-      const storageField = refInfo && refInfo.storageField ? refInfo.storageField : (this.refPickerPkField || 'id')
+      const storageField = refInfo && refInfo.storageField ? refInfo.storageField : 'id'
       const displayField = refInfo && refInfo.displayField ? refInfo.displayField : storageField
-      const row = picker.row
+      const row = picker.selectedRow
 
       const targetData = picker.isForFilter ? this.filterForm : this.formData
-
-      // 存储列的值用于提交
       targetData[picker.field.field] = row[storageField] !== undefined ? row[storageField] : ''
-      // 展示列的值用于回显
       targetData[picker.field.field + '_display'] = row[displayField] !== undefined ? row[displayField] : ''
 
       if (!picker.isForFilter) {
         delete this.formErrors[picker.field.field]
       }
 
-      // 关闭当前及更高层级的弹窗
       this.closePickerAtLevel(level)
-    },
-    onPickerMessage(event) {
-      if (!event.data) return
-
-      const msgType = event.data.type
-
-      // 处理打开子 picker 的请求
-      if (msgType === 'nova-picker-open') {
-        const { novaName, level, field, isForFilter } = event.data
-        this.refPickerStack.push({
-          level: level,
-          novaName: novaName,
-          field: field,
-          row: null,
-          isForFilter: isForFilter || false
-        })
-        return
-      }
-
-      // 处理关闭 picker 的请求
-      if (msgType === 'nova-picker-close') {
-        const { level } = event.data
-        this.closePickerAtLevel(level)
-        return
-      }
-
-      // 处理选择行的消息
-      if (msgType !== 'nova-picker-row') return
-
-      // table.js 是第 0 层，只处理 targetLevel === 0 的消息
-      if (event.data.targetLevel !== undefined && event.data.targetLevel !== 0) {
-        return
-      }
-
-      // 找到对应层级的 picker 并设置 row
-      const targetLevel = event.data.fromLevel - 1
-      const picker = this.refPickerStack.find(p => p.level === targetLevel)
-      if (picker) {
-        picker.row = event.data.row || null
-        if (event.data.pkField) this.refPickerPkField = event.data.pkField
-      }
     },
     referenceDisplayLabel(field) {
       const displayVal = this.formData[field + '_display']
@@ -570,16 +596,22 @@ const NovaTable = {
       if (val === null || val === undefined || val === '') return ''
       return String(val)
     },
+    selectRow(row) {
+      this.selectedRowKey = row[this.pkFieldName]
+      this.$emit('pick', row)
+    },
     handlePageChange(current) {
-      window.NovaTableJQ.onPageChange(this.novaName, current)
+      const key = this.pickerMode ? this._vmKey : this.novaName
+      window.NovaTableJQ.onPageChange(key, current)
     },
     handlePageSizeChange(pageSize) {
-      window.NovaTableJQ.onPageSizeChange(this.novaName, pageSize)
+      const key = this.pickerMode ? this._vmKey : this.novaName
+      window.NovaTableJQ.onPageSizeChange(key, pageSize)
     }
   },
 
   template: `
-    <div style="padding:16px">
+    <div :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden' : 'padding:16px'">
 
       <!-- 筛选卡片 -->
       <n-card :bordered="false" class="page-card filter-card">
@@ -683,8 +715,8 @@ const NovaTable = {
       </n-card>
 
       <!-- 表格卡片 -->
-      <n-card :bordered="false" class="page-card table-card">
-        <div class="table-card-header">
+      <n-card :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : ''" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : ''">
+        <div v-if="!pickerMode" class="table-card-header">
           <span style="font-size:16px;font-weight:500">数据列表</span>
           <div style="display:flex;gap:8px">
             <n-button v-if="checkedRowKeys.length > 0" type="error" @click="handleBatchDelete">
@@ -721,13 +753,14 @@ const NovaTable = {
             </n-popover>
           </div>
         </div>
-        <div id="table-wrapper">
+        <div id="table-wrapper" :style="pickerMode ? 'flex:1;min-height:0;overflow:hidden' : ''">
           <n-data-table
             :data="filteredData"
             :columns="columns"
             :row-key="row => row[pkFieldName]"
             :checked-row-keys="checkedRowKeys"
             @update:checked-row-keys="handleCheck"
+            :row-props="pickerMode ? (row) => ({ style: 'cursor:pointer', onClick: () => selectRow(row) }) : undefined"
             :loading="loading"
             :remote="true"
             :pagination="paginationConfig"
@@ -978,13 +1011,12 @@ const NovaTable = {
       </n-modal>
 
       <!-- 关联引用选择弹窗 -->
-      <n-modal v-for="picker in refPickerStack" :key="picker.level" :show="true" preset="card" class="ref-picker-modal" :title="'选择 ' + picker.field.title" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ paddingBottom: '0' }" :z-index="2000 + picker.level">
-        <iframe
-          :src="getPickerUrl(picker)"
-          :style="{ width:'100%', height:'calc(100vh - 180px)', maxHeight:'700px', border:'none', display:'block', backgroundColor: isDark ? '#151515' : '#f5f5f5' }"
-        />
+      <n-modal v-for="picker in refPickerStack" :key="picker.level" :show="picker.visible" @update:show="(v) => { if (!v) closePickerAtLevel(picker.level) }" preset="card" class="ref-picker-modal" :title="'选择 ' + picker.field.title" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="3000 + picker.level">
+        <div :style="{ height: 'calc(100vh - 180px)', maxHeight: '700px', overflow: 'hidden' }">
+          <nova-table :picker-mode="true" :nova-name-prop="picker.novaName" @pick="onPickerPick(picker.level, $event)" />
+        </div>
         <template #footer>
-          <div style="display:flex;justify-content:flex-end;gap:8px;width:100%;padding-top:8px">
+          <div style="display:flex;justify-content:flex-end;gap:8px;width:100%">
             <n-button @click="closePickerAtLevel(picker.level)">关闭 (Esc)</n-button>
             <n-button type="primary" @click="confirmPickerSelect(picker.level)">选 择</n-button>
           </div>
@@ -994,6 +1026,8 @@ const NovaTable = {
     </div>
   `
 }
+
+NovaTable.components = { NovaTable }
 
 window.NovaTable = NovaTable
 })()
