@@ -1,7 +1,6 @@
 package com.nova.dto;
 
 import com.nova.annotation.config.Comment;
-import com.nova.annotation.sub.nova.field.edit.AttachmentType;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -53,6 +52,9 @@ public class NovaTableBuild {
 
         @Comment("文件上传组件信息")
         private Map<String, AttachmentType> attachment;
+
+        @Comment("关联引用组件信息")
+        private Map<String, ReferenceType> reference;
 
         @Data
         @Accessors(chain = true)
@@ -250,6 +252,27 @@ public class NovaTableBuild {
 
             @Comment("允许上传的文件类型")
             private List<String> fileTypes;
+
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class ReferenceType {
+
+            @Comment("关联类型")
+            private String type;
+
+            @Comment("关联类名")
+            private String referenceName;
+
+            @Comment("关联字段")
+            private String referenceField;
+
+            @Comment("存储列")
+            private String storageField;
+
+            @Comment("展示列")
+            private String displayField;
 
         }
     }

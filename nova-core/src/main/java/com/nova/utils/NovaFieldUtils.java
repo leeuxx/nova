@@ -79,11 +79,13 @@ public class NovaFieldUtils {
             NovaField novaField = novaFieldInfo.getNovaField();
             View[] views = novaField.views();
             Edit edit = novaField.edit();
-            // 显示列
+            Edit.Type type = edit.type();
+            boolean isReference = type == Edit.Type.REFERENCE;
             for (View view : views) {
                 if (view.show()) {
+                    String fieldName = isReference ? field + "." + view.column() : field;
                     TableColumnInfo tableColumnInfo = new TableColumnInfo()
-                            .setField(field)
+                            .setField(fieldName)
                             .setTitle(view.title())
                             .setDesc(view.desc())
                             .setWidth(view.width())
@@ -364,6 +366,37 @@ public class NovaFieldUtils {
         return attachmentTypeInfos;
     }
 
+    /**
+     * 获取关联参数信息
+     *
+     * @param className 类名
+     * @return 关联参数信息
+     */
+    public static Map<String, ReferenceTypeInfo> getReference(String className) {
+        Map<String, ReferenceTypeInfo> referenceTypeInfos = new LinkedHashMap<>();
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return referenceTypeInfos;
+        }
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
+            Edit edit = novaField.edit();
+            if (edit.type() == Edit.Type.REFERENCE) {
+                ReferenceType referenceType = edit.referenceType();
+                ReferenceTypeInfo referenceTypeInfo = new ReferenceTypeInfo()
+                        .setType(referenceType.type())
+                        .setReferenceClass(novaFieldInfo.getFieldClass())
+                        .setReferenceField(referenceType.referenceField())
+                        .setStorageField(referenceType.storageField())
+                        .setDisplayField(referenceType.displayField());
+                referenceTypeInfos.put(field, referenceTypeInfo);
+            }
+        });
+        return referenceTypeInfos;
+    }
+
     @Data
     @Accessors(chain = true)
     public static class SearchInfo {
@@ -545,6 +578,27 @@ public class NovaFieldUtils {
 
         @Comment("允许上传的文件类型")
         private List<String> fileTypes;
+
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class ReferenceTypeInfo {
+
+        @Comment("关联类型")
+        private ReferenceType.Type type;
+
+        @Comment("关联类")
+        private Class<?> referenceClass;
+
+        @Comment("关联字段")
+        private String referenceField;
+
+        @Comment("存储列")
+        private String storageField;
+
+        @Comment("展示列")
+        private String displayField;
 
     }
 }

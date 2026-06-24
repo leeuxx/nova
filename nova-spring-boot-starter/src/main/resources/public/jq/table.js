@@ -40,7 +40,8 @@ window.NovaTableJQ = (function ($) {
         target.dateMap    = resp.data.date    || {}
         target.numberMap  = resp.data.number  || {}
         target.booleanMap = resp.data.booleanInfo || {}
-        target.attachmentMap = resp.data.attachment || {}
+        target.attachmentMap  = resp.data.attachment  || {}
+        target.referenceMap   = resp.data.reference   || {}
         var fields = resp.data.search || []
         target.searchFields = fields
         var form = {}
@@ -50,6 +51,10 @@ window.NovaTableJQ = (function ($) {
           var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
           var isDate = f.type === 'DATE'
           form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
+          // REFERENCE 字段初始化 _display 字段
+          if (f.type === 'REFERENCE') {
+            form[f.field + '_display'] = ''
+          }
         })
         target.filterForm = form
         var cols = resp.data.tableColumns || []
@@ -98,7 +103,13 @@ window.NovaTableJQ = (function ($) {
       } else {
         strVal = Array.isArray(val) ? val.join(',') : String(val)
       }
-      conditions[fieldDef.field] = {
+      // REFERENCE 字段：使用 storageField 作为实际查询字段
+      var actualField = fieldDef.field
+      if (fieldDef.type === 'REFERENCE') {
+        var refInfo = (target.referenceMap && target.referenceMap[fieldDef.field]) || {}
+        actualField = refInfo.referenceField || refInfo.storageField || fieldDef.field
+      }
+      conditions[actualField] = {
         value: strVal,
         type: fieldDef.type || '',
         ext: (target.choiceMap && target.choiceMap[fieldDef.field] && target.choiceMap[fieldDef.field].selectType) || '',
@@ -268,6 +279,10 @@ window.NovaTableJQ = (function ($) {
       var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
       var isDate = f.type === 'DATE'
       form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
+      // REFERENCE 字段重置 _display 字段
+      if (f.type === 'REFERENCE') {
+        form[f.field + '_display'] = ''
+      }
     })
     target.filterForm = form
     target.paginationConfig.page = 1
@@ -285,6 +300,10 @@ window.NovaTableJQ = (function ($) {
       var isSingle = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE'
       var isDate   = f.type === 'DATE'
       formData[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (isSingle || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
+      // REFERENCE 字段初始化 _display 字段
+      if (f.type === 'REFERENCE') {
+        formData[f.field + '_display'] = ''
+      }
     })
     vm().currentRow = null
     vm().formMode   = 'add'
@@ -327,6 +346,28 @@ window.NovaTableJQ = (function ($) {
       } else if (f.type === 'NUMBER') {
         var nv = source[f.field]
         source[f.field] = (nv === null || nv === undefined || nv === '') ? null : Number(nv)
+      } else if (f.type === 'REFERENCE') {
+        // REFERENCE 字段：提取展示列的值
+        var refInfo = (target.referenceMap && target.referenceMap[f.field]) || {}
+        var displayField = refInfo.displayField
+        if (displayField) {
+          // 方式1: 扁平化格式，如 row['testDemo2.name']
+          var displayKey = f.field + '.' + displayField
+          if (row[displayKey] !== undefined) {
+            source[f.field + '_display'] = row[displayKey]
+          }
+          // 方式2: 直接有 _display 字段
+          else if (row[f.field + '_display'] !== undefined) {
+            source[f.field + '_display'] = row[f.field + '_display']
+          }
+          // 方式3: 嵌套对象格式，如 row['testDemo2'] = { id: 123, name: '张三' }
+          else if (row[f.field] && typeof row[f.field] === 'object' && row[f.field][displayField] !== undefined) {
+            source[f.field + '_display'] = row[f.field][displayField]
+            // 提取存储列的值（通常是 id）
+            var storageField = refInfo.storageField || 'id'
+            source[f.field] = row[f.field][storageField]
+          }
+        }
       }
     })
     target.currentRow = source
@@ -417,7 +458,13 @@ window.NovaTableJQ = (function ($) {
         } else {
           strVal = String(val)
         }
-        return { field: f.field, value: strVal, type: f.type }
+        // REFERENCE 字段：使用 referenceField 作为实际提交字段
+        var actualField = f.field
+        if (f.type === 'REFERENCE') {
+          var refInfo = (target.referenceMap && target.referenceMap[f.field]) || {}
+          actualField = refInfo.referenceField || refInfo.storageField || f.field
+        }
+        return { field: actualField, value: strVal, type: f.type }
       })
       formInfo.unshift({ field: pkField, value: pkValue, type: '' })
       $.ajax({
@@ -450,7 +497,13 @@ window.NovaTableJQ = (function ($) {
         } else {
           strVal = String(val)
         }
-        return { field: f.field, value: strVal, type: f.type }
+        // REFERENCE 字段：使用 referenceField 作为实际提交字段
+        var actualField = f.field
+        if (f.type === 'REFERENCE') {
+          var refInfo = (target.referenceMap && target.referenceMap[f.field]) || {}
+          actualField = refInfo.referenceField || refInfo.storageField || f.field
+        }
+        return { field: actualField, value: strVal, type: f.type }
       }).filter(function (item) { return item.value !== '' })
       $.ajax({
         url:         '/nova/table/add',

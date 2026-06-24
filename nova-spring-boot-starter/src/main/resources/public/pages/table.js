@@ -31,6 +31,14 @@ const NovaTable = {
       numberMap:      {},
       booleanMap:     {},
       attachmentMap:  {},
+      referenceMap:   {},
+      refPickerField: null,
+      refPickerRow:   null,
+      refPickerData:  [],
+      refPickerLoading: false,
+      refPickerColumns: [],
+      refPickerPkField: 'id',
+      refPickerStack: [],
       tableWrapperWidth: 0,
       novaName:       '',
       pkFieldName:    'id',
@@ -72,6 +80,9 @@ const NovaTable = {
   },
 
   computed: {
+    isDark() {
+      return window.__appDarkMode ? window.__appDarkMode.value : false
+    },
     // 固定列像素：checkbox 50 + 操作列 140
     colPixels() {
       const fixedPx = 50 + 140
@@ -219,6 +230,19 @@ const NovaTable = {
           }
         }
 
+        if (col.type === 'REFERENCE') {
+          const dotIdx = col.field.indexOf('.')
+          const objKey  = dotIdx > -1 ? col.field.slice(0, dotIdx)  : col.field
+          const propKey = dotIdx > -1 ? col.field.slice(dotIdx + 1) : ''
+          colDef.key = col.field
+          colDef.render = (row) => {
+            const obj = row[objKey]
+            if (obj === null || obj === undefined) return ''
+            const val = propKey ? obj[propKey] : obj
+            return val === null || val === undefined ? '' : String(val)
+          }
+        }
+
         if (col.type === 'DATE') {
           colDef.render = (row) => {
             const ts = row[col.field]
@@ -273,11 +297,12 @@ const NovaTable = {
     this.novaName = this.$route.params.novaName || ''
     window.vmMap[this.novaName] = this
     window.activeNovaName = this.novaName
-    // 挂载分页回调（需要 this，不能在 data 里写）
     this.paginationConfig.onUpdatePage     = this.handlePageChange
     this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
     this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
     if (window.NovaTableJQ) window.NovaTableJQ.onMounted(this.novaName)
+    this._pickerMsgHandler = (e) => this.onPickerMessage(e)
+    window.addEventListener('message', this._pickerMsgHandler)
   },
 
   activated() {
@@ -289,6 +314,7 @@ const NovaTable = {
     if (window.vmMap) delete window.vmMap[this.novaName]
     if (window.activeNovaName === this.novaName) window.activeNovaName = null
     $(window).off('resize.novaTable')
+    if (this._pickerMsgHandler) window.removeEventListener('message', this._pickerMsgHandler)
   },
 
   methods: {
@@ -434,6 +460,116 @@ const NovaTable = {
     clearAttachmentDropdown() {
       this.attachmentDropdownKey = null
     },
+    openReferenceModal(f) {
+      if (this.isReadonly(f)) return
+      const refInfo = this.referenceMap[f.field]
+      if (!refInfo || !refInfo.referenceName) return
+
+      this.refPickerStack.push({
+        level: 1,
+        novaName: refInfo.referenceName,
+        field: f,
+        row: null,
+        isForFilter: false
+      })
+    },
+    openReferenceModalForFilter(f) {
+      const refInfo = this.referenceMap[f.field]
+      if (!refInfo || !refInfo.referenceName) return
+
+      this.refPickerStack.push({
+        level: 1,
+        novaName: refInfo.referenceName,
+        field: f,
+        row: null,
+        isForFilter: true
+      })
+    },
+    getPickerUrl(picker) {
+      const isDark = typeof document !== 'undefined' && document.body && document.body.classList.contains('dark')
+      const ts = Date.now()
+      return '/picker.html?novaName=' + picker.novaName + '&level=' + picker.level + (isDark ? '&dark=1' : '') + '&_t=' + ts
+    },
+    closePickerAtLevel(level) {
+      // 关闭指定层级及之后的所有弹窗
+      this.refPickerStack = this.refPickerStack.filter(p => p.level < level)
+    },
+    confirmPickerSelect(level) {
+      const picker = this.refPickerStack.find(p => p.level === level)
+      if (!picker) return
+
+      if (!picker.row) {
+        if (window.$message) window.$message.warning('请先选择一行')
+        return
+      }
+
+      const refInfo = this.referenceMap[picker.field.field]
+      const storageField = refInfo && refInfo.storageField ? refInfo.storageField : (this.refPickerPkField || 'id')
+      const displayField = refInfo && refInfo.displayField ? refInfo.displayField : storageField
+      const row = picker.row
+
+      const targetData = picker.isForFilter ? this.filterForm : this.formData
+
+      // 存储列的值用于提交
+      targetData[picker.field.field] = row[storageField] !== undefined ? row[storageField] : ''
+      // 展示列的值用于回显
+      targetData[picker.field.field + '_display'] = row[displayField] !== undefined ? row[displayField] : ''
+
+      if (!picker.isForFilter) {
+        delete this.formErrors[picker.field.field]
+      }
+
+      // 关闭当前及更高层级的弹窗
+      this.closePickerAtLevel(level)
+    },
+    onPickerMessage(event) {
+      if (!event.data) return
+
+      const msgType = event.data.type
+
+      // 处理打开子 picker 的请求
+      if (msgType === 'nova-picker-open') {
+        const { novaName, level, field, isForFilter } = event.data
+        this.refPickerStack.push({
+          level: level,
+          novaName: novaName,
+          field: field,
+          row: null,
+          isForFilter: isForFilter || false
+        })
+        return
+      }
+
+      // 处理关闭 picker 的请求
+      if (msgType === 'nova-picker-close') {
+        const { level } = event.data
+        this.closePickerAtLevel(level)
+        return
+      }
+
+      // 处理选择行的消息
+      if (msgType !== 'nova-picker-row') return
+
+      // table.js 是第 0 层，只处理 targetLevel === 0 的消息
+      if (event.data.targetLevel !== undefined && event.data.targetLevel !== 0) {
+        return
+      }
+
+      // 找到对应层级的 picker 并设置 row
+      const targetLevel = event.data.fromLevel - 1
+      const picker = this.refPickerStack.find(p => p.level === targetLevel)
+      if (picker) {
+        picker.row = event.data.row || null
+        if (event.data.pkField) this.refPickerPkField = event.data.pkField
+      }
+    },
+    referenceDisplayLabel(field) {
+      const displayVal = this.formData[field + '_display']
+      if (displayVal !== null && displayVal !== undefined && displayVal !== '') return String(displayVal)
+      const val = this.formData[field]
+      if (val === null || val === undefined || val === '') return ''
+      return String(val)
+    },
     handlePageChange(current) {
       window.NovaTableJQ.onPageChange(this.novaName, current)
     },
@@ -513,6 +649,19 @@ const NovaTable = {
                 :placeholder="field.vague ? ['开始时间', '结束时间'] : '请选择' + field.title"
                 clearable style="flex:1"
               />
+              <div v-else-if="field.type === 'REFERENCE' && referenceMap[field.field]" @click="openReferenceModalForFilter(field)" style="flex:1;cursor:pointer">
+                <n-input
+                  :value="filterForm[field.field + '_display'] || filterForm[field.field] || ''"
+                  :placeholder="'请选择' + field.title"
+                  readonly
+                  clearable
+                  @clear.stop="filterForm[field.field] = null; filterForm[field.field + '_display'] = ''"
+                >
+                  <template #suffix>
+                    <iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon>
+                  </template>
+                </n-input>
+              </div>
               <n-input v-else
                 v-model:value="filterForm[field.field]"
                 :placeholder="'请输入' + field.title"
@@ -701,6 +850,23 @@ const NovaTable = {
                 :disabled="isReadonly(f)"
                 @update:value="delete formErrors[f.field]"
               />
+              <div v-else-if="f.type === 'REFERENCE' && referenceMap[f.field] && referenceMap[f.field].type === 'MANY_TO_ONE'"
+                @click="!isReadonly(f) && openReferenceModal(f)"
+                style="cursor:pointer">
+                <n-input
+                  :value="referenceDisplayLabel(f.field)"
+                  :placeholder="'请选择' + f.title"
+                  readonly
+                  clearable
+                  :status="formErrors[f.field] ? 'error' : undefined"
+                  :disabled="isReadonly(f)"
+                  @clear.stop="formData[f.field] = null; formData[f.field + '_display'] = ''; delete formErrors[f.field]"
+                >
+                  <template #suffix>
+                    <iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon>
+                  </template>
+                </n-input>
+              </div>
               <div v-else-if="f.type === 'ATTACHMENT'" class="attachment-field"
                 @mouseenter="setAttachmentDropdown(f.field)" @mouseleave="clearAttachmentDropdown">
                 <div class="attachment-btn">
@@ -809,6 +975,20 @@ const NovaTable = {
           </template>
           <div v-if="(formData[previewField.field] || []).length === 0" class="preview-empty">暂无文件</div>
         </div>
+      </n-modal>
+
+      <!-- 关联引用选择弹窗 -->
+      <n-modal v-for="picker in refPickerStack" :key="picker.level" :show="true" preset="card" class="ref-picker-modal" :title="'选择 ' + picker.field.title" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ paddingBottom: '0' }" :z-index="2000 + picker.level">
+        <iframe
+          :src="getPickerUrl(picker)"
+          :style="{ width:'100%', height:'calc(100vh - 180px)', maxHeight:'700px', border:'none', display:'block', backgroundColor: isDark ? '#151515' : '#f5f5f5' }"
+        />
+        <template #footer>
+          <div style="display:flex;justify-content:flex-end;gap:8px;width:100%;padding-top:8px">
+            <n-button @click="closePickerAtLevel(picker.level)">关闭 (Esc)</n-button>
+            <n-button type="primary" @click="confirmPickerSelect(picker.level)">选 择</n-button>
+          </div>
+        </template>
       </n-modal>
 
     </div>

@@ -39,9 +39,9 @@ public class NovaUserController {
                 new NovaUserGetMenu.Vo()
                         .setId(4L)
                         .setCode("role")
-                        .setValue("ROLE")
+                        .setValue("TestDemo2")
                         .setType("table")
-                        .setName("角色管理")
+                        .setName("部门管理")
                         .setIcon("material-symbols:group-outline")
                         .setPid(2L),
                 new NovaUserGetMenu.Vo()

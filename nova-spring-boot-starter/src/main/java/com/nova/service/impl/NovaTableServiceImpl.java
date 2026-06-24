@@ -156,6 +156,19 @@ public class NovaTableServiceImpl implements NovaTableService {
             attachmentMap.put(field, attachment);
         });
         vo.setAttachment(attachmentMap);
+        // 获取关联引用组件信息
+        Map<String, NovaTableBuild.Vo.ReferenceType> referenceMap = new LinkedHashMap<>();
+        Map<String, NovaFieldUtils.ReferenceTypeInfo> references = NovaFieldUtils.getReference(novaTableBuild.getNovaName());
+        references.forEach((field, referenceInfo) -> {
+            NovaTableBuild.Vo.ReferenceType reference = new NovaTableBuild.Vo.ReferenceType()
+                    .setType(referenceInfo.getType().name())
+                    .setReferenceName(referenceInfo.getReferenceClass().getSimpleName())
+                    .setReferenceField(referenceInfo.getReferenceField())
+                    .setStorageField(referenceInfo.getStorageField())
+                    .setDisplayField(referenceInfo.getDisplayField());
+            referenceMap.put(field, reference);
+        });
+        vo.setReference(referenceMap);
         return vo;
     }
 
@@ -213,7 +226,8 @@ public class NovaTableServiceImpl implements NovaTableService {
         DataProxy<?> dataProxy = DataProxyUtils.getDataProxy(novaName);
         FetchResponse<?> fetch = dataProxy.fetch(queryRequest);
         List<Map<String, Object>> maps = new ArrayList<>();
-        fetch.getRecords().forEach(record -> maps.add(DataProxyUtils.toMapWithTimestamp(record)));
+        List<?> records = fetch.getRecords();
+        records.forEach(record -> maps.add(DataProxyUtils.toMapWithTimestamp(record)));
         pageBean.setTotal(fetch.getTotal()).setRecords(maps);
         return pageBean;
     }

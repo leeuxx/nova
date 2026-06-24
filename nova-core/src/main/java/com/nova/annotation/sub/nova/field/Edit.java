@@ -44,6 +44,9 @@ public @interface Edit {
     @Comment("文件上传组件配置")
     AttachmentType attachmentType() default @AttachmentType;
 
+    @Comment("关联引用组件配置")
+    ReferenceType referenceType() default @ReferenceType(referenceField = "");
+
     enum Type {
 
         @Comment("自动匹配")
@@ -72,6 +75,9 @@ public @interface Edit {
 
         @Comment("文件上传组件")
         ATTACHMENT,
+
+        @Comment("关联引用组件")
+        REFERENCE,
 
 
         @Comment("分割线")

@@ -10,6 +10,9 @@ public @interface View {
     @Comment("详细说明")
     String desc() default "";
 
+    @Comment("修饰类型为关联引用组件时必须指定列名")
+    String column() default "";
+
     @Comment("列宽度（单位：%）")
     String width() default "";
 

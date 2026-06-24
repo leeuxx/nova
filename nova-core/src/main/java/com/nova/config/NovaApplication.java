@@ -71,6 +71,7 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
                     Edit.Type type = novaFieldAutoTypeChange(field.getType(), novaField.edit().type());
                     novaFields.put(field.getName(), new ScanNova.NovaFieldInfo()
                             .setType(type)
+                            .setFieldClass(field.getType())
                             .setNovaField(novaField)
                     );
                 }
@@ -114,6 +115,9 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
 
             @Comment("组件类型（自动类型转换）")
             private Edit.Type type;
+
+            @Comment("属性类型")
+            private Class<?> fieldClass;
 
             @Comment("NovaField注解")
             private NovaField novaField;

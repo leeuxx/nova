@@ -111,6 +111,9 @@ function mountApp(menuList) {
 
       watch(isDark, (val) => { document.body.classList.toggle('dark', val) })
 
+      // 暴露黑夜模式状态给子组件
+      window.__appDarkMode = isDark
+
       // 监听路由变化，维护 tab 列表
       watch(() => route.path, (path) => {
         if (path === '/') return
@@ -275,6 +278,7 @@ function mountApp(menuList) {
   )
   window.$message = message
   window.$dialog  = dialog
+
   const app = createApp(App)
   app.use(naive)
   app.use(router)

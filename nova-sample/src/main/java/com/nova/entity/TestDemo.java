@@ -40,6 +40,32 @@ public class TestDemo {
     private Long id;
 
     @NovaField(
+            edit = @Edit(
+                    title = "部门ID",
+                    show = false
+            )
+    )
+    private Long demo2Id;
+
+    @TableField(exist = false)
+    @NovaField(
+            views = {
+                    @View(title = "部门名称", column = "name", width = "10%"),
+                    @View(title = "部门说明", column = "msg", width = "10%")
+            },
+            edit = @Edit(
+                    title = "部门信息",
+                    type = Edit.Type.REFERENCE,
+                    referenceType = @ReferenceType(
+                            type = ReferenceType.Type.MANY_TO_ONE,
+                            referenceField = "demo2Id"
+                    ),
+                    search = @Search
+            )
+    )
+    private TestDemo2 testDemo2;
+
+    @NovaField(
             views = @View(title = "用户名", width = "10%"),
             edit = @Edit(
                     title = "用户名",
