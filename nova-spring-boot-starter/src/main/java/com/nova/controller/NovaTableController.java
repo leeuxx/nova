@@ -11,6 +11,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.List;
+
 @AllArgsConstructor
 @RestMappingController("nova/table")
 public class NovaTableController {
@@ -52,4 +54,10 @@ public class NovaTableController {
         return R.ok(delete);
     }
 
+    @Comment("关键词搜索")
+    @PostMapping("promptSearch")
+    public R<List<NovaTablePromptSearch.Vo>> promptSearch(@RequestBody @Validated NovaTablePromptSearch novaTablePromptSearch) {
+        List<NovaTablePromptSearch.Vo> vos = novaTableService.promptSearch(novaTablePromptSearch);
+        return R.ok(vos);
+    }
 }

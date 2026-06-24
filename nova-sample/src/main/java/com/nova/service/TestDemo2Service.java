@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nova.annotation.fun.DataProxy;
 import com.nova.annotation.fun.FetchRequest;
 import com.nova.annotation.fun.FetchResponse;
+import com.nova.annotation.fun.PromptSearchResponse;
 import com.nova.entity.TestDemo;
 import com.nova.entity.TestDemo2;
 import com.nova.mapper.TestDemo2Mapper;
@@ -13,6 +14,7 @@ import com.nova.utils.SpringBeanUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -44,5 +46,20 @@ public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> im
         return new FetchResponse<TestDemo2>()
                 .setTotal(iPage.getTotal())
                 .setRecords(records);
+    }
+
+    @Override
+    public List<PromptSearchResponse> promptSearch(String novaName, String prompt) {
+        List<TestDemo2> testDemo2s = list(new LambdaQueryWrapper<TestDemo2>()
+                .like(TestDemo2::getName, prompt)
+        );
+        List<PromptSearchResponse> promptSearchResponses = new ArrayList<>();
+        for (TestDemo2 testDemo2 : testDemo2s) {
+            PromptSearchResponse promptSearchResponse = new PromptSearchResponse()
+                    .setStorageField(String.valueOf(testDemo2.getId()))
+                    .setDisplayField(testDemo2.getName());
+            promptSearchResponses.add(promptSearchResponse);
+        }
+        return promptSearchResponses;
     }
 }

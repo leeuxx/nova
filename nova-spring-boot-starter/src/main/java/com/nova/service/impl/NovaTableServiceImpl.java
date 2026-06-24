@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nova.annotation.fun.DataProxy;
 import com.nova.annotation.fun.FetchRequest;
 import com.nova.annotation.fun.FetchResponse;
+import com.nova.annotation.fun.PromptSearchResponse;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 import com.nova.service.NovaTableService;
@@ -277,6 +278,19 @@ public class NovaTableServiceImpl implements NovaTableService {
         //noinspection unchecked,rawtypes
         ((DataProxy) DataProxyUtils.getDataProxy(novaName)).delete(models);
         return new NovaTableDelete.Vo();
+    }
+
+    @Override
+    public List<NovaTablePromptSearch.Vo> promptSearch(NovaTablePromptSearch novaTablePromptSearch) {
+        List<PromptSearchResponse> promptSearchResponses = ((DataProxy) DataProxyUtils.getDataProxy(novaTablePromptSearch.getNovaName())).promptSearch(novaTablePromptSearch.getSourceNovaName(), novaTablePromptSearch.getPrompt());
+        List<NovaTablePromptSearch.Vo> vos = new ArrayList<>();
+        for (PromptSearchResponse promptSearchRespons : promptSearchResponses) {
+            NovaTablePromptSearch.Vo vo = new NovaTablePromptSearch.Vo()
+                    .setStorageField(promptSearchRespons.getStorageField())
+                    .setDisplayField(promptSearchRespons.getDisplayField());
+            vos.add(vo);
+        }
+        return vos;
     }
 
 }

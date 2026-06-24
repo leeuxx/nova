@@ -75,6 +75,9 @@ const NovaTable = {
       previewIndex:     0,
       slideDirection:  'right',
       attachmentDropdownKey: null,
+      refSelectOptions:  {},   // { [field]: [{label, value, raw}] }
+      refSelectLoading:  {},   // { [field]: bool }
+      _refSelectTimers:  {},   // 防抖 timer
       paginationConfig: {
         page:            1,
         itemCount:       0,
@@ -589,6 +592,42 @@ const NovaTable = {
 
       this.closePickerAtLevel(level)
     },
+    onRefSelectSearch(f, query) {
+      const field = f.field
+      const refField = f._refField || field
+      const refInfo = this.referenceMap[refField] || {}
+      clearTimeout(this._refSelectTimers[field])
+      if (!query) {
+        this.refSelectOptions[field] = []
+        return
+      }
+      this.refSelectLoading[field] = true
+      this._refSelectTimers[field] = setTimeout(() => {
+        $.ajax({
+          url: '/nova/table/promptSearch',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({
+            novaName: refInfo.referenceName,
+            sourceNovaName: this.novaName,
+            prompt: query
+          }),
+          success: (resp) => {
+            this.refSelectOptions[field] = (resp.data || []).map(item => ({
+              label: String(item.displayField ?? ''),
+              value: item.storageField
+            }))
+            this.refSelectLoading[field] = false
+          },
+          error: () => { this.refSelectLoading[field] = false }
+        })
+      }, 300)
+    },
+    onRefSelectUpdate(f, value, option) {
+      this.formData[f.field] = value
+      this.formData[f.field + '_display'] = option ? option.label : ''
+      delete this.formErrors[f.field]
+    },
     referenceDisplayLabel(field) {
       const displayVal = this.formData[field + '_display']
       if (displayVal !== null && displayVal !== undefined && displayVal !== '') return String(displayVal)
@@ -681,6 +720,38 @@ const NovaTable = {
                 :placeholder="field.vague ? ['开始时间', '结束时间'] : '请选择' + field.title"
                 clearable style="flex:1"
               />
+              <!-- 筛选区 REFERENCE 非 vague：下拉搜索 -->
+              <n-select
+                v-else-if="field.type === 'REFERENCE' && referenceMap[field.field] && !field.vague"
+                :value="filterForm[field.field] || null"
+                :options="refSelectOptions['_f_' + field.field] || []"
+                :loading="!!refSelectLoading['_f_' + field.field]"
+                :placeholder="'输入关键词搜索'"
+                filterable
+                remote
+                clearable
+                :clear-filter-after-select="false"
+                style="flex:1"
+                @search="(q) => onRefSelectSearch({ field: '_f_' + field.field, _refField: field.field }, q)"
+                @update:value="(v, opt) => { filterForm[field.field] = v; filterForm[field.field + '_display'] = opt ? opt.label : '' }"
+                @clear="filterForm[field.field] = null; filterForm[field.field + '_display'] = ''"
+              >
+                <template #empty>
+                  <div style="padding:12px;text-align:center;color:#aaa;font-size:13px">
+                    {{ refSelectLoading['_f_' + field.field] ? '搜索中…' : '输入关键词开始搜索' }}
+                  </div>
+                </template>
+                <template #action>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-top:1px solid #f0f0f0">
+                    <span style="font-size:12px;color:#aaa">共 11 条</span>
+                    <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#2563eb;cursor:pointer;padding:2px 6px;border-radius:4px;transition:background .15s" onmouseenter="this.style.background='#eff6ff'" onmouseleave="this.style.background='transparent'">
+                      <iconify-icon icon="mdi:refresh" style="font-size:13px"></iconify-icon>
+                      加载更多
+                    </div>
+                  </div>
+                </template>
+              </n-select>
+              <!-- 筛选区 REFERENCE vague=true：弹窗选择 -->
               <div v-else-if="field.type === 'REFERENCE' && referenceMap[field.field]" @click="openReferenceModalForFilter(field)" style="flex:1;cursor:pointer">
                 <n-input
                   :value="filterForm[field.field + '_display'] || filterForm[field.field] || ''"

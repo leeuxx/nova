@@ -1,0 +1,37 @@
+package com.nova.dto;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.nova.annotation.config.Comment;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+import lombok.experimental.Accessors;
+
+@Data
+@Accessors(chain = true)
+public class NovaTablePromptSearch {
+
+    @Comment("nova名称")
+    @NotBlank(message = "novaName不能为空")
+    private String novaName;
+
+    @Comment("来源nova名称")
+    @NotBlank(message = "sourceNovaName不能为空")
+    private String sourceNovaName;
+
+    @Comment("提示词")
+    @NotBlank(message = "prompt不能为空")
+    private String prompt;
+
+    @Data
+    @Accessors(chain = true)
+    @JsonSerialize
+    public static class Vo {
+
+        @Comment("存储列")
+        private String storageField;
+
+        @Comment("展示列")
+        private String displayField;
+
+    }
+}
