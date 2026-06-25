@@ -138,6 +138,9 @@ public class NovaTableBuild {
             @Comment("只读控制信息")
             private ReadonlyInfo readonly;
 
+            @Comment("动态是否显示表达式")
+            private String showByExpr;
+
             @Data
             @Accessors(chain = true)
             public static class ReadonlyInfo {
@@ -267,6 +270,9 @@ public class NovaTableBuild {
 
             @Comment("关联字段")
             private String referenceField;
+
+            @Comment("关联引用透传属性")
+            private List<String> referenceTransmitField;
 
             @Comment("存储列")
             private String storageField;

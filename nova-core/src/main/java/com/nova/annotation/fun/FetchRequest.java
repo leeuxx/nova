@@ -36,6 +36,12 @@ public class FetchRequest<T> {
         @Comment("排序")
         private List<OrderItemBean> orders = new ArrayList<>();
 
+        @Comment("来源nova名称")
+        private String novaName;
+
+        @Comment("来源属性集合")
+        private Map<String, String> sourceFields;
+
         @Data
         @Accessors(chain = true)
         public static class Search {

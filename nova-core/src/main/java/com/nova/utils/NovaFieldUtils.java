@@ -46,8 +46,22 @@ public class NovaFieldUtils {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
             Search search = edit.search();
-            if (search == null || !search.value()) {
+            if (search == null) {
                 return;
+            }
+            if (!search.value()) {
+                return;
+            }
+            Class<? extends SearchHandler>[] searchHandlerClasses = search.searchHandler();
+            if (searchHandlerClasses.length > 0) {
+                String[] searchHandlerParams = search.searchHandlerParams();
+                for (Class<? extends SearchHandler> searchHandlerClass : searchHandlerClasses) {
+                    SearchHandler searchHandler = SpringBeanUtils.getBean(searchHandlerClass);
+                    boolean result = searchHandler.searchValue(searchHandlerParams);
+                    if (!result) {
+                        return;
+                    }
+                }
             }
             SearchInfo searchInfo = new SearchInfo()
                     .setField(field)
@@ -128,7 +142,8 @@ public class NovaFieldUtils {
                     .setReadonly(new EditInfo.ReadonlyInfo()
                             .setAdd(readonly.add())
                             .setEdit(readonly.edit())
-                    );
+                    )
+                    .setShowBy(edit.showBy());
             editInfos.add(searchInfo);
         });
         return editInfos;
@@ -389,6 +404,7 @@ public class NovaFieldUtils {
                         .setType(referenceType.type())
                         .setReferenceClass(novaFieldInfo.getFieldClass())
                         .setReferenceField(referenceType.referenceField())
+                        .setReferenceTransmitField(Arrays.asList(referenceType.referenceTransmitField()))
                         .setStorageField(referenceType.storageField())
                         .setDisplayField(referenceType.displayField());
                 referenceTypeInfos.put(field, referenceTypeInfo);
@@ -463,6 +479,9 @@ public class NovaFieldUtils {
 
         @Comment("只读控制信息")
         private ReadonlyInfo readonly;
+
+        @Comment("动态是否显示")
+        private ShowBy showBy;
 
         @Data
         @Accessors(chain = true)
@@ -593,6 +612,9 @@ public class NovaFieldUtils {
 
         @Comment("关联字段")
         private String referenceField;
+
+        @Comment("关联引用透传属性")
+        private List<String> referenceTransmitField;
 
         @Comment("存储列")
         private String storageField;

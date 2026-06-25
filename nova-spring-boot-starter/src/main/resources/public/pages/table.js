@@ -20,12 +20,126 @@ function darkenHex(hex, factor) {
   return '#' + [r,g,b].map(function(v){ return v.toString(16).padStart(2,'0') }).join('')
 }
 
+// ─── showByExpr 表达式解析器 ────────────────────────────────────
+// 支持语法：field op value [&& / || ...] 以及括号分组
+// op: = != > >= < <= = null != null
+// value: 'string' "string" number true false null
+function parseShowExpr(expr) {
+  var pos = 0
+  var src = (expr || '').trim()
+
+  function skipWs() { while (pos < src.length && /\s/.test(src[pos])) pos++ }
+  function peek()   { skipWs(); return src[pos] }
+
+  function parseOr() {
+    var left = parseAnd()
+    while (true) {
+      skipWs()
+      if (src.slice(pos, pos + 2) === '||') { pos += 2; left = { op: '||', left: left, right: parseAnd() } }
+      else break
+    }
+    return left
+  }
+
+  function parseAnd() {
+    var left = parseAtom()
+    while (true) {
+      skipWs()
+      if (src.slice(pos, pos + 2) === '&&') { pos += 2; left = { op: '&&', left: left, right: parseAtom() } }
+      else break
+    }
+    return left
+  }
+
+  function parseAtom() {
+    skipWs()
+    if (src[pos] === '(') {
+      pos++ // skip (
+      var inner = parseOr()
+      skipWs()
+      if (src[pos] === ')') pos++ // skip )
+      return inner
+    }
+    return parseCondition()
+  }
+
+  function parseCondition() {
+    skipWs()
+    // field name: word chars
+    var fieldMatch = src.slice(pos).match(/^[\w.]+/)
+    if (!fieldMatch) return { op: 'lit', val: true }
+    var field = fieldMatch[0]; pos += field.length
+    skipWs()
+    // operator
+    var op
+    if      (src.slice(pos, pos + 2) === '!=') { op = '!='; pos += 2 }
+    else if (src.slice(pos, pos + 2) === '>=') { op = '>='; pos += 2 }
+    else if (src.slice(pos, pos + 2) === '<=') { op = '<='; pos += 2 }
+    else if (src.slice(pos, pos + 2) === '==') { op = '=='; pos += 2 }
+    else if (src[pos] === '>')                 { op = '>';  pos += 1 }
+    else if (src[pos] === '<')                 { op = '<';  pos += 1 }
+    else return { op: 'lit', val: true }
+    skipWs()
+    // value
+    var val
+    if (src.slice(pos, pos + 4).toLowerCase() === 'null') { val = null; pos += 4 }
+    else if (src.slice(pos, pos + 4).toLowerCase() === 'true') { val = true; pos += 4 }
+    else if (src.slice(pos, pos + 5).toLowerCase() === 'false') { val = false; pos += 5 }
+    else if (src[pos] === "'" || src[pos] === '"') {
+      var q = src[pos++]; var s = ''
+      while (pos < src.length && src[pos] !== q) { s += src[pos++] }
+      pos++ // closing quote
+      val = s
+    } else {
+      var numMatch = src.slice(pos).match(/^-?\d+(\.\d+)?/)
+      if (numMatch) { val = parseFloat(numMatch[0]); pos += numMatch[0].length }
+      else val = null
+    }
+    return { op: op, field: field, val: val }
+  }
+
+  try { return parseOr() } catch(e) { return { op: 'lit', val: true } }
+}
+
+function evalShowNode(node, formData) {
+  if (!node) return true
+  if (node.op === 'lit')  return !!node.val
+  if (node.op === '||')   return evalShowNode(node.left, formData) || evalShowNode(node.right, formData)
+  if (node.op === '&&')   return evalShowNode(node.left, formData) && evalShowNode(node.right, formData)
+  // condition
+  var raw = formData[node.field]
+  var fv  = (raw === undefined || raw === null || raw === '') ? null : raw
+  var cv  = node.val
+  // null checks
+  if (node.op === '=='  && cv === null) return fv === null
+  if (node.op === '!=' && cv === null) return fv !== null
+  // typed compare
+  if (fv === null) return false
+  if (node.op === '==') return String(fv) === String(cv)
+  if (node.op === '!=') return String(fv) !== String(cv)
+  var fn = parseFloat(fv), cn = parseFloat(cv)
+  if (isNaN(fn) || isNaN(cn)) return false
+  if (node.op === '>')  return fn >  cn
+  if (node.op === '>=') return fn >= cn
+  if (node.op === '<')  return fn <  cn
+  if (node.op === '<=') return fn <= cn
+  return true
+}
+
+function evalShowExpr(expr, formData) {
+  if (!expr) return true
+  return evalShowNode(parseShowExpr(expr), formData)
+}
+// ────────────────────────────────────────────────────────────────
+
 const NovaTable = {
   name: 'NovaTable',
 
   props: {
-    pickerMode: { type: Boolean, default: false },
-    novaNameProp: { type: String, default: '' }
+    pickerMode:         { type: Boolean, default: false },
+    novaNameProp:       { type: String,  default: '' },
+    sourceNovaNameProp: { type: String,  default: '' },
+    sourceFieldsProp:   { type: Object,  default: () => ({}) }
   },
 
   emits: ['pick'],
@@ -117,6 +231,21 @@ const NovaTable = {
 
     filteredData() {
       return this.tableData
+    },
+
+    visibleEditFields() {
+      const fields = this.editFields
+      const fd     = this.formData
+      // REFERENCE 字段对象名 → referenceField 值的映射，兼容表达式里直接用对象名判断
+      const evalFd = Object.assign({}, fd)
+      for (const key in this.referenceMap) {
+        const rf = this.referenceMap[key] && this.referenceMap[key].referenceField
+        if (rf) evalFd[key] = fd[rf] !== undefined ? fd[rf] : null
+      }
+      return fields.map(f => ({
+        field: f,
+        visible: !f.showByExpr || evalShowExpr(f.showByExpr, evalFd)
+      }))
     },
 
     columns() {
@@ -319,7 +448,40 @@ const NovaTable = {
 
   beforeRouteUpdate() {},
 
-  watch: {},
+  watch: {
+    formData: {
+      deep: true,
+      handler() {
+        const fields = this.editFields
+        if (!fields || !fields.length) return
+        const evalFd = Object.assign({}, this.formData)
+        for (const key in this.referenceMap) {
+          const rf = this.referenceMap[key] && this.referenceMap[key].referenceField
+          if (rf) evalFd[key] = this.formData[rf] !== undefined ? this.formData[rf] : null
+        }
+        const maxIter = fields.length
+        for (var i = 0; i < maxIter; i++) {
+          var changed = false
+          for (var j = 0; j < fields.length; j++) {
+            var f = fields[j]
+            if (!f.showByExpr) continue
+            if (!evalShowExpr(f.showByExpr, evalFd)) {
+              var isEmpty = this.formData[f.field] === null
+                         || this.formData[f.field] === undefined
+                         || this.formData[f.field] === ''
+                         || (Array.isArray(this.formData[f.field]) && !this.formData[f.field].length)
+              if (!isEmpty) {
+                this.formData[f.field] = null
+                if (this.formData[f.field + '_display'] !== undefined) this.formData[f.field + '_display'] = ''
+                changed = true
+              }
+            }
+          }
+          if (!changed) break
+        }
+      }
+    }
+  },
 
   mounted() {
     this._isActive = true
@@ -331,7 +493,7 @@ const NovaTable = {
       this.paginationConfig.onUpdatePage     = this.handlePageChange
       this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
       this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
-      if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onPickerMounted(this.novaName, this._vmKey)
+      if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onPickerMounted(this.novaName, this._vmKey, this.sourceNovaNameProp || this.novaName, this.sourceFieldsProp || {})
     } else {
       this.novaName = this.$route.params.novaName || ''
       window.vmMap[this.novaName] = this
@@ -562,6 +724,20 @@ const NovaTable = {
         if (picker) picker.visible = true
       })
     },
+    buildPickerSourceFields(picker) {
+      if (picker.isForFilter) return {}
+      const fields = {}
+      if (this.currentRow) fields.ids = String(this.currentRow[this.pkFieldName] || '')
+      const refInfo = this.referenceMap[picker.field.field]
+      const transmit = refInfo && refInfo.referenceTransmitField
+      if (transmit && transmit.length) {
+        transmit.forEach(f => {
+          const v = this.formData[f]
+          fields[f] = (v === null || v === undefined) ? '' : String(v)
+        })
+      }
+      return fields
+    },
     closePickerAtLevel(level) {
       const picker = this.refPickerStack.find(p => p.level === level)
       if (picker) {
@@ -592,8 +768,12 @@ const NovaTable = {
       const row = picker.selectedRow
 
       const targetData = picker.isForFilter ? this.filterForm : this.formData
-      targetData[picker.field.field] = row[storageField] !== undefined ? row[storageField] : ''
+      const storedVal = row[storageField] !== undefined ? row[storageField] : ''
+      targetData[picker.field.field] = storedVal
       targetData[picker.field.field + '_display'] = row[displayField] !== undefined ? row[displayField] : ''
+      if (refInfo && refInfo.referenceField) {
+        targetData[refInfo.referenceField] = storedVal
+      }
 
       if (!picker.isForFilter) {
         delete this.formErrors[picker.field.field]
@@ -901,10 +1081,11 @@ const NovaTable = {
       <!-- 新增/编辑弹窗 -->
       <n-modal v-model:show="showForm" preset="card" :title="formMode === 'add' ? '新增' : '编辑'" style="width:960px;margin-top:60px">
         <div :style="'display:grid;gap:16px 24px;' + (editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
-          <template v-for="f in editFields" :key="f.field">
-            <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
-            <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'"></div>
-            <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY'" :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+          <template v-for="{field: f, visible: _vis} in visibleEditFields" :key="f.field">
+            <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" v-show="_vis" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
+            <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'" v-show="_vis"></div>
+            <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY'" v-show="_vis" :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')"
+                 :aria-hidden="!_vis ? 'true' : undefined">
               <span class="edit-form-label">
                 <span v-if="f.notNull && !isReadonly(f)" class="form-label-required">*</span>{{ f.title }}
                 <n-tooltip v-if="f.desc" trigger="hover" placement="top">
@@ -1018,7 +1199,7 @@ const NovaTable = {
                   clearable
                   :status="formErrors[f.field] ? 'error' : undefined"
                   :disabled="isReadonly(f)"
-                  @clear.stop="formData[f.field] = null; formData[f.field + '_display'] = ''; delete formErrors[f.field]"
+                  @clear.stop="formData[f.field] = null; formData[f.field + '_display'] = ''; if (referenceMap[f.field] && referenceMap[f.field].referenceField) formData[referenceMap[f.field].referenceField] = null; delete formErrors[f.field]"
                 >
                   <template #suffix>
                     <iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon>
@@ -1138,7 +1319,7 @@ const NovaTable = {
       <!-- 关联引用选择弹窗 -->
       <n-modal v-for="picker in refPickerStack" :key="picker.level" :show="picker.visible" @update:show="(v) => { if (!v) closePickerAtLevel(picker.level) }" preset="card" class="ref-picker-modal" :title="'选择 ' + picker.field.title" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="3000 + picker.level">
         <div :style="{ height: 'calc(100vh - 180px)', maxHeight: '700px', overflow: 'hidden' }">
-          <nova-table :picker-mode="true" :nova-name-prop="picker.novaName" @pick="onPickerPick(picker.level, $event)" />
+          <nova-table :picker-mode="true" :nova-name-prop="picker.novaName" :source-nova-name-prop="novaName" :source-fields-prop="buildPickerSourceFields(picker)" @pick="onPickerPick(picker.level, $event)" />
         </div>
         <template #footer>
           <div style="display:flex;justify-content:flex-end;gap:8px;width:100%">

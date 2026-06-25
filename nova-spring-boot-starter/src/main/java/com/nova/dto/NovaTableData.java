@@ -17,12 +17,19 @@ public class NovaTableData {
     @NotBlank(message = "novaName不能为空")
     private String novaName;
 
+    @Comment("来源nova名称")
+    @NotBlank(message = "sourceNovaName不能为空")
+    private String sourceNovaName;
+
     @Comment("分页信息")
     @NotNull(message = "pageBean不能为空")
     private PageBean<Map<String, Object>> pageBean;
 
     @Comment("查询条件")
     private Map<String, Search> conditions;
+
+    @Comment("来源属性集合")
+    private Map<String, String> sourceFields;
 
     @Data
     @Accessors(chain = true)

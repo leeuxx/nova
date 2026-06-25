@@ -76,6 +76,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                     .setReadonly(new NovaTableBuild.Vo.Edit.ReadonlyInfo()
                             .setAdd(ro.getAdd())
                             .setEdit(ro.getEdit()))
+                    .setShowByExpr(editInfo.getShowBy().value())
             );
         }
         vo.setEdit(editList);
@@ -162,6 +163,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                     .setType(referenceInfo.getType().name())
                     .setReferenceName(referenceInfo.getReferenceClass().getSimpleName())
                     .setReferenceField(referenceInfo.getReferenceField())
+                    .setReferenceTransmitField(referenceInfo.getReferenceTransmitField())
                     .setStorageField(referenceInfo.getStorageField())
                     .setDisplayField(referenceInfo.getDisplayField());
             referenceMap.put(field, reference);
@@ -215,6 +217,8 @@ public class NovaTableServiceImpl implements NovaTableService {
                         .setSize(pageBean.getSize())
                         .setConditions(requestConditions)
                         .setOrders(requestOrders)
+                        .setNovaName(novaTableData.getSourceNovaName())
+                        .setSourceFields(novaTableData.getSourceFields())
                 )
                 .setMybatisPLus(new FetchRequest.MybatisPLus()
                         .setPage(Page.of(pageBean.getCurrent(), pageBean.getSize()))

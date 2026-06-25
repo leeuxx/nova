@@ -142,7 +142,7 @@ window.NovaTableJQ = (function ($) {
       url:         '/nova/table/data',
       method:      'POST',
       contentType: 'application/json',
-      data:        JSON.stringify({ novaName: queryName, pageBean: pageBean, conditions: conditions }),
+      data:        JSON.stringify({ novaName: queryName, sourceNovaName: target._sourceNovaName || queryName, sourceFields: target._sourceFields || {}, pageBean: pageBean, conditions: conditions }),
       success: function (resp) {
         var t = window.vmMap && window.vmMap[vmKey]
         if (!t) return
@@ -450,9 +450,11 @@ window.NovaTableJQ = (function ($) {
     var target     = vm()
     var formData   = target.formData
     var editFields = target.editFields || []
+    var visibleSet = new Set((target.visibleEditFields || []).filter(function(v) { return v.visible }).map(function(v) { return v.field.field }))
     var errors     = {}
     editFields.forEach(function (f) {
       if (f.type === 'DIVIDE' || f.type === 'EMPTY' || !f.notNull) return
+      if (!visibleSet.has(f.field)) return
       var val = formData[f.field]
       var empty = val === null || val === undefined || val === '' || (Array.isArray(val) && val.length === 0)
       if (empty) errors[f.field] = f.title + '不能为空'
@@ -542,12 +544,12 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── picker 模式初始化（不更新 tableHeight，不绑 resize） ────────
-  function onPickerMounted(novaName, vmKey) {
-    buildTableForKey(novaName, vmKey)
+  function onPickerMounted(novaName, vmKey, sourceNovaName, sourceFields) {
+    buildTableForKey(novaName, vmKey, sourceNovaName, sourceFields)
   }
 
   // ── picker 专用 buildTable，用 vmKey 索引而非 novaName ─────────
-  function buildTableForKey(novaName, vmKey) {
+  function buildTableForKey(novaName, vmKey, sourceNovaName, sourceFields) {
     if (!novaName || !vmKey) return
     $.ajax({
       url:         '/nova/table/build',
@@ -558,6 +560,8 @@ window.NovaTableJQ = (function ($) {
         if (resp.code !== 200) return
         var target = window.vmMap && window.vmMap[vmKey]
         if (!target) return
+        target._sourceNovaName = sourceNovaName || novaName
+        target._sourceFields   = sourceFields || {}
         target.choiceMap     = resp.data.choice      || {}
         target.tagMap        = resp.data.tag         || {}
         target.dateMap       = resp.data.date        || {}

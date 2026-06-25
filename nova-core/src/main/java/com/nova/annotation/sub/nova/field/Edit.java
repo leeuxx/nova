@@ -23,6 +23,9 @@ public @interface Edit {
     @Comment("是否只读")
     Readonly readonly() default @Readonly;
 
+    @Comment("动态是否显示,使用此方式必须把show设置为true")
+    ShowBy showBy() default @ShowBy("");
+
     @Comment("组件类型")
     Type type() default Type.AUTO;
 
