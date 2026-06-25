@@ -2,10 +2,7 @@ package com.nova.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nova.annotation.fun.DataProxy;
-import com.nova.annotation.fun.FetchRequest;
-import com.nova.annotation.fun.FetchResponse;
-import com.nova.annotation.fun.PromptSearchResponse;
+import com.nova.annotation.fun.*;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 import com.nova.service.NovaTableService;
@@ -281,16 +278,27 @@ public class NovaTableServiceImpl implements NovaTableService {
     }
 
     @Override
-    public List<NovaTablePromptSearch.Vo> promptSearch(NovaTablePromptSearch novaTablePromptSearch) {
-        List<PromptSearchResponse> promptSearchResponses = ((DataProxy) DataProxyUtils.getDataProxy(novaTablePromptSearch.getNovaName())).promptSearch(novaTablePromptSearch.getSourceNovaName(), novaTablePromptSearch.getPrompt());
+    public PageBean<NovaTablePromptSearch.Vo> promptSearch(NovaTablePromptSearch novaTablePromptSearch) {
+        PageBean<NovaTablePromptSearch.Vo> pageBean = novaTablePromptSearch.getPageBean();
+        PromptSearchResponse promptSearchResponse = DataProxyUtils.getDataProxy(novaTablePromptSearch.getNovaName()).promptSearch(new PromptSearchRequest()
+                .setCurrent(pageBean.getCurrent())
+                .setSize(pageBean.getSize())
+                .setNovaName(novaTablePromptSearch.getNovaName())
+                .setPrompt(novaTablePromptSearch.getPrompt())
+        );
+        if (promptSearchResponse == null) {
+            return pageBean;
+        }
+        List<PromptSearchResponse.Record> records = promptSearchResponse.getRecords();
         List<NovaTablePromptSearch.Vo> vos = new ArrayList<>();
-        for (PromptSearchResponse promptSearchRespons : promptSearchResponses) {
+        for (PromptSearchResponse.Record record : records) {
             NovaTablePromptSearch.Vo vo = new NovaTablePromptSearch.Vo()
-                    .setStorageField(promptSearchRespons.getStorageField())
-                    .setDisplayField(promptSearchRespons.getDisplayField());
+                    .setStorageField(record.getStorageField())
+                    .setDisplayField(record.getDisplayField());
             vos.add(vo);
         }
-        return vos;
+        pageBean.setTotal(promptSearchResponse.getTotal()).setRecords(vos);
+        return pageBean;
     }
 
 }

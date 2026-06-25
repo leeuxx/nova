@@ -75,8 +75,11 @@ const NovaTable = {
       previewIndex:     0,
       slideDirection:  'right',
       attachmentDropdownKey: null,
-      refSelectOptions:  {},   // { [field]: [{label, value, raw}] }
+      refSelectOptions:  {},   // { [field]: [{label, value}] }
       refSelectLoading:  {},   // { [field]: bool }
+      refSelectTotal:    {},   // { [field]: number }
+      refSelectPage:     {},   // { [field]: number }
+      refSelectQuery:    {},   // { [field]: string }
       _refSelectTimers:  {},   // 防抖 timer
       paginationConfig: {
         page:            1,
@@ -544,14 +547,20 @@ const NovaTable = {
       if (this.isReadonly(f)) return
       const refInfo = this.referenceMap[f.field]
       if (!refInfo || !refInfo.referenceName) return
-
-      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, visible: true })
+      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, visible: false })
+      this.$nextTick(() => {
+        const picker = this.refPickerStack[this.refPickerStack.length - 1]
+        if (picker) picker.visible = true
+      })
     },
     openReferenceModalForFilter(f) {
       const refInfo = this.referenceMap[f.field]
       if (!refInfo || !refInfo.referenceName) return
-
-      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: true, visible: true })
+      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: true, visible: false })
+      this.$nextTick(() => {
+        const picker = this.refPickerStack[this.refPickerStack.length - 1]
+        if (picker) picker.visible = true
+      })
     },
     closePickerAtLevel(level) {
       const picker = this.refPickerStack.find(p => p.level === level)
@@ -592,36 +601,75 @@ const NovaTable = {
 
       this.closePickerAtLevel(level)
     },
+    _doRefSelectRequest(field, refField, query, page, append, onDone) {
+      const refInfo = this.referenceMap[refField] || {}
+      this.refSelectLoading[field] = true
+      $.ajax({
+        url: '/nova/table/promptSearch',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          novaName: refInfo.referenceName,
+          sourceNovaName: this.novaName,
+          prompt: query,
+          pageBean: { current: page, size: 10 }
+        }),
+        success: (resp) => {
+          const pb = resp.data || {}
+          const items = (pb.records || []).map(item => ({
+            label: String(item.displayField ?? ''),
+            value: item.storageField
+          }))
+          this.refSelectOptions[field] = append
+            ? (this.refSelectOptions[field] || []).concat(items)
+            : items
+          this.refSelectTotal[field] = pb.total || 0
+          this.refSelectPage[field]  = page
+          this.refSelectLoading[field] = false
+          if (onDone) this.$nextTick(onDone)
+        },
+        error: () => { this.refSelectLoading[field] = false }
+      })
+    },
     onRefSelectSearch(f, query) {
       const field = f.field
       const refField = f._refField || field
-      const refInfo = this.referenceMap[refField] || {}
       clearTimeout(this._refSelectTimers[field])
       if (!query) {
         this.refSelectOptions[field] = []
+        this.refSelectTotal[field]   = 0
+        this.refSelectPage[field]    = 1
+        this.refSelectQuery[field]   = ''
         return
       }
+      this.refSelectQuery[field]   = query
       this.refSelectLoading[field] = true
       this._refSelectTimers[field] = setTimeout(() => {
-        $.ajax({
-          url: '/nova/table/promptSearch',
-          method: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify({
-            novaName: refInfo.referenceName,
-            sourceNovaName: this.novaName,
-            prompt: query
-          }),
-          success: (resp) => {
-            this.refSelectOptions[field] = (resp.data || []).map(item => ({
-              label: String(item.displayField ?? ''),
-              value: item.storageField
-            }))
-            this.refSelectLoading[field] = false
-          },
-          error: () => { this.refSelectLoading[field] = false }
-        })
+        this._doRefSelectRequest(field, refField, query, 1, false)
       }, 300)
+    },
+    loadMoreRefSelect(field, refField) {
+      const query = this.refSelectQuery[field]
+      if (!query || this.refSelectLoading[field]) return
+      const nextPage = (this.refSelectPage[field] || 1) + 1
+      const menu = document.querySelector('.n-base-select-menu')
+      const scrollEl = menu && (
+        menu.querySelector('.n-virtual-list') ||
+        menu.querySelector('.n-scrollbar-container') ||
+        menu.querySelector('.n-base-select-menu__items')
+      )
+      const savedTop = scrollEl ? scrollEl.scrollTop : 0
+      this._doRefSelectRequest(field, refField, query, nextPage, true, () => {
+        requestAnimationFrame(() => {
+          const m = document.querySelector('.n-base-select-menu')
+          const el = m && (
+            m.querySelector('.n-virtual-list') ||
+            m.querySelector('.n-scrollbar-container') ||
+            m.querySelector('.n-base-select-menu__items')
+          )
+          if (el) el.scrollTop = savedTop
+        })
+      })
     },
     onRefSelectUpdate(f, value, option) {
       this.formData[f.field] = value
@@ -722,7 +770,7 @@ const NovaTable = {
               />
               <!-- 筛选区 REFERENCE 非 vague：下拉搜索 -->
               <n-select
-                v-else-if="field.type === 'REFERENCE' && referenceMap[field.field] && !field.vague"
+                v-else-if="field.type === 'REFERENCE' && referenceMap[field.field] && field.vague"
                 :value="filterForm[field.field] || null"
                 :options="refSelectOptions['_f_' + field.field] || []"
                 :loading="!!refSelectLoading['_f_' + field.field]"
@@ -742,12 +790,18 @@ const NovaTable = {
                   </div>
                 </template>
                 <template #action>
-                  <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-top:1px solid #f0f0f0">
-                    <span style="font-size:12px;color:#aaa">共 11 条</span>
-                    <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#2563eb;cursor:pointer;padding:2px 6px;border-radius:4px;transition:background .15s" onmouseenter="this.style.background='#eff6ff'" onmouseleave="this.style.background='transparent'">
-                      <iconify-icon icon="mdi:refresh" style="font-size:13px"></iconify-icon>
-                      加载更多
+                  <div style="display:flex;align-items:center;justify-content:center;padding:6px 8px">
+                    <div v-if="(refSelectOptions['_f_' + field.field] || []).length < (refSelectTotal['_f_' + field.field] || 0)"
+                      style="display:flex;align-items:center;gap:4px;font-size:12px;color:#2563eb;cursor:pointer;padding:2px 6px;border-radius:4px;transition:background .15s"
+                      @mouseenter="$event.currentTarget.style.background='#eff6ff'"
+                      @mouseleave="$event.currentTarget.style.background='transparent'"
+                      @click.stop="loadMoreRefSelect('_f_' + field.field, field.field)">
+                      <iconify-icon icon="mdi:chevron-down" style="font-size:14px"></iconify-icon>
+                      加载更多({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
                     </div>
+                    <span v-else-if="(refSelectOptions['_f_' + field.field] || []).length > 0" style="font-size:12px;color:#aaa">
+                      已全部加载({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
+                    </span>
                   </div>
                 </template>
               </n-select>

@@ -60,7 +60,7 @@ public class TestDemo {
                             type = ReferenceType.Type.MANY_TO_ONE,
                             referenceField = "demo2Id"
                     ),
-                    search = @Search
+                    search = @Search(vague = true)
             )
     )
     private TestDemo2 testDemo2;

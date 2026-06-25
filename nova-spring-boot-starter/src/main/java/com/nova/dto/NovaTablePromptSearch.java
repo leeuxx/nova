@@ -2,7 +2,9 @@ package com.nova.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nova.annotation.config.Comment;
+import com.nova.dto.page.PageBean;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -21,6 +23,10 @@ public class NovaTablePromptSearch {
     @Comment("提示词")
     @NotBlank(message = "prompt不能为空")
     private String prompt;
+
+    @Comment("分页信息")
+    @NotNull(message = "pageBean不能为空")
+    private PageBean<Vo> pageBean;
 
     @Data
     @Accessors(chain = true)

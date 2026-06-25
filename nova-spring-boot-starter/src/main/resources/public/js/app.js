@@ -85,7 +85,17 @@ function processMenus(list) {
     if (defaultPath === '/home') defaultPath = key
   })
 
-  return { menuTree: roots, routeMeta: routeMeta, bcIconMap: bcIconMap, defaultPath: defaultPath }
+  // 构建 childKey → parentKey 的映射，用于自动展开父级菜单
+  var parentKeyMap = {}
+  list.forEach(function (item) {
+    if (item.pid && nodeMap[item.pid]) {
+      var childKey  = nodeMap[item.id].key
+      var parentKey = nodeMap[item.pid].key
+      parentKeyMap[childKey] = parentKey
+    }
+  })
+
+  return { menuTree: roots, routeMeta: routeMeta, bcIconMap: bcIconMap, defaultPath: defaultPath, parentKeyMap: parentKeyMap }
 }
 
 // ─── themeOverrides ──────────────────────────────────────────────
@@ -112,6 +122,7 @@ function mountApp(menuList) {
   var routeMeta   = processed.routeMeta
   var bcIconMap   = processed.bcIconMap
   var defaultPath = processed.defaultPath
+  var parentKeyMap = processed.parentKeyMap
 
   // ── 布局组件 ──────────────────────────────────────────────────
   const App = {
@@ -123,6 +134,7 @@ function mountApp(menuList) {
       const isDark     = ref(false)
       const openedTabs = ref([])
       const activeTab  = ref('')
+      const expandedKeys = ref([])
 
       const theme = computed(() => isDark.value ? darkTheme : null)
 
@@ -139,6 +151,13 @@ function mountApp(menuList) {
           openedTabs.value.push({ key: path, title: meta.title, icon: meta.icon, closable: path !== '/home' })
         }
         activeTab.value = path
+        // 自动展开当前路由的祖先菜单节点
+        const ancestors = []
+        let cur = parentKeyMap[path]
+        while (cur) { ancestors.push(cur); cur = parentKeyMap[cur] }
+        if (ancestors.length) {
+          expandedKeys.value = [...new Set([...expandedKeys.value, ...ancestors])]
+        }
       }, { immediate: true })
 
       // 面包屑
@@ -168,7 +187,7 @@ function mountApp(menuList) {
       const userDropdown   = [{ label: '个人中心', key: 'profile' }, { label: '退出登录', key: 'logout' }]
 
       return {
-        collapsed, isDark, theme, themeOverrides, openedTabs, activeTab,
+        collapsed, isDark, theme, themeOverrides, openedTabs, activeTab, expandedKeys,
         menuTree, breadcrumbItems, zhCN, dateZhCN,
         handleMenuSelect, handleTabClose, handleTabClick, userDropdown
       }
@@ -197,6 +216,8 @@ function mountApp(menuList) {
                     :collapsed="collapsed"
                     :collapsed-width="64"
                     :collapsed-icon-size="22"
+                    :expanded-keys="expandedKeys"
+                    @update:expanded-keys="expandedKeys = $event"
                     @update:value="handleMenuSelect"
                   />
                 </n-layout-sider>

@@ -11,8 +11,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.List;
-
 @AllArgsConstructor
 @RestMappingController("nova/table")
 public class NovaTableController {
@@ -29,8 +27,8 @@ public class NovaTableController {
     @Comment("获取表格数据")
     @PostMapping("data")
     public R<PageBean<?>> data(@RequestBody @Validated NovaTableData novaTableData) {
-        PageBean<?> data = novaTableService.data(novaTableData);
-        return R.ok(data);
+        PageBean<?> pageBean = novaTableService.data(novaTableData);
+        return R.ok(pageBean);
     }
 
     @Comment("新增表格数据")
@@ -56,8 +54,8 @@ public class NovaTableController {
 
     @Comment("关键词搜索")
     @PostMapping("promptSearch")
-    public R<List<NovaTablePromptSearch.Vo>> promptSearch(@RequestBody @Validated NovaTablePromptSearch novaTablePromptSearch) {
-        List<NovaTablePromptSearch.Vo> vos = novaTableService.promptSearch(novaTablePromptSearch);
-        return R.ok(vos);
+    public R<PageBean<NovaTablePromptSearch.Vo>> promptSearch(@RequestBody @Validated NovaTablePromptSearch novaTablePromptSearch) {
+        PageBean<NovaTablePromptSearch.Vo> pageBean = novaTableService.promptSearch(novaTablePromptSearch);
+        return R.ok(pageBean);
     }
 }

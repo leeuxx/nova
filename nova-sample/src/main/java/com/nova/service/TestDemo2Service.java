@@ -2,11 +2,9 @@ package com.nova.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.nova.annotation.fun.DataProxy;
-import com.nova.annotation.fun.FetchRequest;
-import com.nova.annotation.fun.FetchResponse;
-import com.nova.annotation.fun.PromptSearchResponse;
+import com.nova.annotation.fun.*;
 import com.nova.entity.TestDemo;
 import com.nova.entity.TestDemo2;
 import com.nova.mapper.TestDemo2Mapper;
@@ -49,17 +47,20 @@ public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> im
     }
 
     @Override
-    public List<PromptSearchResponse> promptSearch(String novaName, String prompt) {
-        List<TestDemo2> testDemo2s = list(new LambdaQueryWrapper<TestDemo2>()
-                .like(TestDemo2::getName, prompt)
-        );
-        List<PromptSearchResponse> promptSearchResponses = new ArrayList<>();
-        for (TestDemo2 testDemo2 : testDemo2s) {
-            PromptSearchResponse promptSearchResponse = new PromptSearchResponse()
-                    .setStorageField(String.valueOf(testDemo2.getId()))
+    public PromptSearchResponse promptSearch(PromptSearchRequest promptSearchRequest) {
+        LambdaQueryWrapper<TestDemo2> lambdaQueryWrapper = new LambdaQueryWrapper<TestDemo2>()
+                .like(TestDemo2::getName, promptSearchRequest.getPrompt());
+        IPage<TestDemo2> iPage = page(Page.of(promptSearchRequest.getCurrent(), promptSearchRequest.getSize()), lambdaQueryWrapper);
+        List<TestDemo2> records = iPage.getRecords();
+        List<PromptSearchResponse.Record> list = new ArrayList<>();
+        for (TestDemo2 testDemo2 : records) {
+            PromptSearchResponse.Record record = new PromptSearchResponse.Record()
+                    .setStorageField(testDemo2.getId().toString())
                     .setDisplayField(testDemo2.getName());
-            promptSearchResponses.add(promptSearchResponse);
+            list.add(record);
         }
-        return promptSearchResponses;
+        return new PromptSearchResponse()
+                .setTotal(iPage.getTotal())
+                .setRecords(list);
     }
 }

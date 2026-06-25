@@ -19,10 +19,11 @@ public interface DataProxy<MODEL> {
     }
 
     @Comment("查询")
-    FetchResponse<MODEL> fetch(FetchRequest<MODEL> queryRequest);
+    FetchResponse<MODEL> fetch(FetchRequest<MODEL> fetchRequest);
 
-    @Comment("关键词搜索（被引用表做为查询条件搜索时触发, 返回被引用列和显示列）")
-    default List<PromptSearchResponse> promptSearch(String novaName, String prompt) {
+    @Comment("关键词搜索（被引用表做为下拉查询条件搜索时触发, 返回被引用列和显示列）")
+    default PromptSearchResponse promptSearch(PromptSearchRequest promptSearchRequest) {
         return null;
     }
+
 }

@@ -4,8 +4,6 @@ import com.nova.annotation.config.Comment;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 
-import java.util.List;
-
 public interface NovaTableService {
 
     @Comment("构建表格页")
@@ -24,5 +22,5 @@ public interface NovaTableService {
     NovaTableDelete.Vo delete(NovaTableDelete novaTableDelete);
 
     @Comment("关键词搜索")
-    List<NovaTablePromptSearch.Vo> promptSearch(NovaTablePromptSearch novaTablePromptSearch);
+    PageBean<NovaTablePromptSearch.Vo> promptSearch(NovaTablePromptSearch novaTablePromptSearch);
 }
