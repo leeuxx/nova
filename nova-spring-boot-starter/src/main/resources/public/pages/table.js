@@ -158,10 +158,9 @@ const NovaTable = {
       refPickerData:  [],
       refPickerLoading: false,
       refPickerColumns: [],
-      refPickerStack: [],
-      tableWrapperWidth: 0,
+      refPickerStack: [],      tableWrapperWidth: 0,
       novaName:       '',
-      pkFieldName:    'id',
+      idFieldName:    'id',
       tableRowColors: [],
       tableData:      [],
       rawTableData:   [],
@@ -258,8 +257,8 @@ const NovaTable = {
           render(row) {
             return h('div', { style: 'display:flex;align-items:center;justify-content:center;width:100%;height:100%' }, [
               h(NRadio, {
-                value: row[vm.pkFieldName],
-                checked: vm.selectedRowKey === row[vm.pkFieldName],
+                value: row[vm.idFieldName],
+                checked: vm.selectedRowKey === row[vm.idFieldName],
                 onClick: () => vm.selectRow(row),
                 style: { transform: 'scale(1.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }
               })
@@ -337,7 +336,7 @@ const NovaTable = {
             const bInfo = vm.booleanMap && vm.booleanMap[col.field]
             if (bInfo && bInfo.type === 'SWITCH') {
               const novaName = vm.novaName
-              const pkField = vm.pkFieldName || 'id'
+              const pkField = vm.idFieldName || 'id'
               const editField = (vm.editFields || []).find(function(f) { return f.field === col.field })
               const disabled = !editField || (editField.readonly && editField.readonly.edit)
               const isDark = document.body.classList.contains('dark')
@@ -727,7 +726,7 @@ const NovaTable = {
     buildPickerSourceFields(picker) {
       if (picker.isForFilter) return {}
       const fields = {}
-      if (this.currentRow) fields.ids = String(this.currentRow[this.pkFieldName] || '')
+      if (this.currentRow) fields.ids = String(this.currentRow[this.idFieldName] || '')
       const refInfo = this.referenceMap[picker.field.field]
       const transmit = refInfo && refInfo.referenceTransmitField
       if (transmit && transmit.length) {
@@ -864,7 +863,7 @@ const NovaTable = {
       return String(val)
     },
     selectRow(row) {
-      this.selectedRowKey = row[this.pkFieldName]
+      this.selectedRowKey = row[this.idFieldName]
       this.$emit('pick', row)
     },
     handlePageChange(current) {
@@ -1062,7 +1061,7 @@ const NovaTable = {
           <n-data-table
             :data="filteredData"
             :columns="columns"
-            :row-key="row => row[pkFieldName]"
+            :row-key="row => row[idFieldName]"
             :checked-row-keys="checkedRowKeys"
             @update:checked-row-keys="handleCheck"
             :row-props="pickerMode ? (row) => ({ style: 'cursor:pointer', onClick: () => selectRow(row) }) : undefined"

@@ -60,7 +60,7 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
         );
         // 获取所有带有 @Nova 注解的类
         Set<Class<?>> novaClasses = reflections.getTypesAnnotatedWith(Nova.class);
-        String pkFieldName = null;
+        String idFieldName = null;
         for (Class<?> clz : novaClasses) {
             log.info("找到 @Nova 注解类: {}", clz.getName());
             Map<String, ScanNova.NovaFieldInfo> novaFields = new LinkedHashMap<>();
@@ -76,13 +76,13 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
                     );
                 }
                 if (field.isAnnotationPresent(TableId.class)) {
-                    pkFieldName = field.getName();
+                    idFieldName = field.getName();
                 }
             }
             Nova nova = clz.getDeclaredAnnotation(Nova.class);
             ScanNova scanNova = new ScanNova()
                     .setClz(clz)
-                    .setPkFieldName(pkFieldName)
+                    .setIdFieldName(idFieldName)
                     .setNova(nova)
                     .setNovaFields(novaFields)
                     .setDataProxyClass(nova.dataProxy());
@@ -97,8 +97,8 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
         @Comment("类")
         private Class<?> clz;
 
-        @Comment("主键属性名")
-        private String pkFieldName;
+        @Comment("ID属性名")
+        private String idFieldName;
 
         @Comment("Nova注解")
         private Nova nova;

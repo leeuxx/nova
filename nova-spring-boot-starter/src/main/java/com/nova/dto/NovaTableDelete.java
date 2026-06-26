@@ -17,9 +17,9 @@ public class NovaTableDelete {
     @NotBlank(message = "novaName不能为空")
     private String novaName;
 
-    @Comment("主键属性名")
-    @NotBlank(message = "pkFieldName不能为空")
-    private String pkFieldName;
+    @Comment("数据标识属性名")
+    @NotBlank(message = "idFieldName不能为空")
+    private String idFieldName;
 
     @Comment("主键值列表")
     @NotEmpty(message = "pkValues不能为空")

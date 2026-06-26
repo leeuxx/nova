@@ -25,9 +25,9 @@ public class NovaTableServiceImpl implements NovaTableService {
     @Override
     public NovaTableBuild.Vo build(NovaTableBuild novaTableBuild) {
         NovaTableBuild.Vo vo = new NovaTableBuild.Vo();
-        // 获取主键属性名称
-        String pkFieldName = NovaFieldUtils.getPkFieldName(novaTableBuild.getNovaName());
-        vo.setPkFieldName(pkFieldName);
+        // 获取数据标识属性名称
+        String idFieldName = NovaFieldUtils.getIdFieldName(novaTableBuild.getNovaName());
+        vo.setIdFieldName(idFieldName);
         // 获取搜索条件
         List<NovaTableBuild.Vo.Search> searchList = new ArrayList<>();
         List<NovaFieldUtils.SearchInfo> searchs = NovaFieldUtils.getSearch(novaTableBuild.getNovaName());
@@ -271,7 +271,7 @@ public class NovaTableServiceImpl implements NovaTableService {
     @Override
     public NovaTableDelete.Vo delete(NovaTableDelete novaTableDelete) {
         String novaName = novaTableDelete.getNovaName();
-        String pkColumn = MixUtils.camelToSnake(novaTableDelete.getPkFieldName());
+        String pkColumn = MixUtils.camelToSnake(novaTableDelete.getIdFieldName());
         List<Object> models = new ArrayList<>();
         for (String pk : novaTableDelete.getPkValues()) {
             models.add(DataProxyUtils.buildModel(novaName, List.of(pkColumn), List.of(pk)));

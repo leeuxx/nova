@@ -153,7 +153,7 @@ window.NovaTableJQ = (function ($) {
         t.paginationConfig.itemCount   = resp.data.total      || 0
         t.paginationConfig.page        = resp.data.current    || pageBean.current
         t.paginationConfig.pageSize    = resp.data.size       || pageBean.size
-        if (resp.data.pkFieldName)     t.pkFieldName          = resp.data.pkFieldName
+        if (resp.data.idFieldName)     t.idFieldName          = resp.data.idFieldName
         translateData(vmKey)
       },
       error: function () {
@@ -331,7 +331,7 @@ window.NovaTableJQ = (function ($) {
   // ── 打开编辑弹窗 ──────────────────────────────────────────────
   function handleEdit(row) {
     var target = vm()
-    var pkField = target.pkFieldName || 'id'
+    var pkField = target.idFieldName || 'id'
     var pkVal = row[pkField]
     // 从 rawTableData 找对应原始行（翻译前的值）
     var rawRow = null
@@ -396,14 +396,14 @@ window.NovaTableJQ = (function ($) {
   // ── 删除单条 ──────────────────────────────────────────────────
   function handleDelete(row) {
     var target = vm()
-    var pkField = target.pkFieldName || 'id'
+    var pkField = target.idFieldName || 'id'
     doDelete(target.novaName, pkField, [String(row[pkField])])
   }
 
   // ── 批量删除 ──────────────────────────────────────────────────
   function handleBatchDelete() {
     var target = vm()
-    var pkField = target.pkFieldName || 'id'
+    var pkField = target.idFieldName || 'id'
     var keys = target.checkedRowKeys.map(function (k) { return String(k) })
     if (!window.$dialog) {
       doDelete(target.novaName, pkField, keys)
@@ -425,12 +425,12 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── 删除公共逻辑 ──────────────────────────────────────────────
-  function doDelete(novaName, pkFieldName, pkValues) {
+  function doDelete(novaName, idFieldName, pkValues) {
     $.ajax({
       url:         '/nova/table/delete',
       method:      'POST',
       contentType: 'application/json',
-      data:        JSON.stringify({ novaName: novaName, pkFieldName: pkFieldName, pkValues: pkValues }),
+      data:        JSON.stringify({ novaName: novaName, idFieldName: idFieldName, pkValues: pkValues }),
       success: function (resp) {
         var t = window.vmMap && window.vmMap[novaName]
         if (!t) return
@@ -464,7 +464,7 @@ window.NovaTableJQ = (function ($) {
     if (target.currentRow) {
       // 编辑
       var novaName = target.novaName
-      var pkField = target.pkFieldName || 'id'
+      var pkField = target.idFieldName || 'id'
       var pkValue = String(target.currentRow[pkField])
       var formInfo = editFields.filter(function (f) { return f.type !== 'DIVIDE' && f.type !== 'EMPTY' }).map(function (f) {
         var val = formData[f.field]
@@ -592,7 +592,7 @@ window.NovaTableJQ = (function ($) {
           target.pageSizes = layout.pageSizes
           target.paginationConfig.pageSizes = layout.pageSizes.map(function (n) { return { label: n + ' 条/页', value: n } })
         }
-        if (resp.data.pkFieldName) target.pkFieldName = resp.data.pkFieldName
+        if (resp.data.idFieldName) target.idFieldName = resp.data.idFieldName
         loadData(vmKey)
       },
       error: function () {

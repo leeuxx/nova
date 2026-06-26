@@ -20,8 +20,8 @@ public class NovaTableBuild {
     @Accessors(chain = true)
     public static class Vo {
 
-        @Comment("主键属性名")
-        private String pkFieldName;
+        @Comment("数据标识属性名")
+        private String idFieldName;
 
         @Comment("查询条件")
         private List<Search> search;

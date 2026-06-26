@@ -14,18 +14,18 @@ import java.util.*;
 public class NovaFieldUtils {
 
     /**
-     * 获取主键字段名
+     * 获取数据标识字段名
      *
      * @param className 类名
      * @return 主键字段名
      */
-    public static String getPkFieldName(String className) {
+    public static String getIdFieldName(String className) {
         Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
         NovaApplication.ScanNova scanNova = scanNovas.get(className);
         if (scanNova == null) {
             return null;
         }
-        return scanNova.getPkFieldName();
+        return scanNova.getIdFieldName();
     }
 
     /**
