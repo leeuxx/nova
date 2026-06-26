@@ -24,6 +24,6 @@ public @interface Nova {
     Layout layout() default @Layout;
 
     @Comment("数据行为代理接口，对增、删、改、查等行为做逻辑处理")
-    Class<? extends DataProxy<?>> dataProxy();
+    Class<? extends DataProxy<?, ?>> dataProxy();
 
 }

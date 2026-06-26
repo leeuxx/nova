@@ -107,7 +107,7 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
         private Map<String, NovaFieldInfo> novaFields;
 
         @Comment("数据代理类")
-        private Class<? extends DataProxy<?>> dataProxyClass;
+        private Class<? extends DataProxy<?, ?>> dataProxyClass;
 
         @Data
         @Accessors(chain = true)

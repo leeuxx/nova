@@ -11,16 +11,20 @@ import com.nova.annotation.sub.nova.field.edit.ChoiceFetchHandler;
 import com.nova.entity.TestDemo;
 import com.nova.entity.TestDemo2;
 import com.nova.mapper.TestDemoMapper;
+import com.nova.view.TestDemo2View;
+import com.nova.view.TestDemoView;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 @Service
 @AllArgsConstructor
-public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemo> {
+public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemo, TestDemoView> {
 
     private TestDemo2Service testDemo2Service;
 
@@ -34,7 +38,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     }
 
     @Override
-    public FetchResponse<TestDemo> fetch(FetchRequest<TestDemo> queryRequest) {
+    public FetchResponse<TestDemoView> fetch(FetchRequest<TestDemo> queryRequest) {
         FetchRequest.MybatisPLus<TestDemo> mybatisPLus = queryRequest.getMybatisPLus();
         LambdaQueryWrapper<TestDemo> wrapper = mybatisPLus.getWrapper();
         IPage<TestDemo> iPage = page(mybatisPLus.getPage(), wrapper);
@@ -43,33 +47,50 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
                 .map(TestDemo::getDemo2Id)
                 .filter(Objects::nonNull)
                 .toList();
+        List<TestDemoView> testDemoViews = new ArrayList<>();
         if (!demo2IdList.isEmpty()) {
             List<TestDemo2> testDemo2s = testDemo2Service.listByIds(demo2IdList);
             for (TestDemo record : records) {
-                record.setTestDemo2(testDemo2s.stream()
-                        .filter(testDemo2 -> testDemo2.getId().equals(record.getDemo2Id()))
-                        .findFirst()
-                        .orElse(null));
+                TestDemoView testDemoView = new TestDemoView();
+                BeanUtils.copyProperties(record, testDemoView); // 源，目标
+                for (TestDemo2 testDemo2 : testDemo2s) {
+                    if (testDemo2.getId().equals(record.getDemo2Id())) {
+                        TestDemo2View testDemo2View = new TestDemo2View();
+                        BeanUtils.copyProperties(testDemo2, testDemo2View); // 源，目标
+                        testDemoView.setTestDemo2View(testDemo2View);
+                    }
+                }
+                testDemoViews.add(testDemoView);
             }
         }
-        return new FetchResponse<TestDemo>()
+        return new FetchResponse<TestDemoView>()
                 .setTotal(iPage.getTotal())
-                .setRecords(records);
+                .setRecords(testDemoViews);
     }
 
     @Override
-    public void add(TestDemo testDemo) {
-        testDemo.setId(YitIdHelper.nextId());
+    public void add(TestDemoView testDemoView) {
+        testDemoView.setId(YitIdHelper.nextId());
+        TestDemo testDemo = new TestDemo();
+        BeanUtils.copyProperties(testDemoView, testDemo);
         save(testDemo);
     }
 
     @Override
-    public void delete(List<TestDemo> testDemos) {
-        removeBatchByIds(testDemos);
+    public void delete(List<TestDemoView> testDemoViews) {
+        List<TestDemo> testDemoList = new ArrayList<>();
+        for (TestDemoView testDemoView : testDemoViews) {
+            TestDemo testDemo = new TestDemo();
+            BeanUtils.copyProperties(testDemoView, testDemo);
+            testDemoList.add(testDemo);
+        }
+        removeBatchByIds(testDemoList);
     }
 
     @Override
-    public void update(TestDemo testDemo) {
+    public void update(TestDemoView testDemoView) {
+        TestDemo testDemo = new TestDemo();
+        BeanUtils.copyProperties(testDemoView, testDemo);
         updateById(testDemo);
     }
 }

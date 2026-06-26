@@ -9,7 +9,10 @@ import com.nova.entity.TestDemo;
 import com.nova.entity.TestDemo2;
 import com.nova.mapper.TestDemo2Mapper;
 import com.nova.utils.SpringBeanUtils;
+import com.nova.view.TestDemo2View;
+import com.nova.view.TestDemoView;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -18,10 +21,10 @@ import java.util.Objects;
 
 @Service
 @AllArgsConstructor
-public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> implements DataProxy<TestDemo2> {
+public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> implements DataProxy<TestDemo2, TestDemo2View> {
 
     @Override
-    public FetchResponse<TestDemo2> fetch(FetchRequest<TestDemo2> queryRequest) {
+    public FetchResponse<TestDemo2View> fetch(FetchRequest<TestDemo2> queryRequest) {
         FetchRequest.MybatisPLus<TestDemo2> mybatisPLus = queryRequest.getMybatisPLus();
         LambdaQueryWrapper<TestDemo2> wrapper = mybatisPLus.getWrapper();
         IPage<TestDemo2> iPage = page(mybatisPLus.getPage(), wrapper);
@@ -31,19 +34,24 @@ public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> im
                 .filter(Objects::nonNull)
                 .toList();
         TestDemoService testDemoService = SpringBeanUtils.getBean(TestDemoService.class);
+        List<TestDemo2View> testDemo2Views = new ArrayList<>();
         if (!demoIdList.isEmpty()) {
             List<TestDemo> testDemos = testDemoService.listByIds(demoIdList);
             for (TestDemo2 record : records) {
-                record.setTestDemo(testDemos.stream()
-                        .filter(testDemo -> testDemo.getId().equals(record.getDemoId()))
-                        .findFirst()
-                        .orElse(null));
+                TestDemo2View testDemo2View = new TestDemo2View();
+                BeanUtils.copyProperties(record, testDemo2View); // 源，目标
+                for (TestDemo testDemo : testDemos) {
+                    if (testDemo.getId().equals(record.getDemoId())) {
+                        testDemo2View.setTestDemoView(new TestDemoView());
+                        BeanUtils.copyProperties(testDemo, testDemo2View.getTestDemoView()); // 源，目标
+                    }
+                }
+                testDemo2Views.add(testDemo2View);
             }
         }
-
-        return new FetchResponse<TestDemo2>()
+        return new FetchResponse<TestDemo2View>()
                 .setTotal(iPage.getTotal())
-                .setRecords(records);
+                .setRecords(testDemo2Views);
     }
 
     @Override

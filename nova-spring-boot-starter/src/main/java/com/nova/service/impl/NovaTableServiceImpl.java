@@ -226,7 +226,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                         .setWrapper(queryWrapper.lambda())
                 );
         // 调用代理
-        DataProxy<?> dataProxy = DataProxyUtils.getDataProxy(novaName);
+        DataProxy<?, ?> dataProxy = DataProxyUtils.getDataProxy(novaName);
         FetchResponse<?> fetch = dataProxy.fetch(queryRequest);
         List<Map<String, Object>> maps = new ArrayList<>();
         List<?> records = fetch.getRecords();
