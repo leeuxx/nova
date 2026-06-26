@@ -241,8 +241,9 @@ public class TestDemo {
                     title = "文件",
                     type = Edit.Type.ATTACHMENT,
                     attachmentType = @AttachmentType(
-                            maxLimit = 7,
-                            type = AttachmentType.Type.IMAGE
+                            type = AttachmentType.Type.IMAGE,
+                            showType = AttachmentType.ShowType.TOP,
+                            maxLimit = 7
                     )
             )
     )
@@ -254,8 +255,9 @@ public class TestDemo {
                     title = "文件2",
                     type = Edit.Type.ATTACHMENT,
                     attachmentType = @AttachmentType(
-                            maxLimit = 3,
-                            type = AttachmentType.Type.BASE
+                            type = AttachmentType.Type.BASE,
+                            showType = AttachmentType.ShowType.TOP,
+                            maxLimit = 3
                     )
             )
     )

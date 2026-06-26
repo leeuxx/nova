@@ -325,6 +325,7 @@ window.NovaTableJQ = (function ($) {
     vm().formMode   = 'add'
     vm().formData   = formData
     vm().formErrors = {}
+    vm().formTab    = 'form'
     vm().showForm   = true
   }
 
@@ -390,6 +391,7 @@ window.NovaTableJQ = (function ($) {
     target.formMode   = 'edit'
     target.formData   = $.extend({}, source)
     target.formErrors = {}
+    target.formTab    = 'form'
     target.showForm   = true
   }
 

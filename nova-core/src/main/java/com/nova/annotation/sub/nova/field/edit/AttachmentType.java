@@ -7,6 +7,9 @@ public @interface AttachmentType {
     @Comment("附件类型")
     Type type() default Type.BASE;
 
+    @Comment("附件显示类型")
+    ShowType showType() default ShowType.DOWN;
+
     @Comment("最大上传数")
     int maxLimit() default 1;
 
@@ -24,6 +27,13 @@ public @interface AttachmentType {
         BASE,
         @Comment("图片文件")
         IMAGE
+    }
+
+    enum ShowType {
+        @Comment("往上展开")
+        TOP,
+        @Comment("往下展开")
+        DOWN
     }
 
 }

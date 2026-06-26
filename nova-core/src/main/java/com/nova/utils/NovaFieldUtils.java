@@ -371,6 +371,7 @@ public class NovaFieldUtils {
             if (edit.type() == Edit.Type.ATTACHMENT) {
                 AttachmentTypeInfo attachmentTypeInfo = new AttachmentTypeInfo()
                         .setType(edit.attachmentType().type())
+                        .setShowType(edit.attachmentType().showType())
                         .setMaxLimit(edit.attachmentType().maxLimit())
                         .setMinSize(edit.attachmentType().minSize())
                         .setMaxSize(edit.attachmentType().maxSize())
@@ -585,6 +586,9 @@ public class NovaFieldUtils {
 
         @Comment("附件类型")
         private AttachmentType.Type type;
+
+        @Comment("附件显示类型")
+        private AttachmentType.ShowType showType;
 
         @Comment("最大上传数")
         private Integer maxLimit;

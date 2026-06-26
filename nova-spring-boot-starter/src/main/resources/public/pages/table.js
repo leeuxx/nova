@@ -172,6 +172,7 @@ const NovaTable = {
       searchFields:   [],
       filterForm:     {},
       showForm:       false,
+      formTab:        'form',
       formMode:       'add',
       currentRow:     null,
       formData:       {},
@@ -1078,8 +1079,12 @@ const NovaTable = {
       </n-card>
 
       <!-- 新增/编辑弹窗 -->
-      <n-modal v-model:show="showForm" preset="card" :title="formMode === 'add' ? '新增' : '编辑'" style="width:960px;margin-top:60px">
-        <div :style="'display:grid;gap:16px 24px;' + (editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
+      <n-modal v-model:show="showForm" preset="card" :title="formMode === 'add' ? '新增' : '编辑'" style="width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column" :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}">
+        <n-tabs v-model:value="formTab" type="line" style="padding:0 20px">
+
+          <!-- Tab 1: 表单 -->
+          <n-tab-pane name="form" tab="基本信息" style="padding:16px 0 20px 0">
+            <div :style="'display:grid;gap:16px 24px;' + (editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
           <template v-for="{field: f, visible: _vis} in visibleEditFields" :key="f.field">
             <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" v-show="_vis" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
             <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'" v-show="_vis"></div>
@@ -1210,10 +1215,10 @@ const NovaTable = {
                 <div class="attachment-btn">
                   <iconify-icon icon="mdi:paperclip" style="font-size:13px"></iconify-icon>
                   附件管理
-                  <iconify-icon icon="mdi:chevron-down" :style="'font-size:12px;transition:transform .2s ease;transform:' + (attachmentDropdownKey === f.field ? 'rotate(180deg)' : 'rotate(0deg)')"></iconify-icon>
+                  <iconify-icon icon="mdi:chevron-down" :style="'font-size:12px;transition:transform .2s ease;transform:' + (attachmentDropdownKey === f.field ? (attachmentMap[f.field] && attachmentMap[f.field].showType === 'DOWN' ? 'rotate(180deg)' : 'rotate(180deg)') : 'rotate(0deg)')"></iconify-icon>
                 </div>
                 <transition name="dropdown-fade">
-                  <div v-if="attachmentDropdownKey === f.field" class="attachment-dropdown">
+                  <div v-if="attachmentDropdownKey === f.field" :class="'attachment-dropdown' + (attachmentMap[f.field] && attachmentMap[f.field].showType === 'DOWN' ? ' down' : '')">
                     <div class="attachment-dropdown-inner">
                       <label v-if="!isReadonly(f) && (!attachmentMap[f.field] || !attachmentMap[f.field].maxLimit || (formData[f.field] || []).length < attachmentMap[f.field].maxLimit)"
                         class="attachment-dropdown-item"
@@ -1253,8 +1258,32 @@ const NovaTable = {
             </div>
           </template>
         </div>
+        </n-tab-pane>
+
+        <!-- Tab 2: 详情页 -->
+        <n-tab-pane name="detail" tab="详情信息" style="padding:16px 0 20px 0">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--n-border-color);border-radius:6px;overflow:hidden">
+            <template v-for="(f, idx) in editFields.filter(f => f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'ATTACHMENT')" :key="f.field">
+              <div :style="'display:flex;align-items:stretch;' + (idx % 2 === 0 ? 'border-right:1px solid var(--n-border-color);' : '') + (idx >= 2 ? 'border-top:1px solid var(--n-border-color);' : '')">
+                <div style="background:var(--n-th-color);padding:10px 14px;min-width:100px;font-size:13px;color:var(--n-title-text-color);font-weight:500;display:flex;align-items:center">{{ f.title }}</div>
+                <div style="padding:10px 14px;font-size:13px;flex:1;display:flex;align-items:center;word-break:break-all">{{ currentRow && (currentRow[f.field + '_display'] || currentRow[f.field]) }}</div>
+              </div>
+            </template>
+          </div>
+        </n-tab-pane>
+
+        <!-- Tab 3: 关联明细 -->
+        <n-tab-pane name="sub" tab="关联明细" style="padding:16px 0 20px 0">
+          <n-data-table size="small"
+            :columns="[{title:'编号',key:'no'},{title:'名称',key:'name'},{title:'金额',key:'amount'},{title:'时间',key:'time'}]"
+            :data="[{no:'001',name:'明细A',amount:'100.00',time:'2024-01-01'},{no:'002',name:'明细B',amount:'200.00',time:'2024-02-01'},{no:'003',name:'明细C',amount:'300.00',time:'2024-03-01'}]"
+            :pagination="{pageSize:10}"
+            :bordered="false" striped />
+        </n-tab-pane>
+
+        </n-tabs>
         <template #footer>
-          <n-space justify="end">
+          <n-space v-if="formTab === 'form'" justify="end">
             <n-button @click="showForm = false">取 消</n-button>
             <n-button type="primary" @click="handleFormSubmit">确 定</n-button>
           </n-space>
