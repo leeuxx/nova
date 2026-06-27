@@ -49,6 +49,9 @@ public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> im
         for (TestDemo2 testDemo2 : testDemo2s) {
             TestDemo2View testDemo2View = new TestDemo2View();
             BeanUtils.copyProperties(testDemo2, testDemo2View); // 源，目标
+            testDemo2View.setTestDemoView(new TestDemoView()
+                    .setId(testDemo2.getDemoId())
+            );
             testDemo2Views.put(String.valueOf(testDemo2.getId()), testDemo2View);
         }
         return testDemo2Views;

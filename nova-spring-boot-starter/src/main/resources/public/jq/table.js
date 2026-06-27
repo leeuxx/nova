@@ -385,62 +385,103 @@ window.NovaTableJQ = (function ($) {
   // ── 打开编辑弹窗 ──────────────────────────────────────────────
   function handleEdit(row) {
     var target = vm()
+    var novaName = target.novaName
     var novaIdField = target.novaIdFieldName
-    var pkVal = row[novaIdField]
-    // 从 rawTableData 找对应原始行（翻译前的值）
-    var rawRow = null
-    ;(target.rawTableData || []).forEach(function (r) {
-      if (String(r[novaIdField]) === String(pkVal)) rawRow = r
-    })
-    var source = rawRow ? $.extend({}, rawRow) : $.extend({}, row)
-    // MULTI 类型的值转为数组；DATE 类型的字符串转为时间戳
-    var choiceMap = target.choiceMap || {}
-    var dateMap   = target.dateMap   || {}
-    ;(target.editFields || []).forEach(function (f) {
-      var choice = choiceMap[f.field]
-      if (choice && choice.selectType === 'MULTI') {
-        var val = source[f.field]
-        source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
-      } else if (f.type === 'TAG') {
-        var tv = source[f.field]
-        source[f.field] = (tv && String(tv).length > 0) ? String(tv).split(',') : []
-      } else if (f.type === 'ATTACHMENT') {
-        var av = source[f.field]
-        source[f.field] = (av && String(av).length > 0) ? String(av).split(',') : []
-      } else if (f.type === 'DATE' && source[f.field]) {
-        var ts = new Date(source[f.field]).getTime()
-        source[f.field] = isNaN(ts) ? null : ts
-      } else if (f.type === 'BOOLEAN') {
-        var bv = source[f.field]
-        source[f.field] = (bv === null || bv === undefined) ? null : String(bv)
-      } else if (f.type === 'NUMBER') {
-        var nv = source[f.field]
-        source[f.field] = (nv === null || nv === undefined || nv === '') ? null : Number(nv)
-      } else if (f.type === 'REFERENCE') {
-        var refInfo = (target.referenceMap && target.referenceMap[f.field]) || {}
-        var storageField = refInfo.storageField || 'id'
-        var displayField = refInfo.displayField
-        // 从嵌套对象提取 storageField 值
-        if (row[f.field] && typeof row[f.field] === 'object') {
-          source[f.field] = row[f.field][storageField]
-        }
-        // 从 translateData 生成的 _display 键提取展示值
-        if (displayField) {
-          var tKey = f.field + '.' + displayField + '_display'
-          if (row[tKey] !== undefined && row[tKey] !== null) {
-            source[f.field + '_display'] = row[tKey]
-          } else if (row[f.field + '_display'] !== undefined) {
-            source[f.field + '_display'] = row[f.field + '_display']
+    var pkVal = String(row[novaIdField])
+
+    $.ajax({
+      url: '/nova/table/referencesData',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify([{ novaName: novaName, sourceNovaName: novaName, storageFieldValues: [pkVal] }]),
+      success: function(resp) {
+        if (resp.code !== 200) return
+        var t = window.vmMap && window.vmMap[novaName]
+        if (!t) return
+        var detailRow = resp.data[novaName] && resp.data[novaName][pkVal]
+        if (!detailRow) return
+
+        var choiceMap    = t.choiceMap    || {}
+        var referenceMap = t.referenceMap || {}
+        var source = {}
+        source[novaIdField] = pkVal
+
+        ;(t.editFields || []).forEach(function(f) {
+          var val = detailRow[f.field]
+          var choice = choiceMap[f.field]
+          if (choice && choice.selectType === 'MULTI') {
+            source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+          } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
+            source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+          } else if (f.type === 'DATE') {
+            var ts = val !== null && val !== undefined ? Number(val) : null
+            source[f.field] = (ts && !isNaN(ts)) ? ts : null
+          } else if (f.type === 'BOOLEAN') {
+            source[f.field] = (val === null || val === undefined) ? null : String(val)
+          } else if (f.type === 'NUMBER') {
+            source[f.field] = (val === null || val === undefined || val === '') ? null : Number(val)
+          } else if (f.type === 'REFERENCE') {
+            var refInfo = referenceMap[f.field] || {}
+            var sf = refInfo.storageField || 'id'
+            source[f.field] = (val && typeof val === 'object')
+              ? (val[sf] !== undefined && val[sf] !== null ? String(val[sf]) : null)
+              : (val !== null && val !== undefined && val !== '' ? String(val) : null)
+            source[f.field + '_display'] = ''
+          } else {
+            source[f.field] = (val === null || val === undefined) ? '' : val
           }
+        })
+
+        // 收集 REFERENCE 字段，批量获取 display 文本
+        var refReqs = {}
+        ;(t.editFields || []).forEach(function(f) {
+          if (f.type !== 'REFERENCE') return
+          var refInfo = referenceMap[f.field] || {}
+          var sv = source[f.field]
+          if (!sv || !refInfo.referenceName) return
+          if (!refReqs[refInfo.referenceName]) {
+            refReqs[refInfo.referenceName] = { novaName: refInfo.referenceName, sourceNovaName: novaName, storageFieldValues: [] }
+          }
+          if (refReqs[refInfo.referenceName].storageFieldValues.indexOf(sv) === -1) {
+            refReqs[refInfo.referenceName].storageFieldValues.push(sv)
+          }
+        })
+
+        function openModal() {
+          t.currentRow = $.extend({}, source)
+          t.formMode   = 'edit'
+          t.formData   = $.extend({}, source)
+          t.formErrors = {}
+          t.formTab    = 'form'
+          t.showForm   = true
         }
+
+        var reqList = Object.keys(refReqs).map(function(k) { return refReqs[k] })
+        if (reqList.length === 0) { openModal(); return }
+
+        $.ajax({
+          url: '/nova/table/referencesData',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify(reqList),
+          success: function(resp2) {
+            if (resp2.code === 200) {
+              var result = resp2.data || {}
+              ;(t.editFields || []).forEach(function(f) {
+                if (f.type !== 'REFERENCE') return
+                var refInfo = referenceMap[f.field] || {}
+                var sv = source[f.field]
+                if (!sv || !refInfo.referenceName || !refInfo.displayField) return
+                var rec = result[refInfo.referenceName] && result[refInfo.referenceName][sv]
+                source[f.field + '_display'] = rec && rec[refInfo.displayField] != null ? String(rec[refInfo.displayField]) : ''
+              })
+            }
+            openModal()
+          },
+          error: function() { openModal() }
+        })
       }
     })
-    target.currentRow = source
-    target.formMode   = 'edit'
-    target.formData   = $.extend({}, source)
-    target.formErrors = {}
-    target.formTab    = 'form'
-    target.showForm   = true
   }
 
   // ── 删除单条 ──────────────────────────────────────────────────
