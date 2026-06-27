@@ -25,9 +25,9 @@ public class NovaTableServiceImpl implements NovaTableService {
     @Override
     public NovaTableBuild.Vo build(NovaTableBuild novaTableBuild) {
         NovaTableBuild.Vo vo = new NovaTableBuild.Vo();
-        // 获取数据标识属性名称
-        String idFieldName = NovaFieldUtils.getIdFieldName(novaTableBuild.getNovaName());
-        vo.setIdFieldName(idFieldName);
+        // 获取novaId属性名称
+        String novaIdFieldName = NovaFieldUtils.getNovaIdFieldName(novaTableBuild.getNovaName());
+        vo.setNovaIdFieldName(novaIdFieldName);
         // 获取搜索条件
         List<NovaTableBuild.Vo.Search> searchList = new ArrayList<>();
         List<NovaFieldUtils.SearchInfo> searchs = NovaFieldUtils.getSearch(novaTableBuild.getNovaName());
@@ -236,11 +236,31 @@ public class NovaTableServiceImpl implements NovaTableService {
     }
 
     @Override
+    public Map<String, Map<String, Map<String, Object>>> referencesData(List<NovaTableReferencesData> novaTableReferencesDatas) {
+        Map<String, Map<String, Map<String, Object>>> maps = new LinkedHashMap<>();
+        for (NovaTableReferencesData novaTableReferencesData : novaTableReferencesDatas) {
+            DataProxy<?, ?> dataProxy = DataProxyUtils.getDataProxy(novaTableReferencesData.getNovaName());
+            Map<String, ?> dataMaps = dataProxy.fetchReferences(new FetchReferencesRequest()
+                    .setNovaName(novaTableReferencesData.getSourceNovaName())
+                    .setStorageFieldValues(novaTableReferencesData.getStorageFieldValues())
+            );
+            Map<String, Map<String, Object>> storageFieldMaps = new LinkedHashMap<>();
+            dataMaps.forEach((storageFieldValue, record) -> {
+                Map<String, Object> data = DataProxyUtils.toMapWithTimestamp(record);
+                storageFieldMaps.put(storageFieldValue, data);
+            });
+            maps.put(novaTableReferencesData.getNovaName(), storageFieldMaps);
+        }
+        return maps;
+    }
+
+    @Override
     public NovaTableAdd.Vo add(NovaTableAdd novaTableAdd) {
         String novaName = novaTableAdd.getNovaName();
         List<String> columns = new ArrayList<>();
         List<String> values = new ArrayList<>();
         for (NovaTableAdd.FormInfo formInfo : novaTableAdd.getFormInfo()) {
+            if ("REFERENCE".equals(formInfo.getType())) continue;
             String value = formInfo.getValue();
             if (value != null && !value.isEmpty()) {
                 columns.add(MixUtils.camelToSnake(formInfo.getField()));
@@ -248,6 +268,11 @@ public class NovaTableServiceImpl implements NovaTableService {
             }
         }
         Object model = DataProxyUtils.buildModel(novaName, columns, values);
+        for (NovaTableAdd.FormInfo formInfo : novaTableAdd.getFormInfo()) {
+            if ("REFERENCE".equals(formInfo.getType())) {
+                DataProxyUtils.setReferenceField(novaName, model, formInfo.getField(), formInfo.getValue());
+            }
+        }
         //noinspection unchecked,rawtypes
         ((DataProxy) DataProxyUtils.getDataProxy(novaName)).add(model);
         return new NovaTableAdd.Vo();
@@ -259,11 +284,17 @@ public class NovaTableServiceImpl implements NovaTableService {
         List<String> columns = new ArrayList<>();
         List<String> values = new ArrayList<>();
         for (NovaTableUpdate.FormInfo formInfo : novaTableUpdate.getFormInfo()) {
+            if ("REFERENCE".equals(formInfo.getType())) continue;
             columns.add(MixUtils.camelToSnake(formInfo.getField()));
             String value = formInfo.getValue();
             values.add((value == null || value.isEmpty()) ? null : value);
         }
         Object model = DataProxyUtils.buildModel(novaName, columns, values);
+        for (NovaTableUpdate.FormInfo formInfo : novaTableUpdate.getFormInfo()) {
+            if ("REFERENCE".equals(formInfo.getType())) {
+                DataProxyUtils.setReferenceField(novaName, model, formInfo.getField(), formInfo.getValue());
+            }
+        }
         //noinspection unchecked,rawtypes
         ((DataProxy) DataProxyUtils.getDataProxy(novaName)).update(model);
         return new NovaTableUpdate.Vo();
@@ -272,10 +303,11 @@ public class NovaTableServiceImpl implements NovaTableService {
     @Override
     public NovaTableDelete.Vo delete(NovaTableDelete novaTableDelete) {
         String novaName = novaTableDelete.getNovaName();
-        String pkColumn = MixUtils.camelToSnake(novaTableDelete.getIdFieldName());
-        List<Object> models = new ArrayList<>();
-        for (String pk : novaTableDelete.getPkValues()) {
-            models.add(DataProxyUtils.buildModel(novaName, List.of(pkColumn), List.of(pk)));
+        String pkColumn = MixUtils.camelToSnake(novaTableDelete.getNovaIdFieldName());
+        List<String> novaIdValues = novaTableDelete.getNovaIdValues();
+        List<Object> models = new ArrayList<>(novaIdValues.size());
+        for (String novaIdValue : novaIdValues) {
+            models.add(DataProxyUtils.buildModel(novaName, List.of(pkColumn), List.of(novaIdValue)));
         }
         //noinspection unchecked,rawtypes
         ((DataProxy) DataProxyUtils.getDataProxy(novaName)).delete(models);

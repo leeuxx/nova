@@ -5,11 +5,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yitter.idgen.YitIdHelper;
 import com.nova.annotation.fun.DataProxy;
+import com.nova.annotation.fun.FetchReferencesRequest;
 import com.nova.annotation.fun.FetchRequest;
 import com.nova.annotation.fun.FetchResponse;
 import com.nova.annotation.sub.nova.field.edit.ChoiceFetchHandler;
 import com.nova.entity.TestDemo;
-import com.nova.entity.TestDemo2;
 import com.nova.mapper.TestDemoMapper;
 import com.nova.view.TestDemo2View;
 import com.nova.view.TestDemoView;
@@ -17,16 +17,11 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
 public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemo, TestDemoView> {
-
-    private TestDemo2Service testDemo2Service;
 
     @Override
     public List<VLModel> fetch(String[] params) {
@@ -43,25 +38,14 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         LambdaQueryWrapper<TestDemo> wrapper = mybatisPLus.getWrapper();
         IPage<TestDemo> iPage = page(mybatisPLus.getPage(), wrapper);
         List<TestDemo> records = iPage.getRecords();
-        List<Long> demo2IdList = records.stream()
-                .map(TestDemo::getDemo2Id)
-                .filter(Objects::nonNull)
-                .toList();
         List<TestDemoView> testDemoViews = new ArrayList<>();
-        if (!demo2IdList.isEmpty()) {
-            List<TestDemo2> testDemo2s = testDemo2Service.listByIds(demo2IdList);
-            for (TestDemo record : records) {
-                TestDemoView testDemoView = new TestDemoView();
-                BeanUtils.copyProperties(record, testDemoView); // 源，目标
-                for (TestDemo2 testDemo2 : testDemo2s) {
-                    if (testDemo2.getId().equals(record.getDemo2Id())) {
-                        TestDemo2View testDemo2View = new TestDemo2View();
-                        BeanUtils.copyProperties(testDemo2, testDemo2View); // 源，目标
-                        testDemoView.setTestDemo2View(testDemo2View);
-                    }
-                }
-                testDemoViews.add(testDemoView);
-            }
+        for (TestDemo record : records) {
+            TestDemoView testDemoView = new TestDemoView();
+            BeanUtils.copyProperties(record, testDemoView); // 源，目标
+            testDemoView.setTestDemo2View(new TestDemo2View()
+                    .setId(record.getDemo2Id())
+            );
+            testDemoViews.add(testDemoView);
         }
         return new FetchResponse<TestDemoView>()
                 .setTotal(iPage.getTotal())
@@ -69,9 +53,22 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     }
 
     @Override
+    public Map<String, TestDemoView> fetchReferences(FetchReferencesRequest fetchReferencesRequest) {
+        List<TestDemo> testDemos = listByIds(fetchReferencesRequest.getStorageFieldValues());
+        Map<String, TestDemoView> testDemoViews = new HashMap<>();
+        for (TestDemo testDemo : testDemos) {
+            TestDemoView testDemoView = new TestDemoView();
+            BeanUtils.copyProperties(testDemo, testDemoView); // 源，目标
+            testDemoViews.put(String.valueOf(testDemo.getId()), testDemoView);
+        }
+        return testDemoViews;
+    }
+
+    @Override
     public void add(TestDemoView testDemoView) {
         testDemoView.setId(YitIdHelper.nextId());
-        TestDemo testDemo = new TestDemo();
+        TestDemo testDemo = new TestDemo()
+                .setDemo2Id(testDemoView.getTestDemo2View().getId());
         BeanUtils.copyProperties(testDemoView, testDemo);
         save(testDemo);
     }
@@ -89,7 +86,8 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
 
     @Override
     public void update(TestDemoView testDemoView) {
-        TestDemo testDemo = new TestDemo();
+        TestDemo testDemo = new TestDemo()
+                .setDemo2Id(testDemoView.getTestDemo2View().getId());
         BeanUtils.copyProperties(testDemoView, testDemo);
         updateById(testDemo);
     }

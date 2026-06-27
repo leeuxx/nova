@@ -4,6 +4,9 @@ import com.nova.annotation.config.Comment;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 
+import java.util.List;
+import java.util.Map;
+
 public interface NovaTableService {
 
     @Comment("构建表格页")
@@ -11,6 +14,9 @@ public interface NovaTableService {
 
     @Comment("获取表格数据")
     PageBean<?> data(NovaTableData novaTableData);
+
+    @Comment("获取表格引用数据")
+    Map<String, Map<String, Map<String, Object>>> referencesData(List<NovaTableReferencesData> novaTableReferencesDatas);
 
     @Comment("新增表格数据")
     NovaTableAdd.Vo add(NovaTableAdd novaTableAdd);

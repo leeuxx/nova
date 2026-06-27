@@ -1,9 +1,8 @@
 package com.nova.view;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.nova.annotation.Nova;
 import com.nova.annotation.NovaField;
+import com.nova.annotation.config.NovaId;
 import com.nova.annotation.sub.nova.Layout;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
@@ -28,7 +27,7 @@ import java.time.LocalDateTime;
 )
 public class TestDemoView {
 
-    @TableId(type = IdType.AUTO)
+    @NovaId
     @NovaField(
             views = @View(title = "ID", width = "10%"),
             edit = @Edit(

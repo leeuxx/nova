@@ -1,6 +1,5 @@
 package com.nova.dto;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nova.annotation.config.Comment;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -11,24 +10,18 @@ import java.util.List;
 
 @Data
 @Accessors(chain = true)
-public class NovaTableDelete {
+public class NovaTableReferencesData {
 
     @Comment("nova名称")
     @NotBlank(message = "novaName不能为空")
     private String novaName;
 
-    @Comment("novaId属性名")
-    @NotBlank(message = "novaIdFieldName不能为空")
-    private String novaIdFieldName;
+    @Comment("来源nova名称")
+    @NotBlank(message = "sourceNovaName不能为空")
+    private String sourceNovaName;
 
-    @Comment("novaId值列表")
+    @Comment("存储值列表")
     @NotEmpty(message = "novaIdValues不能为空")
-    private List<String> novaIdValues;
+    private List<String> storageFieldValues;
 
-    @Data
-    @Accessors(chain = true)
-    @JsonSerialize
-    public static class Vo {
-
-    }
 }

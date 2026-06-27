@@ -170,6 +170,28 @@ public class DataProxyUtils {
     }
 
     /**
+     * 设置 REFERENCE 类型字段（构造嵌套对象并赋值）
+     */
+    @SneakyThrows
+    public static void setReferenceField(String novaName, Object model, String fieldName, String value) {
+        Map<String, NovaFieldUtils.ReferenceTypeInfo> refs = NovaFieldUtils.getReference(novaName);
+        NovaFieldUtils.ReferenceTypeInfo refInfo = refs.get(fieldName);
+        if (refInfo == null) return;
+        Field modelField = model.getClass().getDeclaredField(fieldName);
+        modelField.setAccessible(true);
+        if (value == null || value.isEmpty()) {
+            modelField.set(model, null);
+            return;
+        }
+        Class<?> refClass = refInfo.getReferenceClass();
+        Object refInstance = refClass.getDeclaredConstructor().newInstance();
+        Field storageF = refClass.getDeclaredField(refInfo.getStorageField());
+        storageF.setAccessible(true);
+        storageF.set(refInstance, convertValue(value, storageF.getType()));
+        modelField.set(model, refInstance);
+    }
+
+    /**
      * ms 时间戳转为 SQL 时间字符串
      */
     private static String msToSqlStr(String ms, String dateType) {

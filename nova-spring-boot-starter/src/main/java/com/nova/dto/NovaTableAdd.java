@@ -34,6 +34,17 @@ public class NovaTableAdd {
         @Comment("类型")
         private String type;
 
+        @Comment("引用信息")
+        private Reference reference;
+
+        @Data
+        @Accessors(chain = true)
+        public static class Reference {
+
+            @Comment("属性名")
+            private String field;
+
+        }
     }
 
     @Data

@@ -83,6 +83,7 @@ window.NovaTableJQ = (function ($) {
         }
         if (layout.editLayout) target.editLayout = layout.editLayout
         target.editFields = resp.data.edit || []
+        if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
         // 构建完成后加载数据
         loadData(novaName)
       },
@@ -153,7 +154,7 @@ window.NovaTableJQ = (function ($) {
         t.paginationConfig.itemCount   = resp.data.total      || 0
         t.paginationConfig.page        = resp.data.current    || pageBean.current
         t.paginationConfig.pageSize    = resp.data.size       || pageBean.size
-        if (resp.data.idFieldName)     t.idFieldName          = resp.data.idFieldName
+        if (resp.data.novaIdFieldName)     t.novaIdFieldName          = resp.data.novaIdFieldName
         translateData(vmKey)
       },
       error: function () {
@@ -218,70 +219,122 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── 翻译 CHOICE 类型列 ────────────────────────────────────────
-  function translateData(novaName) {
-    var target = window.vmMap && window.vmMap[novaName]
+  function translateData(vmKey) {
+    var target = window.vmMap && window.vmMap[vmKey]
     if (!target) return
     var records = target.tableData
     if (!records || records.length === 0) return
     var choiceCols = (target.tableColumns || []).filter(function (c) { return c.type === 'CHOICE' })
-    if (choiceCols.length === 0) return
-    // 翻译前按原始值计算颜色
-    var choiceMap = target.choiceMap || {}
-    var rowColors = []
-    records.forEach(function (row, idx) {
-      var colors = {}
-      choiceCols.forEach(function (col) {
-        var choiceEntry = choiceMap[col.field]
-        if (!choiceEntry || !choiceEntry.values) return
-        var colorLookup = {}
-        choiceEntry.values.forEach(function (v) { if (v.color) colorLookup[v.value] = v.color })
-        if (Object.keys(colorLookup).length === 0) return
-        var raw = (row[col.field] === null || row[col.field] === undefined) ? '' : String(row[col.field])
-        var isMulti = choiceEntry.selectType === 'MULTI'
-        colors[col.field] = isMulti
-          ? (raw ? raw.split(',').map(function (v) { return colorLookup[v.trim()] || null }) : [])
-          : (colorLookup[raw] || null)
+    // CHOICE 翻译（原逻辑不变）
+    if (choiceCols.length > 0) {
+      var choiceMap = target.choiceMap || {}
+      var rowColors = []
+      records.forEach(function (row, idx) {
+        var colors = {}
+        choiceCols.forEach(function (col) {
+          var choiceEntry = choiceMap[col.field]
+          if (!choiceEntry || !choiceEntry.values) return
+          var colorLookup = {}
+          choiceEntry.values.forEach(function (v) { if (v.color) colorLookup[v.value] = v.color })
+          if (Object.keys(colorLookup).length === 0) return
+          var raw = (row[col.field] === null || row[col.field] === undefined) ? '' : String(row[col.field])
+          var isMulti = choiceEntry.selectType === 'MULTI'
+          colors[col.field] = isMulti
+            ? (raw ? raw.split(',').map(function (v) { return colorLookup[v.trim()] || null }) : [])
+            : (colorLookup[raw] || null)
+        })
+        rowColors[idx] = colors
       })
-      rowColors[idx] = colors
-    })
-    target.tableRowColors = rowColors
-    // 从 choiceMap 构建本地查找表
-    var localLookups = {}
-    for (var fk in choiceMap) {
-      if (choiceMap.hasOwnProperty(fk)) {
-        var lookup = {}
-        ;(choiceMap[fk].values || []).forEach(function (v) { lookup[v.value] = v.label })
-        localLookups[fk] = lookup
-      }
-    }
-    // 构建翻译表
-    var localTranslate = {}
-    choiceCols.forEach(function (col) {
-      var isMulti = choiceMap[col.field] && choiceMap[col.field].selectType === 'MULTI'
-      if (localLookups[col.field]) {
-        localTranslate[col.field] = { lookup: localLookups[col.field], isMulti: isMulti }
-      }
-    })
-    // 本地翻译立即回填
-    function applyLookups(lookups, tableData) {
-      return tableData.map(function (row) {
-        var updated = $.extend({}, row)
-        for (var field in lookups) {
-          if (!lookups.hasOwnProperty(field)) continue
-          var lookup = lookups[field].lookup
-          var isMulti = lookups[field].isMulti
-          var raw = (row[field] === null || row[field] === undefined) ? '' : String(row[field])
-          if (!raw) continue
-          updated[field] = isMulti
-            ? raw.split(',').map(function (v) { return lookup[v.trim()] || v.trim() }).join(',')
-            : (lookup[raw] || raw)
+      target.tableRowColors = rowColors
+      var localLookups = {}
+      for (var fk in choiceMap) {
+        if (choiceMap.hasOwnProperty(fk)) {
+          var lookup = {}
+          ;(choiceMap[fk].values || []).forEach(function (v) { lookup[v.value] = v.label })
+          localLookups[fk] = lookup
         }
-        return updated
+      }
+      var localTranslate = {}
+      choiceCols.forEach(function (col) {
+        var isMulti = choiceMap[col.field] && choiceMap[col.field].selectType === 'MULTI'
+        if (localLookups[col.field]) localTranslate[col.field] = { lookup: localLookups[col.field], isMulti: isMulti }
       })
+      if (Object.keys(localTranslate).length > 0) {
+        target.tableData = target.tableData.map(function (row) {
+          var updated = $.extend({}, row)
+          for (var field in localTranslate) {
+            if (!localTranslate.hasOwnProperty(field)) continue
+            var lk = localTranslate[field].lookup
+            var isMulti = localTranslate[field].isMulti
+            var raw = (row[field] === null || row[field] === undefined) ? '' : String(row[field])
+            if (!raw) continue
+            updated[field] = isMulti
+              ? raw.split(',').map(function (v) { return lk[v.trim()] || v.trim() }).join(',')
+              : (lk[raw] || raw)
+          }
+          return updated
+        })
+      }
     }
-    if (Object.keys(localTranslate).length > 0) {
-      target.tableData = applyLookups(localTranslate, target.tableData)
-    }
+    // REFERENCE 翻译
+    var refCols = (target.tableColumns || []).filter(function (c) { return c.type === 'REFERENCE' })
+    if (refCols.length === 0) return
+    var referenceMap = target.referenceMap || {}
+    var queryName = target.novaName || vmKey
+    // 按 novaName 分组收集 storageFieldValues
+    var groups = {}  // { [refNovaName]: { referenceField, displayField, cols: [], values: [] } }
+    refCols.forEach(function (col) {
+      var dotIdx = col.field.indexOf('.')
+      var refKey = dotIdx > -1 ? col.field.slice(0, dotIdx) : col.field
+      var refInfo = referenceMap[refKey]
+      if (!refInfo || !refInfo.referenceName) return
+      var refNovaName = refInfo.referenceName
+      if (!groups[refNovaName]) groups[refNovaName] = { referenceField: refInfo.referenceField, displayField: refInfo.displayField, cols: [], values: [] }
+      groups[refNovaName].cols.push({ colField: col.field, refKey: refKey })
+      var referenceField = refInfo.referenceField || col.field
+      var storageField = refInfo.storageField || 'id'
+      var valSet = {}
+      records.forEach(function (row) {
+        var obj = row[refKey]
+        var v = obj && obj[storageField] !== undefined ? obj[storageField] : null
+        if (v !== null && v !== undefined && v !== '') valSet[String(v)] = true
+      })
+      groups[refNovaName].storageField = storageField
+      Object.keys(valSet).forEach(function (v) { if (groups[refNovaName].values.indexOf(v) === -1) groups[refNovaName].values.push(v) })
+    })
+    var requestList = []
+    Object.keys(groups).forEach(function (refNovaName) {
+      var g = groups[refNovaName]
+      if (g.values.length === 0) return
+      requestList.push({ novaName: refNovaName, sourceNovaName: queryName, storageFieldValues: g.values })
+    })
+    if (requestList.length === 0) return
+    $.ajax({
+      url:         '/nova/table/referencesData',
+      method:      'POST',
+      contentType: 'application/json',
+      data:        JSON.stringify(requestList),
+      success: function (resp) {
+        var t = window.vmMap && window.vmMap[vmKey]
+        if (!t || resp.code !== 200) return
+        var result = resp.data  // { [refNovaName]: { [storageValue]: { fields } } }
+        t.tableData = t.tableData.map(function (row) {
+          var updated = $.extend({}, row)
+          Object.keys(groups).forEach(function (refNovaName) {
+            var g = groups[refNovaName]
+            var obj = row[g.cols[0] && g.cols[0].refKey]
+            var storageVal = obj && obj[g.storageField] !== undefined ? String(obj[g.storageField]) : ''
+            var refRecord = result[refNovaName] && result[refNovaName][storageVal]
+            g.cols.forEach(function (colInfo) {
+              var dotIdx = colInfo.colField.indexOf('.')
+              var propKey = dotIdx > -1 ? colInfo.colField.slice(dotIdx + 1) : (referenceMap[colInfo.refKey] && referenceMap[colInfo.refKey].displayField || 'name')
+              updated[colInfo.colField + '_display'] = refRecord ? (refRecord[propKey] !== undefined ? refRecord[propKey] : '') : ''
+            })
+          })
+          return updated
+        })
+      }
+    })
   }
 
   // ── 重置筛选条件 ──────────────────────────────────────────────
@@ -332,12 +385,12 @@ window.NovaTableJQ = (function ($) {
   // ── 打开编辑弹窗 ──────────────────────────────────────────────
   function handleEdit(row) {
     var target = vm()
-    var pkField = target.idFieldName || 'id'
-    var pkVal = row[pkField]
+    var novaIdField = target.novaIdFieldName
+    var pkVal = row[novaIdField]
     // 从 rawTableData 找对应原始行（翻译前的值）
     var rawRow = null
     ;(target.rawTableData || []).forEach(function (r) {
-      if (String(r[pkField]) === String(pkVal)) rawRow = r
+      if (String(r[novaIdField]) === String(pkVal)) rawRow = r
     })
     var source = rawRow ? $.extend({}, rawRow) : $.extend({}, row)
     // MULTI 类型的值转为数组；DATE 类型的字符串转为时间戳
@@ -364,25 +417,20 @@ window.NovaTableJQ = (function ($) {
         var nv = source[f.field]
         source[f.field] = (nv === null || nv === undefined || nv === '') ? null : Number(nv)
       } else if (f.type === 'REFERENCE') {
-        // REFERENCE 字段：提取展示列的值
         var refInfo = (target.referenceMap && target.referenceMap[f.field]) || {}
+        var storageField = refInfo.storageField || 'id'
         var displayField = refInfo.displayField
+        // 从嵌套对象提取 storageField 值
+        if (row[f.field] && typeof row[f.field] === 'object') {
+          source[f.field] = row[f.field][storageField]
+        }
+        // 从 translateData 生成的 _display 键提取展示值
         if (displayField) {
-          // 方式1: 扁平化格式，如 row['testDemo2.name']
-          var displayKey = f.field + '.' + displayField
-          if (row[displayKey] !== undefined) {
-            source[f.field + '_display'] = row[displayKey]
-          }
-          // 方式2: 直接有 _display 字段
-          else if (row[f.field + '_display'] !== undefined) {
+          var tKey = f.field + '.' + displayField + '_display'
+          if (row[tKey] !== undefined && row[tKey] !== null) {
+            source[f.field + '_display'] = row[tKey]
+          } else if (row[f.field + '_display'] !== undefined) {
             source[f.field + '_display'] = row[f.field + '_display']
-          }
-          // 方式3: 嵌套对象格式，如 row['testDemo2'] = { id: 123, name: '张三' }
-          else if (row[f.field] && typeof row[f.field] === 'object' && row[f.field][displayField] !== undefined) {
-            source[f.field + '_display'] = row[f.field][displayField]
-            // 提取存储列的值（通常是 id）
-            var storageField = refInfo.storageField || 'id'
-            source[f.field] = row[f.field][storageField]
           }
         }
       }
@@ -398,17 +446,17 @@ window.NovaTableJQ = (function ($) {
   // ── 删除单条 ──────────────────────────────────────────────────
   function handleDelete(row) {
     var target = vm()
-    var pkField = target.idFieldName || 'id'
-    doDelete(target.novaName, pkField, [String(row[pkField])])
+    var novaIdField = target.novaIdFieldName
+    doDelete(target.novaName, novaIdField, [String(row[novaIdField])])
   }
 
   // ── 批量删除 ──────────────────────────────────────────────────
   function handleBatchDelete() {
     var target = vm()
-    var pkField = target.idFieldName || 'id'
+    var novaIdField = target.novaIdFieldName
     var keys = target.checkedRowKeys.map(function (k) { return String(k) })
     if (!window.$dialog) {
-      doDelete(target.novaName, pkField, keys)
+      doDelete(target.novaName, novaIdField, keys)
       return
     }
     window.$dialog.create({
@@ -421,22 +469,22 @@ window.NovaTableJQ = (function ($) {
       positiveButtonProps: { type: 'primary', size: 'medium' },
       negativeButtonProps: { size: 'medium' },
       onPositiveClick: function () {
-        doDelete(target.novaName, pkField, keys)
+        doDelete(target.novaName, novaIdField, keys)
       }
     })
   }
 
   // ── 删除公共逻辑 ──────────────────────────────────────────────
-  function doDelete(novaName, idFieldName, pkValues) {
+  function doDelete(novaName, novaIdFieldName, novaIdValues) {
     $.ajax({
       url:         '/nova/table/delete',
       method:      'POST',
       contentType: 'application/json',
-      data:        JSON.stringify({ novaName: novaName, idFieldName: idFieldName, pkValues: pkValues }),
+      data:        JSON.stringify({ novaName: novaName, novaIdFieldName: novaIdFieldName, novaIdValues: novaIdValues }),
       success: function (resp) {
         var t = window.vmMap && window.vmMap[novaName]
         if (!t) return
-        if (resp.code !== 200) return
+        if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '删除失败'); return }
         t.checkedRowKeys = []
         if (window.$message) window.$message.success('删除成功')
         loadData(novaName)
@@ -466,8 +514,8 @@ window.NovaTableJQ = (function ($) {
     if (target.currentRow) {
       // 编辑
       var novaName = target.novaName
-      var pkField = target.idFieldName || 'id'
-      var pkValue = String(target.currentRow[pkField])
+      var novaIdField = target.novaIdFieldName
+      var pkValue = String(target.currentRow[novaIdField])
       var formInfo = editFields.filter(function (f) { return f.type !== 'DIVIDE' && f.type !== 'EMPTY' }).map(function (f) {
         var val = formData[f.field]
         var strVal
@@ -478,15 +526,14 @@ window.NovaTableJQ = (function ($) {
         } else {
           strVal = String(val)
         }
-        // REFERENCE 字段：使用 referenceField 作为实际提交字段
-        var actualField = f.field
+        var item = { field: f.field, value: strVal, type: f.type }
         if (f.type === 'REFERENCE') {
           var refInfo = (target.referenceMap && target.referenceMap[f.field]) || {}
-          actualField = refInfo.referenceField || refInfo.storageField || f.field
+          if (refInfo.referenceField) item.reference = { field: refInfo.referenceField }
         }
-        return { field: actualField, value: strVal, type: f.type }
+        return item
       })
-      formInfo.unshift({ field: pkField, value: pkValue, type: '' })
+      formInfo.unshift({ field: novaIdField, value: pkValue, type: '' })
       $.ajax({
         url:         '/nova/table/update',
         method:      'POST',
@@ -495,7 +542,7 @@ window.NovaTableJQ = (function ($) {
         success: function (resp) {
           var t = window.vmMap && window.vmMap[novaName]
           if (!t) return
-          if (resp.code !== 200) return
+          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '修改失败'); return }
           t.showForm = false
           if (window.$message) window.$message.success('修改成功')
           loadData(novaName)
@@ -517,13 +564,12 @@ window.NovaTableJQ = (function ($) {
         } else {
           strVal = String(val)
         }
-        // REFERENCE 字段：使用 referenceField 作为实际提交字段
-        var actualField = f.field
+        var item = { field: f.field, value: strVal, type: f.type }
         if (f.type === 'REFERENCE') {
           var refInfo = (target.referenceMap && target.referenceMap[f.field]) || {}
-          actualField = refInfo.referenceField || refInfo.storageField || f.field
+          if (refInfo.referenceField) item.reference = { field: refInfo.referenceField }
         }
-        return { field: actualField, value: strVal, type: f.type }
+        return item
       }).filter(function (item) { return item.value !== '' })
       $.ajax({
         url:         '/nova/table/add',
@@ -533,7 +579,7 @@ window.NovaTableJQ = (function ($) {
         success: function (resp) {
           var t = window.vmMap && window.vmMap[novaName]
           if (!t) return
-          if (resp.code !== 200) return
+          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '新增失败'); return }
           t.showForm = false
           if (window.$message) window.$message.success('新增成功')
           loadData(novaName)
@@ -594,7 +640,7 @@ window.NovaTableJQ = (function ($) {
           target.pageSizes = layout.pageSizes
           target.paginationConfig.pageSizes = layout.pageSizes.map(function (n) { return { label: n + ' 条/页', value: n } })
         }
-        if (resp.data.idFieldName) target.idFieldName = resp.data.idFieldName
+        if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
         loadData(vmKey)
       },
       error: function () {

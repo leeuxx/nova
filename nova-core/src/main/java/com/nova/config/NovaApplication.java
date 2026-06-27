@@ -1,9 +1,9 @@
 package com.nova.config;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.nova.annotation.Nova;
 import com.nova.annotation.NovaField;
 import com.nova.annotation.config.Comment;
+import com.nova.annotation.config.NovaId;
 import com.nova.annotation.config.NovaScan;
 import com.nova.annotation.fun.DataProxy;
 import com.nova.annotation.sub.nova.field.Edit;
@@ -21,6 +21,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -60,9 +61,8 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
         );
         // 获取所有带有 @Nova 注解的类
         Set<Class<?>> novaClasses = reflections.getTypesAnnotatedWith(Nova.class);
-        String idFieldName = null;
         for (Class<?> clz : novaClasses) {
-            log.info("找到 @Nova 注解类: {}", clz.getName());
+            String novaIdFieldName = null;
             Map<String, ScanNova.NovaFieldInfo> novaFields = new LinkedHashMap<>();
             Field[] fields = clz.getDeclaredFields();
             for (Field field : fields) {
@@ -75,18 +75,21 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
                             .setNovaField(novaField)
                     );
                 }
-                if (field.isAnnotationPresent(TableId.class)) {
-                    idFieldName = field.getName();
+                if (field.isAnnotationPresent(NovaId.class)) {
+                    novaIdFieldName = field.getName();
                 }
             }
             Nova nova = clz.getDeclaredAnnotation(Nova.class);
             ScanNova scanNova = new ScanNova()
                     .setClz(clz)
-                    .setIdFieldName(idFieldName)
+                    .setNovaIdFieldName(novaIdFieldName)
                     .setNova(nova)
                     .setNovaFields(novaFields)
                     .setDataProxyClass(nova.dataProxy());
-            scanNovas.put(clz.getSimpleName(), scanNova);
+            if (check(scanNova)) {
+                log.info("注册 @Nova 注解类: {}", clz.getName());
+                scanNovas.put(clz.getSimpleName(), scanNova);
+            }
         }
     }
 
@@ -97,8 +100,8 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
         @Comment("类")
         private Class<?> clz;
 
-        @Comment("ID属性名")
-        private String idFieldName;
+        @Comment("novaId属性名")
+        private String novaIdFieldName;
 
         @Comment("Nova注解")
         private Nova nova;
@@ -147,4 +150,20 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
         }
         return Edit.Type.INPUT;
     }
+
+    /**
+     * ScanNova缓存正确性检查
+     */
+    private boolean check(ScanNova scanNova) {
+        // 无数据标识
+        if (scanNova.getNovaIdFieldName() == null) {
+            return false;
+        }
+        // 无有效字段
+        if (scanNova.getNovaFields().isEmpty()) {
+            return false;
+        }
+        return true;
+    }
+
 }

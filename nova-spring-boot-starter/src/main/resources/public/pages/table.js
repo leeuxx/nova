@@ -160,7 +160,7 @@ const NovaTable = {
       refPickerColumns: [],
       refPickerStack: [],      tableWrapperWidth: 0,
       novaName:       '',
-      idFieldName:    'id',
+      novaIdFieldName:    null,
       tableRowColors: [],
       tableData:      [],
       rawTableData:   [],
@@ -258,8 +258,8 @@ const NovaTable = {
           render(row) {
             return h('div', { style: 'display:flex;align-items:center;justify-content:center;width:100%;height:100%' }, [
               h(NRadio, {
-                value: row[vm.idFieldName],
-                checked: vm.selectedRowKey === row[vm.idFieldName],
+                value: row[vm.novaIdFieldName],
+                checked: vm.selectedRowKey === row[vm.novaIdFieldName],
                 onClick: () => vm.selectRow(row),
                 style: { transform: 'scale(1.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }
               })
@@ -337,7 +337,7 @@ const NovaTable = {
             const bInfo = vm.booleanMap && vm.booleanMap[col.field]
             if (bInfo && bInfo.type === 'SWITCH') {
               const novaName = vm.novaName
-              const pkField = vm.idFieldName || 'id'
+              const novaIdField = vm.novaIdFieldName || 'id'
               const editField = (vm.editFields || []).find(function(f) { return f.field === col.field })
               const disabled = !editField || (editField.readonly && editField.readonly.edit)
               const isDark = document.body.classList.contains('dark')
@@ -346,7 +346,7 @@ const NovaTable = {
                 const newVal = !isTrue
                 $.ajax({
                   url: '/nova/table/update', method: 'POST', contentType: 'application/json',
-                  data: JSON.stringify({ novaName, formInfo: [{ field: pkField, value: String(row[pkField]), type: '' }, { field: col.field, value: String(newVal), type: 'BOOLEAN' }] }),
+                  data: JSON.stringify({ novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: String(newVal), type: 'BOOLEAN' }] }),
                   success: (resp) => { if (resp.code === 200) { if (window.$message) window.$message.success('修改成功'); window.NovaTableJQ.loadData(novaName) } }
                 })
               }
@@ -389,15 +389,10 @@ const NovaTable = {
         }
 
         if (col.type === 'REFERENCE') {
-          const dotIdx = col.field.indexOf('.')
-          const objKey  = dotIdx > -1 ? col.field.slice(0, dotIdx)  : col.field
-          const propKey = dotIdx > -1 ? col.field.slice(dotIdx + 1) : ''
           colDef.key = col.field
           colDef.render = (row) => {
-            const obj = row[objKey]
-            if (obj === null || obj === undefined) return ''
-            const val = propKey ? obj[propKey] : obj
-            return val === null || val === undefined ? '' : String(val)
+            const v = row[col.field + '_display']
+            return (v === null || v === undefined) ? '' : String(v)
           }
         }
 
@@ -727,7 +722,7 @@ const NovaTable = {
     buildPickerSourceFields(picker) {
       if (picker.isForFilter) return {}
       const fields = {}
-      if (this.currentRow) fields.ids = String(this.currentRow[this.idFieldName] || '')
+      if (this.currentRow) fields.ids = String(this.currentRow[this.novaIdFieldName] || '')
       const refInfo = this.referenceMap[picker.field.field]
       const transmit = refInfo && refInfo.referenceTransmitField
       if (transmit && transmit.length) {
@@ -864,7 +859,7 @@ const NovaTable = {
       return String(val)
     },
     selectRow(row) {
-      this.selectedRowKey = row[this.idFieldName]
+      this.selectedRowKey = row[this.novaIdFieldName]
       this.$emit('pick', row)
     },
     handlePageChange(current) {
@@ -1062,7 +1057,7 @@ const NovaTable = {
           <n-data-table
             :data="filteredData"
             :columns="columns"
-            :row-key="row => row[idFieldName]"
+            :row-key="row => row[novaIdFieldName]"
             :checked-row-keys="checkedRowKeys"
             @update:checked-row-keys="handleCheck"
             :row-props="pickerMode ? (row) => ({ style: 'cursor:pointer', onClick: () => selectRow(row) }) : undefined"
