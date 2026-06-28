@@ -174,7 +174,6 @@ public class NovaTableServiceImpl implements NovaTableService {
         Map<String, NovaFieldUtils.ReferenceTypeInfo> references = NovaFieldUtils.getReference(novaTableBuild.getNovaName());
         references.forEach((field, referenceInfo) -> {
             NovaTableBuild.Vo.ReferenceType reference = new NovaTableBuild.Vo.ReferenceType()
-                    .setType(referenceInfo.getType().name())
                     .setReferenceName(referenceInfo.getReferenceClass().getSimpleName())
                     .setReferenceField(referenceInfo.getReferenceField())
                     .setReferenceTransmitField(referenceInfo.getReferenceTransmitField())

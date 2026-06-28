@@ -89,8 +89,10 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
 
     @Override
     public void update(TestDemoView testDemoView) {
-        TestDemo testDemo = new TestDemo()
-                .setDemo2Id(testDemoView.getTestDemo2View().getId());
+        TestDemo testDemo = new TestDemo();
+        if (testDemoView.getTestDemo2View() != null) {
+            testDemo.setDemo2Id(testDemoView.getTestDemo2View().getId());
+        }
         BeanUtils.copyProperties(testDemoView, testDemo);
         updateById(testDemo);
     }

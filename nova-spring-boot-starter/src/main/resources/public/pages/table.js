@@ -1367,7 +1367,7 @@ const NovaTable = {
                 :disabled="isReadonly(f)"
                 @update:value="delete formErrors[f.field]"
               />
-              <div v-else-if="f.type === 'REFERENCE' && referenceMap[f.field] && referenceMap[f.field].type === 'MANY_TO_ONE'"
+              <div v-else-if="f.type === 'REFERENCE' && referenceMap[f.field]"
                 @click="!isReadonly(f) && openReferenceModal(f)"
                 style="cursor:pointer">
                 <n-input

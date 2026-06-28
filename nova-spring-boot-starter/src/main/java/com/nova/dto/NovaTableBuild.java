@@ -286,9 +286,6 @@ public class NovaTableBuild {
         @Accessors(chain = true)
         public static class ReferenceType {
 
-            @Comment("关联类型")
-            private String type;
-
             @Comment("关联类名")
             private String referenceName;
 

@@ -47,7 +47,7 @@ public @interface Edit {
     @Comment("文件上传组件配置")
     AttachmentType attachmentType() default @AttachmentType;
 
-    @Comment("关联引用组件配置")
+    @Comment("对象引用组件配置")
     ReferenceType referenceType() default @ReferenceType(referenceField = "");
 
     enum Type {
@@ -79,7 +79,7 @@ public @interface Edit {
         @Comment("文件上传组件")
         ATTACHMENT,
 
-        @Comment("关联引用组件")
+        @Comment("对象引用组件")
         REFERENCE,
 
 

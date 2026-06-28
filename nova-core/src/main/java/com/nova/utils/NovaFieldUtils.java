@@ -422,7 +422,6 @@ public class NovaFieldUtils {
             if (edit.type() == Edit.Type.REFERENCE) {
                 ReferenceType referenceType = edit.referenceType();
                 ReferenceTypeInfo referenceTypeInfo = new ReferenceTypeInfo()
-                        .setType(referenceType.type())
                         .setReferenceClass(novaFieldInfo.getFieldClass())
                         .setReferenceField(referenceType.referenceField())
                         .setReferenceTransmitField(Arrays.asList(referenceType.referenceTransmitField()))
@@ -647,9 +646,6 @@ public class NovaFieldUtils {
     @Data
     @Accessors(chain = true)
     public static class ReferenceTypeInfo {
-
-        @Comment("关联类型")
-        private ReferenceType.Type type;
 
         @Comment("关联类")
         private Class<?> referenceClass;

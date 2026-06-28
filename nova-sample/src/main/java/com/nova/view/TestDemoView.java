@@ -46,7 +46,6 @@ public class TestDemoView {
                     title = "部门信息",
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(
-                            type = ReferenceType.Type.MANY_TO_ONE,
                             referenceField = "demo2Id"
                     ),
                     search = @Search(vague = true)

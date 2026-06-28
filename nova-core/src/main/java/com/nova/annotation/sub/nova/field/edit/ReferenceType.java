@@ -4,26 +4,19 @@ import com.nova.annotation.config.Comment;
 
 public @interface ReferenceType {
 
-    @Comment("关联类型")
-    Type type() default Type.MANY_TO_ONE;
-
-    @Comment("关联字段,多表存储一表的属性名")
+    @Comment("当前对象存储对方的字段名，例如 user_id")
     String referenceField();
 
-    @Comment("关联引用透传属性,一表DataProxy.fetch执行时,会带上多表前端表单上下文的实时属性进行请求,属性名：sourceFields,用于扩展实现动态的数据筛选")
+    @Comment("拉取对方引用数据时透传的当前对象上下文字段列表。对方 DataProxy.fetch 执行时，会携带当前对象前端表单上下文的实时属性值（sourceFields），用于扩展实现动态数据筛选")
     String[] referenceTransmitField() default {};
 
-    @Comment("存储列,一表被多表引用的属性名")
+    @Comment("对方被引用的字段名，默认id，即当前对象的 referenceField 对应对方的哪个字段（通常为主键）")
     String storageField() default "id";
 
-    @Comment("展示列,一表展示到多表中的属性名")
+    @Comment("对方在引用场景下替代 storageField 展示的字段名，默认 name")
     String displayField() default "name";
 
     @Comment("tap页显示")
     boolean tapShow() default true;
 
-    enum Type {
-        @Comment("多对一")
-        MANY_TO_ONE
-    }
 }
