@@ -48,7 +48,8 @@ public class TestDemoView {
                     referenceType = @ReferenceType(
                             referenceField = "demo2Id"
                     ),
-                    search = @Search(vague = true)
+                    search = @Search(vague = true),
+                    notNull = true
             )
     )
     private TestDemo2View testDemo2View;

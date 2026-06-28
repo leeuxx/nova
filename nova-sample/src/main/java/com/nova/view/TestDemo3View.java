@@ -6,6 +6,7 @@ import com.nova.annotation.config.NovaId;
 import com.nova.annotation.sub.nova.Layout;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
+import com.nova.annotation.sub.nova.field.edit.AttachmentType;
 import com.nova.annotation.sub.nova.field.edit.DateType;
 import com.nova.annotation.sub.nova.field.edit.ReferenceType;
 import com.nova.annotation.sub.nova.field.edit.Search;
@@ -68,6 +69,20 @@ public class TestDemo3View {
             )
     )
     private String msg;
+
+    @NovaField(
+            views = @View(title = "文件", width = "25%"),
+            edit = @Edit(
+                    title = "文件",
+                    type = Edit.Type.ATTACHMENT,
+                    attachmentType = @AttachmentType(
+                            type = AttachmentType.Type.IMAGE,
+                            showType = AttachmentType.ShowType.TOP,
+                            maxLimit = 5
+                    )
+            )
+    )
+    private String file;
 
     @NovaField(
             views = @View(title = "创建时间", width = "25%"),

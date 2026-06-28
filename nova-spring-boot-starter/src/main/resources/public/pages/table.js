@@ -195,6 +195,7 @@ const NovaTable = {
       loading:          false,
       previewModalShow: false,
       previewField:     null,
+      previewAppNovaName: null,
       previewIndex:     0,
       slideDirection:  'right',
       attachmentDropdownKey: null,
@@ -240,6 +241,17 @@ const NovaTable = {
 
     filteredData() {
       return this.tableData
+    },
+
+    previewFileList() {
+      if (!this.previewField) return []
+      if (this.previewAppNovaName) return (this.appendageFormData[this.previewAppNovaName] || {})[this.previewField.field] || []
+      return this.formData[this.previewField.field] || []
+    },
+    previewAttachCfg() {
+      if (!this.previewField) return {}
+      if (this.previewAppNovaName) return (this.appBuild(this.previewAppNovaName).attachmentMap || {})[this.previewField.field] || {}
+      return this.attachmentMap[this.previewField.field] || {}
     },
 
     visibleEditFields() {
@@ -590,6 +602,58 @@ const NovaTable = {
       return (d && d.type === 'DATE_TIME') ? 'datetime' : 'date'
     },
     appNumInfo(n, field) { return ((this.appendageTabBuild[n] || {}).numberMap || {})[field] || {} },
+    appFieldVisible(n, f) {
+      if (!f.showByExpr) return true
+      var fd = this.appFd(n), refMap = (this.appBuild(n).referenceMap || {})
+      var evalFd = Object.assign({}, fd)
+      for (var k in refMap) { var rf = refMap[k] && refMap[k].referenceField; if (rf) evalFd[k] = fd[rf] !== undefined ? fd[rf] : null }
+      return evalShowExpr(f.showByExpr, evalFd)
+    },
+    isFieldValueEmpty(f, val) {
+      if (val === null || val === undefined) return true
+      if (Array.isArray(val)) return val.length === 0
+      return String(val).trim() === ''
+    },
+    tabTotalRequired(tabName) {
+      var self = this
+      if (tabName === 'form') {
+        return self.visibleEditFields.filter(function(item) {
+          return item.visible && item.field.notNull && !self.isReadonly(item.field)
+        }).length
+      }
+      if (tabName.startsWith('app_')) {
+        var n = tabName.slice(4), build = self.appBuild(n), refMap = build.referenceMap || {}
+        var fd = self.appFd(n), evalFd = Object.assign({}, fd)
+        for (var k in refMap) { var rf = refMap[k] && refMap[k].referenceField; if (rf) evalFd[k] = fd[rf] !== undefined ? fd[rf] : null }
+        return (build.editFields || []).filter(function(f) {
+          if (!f.notNull || self.isReadonly(f)) return false
+          if (f.type === 'REFERENCE' && refMap[f.field] && refMap[f.field].referenceName === self.novaName) return false
+          if (f.showByExpr && !evalShowExpr(f.showByExpr, evalFd)) return false
+          return true
+        }).length
+      }
+      return 0
+    },
+    tabRequiredCount(tabName) {
+      var self = this
+      if (tabName === 'form') {
+        return self.visibleEditFields.filter(function(item) {
+          return item.visible && item.field.notNull && !self.isReadonly(item.field) && self.isFieldValueEmpty(item.field, self.formData[item.field.field])
+        }).length
+      }
+      if (tabName.startsWith('app_')) {
+        var n = tabName.slice(4), build = self.appBuild(n), refMap = build.referenceMap || {}
+        var fd = self.appFd(n), evalFd = Object.assign({}, fd)
+        for (var k in refMap) { var rf = refMap[k] && refMap[k].referenceField; if (rf) evalFd[k] = fd[rf] !== undefined ? fd[rf] : null }
+        return (build.editFields || []).filter(function(f) {
+          if (!f.notNull || self.isReadonly(f)) return false
+          if (f.type === 'REFERENCE' && refMap[f.field] && refMap[f.field].referenceName === self.novaName) return false
+          if (f.showByExpr && !evalShowExpr(f.showByExpr, evalFd)) return false
+          return self.isFieldValueEmpty(f, fd[f.field])
+        }).length
+      }
+      return 0
+    },
     tagOptions(field) {
       const tag = this.tagMap && this.tagMap[field]
       if (!tag || !tag.tags) return []
@@ -635,14 +699,14 @@ const NovaTable = {
     handleDelete(row)   { window.NovaTableJQ.handleDelete(row) },
     handleBatchDelete() { window.NovaTableJQ.handleBatchDelete() },
     handleFormSubmit()  { window.NovaTableJQ.handleFormSubmit() },
-    handleAttachmentChange(f, event) {
+    handleAttachmentChange(f, event, appNovaName) {
       const files = Array.from(event.target.files || [])
       event.target.value = ''
       if (!files.length) return
-      const cfg = this.attachmentMap[f.field] || {}
+      const cfg = appNovaName ? ((this.appBuild(appNovaName).attachmentMap || {})[f.field] || {}) : (this.attachmentMap[f.field] || {})
+      const currentList = appNovaName ? (this.appFd(appNovaName)[f.field] || []) : (this.formData[f.field] || [])
       const maxLimit = cfg.maxLimit || 1
-      const current = (this.formData[f.field] || []).length
-      const allowed = maxLimit - current
+      const allowed = maxLimit - currentList.length
       if (allowed <= 0) return
       if (files.length > allowed) {
         if (window.$message) window.$message.error('最多还能上传 ' + allowed + ' 个文件')
@@ -658,14 +722,8 @@ const NovaTable = {
           }
         }
         const kb = file.size / 1024
-        if (cfg.minSize > 0 && kb < cfg.minSize) {
-          if (window.$message) window.$message.error('文件不能小于 ' + cfg.minSize + ' KB')
-          return
-        }
-        if (cfg.maxSize > 0 && kb > cfg.maxSize) {
-          if (window.$message) window.$message.error('文件不能超过 ' + cfg.maxSize + ' KB')
-          return
-        }
+        if (cfg.minSize > 0 && kb < cfg.minSize) { if (window.$message) window.$message.error('文件不能小于 ' + cfg.minSize + ' KB'); return }
+        if (cfg.maxSize > 0 && kb > cfg.maxSize) { if (window.$message) window.$message.error('文件不能超过 ' + cfg.maxSize + ' KB'); return }
       }
       const formData = new FormData()
       formData.append('novaName', this.novaName)
@@ -673,28 +731,26 @@ const NovaTable = {
       const field = f.field
       const vm = this
       $.ajax({
-        url: '/nova/attachment/upload',
-        method: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
+        url: '/nova/attachment/upload', method: 'POST', data: formData, processData: false, contentType: false,
         success(resp) {
-          if (resp.code !== 200) {
-            if (window.$message) window.$message.error(resp.msg || '上传失败')
-            return
+          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '上传失败'); return }
+          if (appNovaName) {
+            if (!vm.appendageFormData[appNovaName]) return
+            if (!vm.appendageFormData[appNovaName][field]) vm.appendageFormData[appNovaName][field] = []
+            ;(resp.data || []).forEach(url => vm.appendageFormData[appNovaName][field].push(url))
+          } else {
+            if (!vm.formData[field]) vm.formData[field] = []
+            ;(resp.data || []).forEach(url => vm.formData[field].push(url))
           }
-          if (!vm.formData[field]) vm.formData[field] = []
-          ;(resp.data || []).forEach(url => vm.formData[field].push(url))
           if (window.$message) window.$message.success('上传成功')
-          vm.openPreview(f)
+          vm.openPreview(f, appNovaName || null)
         },
-        error() {
-          if (window.$message) window.$message.error('上传请求失败')
-        }
+        error() { if (window.$message) window.$message.error('上传请求失败') }
       })
     },
-    openPreview(f) {
+    openPreview(f, appNovaName) {
       this.previewField = f
+      this.previewAppNovaName = appNovaName || null
       this.previewIndex = 0
       this.previewModalShow = true
     },
@@ -724,13 +780,14 @@ const NovaTable = {
     closePreview() {
       this.previewModalShow = false
       this.previewField = null
+      this.previewAppNovaName = null
       this.previewIndex = 0
     },
     deleteFromPreview(idx) {
       if (!this.previewField) return
-      this.formData[this.previewField.field].splice(idx, 1)
-      const total = (this.formData[this.previewField.field] || []).length
-      if (this.previewIndex >= total) this.previewIndex = Math.max(0, total - 1)
+      const list = this.previewFileList
+      list.splice(idx, 1)
+      if (this.previewIndex >= list.length) this.previewIndex = Math.max(0, list.length - 1)
     },
     setAttachmentDropdown(fieldKey) {
       this.attachmentDropdownKey = fieldKey
@@ -743,6 +800,16 @@ const NovaTable = {
       const refInfo = this.referenceMap[f.field]
       if (!refInfo || !refInfo.referenceName) return
       this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, visible: false })
+      this.$nextTick(() => {
+        const picker = this.refPickerStack[this.refPickerStack.length - 1]
+        if (picker) picker.visible = true
+      })
+    },
+    openAppReferenceModal(n, f) {
+      if (this.isReadonly(f)) return
+      var refInfo = (this.appBuild(n).referenceMap || {})[f.field]
+      if (!refInfo || !refInfo.referenceName) return
+      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, appNovaName: n, visible: false })
       this.$nextTick(() => {
         const picker = this.refPickerStack[this.refPickerStack.length - 1]
         if (picker) picker.visible = true
@@ -795,10 +862,24 @@ const NovaTable = {
         return
       }
 
-      const refInfo = this.referenceMap[picker.field.field]
+      const refInfo = picker.appNovaName
+        ? (this.appBuild(picker.appNovaName).referenceMap || {})[picker.field.field]
+        : this.referenceMap[picker.field.field]
       const storageField = refInfo && refInfo.storageField ? refInfo.storageField : 'id'
       const displayField = refInfo && refInfo.displayField ? refInfo.displayField : storageField
       const row = picker.selectedRow
+
+      if (picker.appNovaName) {
+        const appFd = this.appendageFormData[picker.appNovaName]
+        if (appFd) {
+          const storedVal = row[storageField] !== undefined ? row[storageField] : ''
+          appFd[picker.field.field] = storedVal
+          appFd[picker.field.field + '_display'] = row[displayField] !== undefined ? row[displayField] : ''
+          if (refInfo && refInfo.referenceField) appFd[refInfo.referenceField] = storedVal
+        }
+        this.closePickerAtLevel(level)
+        return
+      }
 
       const targetData = picker.isForFilter ? this.filterForm : this.formData
       const storedVal = row[storageField] !== undefined ? row[storageField] : ''
@@ -1307,11 +1388,12 @@ const NovaTable = {
       <n-modal v-model:show="showForm" preset="card" :title="formMode === 'add' ? '新增' : '编辑'" style="width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column" :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
         <n-tabs v-model:value="formTab" type="line"
           style="padding:0 20px;margin-top:-4px"
-          :class="((formMode === 'add' ? editExtraTabs.filter(t=>t.tapType!=='referenceForm').length : editExtraTabs.length)) === 0 ? 'tabs-nav-hidden' : ''"
+          :class="''"
           @update:value="onFormTabChange">
 
           <!-- Tab 1: 表单 -->
-          <n-tab-pane name="form" tab="基本信息" style="padding:16px 0 20px 0">
+          <n-tab-pane name="form" style="padding:16px 0 20px 0">
+            <template #tab>基本信息<span v-if="tabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('form') }}</span><span v-else-if="tabTotalRequired('form') > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template>
             <div :key="'tab_' + formTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
             <div :style="'display:grid;gap:16px 24px;' + (editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
           <template v-for="{field: f, visible: _vis} in visibleEditFields" :key="f.field">
@@ -1494,8 +1576,8 @@ const NovaTable = {
         <template v-for="tab in editExtraTabs" :key="tab.tapNovaName">
         <n-tab-pane v-if="tab.tapType !== 'referenceForm' || formMode !== 'add'"
           :name="(tab.tapType === 'referenceForm' ? 'ref_' : 'app_') + tab.tapNovaName"
-          :tab="tab.tapTitle || tab.tapNovaName"
           style="padding:16px 0 20px 0">
+          <template #tab>{{ tab.tapTitle || tab.tapNovaName }}<template v-if="tab.tapType === 'appendageForm'"><span v-if="tabRequiredCount('app_' + tab.tapNovaName) > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('app_' + tab.tapNovaName) }}</span><span v-else-if="tabTotalRequired('app_' + tab.tapNovaName) > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template></template>
           <div :key="'tab_' + formTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
 
           <!-- referenceForm 内容 -->
@@ -1510,8 +1592,11 @@ const NovaTable = {
           <div v-if="!(appBuild(tab.tapNovaName).editFields || []).length" style="text-align:center;padding:40px;color:#aaa;font-size:13px">加载中…</div>
           <div v-else :style="'display:grid;gap:16px 24px;' + (appBuild(tab.tapNovaName).editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
             <template v-for="f in (appBuild(tab.tapNovaName).editFields || [])" :key="f.field">
-              <n-divider v-if="f.type === 'DIVIDE' && appBuild(tab.tapNovaName).editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
-              <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && !(f.type === 'REFERENCE' && (appBuild(tab.tapNovaName).referenceMap || {})[f.field] && (appBuild(tab.tapNovaName).referenceMap || {})[f.field].referenceName === novaName)" :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+              <n-divider v-if="f.type === 'DIVIDE' && appBuild(tab.tapNovaName).editLayout !== 'FULL_LINE'" v-show="appFieldVisible(tab.tapNovaName, f)" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
+              <div v-else-if="f.type === 'EMPTY' && appBuild(tab.tapNovaName).editLayout !== 'FULL_LINE'" v-show="appFieldVisible(tab.tapNovaName, f)"></div>
+              <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && !(f.type === 'REFERENCE' && (appBuild(tab.tapNovaName).referenceMap || {})[f.field] && (appBuild(tab.tapNovaName).referenceMap || {})[f.field].referenceName === novaName)"
+                v-show="appFieldVisible(tab.tapNovaName, f)"
+                :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
                 <span class="edit-form-label">
                   <span v-if="f.notNull && !isReadonly(f)" class="form-label-required">*</span>{{ f.title }}
                   <n-tooltip v-if="f.desc" trigger="hover" placement="top"><template #trigger><span class="form-label-help"><iconify-icon icon="material-symbols:help-outline" style="font-size:15px"></iconify-icon></span></template>{{ f.desc }}</n-tooltip>
@@ -1524,8 +1609,7 @@ const NovaTable = {
                 <n-radio-group v-else-if="f.type === 'CHOICE' && appChoice(tab.tapNovaName,f.field) && appChoice(tab.tapNovaName,f.field).showType === 'RADIO'"
                   :value="appFd(tab.tapNovaName)[f.field]" :disabled="isReadonly(f)"
                   @update:value="appSetFd(tab.tapNovaName,f.field,$event)">
-                  <n-space><n-radio v-for="o in appFieldOpts(tab.tapNovaName,f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
-                </n-radio-group>
+                  <n-space><n-radio v-for="o in appFieldOpts(tab.tapNovaName,f)" :key="o.value" :value="o.value" :label="o.label" /></n-radio-group>
                 <n-select v-else-if="f.type === 'CHOICE' && appChoice(tab.tapNovaName,f.field) && appChoice(tab.tapNovaName,f.field).selectType === 'MULTI'"
                   :value="appFd(tab.tapNovaName)[f.field]" :options="appFieldOpts(tab.tapNovaName,f)"
                   :placeholder="'请选择'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
@@ -1559,13 +1643,44 @@ const NovaTable = {
                   :value="appFd(tab.tapNovaName)[f.field]" type="textarea" :autosize="{minRows:3}"
                   :placeholder="'请输入'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
                   :disabled="isReadonly(f)" @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
-                <n-input v-else-if="f.type === 'REFERENCE'"
-                  :value="appFd(tab.tapNovaName)[f.field+'_display'] || appFd(tab.tapNovaName)[f.field]"
-                  :placeholder="'请选择'+f.title" readonly clearable
-                  :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
-                  @clear.stop="appSetFd(tab.tapNovaName,f.field,null);appSetFd(tab.tapNovaName,f.field+'_display','')">
-                  <template #suffix><iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon></template>
-                </n-input>
+                <div v-else-if="f.type === 'REFERENCE' && (appBuild(tab.tapNovaName).referenceMap||{})[f.field]"
+                  @click="!isReadonly(f) && openAppReferenceModal(tab.tapNovaName, f)" style="cursor:pointer">
+                  <n-input
+                    :value="appFd(tab.tapNovaName)[f.field+'_display'] || appFd(tab.tapNovaName)[f.field]"
+                    :placeholder="'请选择'+f.title" readonly clearable
+                    :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
+                    :disabled="isReadonly(f)"
+                    @clear.stop="appSetFd(tab.tapNovaName,f.field,null);appSetFd(tab.tapNovaName,f.field+'_display','')">
+                    <template #suffix><iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon></template>
+                  </n-input>
+                </div>
+                <div v-else-if="f.type === 'ATTACHMENT'" class="attachment-field"
+                  @mouseenter="setAttachmentDropdown(tab.tapNovaName+'__'+f.field)" @mouseleave="clearAttachmentDropdown">
+                  <div class="attachment-btn">
+                    <iconify-icon icon="mdi:paperclip" style="font-size:13px"></iconify-icon>附件管理
+                    <iconify-icon icon="mdi:chevron-down" :style="'font-size:12px;transition:transform .2s ease;transform:' + (attachmentDropdownKey === tab.tapNovaName+'__'+f.field ? 'rotate(180deg)' : 'rotate(0deg)')"></iconify-icon>
+                  </div>
+                  <transition name="dropdown-fade">
+                    <div v-if="attachmentDropdownKey === tab.tapNovaName+'__'+f.field" :class="'attachment-dropdown' + ((appBuild(tab.tapNovaName).attachmentMap||{})[f.field] && (appBuild(tab.tapNovaName).attachmentMap||{})[f.field].showType === 'DOWN' ? ' down' : '')">
+                      <div class="attachment-dropdown-inner">
+                        <label v-if="!isReadonly(f) && (!(appBuild(tab.tapNovaName).attachmentMap||{})[f.field] || !(appBuild(tab.tapNovaName).attachmentMap||{})[f.field].maxLimit || (appFd(tab.tapNovaName)[f.field]||[]).length < (appBuild(tab.tapNovaName).attachmentMap||{})[f.field].maxLimit)"
+                          class="attachment-dropdown-item" :for="'upload-app-'+tab.tapNovaName+'-'+f.field">
+                          <iconify-icon icon="mdi:upload" style="font-size:13px"></iconify-icon>
+                          上传文件{{ (appBuild(tab.tapNovaName).attachmentMap||{})[f.field] && (appBuild(tab.tapNovaName).attachmentMap||{})[f.field].maxLimit ? '（共'+((appBuild(tab.tapNovaName).attachmentMap||{})[f.field].maxLimit-(appFd(tab.tapNovaName)[f.field]||[]).length)+'个）' : '' }}
+                          <input :id="'upload-app-'+tab.tapNovaName+'-'+f.field" type="file" style="display:none"
+                            :multiple="(appBuild(tab.tapNovaName).attachmentMap||{})[f.field] && (appBuild(tab.tapNovaName).attachmentMap||{})[f.field].maxLimit > 1"
+                            @change="handleAttachmentChange(f, $event, tab.tapNovaName)" />
+                        </label>
+                        <div v-if="(appFd(tab.tapNovaName)[f.field]||[]).length > 0" class="attachment-dropdown-item" @click="openPreview(f, tab.tapNovaName)">
+                          <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>查看文件（共{{ (appFd(tab.tapNovaName)[f.field]||[]).length }}个）
+                        </div>
+                        <div v-else class="attachment-dropdown-item attachment-disabled">
+                          <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>查看文件（共0个）
+                        </div>
+                      </div>
+                    </div>
+                  </transition>
+                </div>
                 <n-input v-else
                   :value="appFd(tab.tapNovaName)[f.field]" :placeholder="'请输入'+f.title"
                   :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
@@ -1594,23 +1709,23 @@ const NovaTable = {
         <template #header>
           <div class="gallery-header">
             <span class="gallery-title">{{ previewField ? (previewField.title || '附件预览') : '附件预览' }}</span>
-            <span v-if="previewField && attachmentMap[previewField.field] && attachmentMap[previewField.field].type === 'IMAGE' && (formData[previewField.field] || []).length > 0" class="gallery-count">
-              {{ previewIndex + 1 }} / {{ (formData[previewField.field] || []).length }}
+            <span v-if="previewField && previewAttachCfg.type === 'IMAGE' && previewFileList.length > 0" class="gallery-count">
+              {{ previewIndex + 1 }} / {{ previewFileList.length }}
             </span>
           </div>
         </template>
-        <div v-if="previewField && attachmentMap[previewField.field] && attachmentMap[previewField.field].type === 'IMAGE'" class="gallery-wrap">
+        <div v-if="previewField && previewAttachCfg.type === 'IMAGE'" class="gallery-wrap">
           <div class="gallery-body">
             <div class="gallery-stage">
               <button v-if="previewIndex > 0" class="gallery-nav gallery-nav-prev" @click="slideDirection = 'left'; previewIndex--">‹</button>
               <transition :name="'slide-' + slideDirection">
-                <img :key="previewIndex" :src="formData[previewField.field][previewIndex]" class="gallery-main-img" />
+                <img :key="previewIndex" :src="previewFileList[previewIndex]" class="gallery-main-img" />
               </transition>
-              <button v-if="previewIndex < (formData[previewField.field] || []).length - 1" class="gallery-nav gallery-nav-next" @click="slideDirection = 'right'; previewIndex++">›</button>
+              <button v-if="previewIndex < previewFileList.length - 1" class="gallery-nav gallery-nav-next" @click="slideDirection = 'right'; previewIndex++">›</button>
             </div>
-            <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-sider">
+            <div v-if="previewFileList.length > 0" class="gallery-sider">
               <div class="gallery-thumb-list">
-                <div v-for="(url, idx) in (formData[previewField.field] || [])" :key="idx" class="gallery-thumb-item">
+                <div v-for="(url, idx) in previewFileList" :key="idx" class="gallery-thumb-item">
                   <img :src="url" class="gallery-thumb-img" :class="{active: previewIndex === idx}"
                     @click="slideDirection = previewIndex < idx ? 'right' : 'left'; previewIndex = idx" />
                   <span class="gallery-thumb-del" @click.stop="deleteFromPreview(idx)">×</span>
@@ -1618,19 +1733,19 @@ const NovaTable = {
               </div>
             </div>
           </div>
-          <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-dots">
-            <span v-for="(url, idx) in (formData[previewField.field] || [])" :key="'dot-' + idx"
+          <div v-if="previewFileList.length > 0" class="gallery-dots">
+            <span v-for="(url, idx) in previewFileList" :key="'dot-' + idx"
               :class="'gallery-dot' + (previewIndex === idx ? ' active' : '')"
               @click="slideDirection = previewIndex < idx ? 'right' : 'left'; previewIndex = idx"></span>
           </div>
-          <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-url-wrap" :title="'点击复制: ' + (formData[previewField.field] || [])[previewIndex]" @click="copyText((formData[previewField.field] || [])[previewIndex])">
+          <div v-if="previewFileList.length > 0" class="gallery-url-wrap" :title="'点击复制: ' + previewFileList[previewIndex]" @click="copyText(previewFileList[previewIndex])">
             <div class="gallery-url-label">图片地址</div>
-            <div class="gallery-url-text">{{ (formData[previewField.field] || [])[previewIndex] }}</div>
+            <div class="gallery-url-text">{{ previewFileList[previewIndex] }}</div>
           </div>
-          <div v-if="(formData[previewField.field] || []).length === 0" class="gallery-empty">暂无图片</div>
+          <div v-if="previewFileList.length === 0" class="gallery-empty">暂无图片</div>
         </div>
         <div v-else-if="previewField" class="preview-file-list">
-          <template v-for="(url, idx) in (formData[previewField.field] || [])" :key="idx">
+          <template v-for="(url, idx) in previewFileList" :key="idx">
             <div class="preview-file-row">
               <span class="preview-file-url">{{ url }}</span>
               <n-space>
@@ -1639,7 +1754,7 @@ const NovaTable = {
               </n-space>
             </div>
           </template>
-          <div v-if="(formData[previewField.field] || []).length === 0" class="preview-empty">暂无文件</div>
+          <div v-if="previewFileList.length === 0" class="preview-empty">暂无文件</div>
         </div>
       </n-modal>
 

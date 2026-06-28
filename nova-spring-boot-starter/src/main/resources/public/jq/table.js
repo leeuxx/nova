@@ -84,9 +84,9 @@ window.NovaTableJQ = (function ($) {
         if (layout.editLayout) target.editLayout = layout.editLayout
         var allEdit = resp.data.edit || []
         target.editFields = allEdit.filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
-        target.editReferenceTabs = allEdit.filter(function(e) { return e.tapType === 'referenceForm' })
-        target.editAppendageTabs = allEdit.filter(function(e) { return e.tapType === 'appendageForm' })
-        target.editExtraTabs = allEdit.filter(function(e) { return e.tapType === 'referenceForm' || e.tapType === 'appendageForm' })
+        target.editReferenceTabs = allEdit.filter(function(e) { return e.tapType === 'referenceForm' && e.tapShow !== false })
+        target.editAppendageTabs = allEdit.filter(function(e) { return e.tapType === 'appendageForm' && e.tapShow !== false })
+        target.editExtraTabs = allEdit.filter(function(e) { return (e.tapType === 'referenceForm' || e.tapType === 'appendageForm') && e.tapShow !== false })
         var refMap = resp.data.reference || {}
         target.editReferenceTabs.forEach(function(tab) {
           if (!tab.tapNovaName) return
@@ -95,7 +95,7 @@ window.NovaTableJQ = (function ($) {
               tab.tapParamField = f.field
           })
         })
-        target.editAppendageTabs = allEdit.filter(function(e) { return e.tapType === 'appendageForm' })
+        target.editAppendageTabs = allEdit.filter(function(e) { return e.tapType === 'appendageForm' && e.tapShow !== false })
         if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
         // 构建完成后加载数据
         loadData(novaName)

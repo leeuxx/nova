@@ -12,6 +12,7 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
+      keepalive-time: 60000
 
   # MyBatis-Plus 配置
   mybatis-plus:

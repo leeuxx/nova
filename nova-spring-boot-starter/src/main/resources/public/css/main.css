@@ -185,6 +185,7 @@ body.dark { background: #151515 !important; }
 .dark .form-label          { color: #e0e0e0; }
 
 .tabs-nav-hidden .n-tabs-nav { display: none; }
+.n-modal-body-wrapper .n-tabs-nav { position: sticky; top: 0; z-index: 10; background: var(--n-color); }
 .n-modal-scroll-content { padding-bottom: 60px !important; }
 .ref-picker-modal .n-modal-scroll-content { padding-bottom: 8px !important; }
 .ref-picker-modal .n-modal__footer { padding-top: 8px !important; padding-bottom: 12px !important; }
