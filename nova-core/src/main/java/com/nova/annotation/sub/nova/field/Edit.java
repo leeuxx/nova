@@ -50,6 +50,9 @@ public @interface Edit {
     @Comment("对象引用组件配置")
     ReferenceType referenceType() default @ReferenceType(referenceField = "");
 
+    @Comment("附属对象组件配置")
+    AppendageType appendageType() default @AppendageType(referenceField = "");
+
     enum Type {
 
         @Comment("自动匹配")
@@ -81,6 +84,15 @@ public @interface Edit {
 
         @Comment("对象引用组件")
         REFERENCE,
+
+        @Comment("附属对象组件")
+        APPENDAGE,
+
+        @Comment("附属集合组件")
+        APPENDAGES,
+
+        @Comment("集合引用组件")
+        LINK,
 
 
         @Comment("分割线")

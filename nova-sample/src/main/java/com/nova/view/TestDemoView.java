@@ -54,6 +54,20 @@ public class TestDemoView {
     private TestDemo2View testDemo2View;
 
     @NovaField(
+            views = {
+                    @View(title = "岗位名称", column = "name", width = "10%")
+            },
+            edit = @Edit(
+                    title = "岗位信息",
+                    type = Edit.Type.APPENDAGE,
+                    appendageType = @AppendageType(
+                            referenceField = "demoId"
+                    )
+            )
+    )
+    private TestDemo3View testDemo3View;
+
+    @NovaField(
             views = @View(title = "用户名", width = "10%"),
             edit = @Edit(
                     title = "用户名",

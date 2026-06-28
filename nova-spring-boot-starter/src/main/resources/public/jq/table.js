@@ -85,6 +85,8 @@ window.NovaTableJQ = (function ($) {
         var allEdit = resp.data.edit || []
         target.editFields = allEdit.filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
         target.editReferenceTabs = allEdit.filter(function(e) { return e.tapType === 'referenceForm' })
+        target.editAppendageTabs = allEdit.filter(function(e) { return e.tapType === 'appendageForm' })
+        target.editExtraTabs = allEdit.filter(function(e) { return e.tapType === 'referenceForm' || e.tapType === 'appendageForm' })
         var refMap = resp.data.reference || {}
         target.editReferenceTabs.forEach(function(tab) {
           if (!tab.tapNovaName) return
@@ -93,6 +95,7 @@ window.NovaTableJQ = (function ($) {
               tab.tapParamField = f.field
           })
         })
+        target.editAppendageTabs = allEdit.filter(function(e) { return e.tapType === 'appendageForm' })
         if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
         // 构建完成后加载数据
         loadData(novaName)
@@ -100,6 +103,48 @@ window.NovaTableJQ = (function ($) {
       error: function () {
         console.info('[Nova] build接口未就绪，novaName:', novaName)
       }
+    })
+  }
+
+  // ── 懒加载 appendage sub-build（首次打开弹窗时调用）──────────────
+  function buildAppendageTabs(novaName) {
+    var target = window.vmMap && window.vmMap[novaName]
+    if (!target) return
+    ;(target.editAppendageTabs || []).forEach(function(appTab) {
+      if (!appTab.tapNovaName) return
+      if (target.appendageTabBuild && target.appendageTabBuild[appTab.tapNovaName]) return // 已加载，跳过
+      $.ajax({
+        url: '/nova/table/build', method: 'POST', contentType: 'application/json',
+        data: JSON.stringify({ novaName: appTab.tapNovaName }),
+        success: function(br) {
+          if (br.code !== 200) return
+          var t2 = window.vmMap && window.vmMap[novaName]
+          if (!t2) return
+          var bd = br.data
+          var editFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
+          var newBuild = Object.assign({}, t2.appendageTabBuild)
+          var cm = bd.choice || {}
+          newBuild[appTab.tapNovaName] = {
+            editFields: editFields, choiceMap: cm, numberMap: bd.number || {},
+            dateMap: bd.date || {}, booleanMap: bd.booleanInfo || {},
+            referenceMap: bd.reference || {}, tagMap: bd.tag || {},
+            attachmentMap: bd.attachment || {},
+            editLayout: (bd.layout && bd.layout.editLayout) || 'DEFAULT'
+          }
+          t2.appendageTabBuild = newBuild
+          var fd = {}
+          editFields.forEach(function(f) {
+            var ci = cm[f.field]
+            var isMulti = f.type === 'CHOICE' && ci && ci.selectType === 'MULTI'
+            var isSingle = f.type === 'CHOICE' && ci && ci.selectType === 'SINGLE'
+            fd[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (isSingle || f.type === 'DATE' || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
+            if (f.type === 'REFERENCE') fd[f.field + '_display'] = ''
+          })
+          var newFds = Object.assign({}, t2.appendageFormData)
+          newFds[appTab.tapNovaName] = fd
+          t2.appendageFormData = newFds
+        }
+      })
     })
   }
 
@@ -389,7 +434,26 @@ window.NovaTableJQ = (function ($) {
     vm().formData   = formData
     vm().formErrors = {}
     vm().refTabData = {}
+    // Reset appendage form data
+    var appFds = {}
+    var appBuild = vm().appendageTabBuild || {}
+    ;(vm().editAppendageTabs || []).forEach(function(appTab) {
+      var bd = appBuild[appTab.tapNovaName] || {}
+      var fd = {}
+      var cm = bd.choiceMap || {}
+      ;(bd.editFields || []).forEach(function(f) {
+        var ci = cm[f.field]
+        var isMulti = f.type === 'CHOICE' && ci && ci.selectType === 'MULTI'
+        var isSingle = f.type === 'CHOICE' && ci && ci.selectType === 'SINGLE'
+        fd[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (isSingle || f.type === 'DATE' || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
+        if (f.type === 'REFERENCE') fd[f.field + '_display'] = ''
+      })
+      appFds[appTab.tapNovaName] = fd
+    })
+    vm().appendageFormData   = appFds
+    vm().appendageFormErrors = {}
     vm().formTab    = 'form'
+    buildAppendageTabs(vm().novaName)
     vm().showForm   = true
   }
 
@@ -443,7 +507,7 @@ window.NovaTableJQ = (function ($) {
           }
         })
 
-        // 收集 REFERENCE 字段，批量获取 display 文本
+        // 收集主表单 REFERENCE 字段批量获取 display 文本
         var refReqs = {}
         ;(t.editFields || []).forEach(function(f) {
           if (f.type !== 'REFERENCE') return
@@ -457,35 +521,15 @@ window.NovaTableJQ = (function ($) {
             refReqs[refInfo.referenceName].storageFieldValues.push(sv)
           }
         })
-        // referenceForm tab：找到对应的 REFERENCE 字段，加入批量查询
-        var refTabSV = {}
-        ;(t.editReferenceTabs || []).forEach(function(tab) {
-          if (!tab.tapNovaName) return
-          var refField = null
-          ;(t.editFields || []).forEach(function(f) {
-            if (f.type === 'REFERENCE' && !refField) {
-              var ri = referenceMap[f.field] || {}
-              if (ri.referenceName === tab.tapNovaName) refField = f.field
-            }
-          })
-          if (!refField) return
-          var sv = source[refField]
-          if (!sv) return
-          refTabSV[tab.tapNovaName] = sv
-          if (!refReqs[tab.tapNovaName]) {
-            refReqs[tab.tapNovaName] = { novaName: tab.tapNovaName, storageFieldValues: [] }
-          }
-          if (refReqs[tab.tapNovaName].storageFieldValues.indexOf(sv) === -1) {
-            refReqs[tab.tapNovaName].storageFieldValues.push(sv)
-          }
-        })
 
         function openModal() {
           t.currentRow = $.extend({}, source)
           t.formMode   = 'edit'
           t.formData   = $.extend({}, source)
           t.formErrors = {}
+          t.refTabData = {}
           t.formTab    = 'form'
+          buildAppendageTabs(novaName)
           t.showForm   = true
         }
 
@@ -507,13 +551,6 @@ window.NovaTableJQ = (function ($) {
                 if (!sv || !refInfo.referenceName || !refInfo.displayField) return
                 var rec = result[refInfo.referenceName] && result[refInfo.referenceName][sv]
                 source[f.field + '_display'] = rec && rec[refInfo.displayField] != null ? String(rec[refInfo.displayField]) : ''
-              })
-              // 填充 referenceForm tab 数据
-              t.refTabData = {}
-              ;(t.editReferenceTabs || []).forEach(function(tab) {
-                var sv = refTabSV[tab.tapNovaName]
-                if (!sv) return
-                t.refTabData[tab.tapNovaName] = (result[tab.tapNovaName] && result[tab.tapNovaName][sv]) || {}
               })
             }
             openModal()

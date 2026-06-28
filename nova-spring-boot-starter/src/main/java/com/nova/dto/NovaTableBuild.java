@@ -56,6 +56,9 @@ public class NovaTableBuild {
         @Comment("关联引用组件信息")
         private Map<String, ReferenceType> reference;
 
+        @Comment("附属对象组件信息")
+        private Map<String, AppendageType> appendage;
+
         @Data
         @Accessors(chain = true)
         public static class Search {
@@ -120,7 +123,7 @@ public class NovaTableBuild {
         @Accessors(chain = true)
         public static class Edit {
 
-            @Comment("tap类型 thisForm=自身详情表单 referenceForm=引用详情表单 referenceTable=引用表格")
+            @Comment("tap类型 thisForm=自身详情表单 referenceForm=引用详情表单 appendageForm=附属对象表单")
             private String tapType;
 
             @Comment("tap名称")
@@ -289,17 +292,32 @@ public class NovaTableBuild {
             @Comment("关联类名")
             private String referenceName;
 
-            @Comment("关联字段")
+            @Comment("当前对象存储对方对象的字段名")
             private String referenceField;
 
-            @Comment("关联引用透传属性")
+            @Comment("拉取对方引用数据时透传的当前对象上下文字段列表")
             private List<String> referenceTransmitField;
 
-            @Comment("存储列")
+            @Comment("对方对象被引用的字段名")
             private String storageField;
 
-            @Comment("展示列")
+            @Comment("对方对象在被引用场景下替代 storageField 展示的字段名")
             private String displayField;
+
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class AppendageType {
+
+            @Comment("关联类名")
+            private String referenceName;
+
+            @Comment("对方对象存储当前对象的字段名")
+            private String referenceField;
+
+            @Comment("当前对象被引用的字段名")
+            private String storageField;
 
         }
     }

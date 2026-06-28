@@ -94,7 +94,7 @@ public class NovaFieldUtils {
             View[] views = novaField.views();
             Edit edit = novaField.edit();
             Edit.Type type = edit.type();
-            boolean isReference = type == Edit.Type.REFERENCE;
+            boolean isReference = (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE);
             for (View view : views) {
                 if (view.show()) {
                     String fieldName = isReference ? field + "." + view.column() : field;
@@ -134,28 +134,44 @@ public class NovaFieldUtils {
                 return;
             }
             // 自身详情表单
-            Readonly readonly = edit.readonly();
-            EditInfo.ThisForm thisForm = new EditInfo.ThisForm()
-                    .setField(field)
-                    .setTitle(edit.title())
-                    .setDesc(edit.desc())
-                    .setType(novaFieldInfo.getType())
-                    .setNotNull(edit.notNull())
-                    .setReadonly(new EditInfo.ThisForm.ReadonlyInfo()
-                            .setAdd(readonly.add())
-                            .setEdit(readonly.edit())
-                    )
-                    .setShowBy(edit.showBy());
-            thisForms.add(thisForm);
+            if (edit.type() != Edit.Type.APPENDAGE) {
+                Readonly readonly = edit.readonly();
+                EditInfo.ThisForm thisForm = new EditInfo.ThisForm()
+                        .setField(field)
+                        .setTitle(edit.title())
+                        .setDesc(edit.desc())
+                        .setType(novaFieldInfo.getType())
+                        .setNotNull(edit.notNull())
+                        .setReadonly(new EditInfo.ThisForm.ReadonlyInfo()
+                                .setAdd(readonly.add())
+                                .setEdit(readonly.edit())
+                        )
+                        .setShowBy(edit.showBy());
+                thisForms.add(thisForm);
+            }
             // 引用详情表单
             if (edit.type() == Edit.Type.REFERENCE) {
                 ReferenceType referenceType = edit.referenceType();
+                if (referenceType.tapShow()) {
+                    Class<?> fieldClass = novaFieldInfo.getFieldClass();
+                    editInfos.add(new EditInfo()
+                            .setTapType("referenceForm")
+                            .setTapNovaName(fieldClass.getSimpleName())
+                            .setTapTitle(edit.title())
+                            .setTapShow(referenceType.tapShow())
+                            .setTapSort(2)
+                    );
+                }
+            }
+            // 附属对象表单
+            if (edit.type() == Edit.Type.APPENDAGE) {
                 Class<?> fieldClass = novaFieldInfo.getFieldClass();
                 editInfos.add(new EditInfo()
-                        .setTapType("referenceForm")
+                        .setTapType("appendageForm")
                         .setTapNovaName(fieldClass.getSimpleName())
                         .setTapTitle(edit.title())
-                        .setTapShow(referenceType.tapShow())
+                        .setTapShow(true)
+                        .setTapSort(1)
                 );
             }
         });
@@ -165,7 +181,9 @@ public class NovaFieldUtils {
                 .setTapTitle("基本信息")
                 .setThisForms(thisForms)
                 .setTapShow(true)
+                .setTapSort(0)
         );
+        editInfos.sort(Comparator.comparingInt(EditInfo::getTapSort));
         return editInfos;
     }
 
@@ -403,7 +421,7 @@ public class NovaFieldUtils {
     }
 
     /**
-     * 获取关联参数信息
+     * 获取对象引用参数信息
      *
      * @param className 类名
      * @return 关联参数信息
@@ -431,6 +449,35 @@ public class NovaFieldUtils {
             }
         });
         return referenceTypeInfos;
+    }
+
+    /**
+     * 获取附属对象参数信息
+     *
+     * @param className 类名
+     * @return 附件参数信息
+     */
+    public static Map<String, AppendageTypeInfo> getAppendage(String className) {
+        Map<String, AppendageTypeInfo> appendageTypeInfos = new LinkedHashMap<>();
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return appendageTypeInfos;
+        }
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
+            Edit edit = novaField.edit();
+            if (edit.type() == Edit.Type.APPENDAGE) {
+                AppendageType appendageType = edit.appendageType();
+                AppendageTypeInfo appendageTypeInfo = new AppendageTypeInfo()
+                        .setReferenceClass(novaFieldInfo.getFieldClass())
+                        .setReferenceField(appendageType.referenceField())
+                        .setStorageField(appendageType.storageField());
+                appendageTypeInfos.put(field, appendageTypeInfo);
+            }
+        });
+        return appendageTypeInfos;
     }
 
     @Data
@@ -482,7 +529,7 @@ public class NovaFieldUtils {
     @Accessors(chain = true)
     public static class EditInfo {
 
-        @Comment("tap类型 thisForm=自身详情表单 referenceForm=引用详情表单 referenceTable=引用表格")
+        @Comment("tap类型 thisForm=自身详情表单 referenceForm=引用详情表单 appendageForm=附属对象表单")
         private String tapType;
 
         @Comment("tap名称")
@@ -496,6 +543,9 @@ public class NovaFieldUtils {
 
         @Comment("自身详情表单编辑信息")
         private List<ThisForm> thisForms;
+
+        @Comment("tap排序")
+        private Integer tapSort = 0;
 
         @Data
         @Accessors(chain = true)
@@ -650,17 +700,32 @@ public class NovaFieldUtils {
         @Comment("关联类")
         private Class<?> referenceClass;
 
-        @Comment("关联字段")
+        @Comment("当前对象存储对方对象的字段名")
         private String referenceField;
 
-        @Comment("关联引用透传属性")
+        @Comment("拉取对方引用数据时透传的当前对象上下文字段列表")
         private List<String> referenceTransmitField;
 
-        @Comment("存储列")
+        @Comment("对方对象被引用的字段名")
         private String storageField;
 
-        @Comment("展示列")
+        @Comment("对方对象在被引用场景下替代 storageField 展示的字段名")
         private String displayField;
+
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class AppendageTypeInfo {
+
+        @Comment("关联类")
+        private Class<?> referenceClass;
+
+        @Comment("对方对象存储当前对象的字段名")
+        private String referenceField;
+
+        @Comment("当前对象被引用的字段名")
+        private String storageField;
 
     }
 }

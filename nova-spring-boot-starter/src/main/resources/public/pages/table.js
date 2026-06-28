@@ -179,8 +179,13 @@ const NovaTable = {
       currentRow:     null,
       formData:       {},
       editFields:        [],
-      editReferenceTabs: [],
-      refTabData:        {},
+      editReferenceTabs:   [],
+      refTabData:          {},
+      editAppendageTabs:   [],
+      editExtraTabs:       [],
+      appendageTabBuild:   {},
+      appendageFormData:   {},
+      appendageFormErrors: {},
       editLayout:     'DEFAULT',
       formErrors:     {},
       striped:        true,
@@ -561,6 +566,30 @@ const NovaTable = {
       if (!choice || !choice.values) return []
       return choice.values.map(v => ({ label: v.label, value: v.value }))
     },
+    // ── appendageForm helpers ───────────────────────────────────
+    appBuild(n)        { return this.appendageTabBuild[n] || {} },
+    appFd(n)           { return this.appendageFormData[n]  || {} },
+    appErrs(n)         { return this.appendageFormErrors[n] || {} },
+    appSetFd(n, f, v)  {
+      if (this.appendageFormData[n])   this.appendageFormData[n][f] = v
+      if (this.appendageFormErrors[n]) delete this.appendageFormErrors[n][f]
+    },
+    appChoice(n, f)    { return ((this.appendageTabBuild[n] || {}).choiceMap || {})[f] || null },
+    appFieldOpts(n, f) {
+      const c = this.appChoice(n, f.field)
+      if (!c || !c.values) return []
+      return c.values.map(v => ({ label: v.label, value: v.value }))
+    },
+    appTagOpts(n, field) {
+      const t = ((this.appendageTabBuild[n] || {}).tagMap || {})[field]
+      if (!t || !t.tags) return []
+      return t.tags.map(v => ({ label: v, value: v }))
+    },
+    appDateType(n, field) {
+      const d = ((this.appendageTabBuild[n] || {}).dateMap || {})[field]
+      return (d && d.type === 'DATE_TIME') ? 'datetime' : 'date'
+    },
+    appNumInfo(n, field) { return ((this.appendageTabBuild[n] || {}).numberMap || {})[field] || {} },
     tagOptions(field) {
       const tag = this.tagMap && this.tagMap[field]
       if (!tag || !tag.tags) return []
@@ -885,7 +914,33 @@ const NovaTable = {
       this.$emit('pick', row)
     },
     onFormTabChange(tab) {
-      // viewMode 组件挂载时自己 build，这里无需额外操作
+      if (!tab.startsWith('ref_')) return
+      var refNovaName = tab.slice(4)
+      var refTab = (this.editReferenceTabs || []).find(function(t) { return t.tapNovaName === refNovaName })
+      if (!refTab) return
+      // 找到当前行中对应的 storageField 值
+      var referenceMap = this.referenceMap || {}
+      var currentRow = this.currentRow || {}
+      var sv = null
+      for (var field in referenceMap) {
+        if ((referenceMap[field] || {}).referenceName === refNovaName) {
+          sv = currentRow[field] !== undefined ? String(currentRow[field]) : null
+          break
+        }
+      }
+      if (!sv) return
+      var novaName = this.novaName
+      var vm = this
+      $.ajax({
+        url: '/nova/table/referencesData', method: 'POST', contentType: 'application/json',
+        data: JSON.stringify({ sourceNovaName: novaName, storageFields: [{ novaName: refNovaName, storageFieldValues: [sv] }] }),
+        success: function(resp) {
+          if (resp.code !== 200) return
+          var newData = Object.assign({}, vm.refTabData)
+          newData[refNovaName] = (resp.data[refNovaName] && resp.data[refNovaName][sv]) || {}
+          vm.refTabData = newData
+        }
+      })
     },
     refTabDisplayValue(novaName, f) {
       const maps = this.refTabMaps[novaName] || {}
@@ -1252,7 +1307,7 @@ const NovaTable = {
       <n-modal v-model:show="showForm" preset="card" :title="formMode === 'add' ? '新增' : '编辑'" style="width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column" :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
         <n-tabs v-model:value="formTab" type="line"
           style="padding:0 20px;margin-top:-4px"
-          :class="editReferenceTabs.filter(t => t.tapShow !== false && (!t.tapParamField || (currentRow && currentRow[t.tapParamField]))).length === 0 ? 'tabs-nav-hidden' : ''"
+          :class="((formMode === 'add' ? editExtraTabs.filter(t=>t.tapType!=='referenceForm').length : editExtraTabs.length)) === 0 ? 'tabs-nav-hidden' : ''"
           @update:value="onFormTabChange">
 
           <!-- Tab 1: 表单 -->
@@ -1435,23 +1490,99 @@ const NovaTable = {
         </div>
         </n-tab-pane>
 
-        <!-- referenceForm 关联查看 tab -->
-        <template v-for="refTab in editReferenceTabs" :key="refTab.tapNovaName">
-        <n-tab-pane v-if="refTab.tapShow !== false && (!refTab.tapParamField || (currentRow && currentRow[refTab.tapParamField]))"
-          :name="'ref_' + refTab.tapNovaName" :tab="refTab.tapTitle || refTab.tapNovaName"
+        <!-- referenceForm / appendageForm 统一按后端顺序渲染 -->
+        <template v-for="tab in editExtraTabs" :key="tab.tapNovaName">
+        <n-tab-pane v-if="tab.tapType !== 'referenceForm' || formMode !== 'add'"
+          :name="(tab.tapType === 'referenceForm' ? 'ref_' : 'app_') + tab.tapNovaName"
+          :tab="tab.tapTitle || tab.tapNovaName"
           style="padding:16px 0 20px 0">
           <div :key="'tab_' + formTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
-          <nova-table v-if="formTab === 'ref_' + refTab.tapNovaName"
+
+          <!-- referenceForm 内容 -->
+          <div v-if="tab.tapType === 'referenceForm' && refTabData[tab.tapNovaName] == null" style="text-align:center;padding:40px;color:#aaa;font-size:13px">加载中…</div>
+          <nova-table v-else-if="tab.tapType === 'referenceForm' && formTab === 'ref_' + tab.tapNovaName"
             :view-mode="true"
-            :nova-name-prop="refTab.tapNovaName"
-            :view-row="refTabData[refTab.tapNovaName]" />
+            :nova-name-prop="tab.tapNovaName"
+            :view-row="refTabData[tab.tapNovaName]" />
+
+          <!-- appendageForm 内容 -->
+          <template v-else-if="tab.tapType === 'appendageForm'">
+          <div v-if="!(appBuild(tab.tapNovaName).editFields || []).length" style="text-align:center;padding:40px;color:#aaa;font-size:13px">加载中…</div>
+          <div v-else :style="'display:grid;gap:16px 24px;' + (appBuild(tab.tapNovaName).editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
+            <template v-for="f in (appBuild(tab.tapNovaName).editFields || [])" :key="f.field">
+              <n-divider v-if="f.type === 'DIVIDE' && appBuild(tab.tapNovaName).editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
+              <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && !(f.type === 'REFERENCE' && (appBuild(tab.tapNovaName).referenceMap || {})[f.field] && (appBuild(tab.tapNovaName).referenceMap || {})[f.field].referenceName === novaName)" :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+                <span class="edit-form-label">
+                  <span v-if="f.notNull && !isReadonly(f)" class="form-label-required">*</span>{{ f.title }}
+                  <n-tooltip v-if="f.desc" trigger="hover" placement="top"><template #trigger><span class="form-label-help"><iconify-icon icon="material-symbols:help-outline" style="font-size:15px"></iconify-icon></span></template>{{ f.desc }}</n-tooltip>
+                </span>
+                <n-checkbox-group v-if="f.type === 'CHOICE' && appChoice(tab.tapNovaName,f.field) && appChoice(tab.tapNovaName,f.field).showType === 'RADIO' && appChoice(tab.tapNovaName,f.field).selectType === 'MULTI'"
+                  :value="appFd(tab.tapNovaName)[f.field]" :disabled="isReadonly(f)"
+                  @update:value="appSetFd(tab.tapNovaName,f.field,$event)">
+                  <n-space><n-checkbox v-for="o in appFieldOpts(tab.tapNovaName,f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
+                </n-checkbox-group>
+                <n-radio-group v-else-if="f.type === 'CHOICE' && appChoice(tab.tapNovaName,f.field) && appChoice(tab.tapNovaName,f.field).showType === 'RADIO'"
+                  :value="appFd(tab.tapNovaName)[f.field]" :disabled="isReadonly(f)"
+                  @update:value="appSetFd(tab.tapNovaName,f.field,$event)">
+                  <n-space><n-radio v-for="o in appFieldOpts(tab.tapNovaName,f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
+                </n-radio-group>
+                <n-select v-else-if="f.type === 'CHOICE' && appChoice(tab.tapNovaName,f.field) && appChoice(tab.tapNovaName,f.field).selectType === 'MULTI'"
+                  :value="appFd(tab.tapNovaName)[f.field]" :options="appFieldOpts(tab.tapNovaName,f)"
+                  :placeholder="'请选择'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
+                  :disabled="isReadonly(f)" multiple clearable @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
+                <n-select v-else-if="f.type === 'CHOICE'"
+                  :value="appFd(tab.tapNovaName)[f.field]" :options="appFieldOpts(tab.tapNovaName,f)"
+                  :placeholder="'请选择'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
+                  :disabled="isReadonly(f)" clearable @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
+                <n-select v-else-if="f.type === 'BOOLEAN'"
+                  :value="appFd(tab.tapNovaName)[f.field]" :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"
+                  :placeholder="'请选择'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
+                  :disabled="isReadonly(f)" clearable @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
+                <n-input-number v-else-if="f.type === 'NUMBER'"
+                  :value="appFd(tab.tapNovaName)[f.field]"
+                  :placeholder="'请输入'+f.title" :show-button="false" style="width:100%"
+                  :min="appNumInfo(tab.tapNovaName,f.field).min" :max="appNumInfo(tab.tapNovaName,f.field).max"
+                  :precision="appNumInfo(tab.tapNovaName,f.field).type==='DECIMAL'?(appNumInfo(tab.tapNovaName,f.field).decimal||2):0"
+                  :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
+                  :disabled="isReadonly(f)" clearable @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
+                <n-date-picker v-else-if="f.type === 'DATE'"
+                  :value="appFd(tab.tapNovaName)[f.field]" :type="appDateType(tab.tapNovaName,f.field)"
+                  :placeholder="'请选择'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
+                  :disabled="isReadonly(f)" clearable style="width:100%"
+                  @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
+                <n-select v-else-if="f.type === 'TAG'"
+                  :value="appFd(tab.tapNovaName)[f.field]" :options="appTagOpts(tab.tapNovaName,f.field)"
+                  :placeholder="'请输入或选择'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
+                  :disabled="isReadonly(f)" filterable multiple clearable
+                  @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
+                <n-input v-else-if="f.type === 'TEXTAREA'"
+                  :value="appFd(tab.tapNovaName)[f.field]" type="textarea" :autosize="{minRows:3}"
+                  :placeholder="'请输入'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
+                  :disabled="isReadonly(f)" @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
+                <n-input v-else-if="f.type === 'REFERENCE'"
+                  :value="appFd(tab.tapNovaName)[f.field+'_display'] || appFd(tab.tapNovaName)[f.field]"
+                  :placeholder="'请选择'+f.title" readonly clearable
+                  :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
+                  @clear.stop="appSetFd(tab.tapNovaName,f.field,null);appSetFd(tab.tapNovaName,f.field+'_display','')">
+                  <template #suffix><iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon></template>
+                </n-input>
+                <n-input v-else
+                  :value="appFd(tab.tapNovaName)[f.field]" :placeholder="'请输入'+f.title"
+                  :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
+                  :disabled="isReadonly(f)" clearable @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
+                <span v-if="appErrs(tab.tapNovaName)[f.field]" class="form-error-tip">{{ appErrs(tab.tapNovaName)[f.field] }}</span>
+              </div>
+            </template>
+          </div>
+          </template>
+
           </div>
         </n-tab-pane>
         </template>
 
         </n-tabs>
         <template #footer>
-          <n-space v-if="formTab === 'form'" justify="end">
+          <n-space justify="end">
             <n-button @click="showForm = false">取 消</n-button>
             <n-button type="primary" @click="handleFormSubmit">确 定</n-button>
           </n-space>
