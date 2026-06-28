@@ -56,6 +56,7 @@ public class TestDemoView {
 
     @NovaField(
             views = {
+                    @View(title = "岗位ID", column = "id", width = "10%"),
                     @View(title = "岗位名称", column = "name", width = "10%")
             },
             edit = @Edit(

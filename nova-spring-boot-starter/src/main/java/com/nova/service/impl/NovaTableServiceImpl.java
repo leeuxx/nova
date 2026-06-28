@@ -189,7 +189,8 @@ public class NovaTableServiceImpl implements NovaTableService {
             NovaTableBuild.Vo.AppendageType appendage = new NovaTableBuild.Vo.AppendageType()
                     .setReferenceName(appendageInfo.getReferenceClass().getSimpleName())
                     .setReferenceField(appendageInfo.getReferenceField())
-                    .setStorageField(appendageInfo.getStorageField());
+                    .setStorageField(appendageInfo.getStorageField())
+                    .setDisplayField(appendageInfo.getDisplayField());
             appendageMap.put(field, appendage);
         });
         vo.setAppendage(appendageMap);

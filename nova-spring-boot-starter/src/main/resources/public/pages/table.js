@@ -417,6 +417,13 @@ const NovaTable = {
           }
         }
 
+        if (col.type === 'APPENDAGE') {
+          colDef.render = (row) => {
+            const v = row[col.field + '_display']
+            return (v === null || v === undefined) ? '' : String(v)
+          }
+        }
+
         if (col.type === 'DATE') {
           colDef.render = (row) => {
             const ts = row[col.field]

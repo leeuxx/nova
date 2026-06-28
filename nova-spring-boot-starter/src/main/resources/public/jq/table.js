@@ -55,6 +55,7 @@ window.NovaTableJQ = (function ($) {
         target.booleanMap = resp.data.booleanInfo || {}
         target.attachmentMap  = resp.data.attachment  || {}
         target.referenceMap   = resp.data.reference   || {}
+        target.appendageMap   = resp.data.appendage   || {}
         var fields = resp.data.search || []
         target.searchFields = fields
         var form = {}
@@ -107,15 +108,86 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── 懒加载 appendage sub-build（首次打开弹窗时调用）──────────────
-  function buildAppendageTabs(novaName) {
+  function buildAppendageTabs(novaName, rowData) {
     var target = window.vmMap && window.vmMap[novaName]
     if (!target) return
     ;(target.editAppendageTabs || []).forEach(function(appTab) {
       if (!appTab.tapNovaName) return
-      if (target.appendageTabBuild && target.appendageTabBuild[appTab.tapNovaName]) return // 已加载，跳过
+      var appNovaName = appTab.tapNovaName
+      var alreadyBuilt = target.appendageTabBuild && target.appendageTabBuild[appNovaName]
+      function fillFromRow(t2) {
+        if (!rowData) return
+        var appendageMap = t2.appendageMap || {}
+        var appInfo = null
+        Object.keys(appendageMap).forEach(function(k) { if (appendageMap[k].referenceName === appNovaName) appInfo = appendageMap[k] })
+        if (!appInfo || !appInfo.storageField) return
+        var sv = rowData[appInfo.storageField]
+        if (sv === null || sv === undefined || sv === '') return
+        sv = String(sv)
+        $.ajax({
+          url: '/nova/table/referencesData', method: 'POST', contentType: 'application/json',
+          data: JSON.stringify({ sourceNovaName: novaName, storageFields: [{ novaName: appNovaName, storageFieldValues: [sv] }] }),
+          success: function(rr) {
+            if (rr.code !== 200) return
+            var t3 = window.vmMap && window.vmMap[novaName]
+            if (!t3) return
+            var rec = rr.data[appNovaName] && rr.data[appNovaName][sv]
+            if (!rec) return
+            var curBuild = (t3.appendageTabBuild || {})[appNovaName] || {}
+            var fields = curBuild.editFields || []
+            var cm = curBuild.choiceMap || {}
+            var fd = {}
+            fields.forEach(function(f) {
+              var val = rec[f.field]
+              var ci = cm[f.field]
+              if (f.type === 'CHOICE' && ci && ci.selectType === 'MULTI') {
+                fd[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+              } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
+                fd[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+              } else if (f.type === 'DATE') {
+                var ts = val !== null && val !== undefined ? Number(val) : null
+                fd[f.field] = (ts && !isNaN(ts)) ? ts : null
+              } else if (f.type === 'BOOLEAN') {
+                fd[f.field] = (val === null || val === undefined) ? null : String(val)
+              } else if (f.type === 'NUMBER') {
+                fd[f.field] = (val === null || val === undefined || val === '') ? null : Number(val)
+              } else if (f.type === 'REFERENCE') {
+                var refInfo = ((t3.appendageTabBuild[appNovaName] || {}).referenceMap || {})[f.field] || {}
+                var rsf = refInfo.storageField || 'id'
+                fd[f.field] = (val && typeof val === 'object')
+                  ? (val[rsf] !== undefined && val[rsf] !== null ? String(val[rsf]) : null)
+                  : (val !== null && val !== undefined && val !== '' ? String(val) : null)
+                fd[f.field + '_display'] = ''
+              } else {
+                fd[f.field] = (val === null || val === undefined) ? '' : val
+              }
+            })
+            var newFds = Object.assign({}, t3.appendageFormData)
+            newFds[appNovaName] = fd
+            t3.appendageFormData = newFds
+          }
+        })
+      }
+      if (alreadyBuilt) {
+        var curBd = target.appendageTabBuild[appNovaName]
+        var resetFd = {}
+        var resetCm = curBd.choiceMap || {}
+        ;(curBd.editFields || []).forEach(function(f) {
+          var ci = resetCm[f.field]
+          var isMulti = f.type === 'CHOICE' && ci && ci.selectType === 'MULTI'
+          var isSingle = f.type === 'CHOICE' && ci && ci.selectType === 'SINGLE'
+          resetFd[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (isSingle || f.type === 'DATE' || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
+          if (f.type === 'REFERENCE') resetFd[f.field + '_display'] = ''
+        })
+        var resetFds = Object.assign({}, target.appendageFormData)
+        resetFds[appNovaName] = resetFd
+        target.appendageFormData = resetFds
+        fillFromRow(target)
+        return
+      }
       $.ajax({
         url: '/nova/table/build', method: 'POST', contentType: 'application/json',
-        data: JSON.stringify({ novaName: appTab.tapNovaName }),
+        data: JSON.stringify({ novaName: appNovaName }),
         success: function(br) {
           if (br.code !== 200) return
           var t2 = window.vmMap && window.vmMap[novaName]
@@ -124,7 +196,7 @@ window.NovaTableJQ = (function ($) {
           var editFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
           var newBuild = Object.assign({}, t2.appendageTabBuild)
           var cm = bd.choice || {}
-          newBuild[appTab.tapNovaName] = {
+          newBuild[appNovaName] = {
             editFields: editFields, choiceMap: cm, numberMap: bd.number || {},
             dateMap: bd.date || {}, booleanMap: bd.booleanInfo || {},
             referenceMap: bd.reference || {}, tagMap: bd.tag || {},
@@ -141,8 +213,9 @@ window.NovaTableJQ = (function ($) {
             if (f.type === 'REFERENCE') fd[f.field + '_display'] = ''
           })
           var newFds = Object.assign({}, t2.appendageFormData)
-          newFds[appTab.tapNovaName] = fd
+          newFds[appNovaName] = fd
           t2.appendageFormData = newFds
+          fillFromRow(t2)
         }
       })
     })
@@ -331,38 +404,37 @@ window.NovaTableJQ = (function ($) {
         })
       }
     }
-    // REFERENCE 翻译
-    var refCols = (target.tableColumns || []).filter(function (c) { return c.type === 'REFERENCE' })
-    if (refCols.length === 0) return
+    // REFERENCE + APPENDAGE 翻译（合并一次请求）
     var referenceMap = target.referenceMap || {}
+    var appendageMap = target.appendageMap || {}
     var queryName = target.novaName || vmKey
-    // 按 novaName 分组收集 storageFieldValues
-    var groups = {}  // { [refNovaName]: { referenceField, displayField, cols: [], values: [] } }
-    refCols.forEach(function (col) {
+    var groups = {}  // { [refNovaName]: { type, storageField, displayField, cols[], values[] } }
+    ;(target.tableColumns || []).forEach(function (col) {
       var dotIdx = col.field.indexOf('.')
       var refKey = dotIdx > -1 ? col.field.slice(0, dotIdx) : col.field
-      var refInfo = referenceMap[refKey]
-      if (!refInfo || !refInfo.referenceName) return
-      var refNovaName = refInfo.referenceName
-      if (!groups[refNovaName]) groups[refNovaName] = { referenceField: refInfo.referenceField, displayField: refInfo.displayField, cols: [], values: [] }
-      groups[refNovaName].cols.push({ colField: col.field, refKey: refKey })
-      var referenceField = refInfo.referenceField || col.field
-      var storageField = refInfo.storageField || 'id'
-      var valSet = {}
-      records.forEach(function (row) {
-        var obj = row[refKey]
-        var v = obj && obj[storageField] !== undefined ? obj[storageField] : null
-        if (v !== null && v !== undefined && v !== '') valSet[String(v)] = true
-      })
-      groups[refNovaName].storageField = storageField
-      Object.keys(valSet).forEach(function (v) { if (groups[refNovaName].values.indexOf(v) === -1) groups[refNovaName].values.push(v) })
+      if (col.type === 'REFERENCE') {
+        var refInfo = referenceMap[refKey]
+        if (!refInfo || !refInfo.referenceName) return
+        var rn = refInfo.referenceName
+        var sf = refInfo.storageField || 'id'
+        if (!groups[rn]) groups[rn] = { type: 'REFERENCE', storageField: sf, displayField: refInfo.displayField, cols: [], values: [] }
+        groups[rn].cols.push({ colField: col.field, refKey: refKey })
+        var valSet = {}
+        records.forEach(function (row) { var obj = row[refKey]; var v = obj && obj[sf] !== undefined ? obj[sf] : null; if (v !== null && v !== undefined && v !== '') valSet[String(v)] = true })
+        Object.keys(valSet).forEach(function (v) { if (groups[rn].values.indexOf(v) === -1) groups[rn].values.push(v) })
+      } else if (col.type === 'APPENDAGE') {
+        var appInfo = appendageMap[refKey]
+        if (!appInfo || !appInfo.referenceName || !appInfo.storageField || !appInfo.displayField) return
+        var an = appInfo.referenceName
+        if (!groups[an]) groups[an] = { type: 'APPENDAGE', storageField: appInfo.storageField, displayField: appInfo.displayField, cols: [], values: [] }
+        groups[an].cols.push({ colField: col.field, refKey: refKey })
+        var aValSet = {}
+        records.forEach(function (row) { var v = row[appInfo.storageField]; if (v !== null && v !== undefined && v !== '') aValSet[String(v)] = true })
+        Object.keys(aValSet).forEach(function (v) { if (groups[an].values.indexOf(v) === -1) groups[an].values.push(v) })
+      }
     })
     var storageFields = []
-    Object.keys(groups).forEach(function (refNovaName) {
-      var g = groups[refNovaName]
-      if (g.values.length === 0) return
-      storageFields.push({ novaName: refNovaName, storageFieldValues: g.values })
-    })
+    Object.keys(groups).forEach(function (rn) { if (groups[rn].values.length > 0) storageFields.push({ novaName: rn, storageFieldValues: groups[rn].values }) })
     if (storageFields.length === 0) return
     $.ajax({
       url:         '/nova/table/referencesData',
@@ -372,17 +444,23 @@ window.NovaTableJQ = (function ($) {
       success: function (resp) {
         var t = window.vmMap && window.vmMap[vmKey]
         if (!t || resp.code !== 200) return
-        var result = resp.data  // { [refNovaName]: { [storageValue]: { fields } } }
+        var result = resp.data
         t.tableData = t.tableData.map(function (row) {
           var updated = $.extend({}, row)
-          Object.keys(groups).forEach(function (refNovaName) {
-            var g = groups[refNovaName]
-            var obj = row[g.cols[0] && g.cols[0].refKey]
-            var storageVal = obj && obj[g.storageField] !== undefined ? String(obj[g.storageField]) : ''
-            var refRecord = result[refNovaName] && result[refNovaName][storageVal]
+          Object.keys(groups).forEach(function (rn) {
+            var g = groups[rn]
+            var storageVal
+            if (g.type === 'REFERENCE') {
+              var obj = row[g.cols[0].refKey]
+              storageVal = obj && obj[g.storageField] !== undefined ? String(obj[g.storageField]) : ''
+            } else {
+              storageVal = row[g.storageField] !== null && row[g.storageField] !== undefined ? String(row[g.storageField]) : ''
+            }
+            var refRecord = result[rn] && result[rn][storageVal]
             g.cols.forEach(function (colInfo) {
-              var dotIdx = colInfo.colField.indexOf('.')
-              var propKey = dotIdx > -1 ? colInfo.colField.slice(dotIdx + 1) : (referenceMap[colInfo.refKey] && referenceMap[colInfo.refKey].displayField || 'name')
+              var propKey = colInfo.colField.indexOf('.') > -1
+                ? colInfo.colField.slice(colInfo.colField.indexOf('.') + 1)
+                : (g.type === 'REFERENCE' ? (referenceMap[colInfo.refKey] && referenceMap[colInfo.refKey].displayField || 'name') : g.displayField)
               updated[colInfo.colField + '_display'] = refRecord ? (refRecord[propKey] !== undefined ? refRecord[propKey] : '') : ''
             })
           })
@@ -529,7 +607,7 @@ window.NovaTableJQ = (function ($) {
           t.formErrors = {}
           t.refTabData = {}
           t.formTab    = 'form'
-          buildAppendageTabs(novaName)
+          buildAppendageTabs(novaName, detailRow)
           t.showForm   = true
         }
 

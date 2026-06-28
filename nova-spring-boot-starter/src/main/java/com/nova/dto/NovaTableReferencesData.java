@@ -29,7 +29,7 @@ public class NovaTableReferencesData {
         private String novaName;
 
         @Comment("存储值列表")
-        @NotEmpty(message = "novaIdValues不能为空")
+        @NotEmpty(message = "storageFieldValues不能为空")
         private List<String> storageFieldValues;
 
     }

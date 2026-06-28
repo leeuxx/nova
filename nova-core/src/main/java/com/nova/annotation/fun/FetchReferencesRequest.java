@@ -13,7 +13,7 @@ public class FetchReferencesRequest {
     @Comment("来源nova名称")
     private String novaName;
 
-    @Comment("存储值列表, 参考ReferenceType.storageField属性")
+    @Comment("存储值列表, 参考storageField属性")
     private List<String> storageFieldValues;
 
 }

@@ -473,7 +473,8 @@ public class NovaFieldUtils {
                 AppendageTypeInfo appendageTypeInfo = new AppendageTypeInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
                         .setReferenceField(appendageType.referenceField())
-                        .setStorageField(appendageType.storageField());
+                        .setStorageField(appendageType.storageField())
+                        .setDisplayField(appendageType.displayField());
                 appendageTypeInfos.put(field, appendageTypeInfo);
             }
         });
@@ -726,6 +727,9 @@ public class NovaFieldUtils {
 
         @Comment("当前对象被引用的字段名")
         private String storageField;
+
+        @Comment("对方对象在被引用显示场景下展示的字段名")
+        private String displayField;
 
     }
 }

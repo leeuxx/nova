@@ -1,5 +1,6 @@
 package com.nova.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nova.annotation.fun.DataProxy;
 import com.nova.annotation.fun.FetchReferencesRequest;
@@ -27,12 +28,14 @@ public class TestDemo3Service extends ServiceImpl<TestDemo3Mapper, TestDemo3> im
 
     @Override
     public Map<String, TestDemo3View> fetchReferences(FetchReferencesRequest fetchReferencesRequest) {
-        List<TestDemo3> testDemo3s = listByIds(fetchReferencesRequest.getStorageFieldValues());
+        List<TestDemo3> testDemo3s = list(new LambdaQueryWrapper<TestDemo3>()
+                .in(TestDemo3::getDemoId, fetchReferencesRequest.getStorageFieldValues())
+        );
         Map<String, TestDemo3View> testDemo3Views = new HashMap<>();
         for (TestDemo3 testDemo3 : testDemo3s) {
             TestDemo3View testDemo3View = new TestDemo3View();
             BeanUtils.copyProperties(testDemo3, testDemo3View); // 源，目标
-            testDemo3Views.put(String.valueOf(testDemo3.getId()), testDemo3View);
+            testDemo3Views.put(String.valueOf(testDemo3.getDemoId()), testDemo3View);
         }
         return testDemo3Views;
     }

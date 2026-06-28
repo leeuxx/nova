@@ -298,10 +298,10 @@ public class NovaTableBuild {
             @Comment("拉取对方引用数据时透传的当前对象上下文字段列表")
             private List<String> referenceTransmitField;
 
-            @Comment("对方对象被引用的字段名")
+            @Comment("对方对象被当前对象引用的字段名")
             private String storageField;
 
-            @Comment("对方对象在被引用场景下替代 storageField 展示的字段名")
+            @Comment("对方对象被当前对象引用场景下替代 storageField 展示的字段名")
             private String displayField;
 
         }
@@ -316,8 +316,11 @@ public class NovaTableBuild {
             @Comment("对方对象存储当前对象的字段名")
             private String referenceField;
 
-            @Comment("当前对象被引用的字段名")
+            @Comment("当前对象被对方对象引用的字段名")
             private String storageField;
+
+            @Comment("对方对象在被引用显示场景下展示的字段名")
+            private String displayField;
 
         }
     }

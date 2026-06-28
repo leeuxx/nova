@@ -6,10 +6,7 @@ import com.nova.annotation.config.NovaId;
 import com.nova.annotation.sub.nova.Layout;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
-import com.nova.annotation.sub.nova.field.edit.AttachmentType;
-import com.nova.annotation.sub.nova.field.edit.DateType;
-import com.nova.annotation.sub.nova.field.edit.ReferenceType;
-import com.nova.annotation.sub.nova.field.edit.Search;
+import com.nova.annotation.sub.nova.field.edit.*;
 import com.nova.service.TestDemo3Service;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -90,7 +87,8 @@ public class TestDemo3View {
                     title = "创建时间",
                     type = Edit.Type.DATE,
                     dateType = @DateType,
-                    search = @Search(vague = true)
+                    search = @Search(vague = true),
+                    readonly = @Readonly(edit = true, add = true)
             )
     )
     private LocalDateTime createTime;
