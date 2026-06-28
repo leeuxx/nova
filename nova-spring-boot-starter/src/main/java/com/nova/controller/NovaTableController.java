@@ -11,7 +11,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.List;
 import java.util.Map;
 
 @AllArgsConstructor
@@ -43,9 +42,16 @@ public class NovaTableController {
 
     @Comment("获取表格引用数据")
     @PostMapping("referencesData")
-    public R<Map<String, Map<String, Map<String, Object>>>> referencesData(@RequestBody @Validated List<NovaTableReferencesData> novaTableReferencesDatas) {
-        Map<String, Map<String, Map<String, Object>>> mapMap = novaTableService.referencesData(novaTableReferencesDatas);
+    public R<Map<String, Map<String, Map<String, Object>>>> referencesData(@RequestBody @Validated NovaTableReferencesData novaTableReferencesData) {
+        Map<String, Map<String, Map<String, Object>>> mapMap = novaTableService.referencesData(novaTableReferencesData);
         return R.ok(mapMap);
+    }
+
+    @Comment("关键词搜索")
+    @PostMapping("promptSearch")
+    public R<PageBean<NovaTablePromptSearch.Vo>> promptSearch(@RequestBody @Validated NovaTablePromptSearch novaTablePromptSearch) {
+        PageBean<NovaTablePromptSearch.Vo> pageBean = novaTableService.promptSearch(novaTablePromptSearch);
+        return R.ok(pageBean);
     }
 
     @Comment("修改表格数据")
@@ -62,10 +68,4 @@ public class NovaTableController {
         return R.ok(delete);
     }
 
-    @Comment("关键词搜索")
-    @PostMapping("promptSearch")
-    public R<PageBean<NovaTablePromptSearch.Vo>> promptSearch(@RequestBody @Validated NovaTablePromptSearch novaTablePromptSearch) {
-        PageBean<NovaTablePromptSearch.Vo> pageBean = novaTableService.promptSearch(novaTablePromptSearch);
-        return R.ok(pageBean);
-    }
 }

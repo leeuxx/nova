@@ -66,18 +66,31 @@ public class NovaTableServiceImpl implements NovaTableService {
         List<NovaTableBuild.Vo.Edit> editList = new ArrayList<>();
         List<NovaFieldUtils.EditInfo> editInfos = NovaFieldUtils.getEdit(novaTableBuild.getNovaName());
         for (NovaFieldUtils.EditInfo editInfo : editInfos) {
-            NovaFieldUtils.EditInfo.ReadonlyInfo ro = editInfo.getReadonly();
-            editList.add(new NovaTableBuild.Vo.Edit()
-                    .setField(editInfo.getField())
-                    .setTitle(editInfo.getTitle())
-                    .setDesc(editInfo.getDesc())
-                    .setType(editInfo.getType().name())
-                    .setNotNull(editInfo.getNotNull())
-                    .setReadonly(new NovaTableBuild.Vo.Edit.ReadonlyInfo()
-                            .setAdd(ro.getAdd())
-                            .setEdit(ro.getEdit()))
-                    .setShowByExpr(editInfo.getShowBy().value())
-            );
+            NovaTableBuild.Vo.Edit edit = new NovaTableBuild.Vo.Edit()
+                    .setTapType(editInfo.getTapType())
+                    .setTapTitle(editInfo.getTapTitle())
+                    .setTapNovaName(editInfo.getTapNovaName())
+                    .setTapShow(editInfo.getTapShow());
+            if (edit.getTapType().equals("thisForm")) {
+                List<NovaFieldUtils.EditInfo.ThisForm> thisForms = editInfo.getThisForms();
+                List<NovaTableBuild.Vo.Edit.ThisForm> thisFormList = new ArrayList<>();
+                for (NovaFieldUtils.EditInfo.ThisForm thisForm : thisForms) {
+                    NovaFieldUtils.EditInfo.ThisForm.ReadonlyInfo ro = thisForm.getReadonly();
+                    thisFormList.add(new NovaTableBuild.Vo.Edit.ThisForm()
+                            .setField(thisForm.getField())
+                            .setTitle(thisForm.getTitle())
+                            .setDesc(thisForm.getDesc())
+                            .setType(thisForm.getType().name())
+                            .setNotNull(thisForm.getNotNull())
+                            .setReadonly(new NovaTableBuild.Vo.Edit.ThisForm.ReadonlyInfo()
+                                    .setAdd(ro.getAdd())
+                                    .setEdit(ro.getEdit()))
+                            .setShowByExpr(thisForm.getShowBy().value())
+                    );
+                }
+                edit.setThisForms(thisFormList);
+            }
+            editList.add(edit);
         }
         vo.setEdit(editList);
         // 获取选择组件信息
@@ -236,22 +249,48 @@ public class NovaTableServiceImpl implements NovaTableService {
     }
 
     @Override
-    public Map<String, Map<String, Map<String, Object>>> referencesData(List<NovaTableReferencesData> novaTableReferencesDatas) {
+    public Map<String, Map<String, Map<String, Object>>> referencesData(NovaTableReferencesData novaTableReferencesData) {
         Map<String, Map<String, Map<String, Object>>> maps = new LinkedHashMap<>();
-        for (NovaTableReferencesData novaTableReferencesData : novaTableReferencesDatas) {
-            DataProxy<?, ?> dataProxy = DataProxyUtils.getDataProxy(novaTableReferencesData.getNovaName());
+        List<NovaTableReferencesData.StorageField> storageFields = novaTableReferencesData.getStorageFields();
+        for (NovaTableReferencesData.StorageField storageField : storageFields) {
+            DataProxy<?, ?> dataProxy = DataProxyUtils.getDataProxy(storageField.getNovaName());
             Map<String, ?> dataMaps = dataProxy.fetchReferences(new FetchReferencesRequest()
                     .setNovaName(novaTableReferencesData.getSourceNovaName())
-                    .setStorageFieldValues(novaTableReferencesData.getStorageFieldValues())
+                    .setStorageFieldValues(storageField.getStorageFieldValues())
             );
             Map<String, Map<String, Object>> storageFieldMaps = new LinkedHashMap<>();
             dataMaps.forEach((storageFieldValue, record) -> {
                 Map<String, Object> data = DataProxyUtils.toMapWithTimestamp(record);
                 storageFieldMaps.put(storageFieldValue, data);
             });
-            maps.put(novaTableReferencesData.getNovaName(), storageFieldMaps);
+            maps.put(storageField.getNovaName(), storageFieldMaps);
         }
         return maps;
+    }
+
+    @Override
+    public PageBean<NovaTablePromptSearch.Vo> promptSearch(NovaTablePromptSearch novaTablePromptSearch) {
+        PageBean<NovaTablePromptSearch.Vo> pageBean = novaTablePromptSearch.getPageBean();
+        PromptSearchResponse promptSearchResponse = DataProxyUtils.getDataProxy(novaTablePromptSearch.getNovaName()).promptSearch(new PromptSearchRequest()
+                .setCurrent(pageBean.getCurrent())
+                .setSize(pageBean.getSize())
+                .setNovaName(novaTablePromptSearch.getNovaName())
+                .setPrompt(novaTablePromptSearch.getPrompt())
+                .setSourceFields(novaTablePromptSearch.getSourceFields())
+        );
+        if (promptSearchResponse == null) {
+            return pageBean;
+        }
+        List<PromptSearchResponse.Record> records = promptSearchResponse.getRecords();
+        List<NovaTablePromptSearch.Vo> vos = new ArrayList<>();
+        for (PromptSearchResponse.Record record : records) {
+            NovaTablePromptSearch.Vo vo = new NovaTablePromptSearch.Vo()
+                    .setStorageField(record.getStorageField())
+                    .setDisplayField(record.getDisplayField());
+            vos.add(vo);
+        }
+        pageBean.setTotal(promptSearchResponse.getTotal()).setRecords(vos);
+        return pageBean;
     }
 
     @Override
@@ -312,30 +351,6 @@ public class NovaTableServiceImpl implements NovaTableService {
         //noinspection unchecked,rawtypes
         ((DataProxy) DataProxyUtils.getDataProxy(novaName)).delete(models);
         return new NovaTableDelete.Vo();
-    }
-
-    @Override
-    public PageBean<NovaTablePromptSearch.Vo> promptSearch(NovaTablePromptSearch novaTablePromptSearch) {
-        PageBean<NovaTablePromptSearch.Vo> pageBean = novaTablePromptSearch.getPageBean();
-        PromptSearchResponse promptSearchResponse = DataProxyUtils.getDataProxy(novaTablePromptSearch.getNovaName()).promptSearch(new PromptSearchRequest()
-                .setCurrent(pageBean.getCurrent())
-                .setSize(pageBean.getSize())
-                .setNovaName(novaTablePromptSearch.getNovaName())
-                .setPrompt(novaTablePromptSearch.getPrompt())
-        );
-        if (promptSearchResponse == null) {
-            return pageBean;
-        }
-        List<PromptSearchResponse.Record> records = promptSearchResponse.getRecords();
-        List<NovaTablePromptSearch.Vo> vos = new ArrayList<>();
-        for (PromptSearchResponse.Record record : records) {
-            NovaTablePromptSearch.Vo vo = new NovaTablePromptSearch.Vo()
-                    .setStorageField(record.getStorageField())
-                    .setDisplayField(record.getDisplayField());
-            vos.add(vo);
-        }
-        pageBean.setTotal(promptSearchResponse.getTotal()).setRecords(vos);
-        return pageBean;
     }
 
 }

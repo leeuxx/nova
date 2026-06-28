@@ -8,6 +8,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.Map;
+
 @Data
 @Accessors(chain = true)
 public class NovaTablePromptSearch {
@@ -27,6 +29,9 @@ public class NovaTablePromptSearch {
     @Comment("分页信息")
     @NotNull(message = "pageBean不能为空")
     private PageBean<Vo> pageBean;
+
+    @Comment("来源上下文属性集合")
+    private Map<String, String> sourceFields;
 
     @Data
     @Accessors(chain = true)

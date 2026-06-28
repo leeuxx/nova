@@ -28,7 +28,7 @@ public class NovaTableData {
     @Comment("查询条件")
     private Map<String, Search> conditions;
 
-    @Comment("来源属性集合")
+    @Comment("来源上下文属性集合")
     private Map<String, String> sourceFields;
 
     @Data

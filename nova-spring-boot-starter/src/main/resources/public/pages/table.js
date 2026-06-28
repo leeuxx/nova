@@ -137,6 +137,8 @@ const NovaTable = {
 
   props: {
     pickerMode:         { type: Boolean, default: false },
+    viewMode:           { type: Boolean, default: false },
+    viewRow:            { type: Object,  default: null },
     novaNameProp:       { type: String,  default: '' },
     sourceNovaNameProp: { type: String,  default: '' },
     sourceFieldsProp:   { type: Object,  default: () => ({}) }
@@ -176,7 +178,9 @@ const NovaTable = {
       formMode:       'add',
       currentRow:     null,
       formData:       {},
-      editFields:     [],
+      editFields:        [],
+      editReferenceTabs: [],
+      refTabData:        {},
       editLayout:     'DEFAULT',
       formErrors:     {},
       striped:        true,
@@ -489,6 +493,11 @@ const NovaTable = {
       this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
       this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
       if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onPickerMounted(this.novaName, this._vmKey, this.sourceNovaNameProp || this.novaName, this.sourceFieldsProp || {})
+    } else if (this.viewMode) {
+      this.novaName = this.novaNameProp || ''
+      this._vmKey = '__view_' + this.novaName + '_' + Date.now()
+      window.vmMap[this._vmKey] = this
+      if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onViewMounted(this.novaName, this._vmKey, this.viewRow)
     } else {
       this.novaName = this.$route.params.novaName || ''
       window.vmMap[this.novaName] = this
@@ -516,7 +525,7 @@ const NovaTable = {
 
   beforeUnmount() {
     this._isActive = false
-    if (this.pickerMode) {
+    if (this.pickerMode || this.viewMode) {
       if (this._vmKey && window.vmMap) delete window.vmMap[this._vmKey]
     } else {
       if (window.vmMap) delete window.vmMap[this.novaName]
@@ -720,17 +729,17 @@ const NovaTable = {
       })
     },
     buildPickerSourceFields(picker) {
-      if (picker.isForFilter) return {}
       const fields = {}
-      if (this.currentRow) fields.ids = String(this.currentRow[this.novaIdFieldName] || '')
+      if (!picker.isForFilter && this.currentRow) fields.ids = String(this.currentRow[this.novaIdFieldName] || '')
       const refInfo = this.referenceMap[picker.field.field]
       const transmit = refInfo && refInfo.referenceTransmitField
-      if (transmit && transmit.length) {
-        transmit.forEach(f => {
-          const v = this.formData[f]
-          fields[f] = (v === null || v === undefined) ? '' : String(v)
-        })
-      }
+      if (!transmit || !transmit.length) return fields
+      const src = picker.isForFilter ? this.filterForm : this.formData
+      transmit.forEach(f => {
+        const v = src[f]
+        if (v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0)) return
+        fields[f] = String(v)
+      })
       return fields
     },
     closePickerAtLevel(level) {
@@ -778,6 +787,18 @@ const NovaTable = {
     },
     _doRefSelectRequest(field, refField, query, page, append, onDone) {
       const refInfo = this.referenceMap[refField] || {}
+      const isForFilter = String(field).startsWith('_f_')
+      const src = isForFilter ? this.filterForm : this.formData
+      const transmit = refInfo.referenceTransmitField
+      const sourceFields = {}
+      if (!isForFilter && this.currentRow) sourceFields.ids = String(this.currentRow[this.novaIdFieldName] || '')
+      if (transmit && transmit.length) {
+        transmit.forEach(f => {
+          const v = src[f]
+          if (v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0))
+            sourceFields[f] = String(v)
+        })
+      }
       this.refSelectLoading[field] = true
       $.ajax({
         url: '/nova/table/promptSearch',
@@ -786,6 +807,7 @@ const NovaTable = {
         data: JSON.stringify({
           novaName: refInfo.referenceName,
           sourceNovaName: this.novaName,
+          sourceFields,
           prompt: query,
           pageBean: { current: page, size: 10 }
         }),
@@ -862,6 +884,67 @@ const NovaTable = {
       this.selectedRowKey = row[this.novaIdFieldName]
       this.$emit('pick', row)
     },
+    onFormTabChange(tab) {
+      // viewMode 组件挂载时自己 build，这里无需额外操作
+    },
+    refTabDisplayValue(novaName, f) {
+      const maps = this.refTabMaps[novaName] || {}
+      const data = this.refTabData[novaName] || {}
+      const val  = data[f.field]
+      if (val === null || val === undefined || val === '') return ''
+      const choiceInfo = maps.choiceMap && maps.choiceMap[f.field]
+      if (choiceInfo) {
+        const vals = choiceInfo.selectType === 'MULTI' ? String(val).split(',') : [String(val)]
+        return vals.map(v => { const o = (choiceInfo.values || []).find(x => x.value === v); return o ? o.label : v }).join('、')
+      }
+      if (f.type === 'DATE') {
+        const ts = Number(val); if (!ts || isNaN(ts)) return String(val)
+        const type = maps.dateMap && maps.dateMap[f.field] && maps.dateMap[f.field].type
+        return this.formatDateTs(ts, type)
+      }
+      if (f.type === 'BOOLEAN') return (val === 'true' || val === true) ? '是' : '否'
+      if (f.type === 'TAG')  return Array.isArray(val) ? val.join('、') : String(val).split(',').filter(Boolean).join('、')
+      if (f.type === 'REFERENCE') return String(data[f.field + '_display'] || val)
+      return String(val)
+    },
+    formatDateTs(ts, type) {
+      const d = new Date(ts)
+      const p = n => String(n).padStart(2, '0')
+      if (type === 'YEAR')  return String(d.getFullYear())
+      if (type === 'MONTH') return d.getFullYear() + '-' + p(d.getMonth() + 1)
+      if (type === 'DATE')  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' +
+             p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds())
+    },
+    viewFieldIcon(f) {
+      const icons = {
+        INPUT: 'material-symbols:text-fields', NUMBER: 'mdi:numeric',
+        TEXTAREA: 'material-symbols:notes', CHOICE: 'material-symbols:checklist',
+        TAG: 'material-symbols:tag', DATE: 'material-symbols:calendar-today',
+        BOOLEAN: 'mdi:radiobox-marked', ATTACHMENT: 'mdi:paperclip',
+        REFERENCE: 'material-symbols:link'
+      }
+      return icons[f.type] || 'mdi:format-list-bulleted-square'
+    },
+    viewDisplayValue(f) {
+      const val = this.formData[f.field]
+      if (val === null || val === undefined || val === '') return ''
+      const choiceInfo = this.choiceMap && this.choiceMap[f.field]
+      if (choiceInfo) {
+        const vals = choiceInfo.selectType === 'MULTI' ? String(val).split(',') : [String(val)]
+        return vals.map(v => { const o = (choiceInfo.values || []).find(x => x.value === v); return o ? o.label : v }).join('、')
+      }
+      if (f.type === 'DATE') {
+        const ts = Number(val); if (!ts || isNaN(ts)) return String(val)
+        const dateInfo = this.dateMap && this.dateMap[f.field]
+        const d = new Date(ts)
+        return this.formatDateTs(ts, dateInfo && dateInfo.type)
+      }
+      if (f.type === 'BOOLEAN') return (val === 'true' || val === true) ? '是' : '否'
+      if (f.type === 'TAG') return Array.isArray(val) ? val.join('、') : String(val).split(',').filter(Boolean).join('、')
+      if (f.type === 'REFERENCE') return String(this.formData[f.field + '_display'] || val)
+      return String(val)
+    },
     handlePageChange(current) {
       const key = this.pickerMode ? this._vmKey : this.novaName
       window.NovaTableJQ.onPageChange(key, current)
@@ -873,7 +956,99 @@ const NovaTable = {
   },
 
   template: `
-    <div :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden' : 'padding:16px'">
+    <div v-if="viewMode">
+      <div v-if="editFields.length === 0" style="text-align:center;padding:60px;color:#aaa;font-size:14px">加载中…</div>
+      <div v-else style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+        <template v-for="f in editFields.filter(f => f.type !== 'DIVIDE' && f.type !== 'EMPTY')" :key="f.field">
+          <div style="background:var(--n-card-color);border:1px solid var(--n-border-color);border-radius:8px;overflow:hidden;display:flex"
+            :style="f.type === 'ATTACHMENT' ? 'grid-column: 1 / -1' : ''">
+            <div style="width:4px;flex-shrink:0;background:var(--n-primary-color);opacity:0.6"></div>
+            <div style="flex:1;padding:12px 14px;min-width:0">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
+                <iconify-icon v-if="viewFieldIcon(f)" :icon="viewFieldIcon(f)" width="14" style="color:var(--n-primary-color);opacity:0.8;flex-shrink:0"></iconify-icon>
+                <span style="font-size:11px;font-weight:500;color:var(--n-text-color-3);letter-spacing:0.3px;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ f.title }}</span>
+              </div>
+              <!-- 附件类型 -->
+              <div v-if="f.type === 'ATTACHMENT'">
+                <div v-if="!(formData[f.field] || []).length" style="font-size:13px;color:var(--n-text-color-3);font-style:italic">-</div>
+                <template v-else-if="attachmentMap[f.field] && attachmentMap[f.field].type === 'IMAGE'">
+                  <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    <div v-for="(url, idx) in (formData[f.field] || [])" :key="idx" class="gallery-thumb-item" style="width:72px;height:72px">
+                      <img :src="url" class="gallery-thumb-img" style="width:72px;height:72px"
+                        @click="previewField = f; previewIndex = idx; previewModalShow = true" />
+                    </div>
+                  </div>
+                </template>
+                <template v-else>
+                  <div v-for="(url, idx) in (formData[f.field] || [])" :key="idx"
+                    style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--n-border-color)">
+                    <iconify-icon icon="mdi:paperclip" width="13" style="color:var(--n-primary-color);flex-shrink:0"></iconify-icon>
+                    <span style="flex:1;font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--n-text-color-1)" :title="url">{{ url }}</span>
+                    <span style="font-size:12px;color:var(--n-primary-color);cursor:pointer;flex-shrink:0" @click="copyText(url)">复制</span>
+                  </div>
+                </template>
+              </div>
+              <!-- 普通类型 -->
+              <div v-else style="font-size:14px;color:var(--n-text-color-1);line-height:1.5;min-height:21px;overflow:hidden">
+                <span v-if="!viewDisplayValue(f)" style="color:var(--n-text-color-3);font-style:italic">-</span>
+                <span v-else
+                  style="display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:default"
+                  :title="viewDisplayValue(f)">{{ viewDisplayValue(f) }}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+      <n-modal v-model:show="previewModalShow" preset="card" style="width:760px;margin-top:60px;padding:0">
+        <template #header>
+          <div class="gallery-header">
+            <span class="gallery-title">{{ previewField ? (previewField.title || '附件预览') : '附件预览' }}</span>
+            <span v-if="previewField && attachmentMap[previewField.field] && attachmentMap[previewField.field].type === 'IMAGE' && (formData[previewField.field] || []).length > 0" class="gallery-count">
+              {{ previewIndex + 1 }} / {{ (formData[previewField.field] || []).length }}
+            </span>
+          </div>
+        </template>
+        <div v-if="previewField && attachmentMap[previewField.field] && attachmentMap[previewField.field].type === 'IMAGE'" class="gallery-wrap">
+          <div class="gallery-body">
+            <div class="gallery-stage">
+              <button v-if="previewIndex > 0" class="gallery-nav gallery-nav-prev" @click="slideDirection = 'left'; previewIndex--">‹</button>
+              <transition :name="'slide-' + slideDirection">
+                <img :key="previewIndex" :src="formData[previewField.field][previewIndex]" class="gallery-main-img" />
+              </transition>
+              <button v-if="previewIndex < (formData[previewField.field] || []).length - 1" class="gallery-nav gallery-nav-next" @click="slideDirection = 'right'; previewIndex++">›</button>
+            </div>
+            <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-sider">
+              <div class="gallery-thumb-list">
+                <div v-for="(url, idx) in (formData[previewField.field] || [])" :key="idx" class="gallery-thumb-item">
+                  <img :src="url" class="gallery-thumb-img" :class="{active: previewIndex === idx}"
+                    @click="slideDirection = previewIndex < idx ? 'right' : 'left'; previewIndex = idx" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-dots">
+            <span v-for="(url, idx) in (formData[previewField.field] || [])" :key="'dot-' + idx"
+              :class="'gallery-dot' + (previewIndex === idx ? ' active' : '')"
+              @click="slideDirection = previewIndex < idx ? 'right' : 'left'; previewIndex = idx"></span>
+          </div>
+          <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-url-wrap" :title="'点击复制: ' + (formData[previewField.field] || [])[previewIndex]" @click="copyText((formData[previewField.field] || [])[previewIndex])">
+            <div class="gallery-url-label">图片地址</div>
+            <div class="gallery-url-text">{{ (formData[previewField.field] || [])[previewIndex] }}</div>
+          </div>
+          <div v-if="(formData[previewField.field] || []).length === 0" class="gallery-empty">暂无图片</div>
+        </div>
+        <div v-else-if="previewField" class="preview-file-list">
+          <template v-for="(url, idx) in (formData[previewField.field] || [])" :key="idx">
+            <div class="preview-file-row">
+              <span class="preview-file-url">{{ url }}</span>
+              <n-button size="tiny" @click="copyText(url)">复制</n-button>
+            </div>
+          </template>
+          <div v-if="(formData[previewField.field] || []).length === 0" class="preview-empty">暂无文件</div>
+        </div>
+      </n-modal>
+    </div>
+    <div v-else :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden' : 'padding:16px'">
 
       <!-- 筛选卡片 -->
       <n-card :bordered="false" class="page-card filter-card">
@@ -1074,11 +1249,15 @@ const NovaTable = {
       </n-card>
 
       <!-- 新增/编辑弹窗 -->
-      <n-modal v-model:show="showForm" preset="card" :title="formMode === 'add' ? '新增' : '编辑'" style="width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column" :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}">
-        <n-tabs v-model:value="formTab" type="line" style="padding:0 20px">
+      <n-modal v-model:show="showForm" preset="card" :title="formMode === 'add' ? '新增' : '编辑'" style="width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column" :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
+        <n-tabs v-model:value="formTab" type="line"
+          style="padding:0 20px;margin-top:-4px"
+          :class="editReferenceTabs.filter(t => t.tapShow !== false && (!t.tapParamField || (currentRow && currentRow[t.tapParamField]))).length === 0 ? 'tabs-nav-hidden' : ''"
+          @update:value="onFormTabChange">
 
           <!-- Tab 1: 表单 -->
           <n-tab-pane name="form" tab="基本信息" style="padding:16px 0 20px 0">
+            <div :key="'tab_' + formTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
             <div :style="'display:grid;gap:16px 24px;' + (editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
           <template v-for="{field: f, visible: _vis} in visibleEditFields" :key="f.field">
             <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" v-show="_vis" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
@@ -1253,28 +1432,22 @@ const NovaTable = {
             </div>
           </template>
         </div>
+        </div>
         </n-tab-pane>
 
-        <!-- Tab 2: 详情页 -->
-        <n-tab-pane name="detail" tab="详情信息" style="padding:16px 0 20px 0">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--n-border-color);border-radius:6px;overflow:hidden">
-            <template v-for="(f, idx) in editFields.filter(f => f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'ATTACHMENT')" :key="f.field">
-              <div :style="'display:flex;align-items:stretch;' + (idx % 2 === 0 ? 'border-right:1px solid var(--n-border-color);' : '') + (idx >= 2 ? 'border-top:1px solid var(--n-border-color);' : '')">
-                <div style="background:var(--n-th-color);padding:10px 14px;min-width:100px;font-size:13px;color:var(--n-title-text-color);font-weight:500;display:flex;align-items:center">{{ f.title }}</div>
-                <div style="padding:10px 14px;font-size:13px;flex:1;display:flex;align-items:center;word-break:break-all">{{ currentRow && (currentRow[f.field + '_display'] || currentRow[f.field]) }}</div>
-              </div>
-            </template>
+        <!-- referenceForm 关联查看 tab -->
+        <template v-for="refTab in editReferenceTabs" :key="refTab.tapNovaName">
+        <n-tab-pane v-if="refTab.tapShow !== false && (!refTab.tapParamField || (currentRow && currentRow[refTab.tapParamField]))"
+          :name="'ref_' + refTab.tapNovaName" :tab="refTab.tapTitle || refTab.tapNovaName"
+          style="padding:16px 0 20px 0">
+          <div :key="'tab_' + formTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
+          <nova-table v-if="formTab === 'ref_' + refTab.tapNovaName"
+            :view-mode="true"
+            :nova-name-prop="refTab.tapNovaName"
+            :view-row="refTabData[refTab.tapNovaName]" />
           </div>
         </n-tab-pane>
-
-        <!-- Tab 3: 关联明细 -->
-        <n-tab-pane name="sub" tab="关联明细" style="padding:16px 0 20px 0">
-          <n-data-table size="small"
-            :columns="[{title:'编号',key:'no'},{title:'名称',key:'name'},{title:'金额',key:'amount'},{title:'时间',key:'time'}]"
-            :data="[{no:'001',name:'明细A',amount:'100.00',time:'2024-01-01'},{no:'002',name:'明细B',amount:'200.00',time:'2024-02-01'},{no:'003',name:'明细C',amount:'300.00',time:'2024-03-01'}]"
-            :pagination="{pageSize:10}"
-            :bordered="false" striped />
-        </n-tab-pane>
+        </template>
 
         </n-tabs>
         <template #footer>
@@ -1285,7 +1458,7 @@ const NovaTable = {
         </template>
       </n-modal>
 
-      <!-- 附件预览弹窗 -->
+      <!-- 附件预览弹窗（viewMode 和普通模式共用） -->
       <n-modal v-model:show="previewModalShow" preset="card" style="width:760px;margin-top:60px;padding:0">
         <template #header>
           <div class="gallery-header">

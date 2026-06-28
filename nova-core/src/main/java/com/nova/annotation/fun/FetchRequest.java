@@ -39,7 +39,7 @@ public class FetchRequest<T> {
         @Comment("来源nova名称")
         private String novaName;
 
-        @Comment("来源属性集合")
+        @Comment("来源上下文属性集合")
         private Map<String, String> sourceFields;
 
         @Data

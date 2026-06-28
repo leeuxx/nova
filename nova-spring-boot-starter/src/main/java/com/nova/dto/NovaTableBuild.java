@@ -120,36 +120,57 @@ public class NovaTableBuild {
         @Accessors(chain = true)
         public static class Edit {
 
-            @Comment("属性名")
-            private String field;
+            @Comment("tap类型 thisForm=自身详情表单 referenceForm=引用详情表单 referenceTable=引用表格")
+            private String tapType;
 
-            @Comment("名称")
-            private String title;
+            @Comment("tap名称")
+            private String tapTitle;
 
-            @Comment("详细说明")
-            private String desc;
+            @Comment("tapNovaName")
+            private String tapNovaName;
 
-            @Comment("类型")
-            private String type;
+            @Comment("tap页显示")
+            private Boolean tapShow;
 
-            @Comment("是否必填")
-            private Boolean notNull;
-
-            @Comment("只读控制信息")
-            private ReadonlyInfo readonly;
-
-            @Comment("动态是否显示表达式")
-            private String showByExpr;
+            @Comment("自身详情表单编辑信息")
+            private List<ThisForm> thisForms;
 
             @Data
             @Accessors(chain = true)
-            public static class ReadonlyInfo {
+            public static class ThisForm {
 
-                @Comment("新增只读")
-                private Boolean add;
+                @Comment("属性名")
+                private String field;
 
-                @Comment("修改只读")
-                private Boolean edit;
+                @Comment("名称")
+                private String title;
+
+                @Comment("详细说明")
+                private String desc;
+
+                @Comment("类型")
+                private String type;
+
+                @Comment("是否必填")
+                private Boolean notNull;
+
+                @Comment("只读控制信息")
+                private ReadonlyInfo readonly;
+
+                @Comment("动态是否显示表达式")
+                private String showByExpr;
+
+                @Data
+                @Accessors(chain = true)
+                public static class ReadonlyInfo {
+
+                    @Comment("新增只读")
+                    private Boolean add;
+
+                    @Comment("修改只读")
+                    private Boolean edit;
+
+                }
 
             }
 

@@ -19,6 +19,9 @@ public @interface ReferenceType {
     @Comment("展示列,一表展示到多表中的属性名")
     String displayField() default "name";
 
+    @Comment("tap页显示")
+    boolean tapShow() default true;
+
     enum Type {
         @Comment("多对一")
         MANY_TO_ONE

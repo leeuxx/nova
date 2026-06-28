@@ -16,7 +16,10 @@ public interface NovaTableService {
     PageBean<?> data(NovaTableData novaTableData);
 
     @Comment("获取表格引用数据")
-    Map<String, Map<String, Map<String, Object>>> referencesData(List<NovaTableReferencesData> novaTableReferencesDatas);
+    Map<String, Map<String, Map<String, Object>>> referencesData(NovaTableReferencesData novaTableReferencesData);
+
+    @Comment("关键词搜索")
+    PageBean<NovaTablePromptSearch.Vo> promptSearch(NovaTablePromptSearch novaTablePromptSearch);
 
     @Comment("新增表格数据")
     NovaTableAdd.Vo add(NovaTableAdd novaTableAdd);
@@ -27,6 +30,4 @@ public interface NovaTableService {
     @Comment("删除表格数据")
     NovaTableDelete.Vo delete(NovaTableDelete novaTableDelete);
 
-    @Comment("关键词搜索")
-    PageBean<NovaTablePromptSearch.Vo> promptSearch(NovaTablePromptSearch novaTablePromptSearch);
 }

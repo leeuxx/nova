@@ -19,7 +19,13 @@ window.IconifyPreload = [
       'edit-outline':           { body: '<path fill="currentColor" d="M5 19h1.425L16.2 9.225L14.775 7.8L5 17.575zm-2 2v-4.25L16.2 3.575q.3-.275.663-.425t.762-.15t.775.15t.65.45L20.425 5q.3.275.438.65T21 6.4q0 .4-.137.763t-.438.662L7.25 21zM19 6.4L17.6 5zm-3.525 2.125l-.7-.725L16.2 9.225z"/>' },
       'circle-outline':         { body: '<path fill="currentColor" d="M12 22q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m0-8"/>' },
       'keyboard-arrow-up':      { body: '<path fill="currentColor" d="m12 10.8l-4.6 4.6L6 14l6-6l6 6l-1.4 1.4z"/>' },
-      'keyboard-arrow-down':    { body: '<path fill="currentColor" d="m12 15.4l-6-6L7.4 8l4.6 4.6L16.6 8L18 9.4z"/>' }
+      'keyboard-arrow-down':    { body: '<path fill="currentColor" d="m12 15.4l-6-6L7.4 8l4.6 4.6L16.6 8L18 9.4z"/>' },
+      'text-fields':            { body: '<path fill="currentColor" d="M5 4v3h5.5v12h3V7H19V4z"/>' },
+      'notes':                  { body: '<path fill="currentColor" d="M3 18v-2h12v2zm0-5v-2h18v2zm0-5V6h18v2z"/>' },
+      'calendar-today':         { body: '<path fill="currentColor" d="M5 22q-.825 0-1.413-.587T3 20V6q0-.825.588-1.412T5 4h1V2h2v2h8V2h2v2h1q.825 0 1.413.588T21 6v14q0 .825-.587 1.413T19 22zm0-2h14V10H5zM5 8h14V6H5zm7 6q-.425 0-.712-.288T11 13t.288-.712T12 12t.713.288T13 13t-.288.713T12 14"/>' },
+      'tag':                    { body: '<path fill="currentColor" d="M11.5 21L2 11.5V2h9.5L21 11.5zM11.55 19l7.95-7.95L11.55 4H4v7.55zM6.5 8q.625 0 1.063-.438T8 6.5t-.437-1.062T6.5 5t-1.062.438T5 6.5t.438 1.063T6.5 8"/>' },
+      'link':                   { body: '<path fill="currentColor" d="M11 17H7q-2.075 0-3.537-1.463T2 12t1.463-3.537T7 7h4v2H7q-1.25 0-2.125.875T4 12t.875 2.125T7 15h4zm1-4v-2h2v2zm0 0H8v-2h4zm2 4v-2h4q1.25 0 2.125-.875T21 12t-.875-2.125T18 9h-4V7h4q2.075 0 3.538 1.463T23 12t-1.462 3.537T18 17z"/>' },
+      'checklist':              { body: '<path fill="currentColor" d="M4 21q-.425 0-.712-.288T3 20t.288-.712T4 19h16q.425 0 .713.288T21 20t-.288.713T20 21zm0-8q-.425 0-.712-.288T3 12t.288-.712T4 11h16q.425 0 .713.288T21 12t-.288.713T20 13zm0-8q-.425 0-.712-.288T3 4t.288-.712T4 3h16q.425 0 .713.288T21 4t-.288.713T20 5z"/>' }
     }
   },
   {

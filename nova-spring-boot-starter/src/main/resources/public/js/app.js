@@ -172,10 +172,13 @@ function mountApp(menuList) {
 
       const handleMenuSelect = (key) => { if (key.startsWith('/')) router.push(key) }
 
+      const tabVersions = Vue.ref({})
+
       const handleTabClose = (key) => {
         const idx = openedTabs.value.findIndex(t => t.key === key)
         if (idx > -1) {
           openedTabs.value.splice(idx, 1)
+          tabVersions.value = { ...tabVersions.value, [key]: (tabVersions.value[key] || 0) + 1 }
           if (activeTab.value === key) {
             const last = openedTabs.value[openedTabs.value.length - 1]
             if (last) router.push(last.key)
@@ -183,12 +186,16 @@ function mountApp(menuList) {
         }
       }
 
+      const routeKey = Vue.computed(() =>
+        route.path + '_' + (tabVersions.value[route.path] || 0)
+      )
+
       const handleTabClick = (key) => router.push(key)
       const userDropdown   = [{ label: '个人中心', key: 'profile' }, { label: '退出登录', key: 'logout' }]
 
       return {
         collapsed, isDark, theme, themeOverrides, openedTabs, activeTab, expandedKeys,
-        menuTree, breadcrumbItems, zhCN, dateZhCN,
+        menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey,
         handleMenuSelect, handleTabClose, handleTabClick, userDropdown
       }
     },
@@ -265,13 +272,13 @@ function mountApp(menuList) {
                     <n-tabs type="line" :value="activeTab" :tabs-padding="0" @update:value="handleTabClick" style="flex:1;min-width:0">
                       <n-tab
                         v-for="tab in openedTabs" :key="tab.key" :name="tab.key"
-                        :closable="tab.closable" @close.stop="handleTabClose(tab.key)"
+                        :closable="tab.closable && openedTabs.length > 1" @close.stop="handleTabClose(tab.key)"
                         style="padding:6px 12px;font-size:13px"
                       >
                         <span style="display:inline-flex;align-items:center;gap:4px">
                           <n-icon :size="14" v-if="tab.icon"><iconify-icon :icon="tab.icon"></iconify-icon></n-icon>
                           {{ tab.title }}
-                          <n-icon v-if="tab.closable" :size="12" style="cursor:pointer;margin-left:4px" @click.stop="handleTabClose(tab.key)">
+                          <n-icon v-if="tab.closable && openedTabs.length > 1" :size="12" style="cursor:pointer;margin-left:4px" @click.stop="handleTabClose(tab.key)">
                             <iconify-icon icon="material-symbols:close"></iconify-icon>
                           </n-icon>
                         </span>
@@ -283,8 +290,8 @@ function mountApp(menuList) {
                   <n-layout-content class="page-content">
                     <router-view v-slot="{ Component }">
                       <transition name="page-fade" mode="out-in">
-                        <keep-alive>
-                          <component :is="Component" :key="$route.path" />
+                        <keep-alive :max="20">
+                          <component :is="Component" :key="routeKey" />
                         </keep-alive>
                       </transition>
                     </router-view>

@@ -184,6 +184,7 @@ body.dark { background: #151515 !important; }
 .dark .header-action:hover { background-color: rgba(37,99,235,0.25); }
 .dark .form-label          { color: #e0e0e0; }
 
+.tabs-nav-hidden .n-tabs-nav { display: none; }
 .n-modal-scroll-content { padding-bottom: 60px !important; }
 .ref-picker-modal .n-modal-scroll-content { padding-bottom: 8px !important; }
 .ref-picker-modal .n-modal__footer { padding-top: 8px !important; padding-bottom: 12px !important; }
@@ -205,6 +206,11 @@ body.dark { background: #151515 !important; }
 @keyframes dropdown-fade-in {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ─── 附件管理按钮/下拉列表（亮色） ─────────────────────────── */

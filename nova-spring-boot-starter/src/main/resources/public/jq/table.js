@@ -82,7 +82,17 @@ window.NovaTableJQ = (function ($) {
           target.paginationConfig.pageSizes = layout.pageSizes.map(function (n) { return { label: n + ' 条/页', value: n } })
         }
         if (layout.editLayout) target.editLayout = layout.editLayout
-        target.editFields = resp.data.edit || []
+        var allEdit = resp.data.edit || []
+        target.editFields = allEdit.filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
+        target.editReferenceTabs = allEdit.filter(function(e) { return e.tapType === 'referenceForm' })
+        var refMap = resp.data.reference || {}
+        target.editReferenceTabs.forEach(function(tab) {
+          if (!tab.tapNovaName) return
+          target.editFields.forEach(function(f) {
+            if (!tab.tapParamField && f.type === 'REFERENCE' && (refMap[f.field] || {}).referenceName === tab.tapNovaName)
+              tab.tapParamField = f.field
+          })
+        })
         if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
         // 构建完成后加载数据
         loadData(novaName)
@@ -302,18 +312,18 @@ window.NovaTableJQ = (function ($) {
       groups[refNovaName].storageField = storageField
       Object.keys(valSet).forEach(function (v) { if (groups[refNovaName].values.indexOf(v) === -1) groups[refNovaName].values.push(v) })
     })
-    var requestList = []
+    var storageFields = []
     Object.keys(groups).forEach(function (refNovaName) {
       var g = groups[refNovaName]
       if (g.values.length === 0) return
-      requestList.push({ novaName: refNovaName, sourceNovaName: queryName, storageFieldValues: g.values })
+      storageFields.push({ novaName: refNovaName, storageFieldValues: g.values })
     })
-    if (requestList.length === 0) return
+    if (storageFields.length === 0) return
     $.ajax({
       url:         '/nova/table/referencesData',
       method:      'POST',
       contentType: 'application/json',
-      data:        JSON.stringify(requestList),
+      data:        JSON.stringify({ sourceNovaName: queryName, storageFields: storageFields }),
       success: function (resp) {
         var t = window.vmMap && window.vmMap[vmKey]
         if (!t || resp.code !== 200) return
@@ -378,6 +388,7 @@ window.NovaTableJQ = (function ($) {
     vm().formMode   = 'add'
     vm().formData   = formData
     vm().formErrors = {}
+    vm().refTabData = {}
     vm().formTab    = 'form'
     vm().showForm   = true
   }
@@ -393,7 +404,7 @@ window.NovaTableJQ = (function ($) {
       url: '/nova/table/referencesData',
       method: 'POST',
       contentType: 'application/json',
-      data: JSON.stringify([{ novaName: novaName, sourceNovaName: novaName, storageFieldValues: [pkVal] }]),
+      data: JSON.stringify({ sourceNovaName: novaName, storageFields: [{ novaName: novaName, storageFieldValues: [pkVal] }] }),
       success: function(resp) {
         if (resp.code !== 200) return
         var t = window.vmMap && window.vmMap[novaName]
@@ -440,10 +451,32 @@ window.NovaTableJQ = (function ($) {
           var sv = source[f.field]
           if (!sv || !refInfo.referenceName) return
           if (!refReqs[refInfo.referenceName]) {
-            refReqs[refInfo.referenceName] = { novaName: refInfo.referenceName, sourceNovaName: novaName, storageFieldValues: [] }
+            refReqs[refInfo.referenceName] = { novaName: refInfo.referenceName, storageFieldValues: [] }
           }
           if (refReqs[refInfo.referenceName].storageFieldValues.indexOf(sv) === -1) {
             refReqs[refInfo.referenceName].storageFieldValues.push(sv)
+          }
+        })
+        // referenceForm tab：找到对应的 REFERENCE 字段，加入批量查询
+        var refTabSV = {}
+        ;(t.editReferenceTabs || []).forEach(function(tab) {
+          if (!tab.tapNovaName) return
+          var refField = null
+          ;(t.editFields || []).forEach(function(f) {
+            if (f.type === 'REFERENCE' && !refField) {
+              var ri = referenceMap[f.field] || {}
+              if (ri.referenceName === tab.tapNovaName) refField = f.field
+            }
+          })
+          if (!refField) return
+          var sv = source[refField]
+          if (!sv) return
+          refTabSV[tab.tapNovaName] = sv
+          if (!refReqs[tab.tapNovaName]) {
+            refReqs[tab.tapNovaName] = { novaName: tab.tapNovaName, storageFieldValues: [] }
+          }
+          if (refReqs[tab.tapNovaName].storageFieldValues.indexOf(sv) === -1) {
+            refReqs[tab.tapNovaName].storageFieldValues.push(sv)
           }
         })
 
@@ -463,7 +496,7 @@ window.NovaTableJQ = (function ($) {
           url: '/nova/table/referencesData',
           method: 'POST',
           contentType: 'application/json',
-          data: JSON.stringify(reqList),
+          data: JSON.stringify({ sourceNovaName: novaName, storageFields: reqList }),
           success: function(resp2) {
             if (resp2.code === 200) {
               var result = resp2.data || {}
@@ -474,6 +507,13 @@ window.NovaTableJQ = (function ($) {
                 if (!sv || !refInfo.referenceName || !refInfo.displayField) return
                 var rec = result[refInfo.referenceName] && result[refInfo.referenceName][sv]
                 source[f.field + '_display'] = rec && rec[refInfo.displayField] != null ? String(rec[refInfo.displayField]) : ''
+              })
+              // 填充 referenceForm tab 数据
+              t.refTabData = {}
+              ;(t.editReferenceTabs || []).forEach(function(tab) {
+                var sv = refTabSV[tab.tapNovaName]
+                if (!sv) return
+                t.refTabData[tab.tapNovaName] = (result[tab.tapNovaName] && result[tab.tapNovaName][sv]) || {}
               })
             }
             openModal()
@@ -690,12 +730,101 @@ window.NovaTableJQ = (function ($) {
     })
   }
 
+  // ── view 模式初始化：build 后填 formData，不加载表格 ────────────
+  function onViewMounted(novaName, vmKey, rawRow) {
+    if (!novaName || !vmKey) return
+    $.ajax({
+      url: '/nova/table/build', method: 'POST', contentType: 'application/json',
+      data: JSON.stringify({ novaName: novaName }),
+      success: function(resp) {
+        if (resp.code !== 200) return
+        var target = window.vmMap && window.vmMap[vmKey]
+        if (!target) return
+        var d = resp.data
+        target.choiceMap     = d.choice      || {}
+        target.tagMap        = d.tag         || {}
+        target.dateMap       = d.date        || {}
+        target.numberMap     = d.number      || {}
+        target.booleanMap    = d.booleanInfo || {}
+        target.attachmentMap = d.attachment  || {}
+        target.referenceMap  = d.reference   || {}
+        target.editLayout    = (d.layout && d.layout.editLayout) || 'DEFAULT'
+        var allEdit = d.edit || []
+        var fields = allEdit.filter(function(e){ return e.tapType === 'thisForm' }).reduce(function(acc, e){ return acc.concat(e.thisForms || []) }, [])
+        target.editFields = fields
+        if (d.novaIdFieldName) target.novaIdFieldName = d.novaIdFieldName
+        // 用 rawRow 填 formData（同 handleEdit 逻辑）
+        var row = rawRow || {}
+        var choiceMap    = target.choiceMap    || {}
+        var referenceMap = target.referenceMap || {}
+        var source = {}
+        fields.forEach(function(f) {
+          var val = row[f.field]
+          var choice = choiceMap[f.field]
+          if (choice && choice.selectType === 'MULTI') {
+            source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+          } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
+            source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+          } else if (f.type === 'DATE') {
+            var ts = val !== null && val !== undefined ? Number(val) : null
+            source[f.field] = (ts && !isNaN(ts)) ? ts : null
+          } else if (f.type === 'BOOLEAN') {
+            source[f.field] = (val === null || val === undefined) ? null : String(val)
+          } else if (f.type === 'NUMBER') {
+            source[f.field] = (val === null || val === undefined || val === '') ? null : Number(val)
+          } else if (f.type === 'REFERENCE') {
+            var refInfo = referenceMap[f.field] || {}
+            var sf = refInfo.storageField || 'id'
+            source[f.field] = (val && typeof val === 'object')
+              ? (val[sf] !== undefined && val[sf] !== null ? String(val[sf]) : null)
+              : (val !== null && val !== undefined && val !== '' ? String(val) : null)
+            source[f.field + '_display'] = (val && typeof val === 'object' && refInfo.displayField) ? (val[refInfo.displayField] != null ? String(val[refInfo.displayField]) : '') : ''
+          } else {
+            source[f.field] = (val === null || val === undefined) ? '' : val
+          }
+        })
+        target.formData  = source
+        target.currentRow = source
+        target.formMode  = 'edit'
+        // 第二次请求：批量翻译 REFERENCE display
+        var refReqs = {}
+        fields.forEach(function(f) {
+          if (f.type !== 'REFERENCE') return
+          var refInfo = referenceMap[f.field] || {}
+          var sv = source[f.field]
+          if (!sv || !refInfo.referenceName) return
+          if (!refReqs[refInfo.referenceName]) refReqs[refInfo.referenceName] = { novaName: refInfo.referenceName, storageFieldValues: [] }
+          if (refReqs[refInfo.referenceName].storageFieldValues.indexOf(sv) === -1) refReqs[refInfo.referenceName].storageFieldValues.push(sv)
+        })
+        var reqList = Object.keys(refReqs).map(function(k){ return refReqs[k] })
+        if (!reqList.length) return
+        $.ajax({
+          url: '/nova/table/referencesData', method: 'POST', contentType: 'application/json',
+          data: JSON.stringify({ sourceNovaName: novaName, storageFields: reqList }),
+          success: function(resp2) {
+            var t2 = window.vmMap && window.vmMap[vmKey]
+            if (!t2 || resp2.code !== 200) return
+            var result = resp2.data || {}
+            fields.forEach(function(f) {
+              if (f.type !== 'REFERENCE') return
+              var refInfo = referenceMap[f.field] || {}
+              var sv = source[f.field]
+              if (!sv || !refInfo.referenceName || !refInfo.displayField) return
+              var rec = result[refInfo.referenceName] && result[refInfo.referenceName][sv]
+              t2.formData[f.field + '_display'] = rec && rec[refInfo.displayField] != null ? String(rec[refInfo.displayField]) : ''
+            })
+          }
+        })
+      }
+    })
+  }
+
   return {
     onMounted, onRouteChange, buildTable, updateTableHeight,
     handleReset, handleAdd, handleEdit, handleDelete,
     handleBatchDelete, handleFormSubmit,
     loadData, onPageChange, onPageSizeChange, onSortChange,
-    onPickerMounted
+    onPickerMounted, onViewMounted
   }
 
 })(jQuery)

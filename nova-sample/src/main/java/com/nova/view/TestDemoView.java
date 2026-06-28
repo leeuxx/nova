@@ -47,7 +47,13 @@ public class TestDemoView {
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(
                             type = ReferenceType.Type.MANY_TO_ONE,
-                            referenceField = "demo2Id"
+                            referenceField = "demo2Id",
+                            referenceTransmitField = {
+                                    "name",
+                                    "nick",
+                                    "sex",
+                                    "createTime"
+                            }
                     ),
                     search = @Search(vague = true)
             )
