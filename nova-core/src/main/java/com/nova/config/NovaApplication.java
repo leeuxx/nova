@@ -21,7 +21,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -110,7 +109,7 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
         private Map<String, NovaFieldInfo> novaFields;
 
         @Comment("数据代理类")
-        private Class<? extends DataProxy<?, ?>> dataProxyClass;
+        private Class<? extends DataProxy<?>> dataProxyClass;
 
         @Data
         @Accessors(chain = true)

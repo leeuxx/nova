@@ -186,6 +186,7 @@ const NovaTable = {
       appendageTabBuild:   {},
       appendageFormData:   {},
       appendageFormErrors: {},
+      appendageDetailsLoaded: {},
       editLayout:     'DEFAULT',
       formErrors:     {},
       striped:        true,
@@ -1002,33 +1003,15 @@ const NovaTable = {
       this.$emit('pick', row)
     },
     onFormTabChange(tab) {
-      if (!tab.startsWith('ref_')) return
-      var refNovaName = tab.slice(4)
-      var refTab = (this.editReferenceTabs || []).find(function(t) { return t.tapNovaName === refNovaName })
-      if (!refTab) return
-      // 找到当前行中对应的 storageField 值
-      var referenceMap = this.referenceMap || {}
-      var currentRow = this.currentRow || {}
-      var sv = null
-      for (var field in referenceMap) {
-        if ((referenceMap[field] || {}).referenceName === refNovaName) {
-          sv = currentRow[field] !== undefined ? String(currentRow[field]) : null
-          break
-        }
+      if (tab.startsWith('ref_')) {
+        var refNovaName = tab.slice(4)
+        if (this.refTabData[refNovaName] != null) return
+        if (window.NovaTableJQ) window.NovaTableJQ.loadReferenceDetails(this.novaName, refNovaName)
+      } else if (tab.startsWith('app_')) {
+        var appNovaName = tab.slice(4)
+        if (this.appendageDetailsLoaded && this.appendageDetailsLoaded[appNovaName]) return
+        if (window.NovaTableJQ) window.NovaTableJQ.loadAppendageDetails(this.novaName, appNovaName)
       }
-      if (!sv) return
-      var novaName = this.novaName
-      var vm = this
-      $.ajax({
-        url: '/nova/table/referencesData', method: 'POST', contentType: 'application/json',
-        data: JSON.stringify({ sourceNovaName: novaName, storageFields: [{ novaName: refNovaName, storageFieldValues: [sv] }] }),
-        success: function(resp) {
-          if (resp.code !== 200) return
-          var newData = Object.assign({}, vm.refTabData)
-          newData[refNovaName] = (resp.data[refNovaName] && resp.data[refNovaName][sv]) || {}
-          vm.refTabData = newData
-        }
-      })
     },
     refTabDisplayValue(novaName, f) {
       const maps = this.refTabMaps[novaName] || {}
@@ -1583,13 +1566,14 @@ const NovaTable = {
         <template v-for="tab in editExtraTabs" :key="tab.tapNovaName">
         <n-tab-pane v-if="tab.tapType !== 'referenceForm' || formMode !== 'add'"
           :name="(tab.tapType === 'referenceForm' ? 'ref_' : 'app_') + tab.tapNovaName"
+          display-directive="show"
           style="padding:16px 0 20px 0">
           <template #tab>{{ tab.tapTitle || tab.tapNovaName }}<template v-if="tab.tapType === 'appendageForm'"><span v-if="tabRequiredCount('app_' + tab.tapNovaName) > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('app_' + tab.tapNovaName) }}</span><span v-else-if="tabTotalRequired('app_' + tab.tapNovaName) > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template></template>
-          <div :key="'tab_' + formTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
+          <div :key="tab.tapNovaName" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
 
           <!-- referenceForm 内容 -->
           <div v-if="tab.tapType === 'referenceForm' && refTabData[tab.tapNovaName] == null" style="text-align:center;padding:40px;color:#aaa;font-size:13px">加载中…</div>
-          <nova-table v-else-if="tab.tapType === 'referenceForm' && formTab === 'ref_' + tab.tapNovaName"
+          <nova-table v-else-if="tab.tapType === 'referenceForm'"
             :view-mode="true"
             :nova-name-prop="tab.tapNovaName"
             :view-row="refTabData[tab.tapNovaName]" />

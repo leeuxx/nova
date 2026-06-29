@@ -1,8 +1,9 @@
 package com.nova.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nova.annotation.fun.*;
+import com.nova.annotation.fun.DataProxy;
+import com.nova.annotation.fun.Details;
+import com.nova.annotation.fun.Fetch;
+import com.nova.annotation.fun.PromptSearch;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 import com.nova.service.NovaTableService;
@@ -11,6 +12,7 @@ import com.nova.utils.MixUtils;
 import com.nova.utils.NovaFieldUtils;
 import com.nova.utils.NovaUtils;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class NovaTableServiceImpl implements NovaTableService {
@@ -203,104 +206,74 @@ public class NovaTableServiceImpl implements NovaTableService {
         PageBean<Map<String, Object>> pageBean = novaTableData.getPageBean();
         Map<String, NovaTableData.Search> conditions = novaTableData.getConditions();
         List<PageBean.OrderItemBean> orders = pageBean.getOrders();
-        QueryWrapper<Object> queryWrapper = new QueryWrapper<>();
-        Map<String, FetchRequest.Source.Search> requestConditions = new LinkedHashMap<>();
         // 搜索条件
+        Map<String, Fetch.Search> requestConditions = new LinkedHashMap<>();
         if (conditions != null) {
-            Map<String, NovaFieldUtils.DateInfo> dateMap = NovaFieldUtils.getDate(novaName);
-            conditions.forEach((field, search) -> {
-                String column = MixUtils.camelToSnake(field);
-                NovaFieldUtils.DateInfo dateInfo = dateMap.get(field);
-                FetchRequest.Source.Search searchBean = DataProxyUtils.buildFetchSearch(
-                        novaName, field, column,
-                        search.getValue(), search.getType(),
-                        Boolean.TRUE.equals(search.getVague()),
-                        dateInfo,
-                        queryWrapper);
-                requestConditions.put(field, searchBean);
-            });
+            conditions.forEach((field, search) -> requestConditions.put(field,
+                    new Fetch.Search().setValue(search.getValue()).setType(search.getType()).setVague(search.getVague())
+            ));
         }
-        // 排序：前端指定 > @Nova orderBy > 无排序
-        List<FetchRequest.Source.OrderItemBean> requestOrders = new ArrayList<>();
+        // 排序
+        List<Fetch.OrderItemBean> requestOrders = new ArrayList<>();
         if (orders != null && !orders.isEmpty()) {
-            orders.forEach(o -> {
-                String col = MixUtils.camelToSnake(o.getColumn());
-                requestOrders.add(new FetchRequest.Source.OrderItemBean().setColumn(col).setAsc(o.isAsc()));
-                if (o.isAsc()) queryWrapper.orderByAsc(col);
-                else queryWrapper.orderByDesc(col);
-            });
-        } else {
-            String defaultOrderBy = NovaUtils.getOrderBy(novaName);
-            if (defaultOrderBy != null && !defaultOrderBy.isBlank()) {
-                queryWrapper.last("ORDER BY " + defaultOrderBy);
-            }
+            orders.forEach(o -> requestOrders.add(
+                    new Fetch.OrderItemBean().setColumn(MixUtils.camelToSnake(o.getColumn())).setAsc(o.isAsc())
+            ));
         }
-        // 构造对象
-        FetchRequest queryRequest = new FetchRequest()
-                .setSource(new FetchRequest.Source()
-                        .setCurrent(pageBean.getCurrent())
-                        .setSize(pageBean.getSize())
-                        .setConditions(requestConditions)
-                        .setOrders(requestOrders)
-                        .setNovaName(novaTableData.getSourceNovaName())
-                        .setSourceFields(novaTableData.getSourceFields())
-                )
-                .setMybatisPLus(new FetchRequest.MybatisPLus()
-                        .setPage(Page.of(pageBean.getCurrent(), pageBean.getSize()))
-                        .setWrapper(queryWrapper.lambda())
-                );
-        // 调用代理
-        DataProxy<?, ?> dataProxy = DataProxyUtils.getDataProxy(novaName);
-        FetchResponse<?> fetch = dataProxy.fetch(queryRequest);
-        List<Map<String, Object>> maps = new ArrayList<>();
+        // 构造请求
+        Fetch queryRequest = new Fetch()
+                .setCurrent(pageBean.getCurrent())
+                .setSize(pageBean.getSize())
+                .setConditions(requestConditions)
+                .setOrders(requestOrders)
+                .setNovaName(novaTableData.getSourceNovaName())
+                .setSourceFields(novaTableData.getSourceFields());
+        // 调用代理，获取实体列表
+        DataProxy<?> dataProxy = DataProxyUtils.getDataProxy(novaName);
+        Fetch.Vo<?> fetch = dataProxy.fetch(queryRequest);
         List<?> records = fetch.getRecords();
+        // 转换Map
+        List<Map<String, Object>> maps = new ArrayList<>();
         records.forEach(record -> maps.add(DataProxyUtils.toMapWithTimestamp(record)));
+        // 分页返回结果信息
         pageBean.setTotal(fetch.getTotal()).setRecords(maps);
         return pageBean;
     }
 
     @Override
-    public Map<String, Map<String, Map<String, Object>>> referencesData(NovaTableReferencesData novaTableReferencesData) {
-        Map<String, Map<String, Map<String, Object>>> maps = new LinkedHashMap<>();
-        List<NovaTableReferencesData.StorageField> storageFields = novaTableReferencesData.getStorageFields();
-        for (NovaTableReferencesData.StorageField storageField : storageFields) {
-            DataProxy<?, ?> dataProxy = DataProxyUtils.getDataProxy(storageField.getNovaName());
-            Map<String, ?> dataMaps = dataProxy.fetchReferences(new FetchReferencesRequest()
-                    .setNovaName(novaTableReferencesData.getSourceNovaName())
-                    .setStorageFieldValues(storageField.getStorageFieldValues())
-            );
-            Map<String, Map<String, Object>> storageFieldMaps = new LinkedHashMap<>();
-            dataMaps.forEach((storageFieldValue, record) -> {
-                Map<String, Object> data = DataProxyUtils.toMapWithTimestamp(record);
-                storageFieldMaps.put(storageFieldValue, data);
-            });
-            maps.put(storageField.getNovaName(), storageFieldMaps);
-        }
-        return maps;
+    public Map<String, Object> details(NovaTableDetails novaTableDetails) {
+        String novaName = novaTableDetails.getNovaName();
+        String storageFieldValue = novaTableDetails.getStorageFieldValue();
+        DataProxy<?> dataProxy = DataProxyUtils.getDataProxy(novaName);
+        return DataProxyUtils.toMapWithTimestamp(dataProxy.details(new Details()
+                .setNovaName(novaName)
+                .setStorageFieldValue(storageFieldValue)
+        ));
     }
 
     @Override
     public PageBean<NovaTablePromptSearch.Vo> promptSearch(NovaTablePromptSearch novaTablePromptSearch) {
         PageBean<NovaTablePromptSearch.Vo> pageBean = novaTablePromptSearch.getPageBean();
-        PromptSearchResponse promptSearchResponse = DataProxyUtils.getDataProxy(novaTablePromptSearch.getNovaName()).promptSearch(new PromptSearchRequest()
+        PromptSearch.Vo promptSearchVo = DataProxyUtils.getDataProxy(novaTablePromptSearch.getNovaName()).promptSearch(new PromptSearch()
                 .setCurrent(pageBean.getCurrent())
                 .setSize(pageBean.getSize())
                 .setNovaName(novaTablePromptSearch.getNovaName())
                 .setPrompt(novaTablePromptSearch.getPrompt())
                 .setSourceFields(novaTablePromptSearch.getSourceFields())
         );
-        if (promptSearchResponse == null) {
+
+        if (promptSearchVo == null) {
             return pageBean;
         }
-        List<PromptSearchResponse.Record> records = promptSearchResponse.getRecords();
+        List<PromptSearch.Vo.Record> records = promptSearchVo.getRecords();
         List<NovaTablePromptSearch.Vo> vos = new ArrayList<>();
-        for (PromptSearchResponse.Record record : records) {
+        for (PromptSearch.Vo.Record record : records) {
             NovaTablePromptSearch.Vo vo = new NovaTablePromptSearch.Vo()
                     .setStorageField(record.getStorageField())
                     .setDisplayField(record.getDisplayField());
             vos.add(vo);
         }
-        pageBean.setTotal(promptSearchResponse.getTotal()).setRecords(vos);
+        pageBean.setTotal(promptSearchVo.getTotal()).setRecords(vos);
         return pageBean;
     }
 

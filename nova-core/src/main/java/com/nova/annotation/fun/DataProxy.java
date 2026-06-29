@@ -3,9 +3,8 @@ package com.nova.annotation.fun;
 import com.nova.annotation.config.Comment;
 
 import java.util.List;
-import java.util.Map;
 
-public interface DataProxy<ENTITY, MODEL> {
+public interface DataProxy<MODEL> {
 
     @Comment("增加")
     default void add(MODEL model) {
@@ -19,16 +18,18 @@ public interface DataProxy<ENTITY, MODEL> {
     default void update(MODEL model) {
     }
 
-    @Comment("查询")
-    FetchResponse<MODEL> fetch(FetchRequest<ENTITY> fetchRequest);
+    @Comment("查询（表格内容渲染）")
+    default Fetch.Vo<MODEL> fetch(Fetch<MODEL> fetch) {
+        return null;
+    }
 
-    @Comment("被引用查询（供其他nova引用时进行数据展示）")
-    default Map<String, MODEL> fetchReferences(FetchReferencesRequest fetchReferencesRequest) {
+    @Comment("详情（编辑详情）")
+    default MODEL details(Details details) {
         return null;
     }
 
     @Comment("关键词搜索（供引用nova用做下拉查询条件搜索）")
-    default PromptSearchResponse promptSearch(PromptSearchRequest promptSearchRequest) {
+    default PromptSearch.Vo promptSearch(PromptSearch promptSearch) {
         return null;
     }
 

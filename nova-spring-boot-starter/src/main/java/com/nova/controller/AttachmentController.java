@@ -1,5 +1,6 @@
 package com.nova.controller;
 
+import com.nova.annotation.config.Comment;
 import com.nova.annotation.config.RestMappingController;
 import com.nova.dto.AttachmentUpload;
 import com.nova.service.AttachmentService;
@@ -17,6 +18,7 @@ public class AttachmentController {
 
     private AttachmentService attachmentService;
 
+    @Comment("上传文件")
     @PostMapping("upload")
     public R<List<String>> upload(@ModelAttribute @Validated AttachmentUpload attachmentUpload) {
         return attachmentService.upload(attachmentUpload);

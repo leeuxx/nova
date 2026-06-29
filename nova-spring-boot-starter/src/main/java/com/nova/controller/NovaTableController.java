@@ -4,14 +4,13 @@ import com.nova.annotation.config.Comment;
 import com.nova.annotation.config.RestMappingController;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
+import java.util.Map;
 import com.nova.service.NovaTableService;
 import com.nova.utils.R;
 import lombok.AllArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
-import java.util.Map;
 
 @AllArgsConstructor
 @RestMappingController("nova/table")
@@ -33,18 +32,18 @@ public class NovaTableController {
         return R.ok(pageBean);
     }
 
+    @Comment("获取数据详情")
+    @PostMapping("details")
+    public R<Map<String, Object>> details(@RequestBody @Validated NovaTableDetails novaTableDetails) {
+        Map<String, Object> map = novaTableService.details(novaTableDetails);
+        return R.ok(map);
+    }
+
     @Comment("新增表格数据")
     @PostMapping("add")
     public R<NovaTableAdd.Vo> add(@RequestBody @Validated NovaTableAdd novaTableAdd) {
         NovaTableAdd.Vo add = novaTableService.add(novaTableAdd);
         return R.ok(add);
-    }
-
-    @Comment("获取表格引用数据")
-    @PostMapping("referencesData")
-    public R<Map<String, Map<String, Map<String, Object>>>> referencesData(@RequestBody @Validated NovaTableReferencesData novaTableReferencesData) {
-        Map<String, Map<String, Map<String, Object>>> mapMap = novaTableService.referencesData(novaTableReferencesData);
-        return R.ok(mapMap);
     }
 
     @Comment("关键词搜索")

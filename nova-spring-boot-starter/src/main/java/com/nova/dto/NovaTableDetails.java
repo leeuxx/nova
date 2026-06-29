@@ -1,19 +1,17 @@
-package com.nova.annotation.fun;
+package com.nova.dto;
 
 import com.nova.annotation.config.Comment;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.util.List;
-
 @Data
 @Accessors(chain = true)
-public class FetchReferencesRequest {
+public class NovaTableDetails {
 
     @Comment("来源nova名称")
     private String novaName;
 
-    @Comment("存储值列表, 参考storageField属性")
-    private List<String> storageFieldValues;
+    @Comment("存储值, 参考storageField属性")
+    private String storageFieldValue;
 
 }

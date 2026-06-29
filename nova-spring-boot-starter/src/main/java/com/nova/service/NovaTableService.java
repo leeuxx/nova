@@ -4,7 +4,6 @@ import com.nova.annotation.config.Comment;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 
-import java.util.List;
 import java.util.Map;
 
 public interface NovaTableService {
@@ -15,8 +14,8 @@ public interface NovaTableService {
     @Comment("获取表格数据")
     PageBean<?> data(NovaTableData novaTableData);
 
-    @Comment("获取表格引用数据")
-    Map<String, Map<String, Map<String, Object>>> referencesData(NovaTableReferencesData novaTableReferencesData);
+    @Comment("获取数据详情")
+    Map<String, Object> details(NovaTableDetails novaTableDetails);
 
     @Comment("关键词搜索")
     PageBean<NovaTablePromptSearch.Vo> promptSearch(NovaTablePromptSearch novaTablePromptSearch);
