@@ -135,6 +135,9 @@ public class NovaTableBuild {
             @Comment("tap页显示")
             private Boolean tapShow;
 
+            @Comment("tap页动态显示表达式")
+            private String tapShowByExpr;
+
             @Comment("自身详情表单编辑信息")
             private List<ThisForm> thisForms;
 
@@ -321,6 +324,9 @@ public class NovaTableBuild {
 
             @Comment("对方对象在被引用显示场景下展示的字段名")
             private String displayField;
+
+            @Comment("novaId属性名")
+            private String novaIdFieldName;
 
         }
     }

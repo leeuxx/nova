@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Accessors(chain = true)
@@ -20,6 +21,9 @@ public class NovaTableUpdate {
     @Comment("表单信息")
     @NotEmpty(message = "formInfo不能为空")
     private List<FormInfo> formInfo;
+
+    @Comment("附加表单信息")
+    private Map<String, List<FormInfo>> appendageFormInfo;
 
     @Data
     @Accessors(chain = true)

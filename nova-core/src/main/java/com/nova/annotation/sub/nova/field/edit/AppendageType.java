@@ -13,4 +13,10 @@ public @interface AppendageType {
     @Comment("对方对象在被引用显示场景下展示的字段名，默认 name")
     String displayField() default "name";
 
+    @Comment("tap页显示")
+    boolean tapShow() default true;
+
+    @Comment("动态tap页是否显示,使用此方式必须把show设置为true")
+    ShowBy tapShowBy() default @ShowBy("");
+
 }

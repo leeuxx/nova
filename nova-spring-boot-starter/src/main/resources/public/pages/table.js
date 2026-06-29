@@ -130,6 +130,7 @@ function evalShowExpr(expr, formData) {
   if (!expr) return true
   return evalShowNode(parseShowExpr(expr), formData)
 }
+window.evalShowExpr = evalShowExpr
 // ────────────────────────────────────────────────────────────────
 
 const NovaTable = {
@@ -503,6 +504,14 @@ const NovaTable = {
           }
           if (!changed) break
         }
+        // 当前 tab 是被隐藏的 appendage tab 时自动切回 form
+        if (this.formTab && this.formTab.startsWith('app_')) {
+          var curAppNovaName = this.formTab.slice(4)
+          var curTab = (this.editExtraTabs || []).find(function(t) { return t.tapNovaName === curAppNovaName })
+          if (curTab && (curTab.tapShow === false || (curTab.tapShowByExpr && !evalShowExpr(curTab.tapShowByExpr, evalFd)))) {
+            this.formTab = 'form'
+          }
+        }
       }
     }
   },
@@ -616,6 +625,10 @@ const NovaTable = {
       var evalFd = Object.assign({}, fd)
       for (var k in refMap) { var rf = refMap[k] && refMap[k].referenceField; if (rf) evalFd[k] = fd[rf] !== undefined ? fd[rf] : null }
       return evalShowExpr(f.showByExpr, evalFd)
+    },
+    evalShowExprSafe(expr, fd) {
+      if (!expr) return true
+      return evalShowExpr(expr, fd)
     },
     isFieldValueEmpty(f, val) {
       if (val === null || val === undefined) return true
@@ -1564,7 +1577,7 @@ const NovaTable = {
 
         <!-- referenceForm / appendageForm 统一按后端顺序渲染 -->
         <template v-for="tab in editExtraTabs" :key="tab.tapNovaName">
-        <n-tab-pane v-if="tab.tapType !== 'referenceForm' || formMode !== 'add'"
+        <n-tab-pane v-if="tab.tapShow !== false && (tab.tapType !== 'referenceForm' || formMode !== 'add') && (!tab.tapShowByExpr || evalShowExprSafe(tab.tapShowByExpr, formData))"
           :name="(tab.tapType === 'referenceForm' ? 'ref_' : 'app_') + tab.tapNovaName"
           display-directive="show"
           style="padding:16px 0 20px 0">

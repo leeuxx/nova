@@ -4,6 +4,7 @@ import com.nova.annotation.fun.DataProxy;
 import com.nova.annotation.fun.Details;
 import com.nova.annotation.fun.Fetch;
 import com.nova.annotation.fun.PromptSearch;
+import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 import com.nova.service.NovaTableService;
@@ -73,7 +74,8 @@ public class NovaTableServiceImpl implements NovaTableService {
                     .setTapType(editInfo.getTapType())
                     .setTapTitle(editInfo.getTapTitle())
                     .setTapNovaName(editInfo.getTapNovaName())
-                    .setTapShow(editInfo.getTapShow());
+                    .setTapShow(editInfo.getTapShow())
+                    .setTapShowByExpr(editInfo.getTapShowByExpr());
             if (edit.getTapType().equals("thisForm")) {
                 List<NovaFieldUtils.EditInfo.ThisForm> thisForms = editInfo.getThisForms();
                 List<NovaTableBuild.Vo.Edit.ThisForm> thisFormList = new ArrayList<>();
@@ -189,8 +191,11 @@ public class NovaTableServiceImpl implements NovaTableService {
         Map<String, NovaTableBuild.Vo.AppendageType> appendageMap = new LinkedHashMap<>();
         Map<String, NovaFieldUtils.AppendageTypeInfo> appendages = NovaFieldUtils.getAppendage(novaTableBuild.getNovaName());
         appendages.forEach((field, appendageInfo) -> {
+            String simpleName = appendageInfo.getReferenceClass().getSimpleName();
+            String appendageNovaIdFieldName = NovaFieldUtils.getNovaIdFieldName(simpleName);
             NovaTableBuild.Vo.AppendageType appendage = new NovaTableBuild.Vo.AppendageType()
-                    .setReferenceName(appendageInfo.getReferenceClass().getSimpleName())
+                    .setNovaIdFieldName(appendageNovaIdFieldName)
+                    .setReferenceName(simpleName)
                     .setReferenceField(appendageInfo.getReferenceField())
                     .setStorageField(appendageInfo.getStorageField())
                     .setDisplayField(appendageInfo.getDisplayField());
@@ -283,7 +288,9 @@ public class NovaTableServiceImpl implements NovaTableService {
         List<String> columns = new ArrayList<>();
         List<String> values = new ArrayList<>();
         for (NovaTableAdd.FormInfo formInfo : novaTableAdd.getFormInfo()) {
-            if ("REFERENCE".equals(formInfo.getType())) continue;
+            if (Edit.Type.REFERENCE.name().equals(formInfo.getType())) {
+                continue;
+            }
             String value = formInfo.getValue();
             if (value != null && !value.isEmpty()) {
                 columns.add(MixUtils.camelToSnake(formInfo.getField()));
@@ -292,8 +299,32 @@ public class NovaTableServiceImpl implements NovaTableService {
         }
         Object model = DataProxyUtils.buildModel(novaName, columns, values);
         for (NovaTableAdd.FormInfo formInfo : novaTableAdd.getFormInfo()) {
-            if ("REFERENCE".equals(formInfo.getType())) {
+            if (Edit.Type.REFERENCE.name().equals(formInfo.getType())) {
                 DataProxyUtils.setReferenceField(novaName, model, formInfo.getField(), formInfo.getValue());
+            }
+        }
+        Map<String, List<NovaTableAdd.FormInfo>> appendageFormInfo = novaTableAdd.getAppendageFormInfo();
+        if (appendageFormInfo != null) {
+            for (Map.Entry<String, List<NovaTableAdd.FormInfo>> entry : appendageFormInfo.entrySet()) {
+                String appNovaName = entry.getKey();
+                List<String> appCols = new ArrayList<>();
+                List<String> appVals = new ArrayList<>();
+                for (NovaTableAdd.FormInfo fi : entry.getValue()) {
+                    if (Edit.Type.REFERENCE.name().equals(fi.getType())) {
+                        continue;
+                    }
+                    String v = fi.getValue();
+                    if (v != null && !v.isEmpty()) {
+                        appCols.add(MixUtils.camelToSnake(fi.getField())); appVals.add(v);
+                    }
+                }
+                Object appModel = DataProxyUtils.buildModel(appNovaName, appCols, appVals);
+                for (NovaTableAdd.FormInfo fi : entry.getValue()) {
+                    if (Edit.Type.REFERENCE.name().equals(fi.getType())) {
+                        DataProxyUtils.setReferenceField(appNovaName, appModel, fi.getField(), fi.getValue());
+                    }
+                }
+                DataProxyUtils.setAppendageField(novaName, model, appNovaName, appModel);
             }
         }
         //noinspection unchecked,rawtypes
@@ -307,15 +338,40 @@ public class NovaTableServiceImpl implements NovaTableService {
         List<String> columns = new ArrayList<>();
         List<String> values = new ArrayList<>();
         for (NovaTableUpdate.FormInfo formInfo : novaTableUpdate.getFormInfo()) {
-            if ("REFERENCE".equals(formInfo.getType())) continue;
+            if (Edit.Type.REFERENCE.name().equals(formInfo.getType())) {
+                continue;
+            }
             columns.add(MixUtils.camelToSnake(formInfo.getField()));
             String value = formInfo.getValue();
             values.add((value == null || value.isEmpty()) ? null : value);
         }
         Object model = DataProxyUtils.buildModel(novaName, columns, values);
         for (NovaTableUpdate.FormInfo formInfo : novaTableUpdate.getFormInfo()) {
-            if ("REFERENCE".equals(formInfo.getType())) {
+            if (Edit.Type.REFERENCE.name().equals(formInfo.getType())) {
                 DataProxyUtils.setReferenceField(novaName, model, formInfo.getField(), formInfo.getValue());
+            }
+        }
+        Map<String, List<NovaTableUpdate.FormInfo>> appendageFormInfo = novaTableUpdate.getAppendageFormInfo();
+        if (appendageFormInfo != null) {
+            for (Map.Entry<String, List<NovaTableUpdate.FormInfo>> entry : appendageFormInfo.entrySet()) {
+                String appNovaName = entry.getKey();
+                List<String> appCols = new ArrayList<>();
+                List<String> appVals = new ArrayList<>();
+                for (NovaTableUpdate.FormInfo fi : entry.getValue()) {
+                    if (Edit.Type.REFERENCE.name().equals(fi.getType())) {
+                        continue;
+                    }
+                    appCols.add(MixUtils.camelToSnake(fi.getField()));
+                    String v = fi.getValue();
+                    appVals.add((v == null || v.isEmpty()) ? null : v);
+                }
+                Object appModel = DataProxyUtils.buildModel(appNovaName, appCols, appVals);
+                for (NovaTableUpdate.FormInfo fi : entry.getValue()) {
+                    if (Edit.Type.REFERENCE.name().equals(fi.getType())) {
+                        DataProxyUtils.setReferenceField(appNovaName, appModel, fi.getField(), fi.getValue());
+                    }
+                }
+                DataProxyUtils.setAppendageField(novaName, model, appNovaName, appModel);
             }
         }
         //noinspection unchecked,rawtypes

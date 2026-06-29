@@ -667,7 +667,55 @@ window.NovaTableJQ = (function ($) {
       if (empty) errors[f.field] = f.title + '不能为空'
     })
     target.formErrors = errors
-    if (Object.keys(errors).length > 0) return
+    if (Object.keys(errors).length > 0) { target.formTab = 'form'; return }
+
+    // 校验附属表单
+    var appErrors = {}
+    var firstErrAppTab = null
+    ;(target.editAppendageTabs || []).forEach(function(appTab) {
+      var n = appTab.tapNovaName
+      if (appTab.tapShow === false || (appTab.tapShowByExpr && window.evalShowExpr && !window.evalShowExpr(appTab.tapShowByExpr, formData))) return
+      var build = (target.appendageTabBuild || {})[n] || {}
+      var fd = (target.appendageFormData || {})[n] || {}
+      var refMap = build.referenceMap || {}
+      var evalFd = Object.assign({}, fd)
+      for (var k in refMap) { var rf = refMap[k] && refMap[k].referenceField; if (rf) evalFd[k] = fd[rf] !== undefined ? fd[rf] : null }
+      var errs = {}
+      ;(build.editFields || []).forEach(function(f) {
+        if (!f.notNull) return
+        if (f.type === 'REFERENCE' && refMap[f.field] && refMap[f.field].referenceName === target.novaName) return
+        if (f.showByExpr && window.evalShowExpr && !window.evalShowExpr(f.showByExpr, evalFd)) return
+        var val = fd[f.field]
+        var empty = val === null || val === undefined || val === '' || (Array.isArray(val) && val.length === 0)
+        if (empty) errs[f.field] = f.title + '不能为空'
+      })
+      appErrors[n] = errs
+      if (!firstErrAppTab && Object.keys(errs).length > 0) firstErrAppTab = n
+    })
+    var newAppErrors = Object.assign({}, target.appendageFormErrors, appErrors)
+    target.appendageFormErrors = newAppErrors
+    if (firstErrAppTab) { target.formTab = 'app_' + firstErrAppTab; return }
+
+    // 组装附属表单数据
+    var appendageFormInfo = {}
+    ;(target.editAppendageTabs || []).forEach(function(appTab) {
+      var n = appTab.tapNovaName
+      if (appTab.tapShow === false || (appTab.tapShowByExpr && window.evalShowExpr && !window.evalShowExpr(appTab.tapShowByExpr, formData))) return
+      var build = (target.appendageTabBuild || {})[n] || {}
+      var fd = (target.appendageFormData || {})[n] || {}
+      var refMap = build.referenceMap || {}
+      appendageFormInfo[n] = (build.editFields || []).filter(function(f) { return f.type !== 'DIVIDE' && f.type !== 'EMPTY' }).map(function(f) {
+        var val = fd[f.field]
+        var strVal = (val === null || val === undefined || val === '') ? '' : (Array.isArray(val) ? val.join(',') : String(val))
+        var item = { field: f.field, value: strVal, type: f.type }
+        if (f.type === 'REFERENCE') {
+          var refInfo = refMap[f.field] || {}
+          if (refInfo.referenceField) item.reference = { field: refInfo.referenceField }
+        }
+        return item
+      })
+    })
+
     if (target.currentRow) {
       // 编辑
       var novaName = target.novaName
@@ -695,7 +743,7 @@ window.NovaTableJQ = (function ($) {
         url:         '/nova/table/update',
         method:      'POST',
         contentType: 'application/json',
-        data:        JSON.stringify({ novaName: novaName, formInfo: formInfo }),
+        data:        JSON.stringify({ novaName: novaName, formInfo: formInfo, appendageFormInfo: appendageFormInfo }),
         success: function (resp) {
           var t = window.vmMap && window.vmMap[novaName]
           if (!t) return
@@ -732,7 +780,7 @@ window.NovaTableJQ = (function ($) {
         url:         '/nova/table/add',
         method:      'POST',
         contentType: 'application/json',
-        data:        JSON.stringify({ novaName: novaName, formInfo: formInfo }),
+        data:        JSON.stringify({ novaName: novaName, formInfo: formInfo, appendageFormInfo: appendageFormInfo }),
         success: function (resp) {
           var t = window.vmMap && window.vmMap[novaName]
           if (!t) return

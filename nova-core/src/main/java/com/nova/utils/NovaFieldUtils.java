@@ -159,6 +159,7 @@ public class NovaFieldUtils {
                             .setTapNovaName(fieldClass.getSimpleName())
                             .setTapTitle(edit.title())
                             .setTapShow(referenceType.tapShow())
+                            .setTapShowByExpr(referenceType.tapShowBy().value())
                             .setTapSort(2)
                     );
                 }
@@ -166,11 +167,13 @@ public class NovaFieldUtils {
             // 附属对象表单
             if (edit.type() == Edit.Type.APPENDAGE) {
                 Class<?> fieldClass = novaFieldInfo.getFieldClass();
+                AppendageType appendageType = edit.appendageType();
                 editInfos.add(new EditInfo()
                         .setTapType("appendageForm")
                         .setTapNovaName(fieldClass.getSimpleName())
                         .setTapTitle(edit.title())
-                        .setTapShow(true)
+                        .setTapShow(appendageType.tapShow())
+                        .setTapShowByExpr(appendageType.tapShowBy().value())
                         .setTapSort(1)
                 );
             }
@@ -541,6 +544,9 @@ public class NovaFieldUtils {
 
         @Comment("tap页显示")
         private Boolean tapShow;
+
+        @Comment("tap页动态显示表达式")
+        private String tapShowByExpr;
 
         @Comment("自身详情表单编辑信息")
         private List<ThisForm> thisForms;

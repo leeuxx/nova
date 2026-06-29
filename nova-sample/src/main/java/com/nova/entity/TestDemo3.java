@@ -20,6 +20,8 @@ public class TestDemo3 {
 
     private String msg;
 
+    private String file;
+
     private LocalDateTime createTime;
 
 }

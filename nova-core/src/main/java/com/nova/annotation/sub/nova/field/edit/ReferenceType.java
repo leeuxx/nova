@@ -19,4 +19,7 @@ public @interface ReferenceType {
     @Comment("tap页显示")
     boolean tapShow() default true;
 
+    @Comment("动态tap页是否显示,使用此方式必须把show设置为true")
+    ShowBy tapShowBy() default @ShowBy("");
+
 }

@@ -77,25 +77,57 @@ public class DataProxyUtils {
     }
 
     /**
-     * 设置 REFERENCE 类型字段（构造嵌套对象并赋值）
+     * 设置REFERENCE组件字段（构造嵌套对象并赋值）
      */
     @SneakyThrows
     public static void setReferenceField(String novaName, Object model, String fieldName, String value) {
+        // 获取对象引用参数信息
         Map<String, NovaFieldUtils.ReferenceTypeInfo> refs = NovaFieldUtils.getReference(novaName);
         NovaFieldUtils.ReferenceTypeInfo refInfo = refs.get(fieldName);
-        if (refInfo == null) return;
+        // 若目标字段不是引用字段，则不进行任何操作
+        if (refInfo == null) {
+            return;
+        }
+        // 获取模型中的目标字段并允许反射访问
         Field modelField = model.getClass().getDeclaredField(fieldName);
         modelField.setAccessible(true);
+        // 若值为空，则清空模型字段（设置为null）
         if (value == null || value.isEmpty()) {
             modelField.set(model, null);
             return;
         }
+        // 获取引用对象的实际类型（如User、Department等实体类）
         Class<?> refClass = refInfo.getReferenceClass();
+        // 通过无参构造创建引用对象实例
         Object refInstance = refClass.getDeclaredConstructor().newInstance();
+        // 获取引用对象中实际存储数据的字段（如id字段）
         Field storageF = refClass.getDeclaredField(refInfo.getStorageField());
         storageF.setAccessible(true);
+        // 将字符串值转换为存储字段所需的类型并设置到引用对象
         storageF.set(refInstance, convertValue(value, storageF.getType()));
+        // 将完整的引用对象赋值给模型字段
         modelField.set(model, refInstance);
+    }
+
+    /**
+     * 设置APPENDAGE组件字段（通过appNovaName找到主对象对应字段，将子对象赋值）
+     */
+    @SneakyThrows
+    public static void setAppendageField(String novaName, Object model, String appNovaName, Object appModel) {
+        Map<String, NovaFieldUtils.AppendageTypeInfo> appendages = NovaFieldUtils.getAppendage(novaName);
+        NovaApplication.ScanNova appScanNova = NovaApplication.getScanNovas().get(appNovaName);
+        if (appScanNova == null) {
+            return;
+        }
+        Class<?> appClass = appScanNova.getClz();
+        for (Map.Entry<String, NovaFieldUtils.AppendageTypeInfo> entry : appendages.entrySet()) {
+            if (entry.getValue().getReferenceClass() == appClass) {
+                Field f = model.getClass().getDeclaredField(entry.getKey());
+                f.setAccessible(true);
+                f.set(model, appModel);
+                return;
+            }
+        }
     }
 
     /**

@@ -115,6 +115,14 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         BeanUtils.copyProperties(testDemoView, testDemo);
         testDemo.setDemo2Id(testDemoView.getTestDemo2View().getId());
         save(testDemo);
+        TestDemo3View testDemo3View = testDemoView.getTestDemo3View();
+        if (testDemo3View != null) {
+            TestDemo3 testDemo3 = new TestDemo3();
+            BeanUtils.copyProperties(testDemo3View, testDemo3);
+            testDemo3.setId(YitIdHelper.nextId())
+                    .setDemoId(testDemo.getId());
+            testDemo3Service.save(testDemo3);
+        }
     }
 
     @Override
@@ -134,5 +142,22 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         BeanUtils.copyProperties(testDemoView, testDemo);
         testDemo.setDemo2Id(testDemoView.getTestDemo2View().getId());
         updateById(testDemo);
+        TestDemo3View testDemo3View = testDemoView.getTestDemo3View();
+        if (testDemo3View != null) {
+            TestDemo3 testDemo3 = testDemo3Service.getOne(new LambdaQueryWrapper<TestDemo3>()
+                    .eq(TestDemo3::getDemoId, testDemo.getId())
+            );
+            if (testDemo3 == null) {
+                testDemo3 = new TestDemo3();
+                BeanUtils.copyProperties(testDemo3View, testDemo3);
+                testDemo3.setId(YitIdHelper.nextId())
+                        .setDemoId(testDemo.getId());
+            } else {
+                testDemo3.setName(testDemo3View.getName())
+                        .setMsg(testDemo3View.getMsg())
+                        .setFile(testDemo3View.getFile());
+            }
+            testDemo3Service.saveOrUpdate(testDemo3);
+        }
     }
 }
