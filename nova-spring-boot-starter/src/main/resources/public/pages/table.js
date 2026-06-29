@@ -1187,7 +1187,7 @@ const NovaTable = {
         </div>
       </n-modal>
     </div>
-    <div v-else :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden' : 'padding:16px'">
+    <div v-else :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : 'padding:16px'">
 
       <!-- 筛选卡片 -->
       <n-card :bordered="false" class="page-card filter-card">
