@@ -65,8 +65,8 @@ window.NovaTableJQ = (function ($) {
           var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
           var isDate = f.type === 'DATE'
           form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
-          // REFERENCE 字段初始化 _display 字段
-          if (f.type === 'REFERENCE') {
+          // REFERENCE / APPENDAGE 字段初始化 _display 字段
+          if (f.type === 'REFERENCE' || f.type === 'APPENDAGE') {
             form[f.field + '_display'] = ''
           }
         })
@@ -145,7 +145,44 @@ window.NovaTableJQ = (function ($) {
     t.appendageFormData = newFds
   }
 
-  // ── 点击 referenceForm tab 时按需调用 /details ──────────────────
+  // ── view 模式填 formData 的共用函数 ────────────────────────────────
+  function fillViewFormData(viewVm, row) {
+    var fields = viewVm.editFields || []
+    var choiceMap    = viewVm.choiceMap    || {}
+    var referenceMap = viewVm.referenceMap || {}
+    var source = {}
+    row = row || {}
+    fields.forEach(function(f) {
+      var val = row[f.field]
+      var choice = choiceMap[f.field]
+      if (choice && choice.selectType === 'MULTI') {
+        source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+      } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
+        source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+      } else if (f.type === 'DATE') {
+        var ts = val !== null && val !== undefined ? Number(val) : null
+        source[f.field] = (ts && !isNaN(ts)) ? ts : null
+      } else if (f.type === 'BOOLEAN') {
+        source[f.field] = (val === null || val === undefined) ? null : String(val)
+      } else if (f.type === 'NUMBER') {
+        source[f.field] = (val === null || val === undefined || val === '') ? null : Number(val)
+      } else if (f.type === 'REFERENCE') {
+        var refInfo = referenceMap[f.field] || {}
+        var sf = refInfo.storageField || 'id'
+        source[f.field] = (val && typeof val === 'object')
+          ? (val[sf] !== undefined && val[sf] !== null ? String(val[sf]) : null)
+          : (val !== null && val !== undefined && val !== '' ? String(val) : null)
+        source[f.field + '_display'] = (val && typeof val === 'object' && refInfo.displayField)
+          ? (val[refInfo.displayField] != null ? String(val[refInfo.displayField]) : '') : ''
+      } else {
+        source[f.field] = (val === null || val === undefined) ? '' : val
+      }
+    })
+    viewVm.formData   = source
+    viewVm.currentRow = source
+  }
+
+  // ── 点击 referenceForm tab：立即展示组件，/build 与 /details 并行 ──
   function loadReferenceDetails(novaName, refNovaName) {
     var target = window.vmMap && window.vmMap[novaName]
     if (!target) return
@@ -154,24 +191,35 @@ window.NovaTableJQ = (function ($) {
     for (var field in referenceMap) {
       if ((referenceMap[field] || {}).referenceName === refNovaName) {
         storageVal = target.formData && target.formData[field]
+        if (!storageVal && target._rawDetailRow) {
+          var rawNested = target._rawDetailRow[field]
+          var sf = (referenceMap[field] || {}).storageField || 'id'
+          if (rawNested && typeof rawNested === 'object') storageVal = rawNested[sf]
+        }
         break
       }
     }
-    if (!storageVal) {
-      var t0 = window.vmMap && window.vmMap[novaName]
-      if (t0) { var nd = Object.assign({}, t0.refTabData); nd[refNovaName] = {}; t0.refTabData = nd }
-      return
-    }
+    // 立即展示 nova-table，触发 /build
+    var nd = Object.assign({}, target.refTabData)
+    nd[refNovaName] = {}
+    target.refTabData = nd
+    if (!storageVal) return
+    // 初始化并行协调状态
+    target._refCoord = target._refCoord || {}
+    target._refCoord[refNovaName] = { data: null, buildVmKey: null }
     $.ajax({
       url: '/nova/table/details', method: 'POST', contentType: 'application/json',
       data: JSON.stringify({ novaName: refNovaName, storageFieldValue: String(storageVal) }),
       success: function(resp) {
-        if (resp.code !== 200 || !resp.data) return
         var t = window.vmMap && window.vmMap[novaName]
-        if (!t) return
-        var newData = Object.assign({}, t.refTabData)
-        newData[refNovaName] = resp.data
-        t.refTabData = newData
+        if (!t || !t._refCoord || !t._refCoord[refNovaName]) return
+        var data = (resp.code === 200 && resp.data) ? resp.data : {}
+        t._refCoord[refNovaName].data = data
+        var buildVmKey = t._refCoord[refNovaName].buildVmKey
+        if (buildVmKey) {
+          var viewVm = window.vmMap && window.vmMap[buildVmKey]
+          if (viewVm) fillViewFormData(viewVm, data)
+        }
       }
     })
   }
@@ -279,11 +327,16 @@ window.NovaTableJQ = (function ($) {
       } else {
         strVal = Array.isArray(val) ? val.join(',') : String(val)
       }
-      // REFERENCE 字段：使用 storageField 作为实际查询字段
+      // REFERENCE 字段：使用 referenceField 作为实际查询字段
       var actualField = fieldDef.field
       if (fieldDef.type === 'REFERENCE') {
         var refInfo = (target.referenceMap && target.referenceMap[fieldDef.field]) || {}
         actualField = refInfo.referenceField || refInfo.storageField || fieldDef.field
+      }
+      // APPENDAGE 字段：使用 storageField 作为实际查询字段
+      if (fieldDef.type === 'APPENDAGE') {
+        var appInfo = (target.appendageMap && target.appendageMap[fieldDef.field]) || {}
+        actualField = appInfo.storageField || fieldDef.field
       }
       conditions[actualField] = {
         value: strVal,
@@ -479,8 +532,8 @@ window.NovaTableJQ = (function ($) {
       var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
       var isDate = f.type === 'DATE'
       form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
-      // REFERENCE 字段重置 _display 字段
-      if (f.type === 'REFERENCE') {
+      // REFERENCE / APPENDAGE 字段重置 _display 字段
+      if (f.type === 'REFERENCE' || f.type === 'APPENDAGE') {
         form[f.field + '_display'] = ''
       }
     })
@@ -512,7 +565,7 @@ window.NovaTableJQ = (function ($) {
     vm().formData   = formData
     vm().formErrors = {}
     vm().refTabData = {}
-    // Reset appendage form data
+    vm()._refCoord  = {}
     var appFds = {}
     var appBuild = vm().appendageTabBuild || {}
     ;(vm().editAppendageTabs || []).forEach(function(appTab) {
@@ -593,6 +646,7 @@ window.NovaTableJQ = (function ($) {
         t.formData   = $.extend({}, source)
         t.formErrors = {}
         t.refTabData = {}
+        t._refCoord  = {}
         t.formTab    = 'form'
         buildAppendageTabs(novaName, detailRow)
         t.showForm   = true
@@ -831,7 +885,7 @@ window.NovaTableJQ = (function ($) {
           var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
           var isDate = f.type === 'DATE'
           form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
-          if (f.type === 'REFERENCE') form[f.field + '_display'] = ''
+          if (f.type === 'REFERENCE' || f.type === 'APPENDAGE') form[f.field + '_display'] = ''
         })
         target.filterForm = form
         var cols = resp.data.tableColumns || []
@@ -854,8 +908,8 @@ window.NovaTableJQ = (function ($) {
     })
   }
 
-  // ── view 模式初始化：build 后填 formData，不加载表格 ────────────
-  function onViewMounted(novaName, vmKey, rawRow) {
+  // ── view 模式初始化：/build，数据由 _refCoord 或 rawRow 提供 ───────
+  function onViewMounted(novaName, vmKey, rawRow, parentNovaName) {
     if (!novaName || !vmKey) return
     $.ajax({
       url: '/nova/table/build', method: 'POST', contentType: 'application/json',
@@ -877,39 +931,19 @@ window.NovaTableJQ = (function ($) {
         var fields = allEdit.filter(function(e){ return e.tapType === 'thisForm' }).reduce(function(acc, e){ return acc.concat(e.thisForms || []) }, [])
         target.editFields = fields
         if (d.novaIdFieldName) target.novaIdFieldName = d.novaIdFieldName
-        // 用 rawRow 填 formData（同 handleEdit 逻辑）
-        var row = rawRow || {}
-        var choiceMap    = target.choiceMap    || {}
-        var referenceMap = target.referenceMap || {}
-        var source = {}
-        fields.forEach(function(f) {
-          var val = row[f.field]
-          var choice = choiceMap[f.field]
-          if (choice && choice.selectType === 'MULTI') {
-            source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
-          } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
-            source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
-          } else if (f.type === 'DATE') {
-            var ts = val !== null && val !== undefined ? Number(val) : null
-            source[f.field] = (ts && !isNaN(ts)) ? ts : null
-          } else if (f.type === 'BOOLEAN') {
-            source[f.field] = (val === null || val === undefined) ? null : String(val)
-          } else if (f.type === 'NUMBER') {
-            source[f.field] = (val === null || val === undefined || val === '') ? null : Number(val)
-          } else if (f.type === 'REFERENCE') {
-            var refInfo = referenceMap[f.field] || {}
-            var sf = refInfo.storageField || 'id'
-            source[f.field] = (val && typeof val === 'object')
-              ? (val[sf] !== undefined && val[sf] !== null ? String(val[sf]) : null)
-              : (val !== null && val !== undefined && val !== '' ? String(val) : null)
-            source[f.field + '_display'] = (val && typeof val === 'object' && refInfo.displayField) ? (val[refInfo.displayField] != null ? String(val[refInfo.displayField]) : '') : ''
+        target.formMode = 'edit'
+        // 尝试从并行协调状态获取 /details 数据
+        var parentVm = parentNovaName && window.vmMap && window.vmMap[parentNovaName]
+        var coord = parentVm && parentVm._refCoord && parentVm._refCoord[novaName]
+        if (coord) {
+          if (coord.data !== null) {
+            fillViewFormData(target, coord.data)
           } else {
-            source[f.field] = (val === null || val === undefined) ? '' : val
+            coord.buildVmKey = vmKey  // /details 还未回来，登记等候
           }
-        })
-        target.formData  = source
-        target.currentRow = source
-        target.formMode  = 'edit'
+        } else {
+          fillViewFormData(target, rawRow)  // 非 tab 场景直接用 rawRow
+        }
       }
     })
   }

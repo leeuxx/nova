@@ -181,9 +181,9 @@ public class NovaTableServiceImpl implements NovaTableService {
             NovaTableBuild.Vo.ReferenceType reference = new NovaTableBuild.Vo.ReferenceType()
                     .setReferenceName(referenceInfo.getReferenceClass().getSimpleName())
                     .setReferenceField(referenceInfo.getReferenceField())
-                    .setReferenceTransmitField(referenceInfo.getReferenceTransmitField())
                     .setStorageField(referenceInfo.getStorageField())
-                    .setDisplayField(referenceInfo.getDisplayField());
+                    .setDisplayField(referenceInfo.getDisplayField())
+                    .setReferenceTransmitField(referenceInfo.getReferenceTransmitField());
             referenceMap.put(field, reference);
         });
         vo.setReference(referenceMap);

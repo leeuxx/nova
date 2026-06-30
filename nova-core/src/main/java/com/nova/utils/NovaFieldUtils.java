@@ -130,24 +130,24 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            if (!edit.show()) {
-                return;
-            }
             // 自身详情表单
-            if (edit.type() != Edit.Type.APPENDAGE) {
-                Readonly readonly = edit.readonly();
-                EditInfo.ThisForm thisForm = new EditInfo.ThisForm()
-                        .setField(field)
-                        .setTitle(edit.title())
-                        .setDesc(edit.desc())
-                        .setType(novaFieldInfo.getType())
-                        .setNotNull(edit.notNull())
-                        .setReadonly(new EditInfo.ThisForm.ReadonlyInfo()
-                                .setAdd(readonly.add())
-                                .setEdit(readonly.edit())
-                        )
-                        .setShowBy(edit.showBy());
-                thisForms.add(thisForm);
+            if (edit.show()) {
+                // 排除附属对象
+                if (edit.type() != Edit.Type.APPENDAGE) {
+                    Readonly readonly = edit.readonly();
+                    EditInfo.ThisForm thisForm = new EditInfo.ThisForm()
+                            .setField(field)
+                            .setTitle(edit.title())
+                            .setDesc(edit.desc())
+                            .setType(novaFieldInfo.getType())
+                            .setNotNull(edit.notNull())
+                            .setReadonly(new EditInfo.ThisForm.ReadonlyInfo()
+                                    .setAdd(readonly.add())
+                                    .setEdit(readonly.edit())
+                            )
+                            .setShowBy(edit.showBy());
+                    thisForms.add(thisForm);
+                }
             }
             // 引用详情表单
             if (edit.type() == Edit.Type.REFERENCE) {
@@ -164,18 +164,20 @@ public class NovaFieldUtils {
                     );
                 }
             }
-            // 附属对象表单
+            // 附属对象详情表单
             if (edit.type() == Edit.Type.APPENDAGE) {
-                Class<?> fieldClass = novaFieldInfo.getFieldClass();
                 AppendageType appendageType = edit.appendageType();
-                editInfos.add(new EditInfo()
-                        .setTapType("appendageForm")
-                        .setTapNovaName(fieldClass.getSimpleName())
-                        .setTapTitle(edit.title())
-                        .setTapShow(appendageType.tapShow())
-                        .setTapShowByExpr(appendageType.tapShowBy().value())
-                        .setTapSort(1)
-                );
+                if (appendageType.tapShow()) {
+                    Class<?> fieldClass = novaFieldInfo.getFieldClass();
+                    editInfos.add(new EditInfo()
+                            .setTapType("appendageForm")
+                            .setTapNovaName(fieldClass.getSimpleName())
+                            .setTapTitle(edit.title())
+                            .setTapShow(appendageType.tapShow())
+                            .setTapShowByExpr(appendageType.tapShowBy().value())
+                            .setTapSort(1)
+                    );
+                }
             }
         });
         editInfos.add(new EditInfo()
@@ -445,9 +447,9 @@ public class NovaFieldUtils {
                 ReferenceTypeInfo referenceTypeInfo = new ReferenceTypeInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
                         .setReferenceField(referenceType.referenceField())
-                        .setReferenceTransmitField(Arrays.asList(referenceType.referenceTransmitField()))
                         .setStorageField(referenceType.storageField())
-                        .setDisplayField(referenceType.displayField());
+                        .setDisplayField(referenceType.displayField())
+                        .setReferenceTransmitField(Arrays.asList(referenceType.referenceTransmitField()));
                 referenceTypeInfos.put(field, referenceTypeInfo);
             }
         });
@@ -707,17 +709,17 @@ public class NovaFieldUtils {
         @Comment("关联类")
         private Class<?> referenceClass;
 
-        @Comment("当前对象存储对方对象的字段名")
+        @Comment("引用类值属性名，默认id")
         private String referenceField;
 
-        @Comment("拉取对方引用数据时透传的当前对象上下文字段列表")
-        private List<String> referenceTransmitField;
-
-        @Comment("对方对象被引用的字段名")
+        @Comment("引用类显示属性名")
         private String storageField;
 
-        @Comment("对方对象在被引用场景下替代 storageField 展示的字段名")
+        @Comment("引用类显示属性名")
         private String displayField;
+
+        @Comment("当前类获取引用类数据时，额外向引用类 DataProxy.fetch 传递的当前类表单上下文信息")
+        private List<String> referenceTransmitField;
 
     }
 
@@ -728,13 +730,13 @@ public class NovaFieldUtils {
         @Comment("关联类")
         private Class<?> referenceClass;
 
-        @Comment("对方对象存储当前对象的字段名")
+        @Comment("附属类存储当前类的关联属性名")
         private String referenceField;
 
-        @Comment("当前对象被引用的字段名")
+        @Comment("当前类属性名")
         private String storageField;
 
-        @Comment("对方对象在被引用显示场景下展示的字段名")
+        @Comment("附属类显示属性名")
         private String displayField;
 
     }

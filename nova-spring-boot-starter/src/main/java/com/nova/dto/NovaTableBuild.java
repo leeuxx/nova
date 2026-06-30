@@ -295,17 +295,17 @@ public class NovaTableBuild {
             @Comment("关联类名")
             private String referenceName;
 
-            @Comment("当前对象存储对方对象的字段名")
+            @Comment("当前类存储引用类的关联属性名")
             private String referenceField;
 
-            @Comment("拉取对方引用数据时透传的当前对象上下文字段列表")
-            private List<String> referenceTransmitField;
-
-            @Comment("对方对象被当前对象引用的字段名")
+            @Comment("引用类值属性名")
             private String storageField;
 
-            @Comment("对方对象被当前对象引用场景下替代 storageField 展示的字段名")
+            @Comment("引用类显示属性名")
             private String displayField;
+
+            @Comment("当前类获取引用类数据时，额外向引用类 DataProxy.fetch 传递的当前类表单上下文信息")
+            private List<String> referenceTransmitField;
 
         }
 
@@ -316,13 +316,13 @@ public class NovaTableBuild {
             @Comment("关联类名")
             private String referenceName;
 
-            @Comment("对方对象存储当前对象的字段名")
+            @Comment("附属类存储当前类的关联属性名")
             private String referenceField;
 
-            @Comment("当前对象被对方对象引用的字段名")
+            @Comment("当前类属性名")
             private String storageField;
 
-            @Comment("对方对象在被引用显示场景下展示的字段名")
+            @Comment("附属类显示属性名")
             private String displayField;
 
             @Comment("novaId属性名")
