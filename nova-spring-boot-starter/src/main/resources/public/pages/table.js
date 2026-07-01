@@ -746,6 +746,11 @@ const NovaTable = {
         window.NovaTableJQ.handleReset()
       }
     },
+    onTapSelect(val) {
+      this.tapSearchValue = (val === '__all__' ? null : val)
+      const self = this
+      setTimeout(function() { self.handleQuery() }, 100)
+    },
     handleQuery() {
       const t = this
       const snapshot = JSON.stringify(t.filterForm)
@@ -1395,7 +1400,7 @@ const NovaTable = {
               </div>
               <!-- 筛选区 APPENDAGE vague=false：下拉搜索 -->
               <n-select
-                v-else-if="field.type === 'APPENDAGE' && appendageMap && appendageMap[field.field] && field.vague"
+                v-else-if="(field.type === 'APPENDAGE' || field.type === 'APPENDAGES') && appendageMap && appendageMap[field.field] && field.vague"
                 :value="filterForm[field.field] || null"
                 :options="refSelectOptions['_f_' + field.field] || []"
                 :loading="!!refSelectLoading['_f_' + field.field]"
@@ -1431,8 +1436,8 @@ const NovaTable = {
                   </div>
                 </template>
               </n-select>
-              <!-- 筛选区 APPENDAGE vague=true：弹窗选择 -->
-              <div v-else-if="field.type === 'APPENDAGE' && appendageMap && appendageMap[field.field]" @click="openAppendageModalForFilter(field)" style="flex:1;cursor:pointer">
+              <!-- 筛选区 APPENDAGE / APPENDAGES vague=false：弹窗选择 -->
+              <div v-else-if="(field.type === 'APPENDAGE' || field.type === 'APPENDAGES') && appendageMap && appendageMap[field.field]" @click="openAppendageModalForFilter(field)" style="flex:1;cursor:pointer">
                 <n-input
                   :value="filterForm[field.field + '_display'] || filterForm[field.field] || ''"
                   :placeholder="'请选择' + field.title"
@@ -1471,13 +1476,15 @@ const NovaTable = {
       <component :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : '')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : undefined">
         <div v-if="!pickerMode" class="table-card-header" :style="embeddedMode ? 'flex-shrink:0' : ''">
           <!-- 标题/tap + 操作按钮行 -->
-            <div v-if="tapSearchField" class="choice-tab-bar" style="margin-bottom:0;border-bottom:none;flex:1">
-              <span v-for="opt in tapSearchOptions" :key="opt.value"
-                :class="['choice-tab-item', tapSearchValue === opt.value ? 'active' : '']"
-                @click="tapSearchValue = opt.value; handleQuery()">
+            <n-tabs v-if="tapSearchField" type="line" :tabs-padding="0"
+              :value="tapSearchValue === null ? '__all__' : tapSearchValue"
+              @update:value="onTapSelect"
+              style="flex:1;min-width:0;margin-bottom:-1px">
+              <n-tab v-for="opt in tapSearchOptions" :key="opt.value === null ? '__all__' : opt.value"
+                :name="opt.value === null ? '__all__' : opt.value">
                 {{ opt.label }}
-              </span>
-            </div>
+              </n-tab>
+            </n-tabs>
             <span v-else style="font-size:16px;font-weight:500">数据列表</span>
             <div style="display:flex;gap:8px">
             <n-button v-if="checkedRowKeys.length > 0" :size="embSize" type="error" @click="handleBatchDelete">
@@ -1943,5 +1950,5 @@ const NovaTable = {
 
 NovaTable.components = { NovaTable }
 
-window.NovaTable = NovaTable
+window.NovaTable = NovaTable
 })()

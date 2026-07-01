@@ -82,7 +82,7 @@ window.NovaTableJQ = (function ($) {
           var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
           var isDate = f.type === 'DATE'
           form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
-          if (f.type === 'REFERENCE' || f.type === 'APPENDAGE') {
+          if (f.type === 'REFERENCE' || f.type === 'APPENDAGE' || f.type === 'APPENDAGES') {
             form[f.field + '_display'] = ''
           }
         })
@@ -382,8 +382,8 @@ window.NovaTableJQ = (function ($) {
         var refInfo = (target.referenceMap && target.referenceMap[fieldDef.field]) || {}
         actualField = refInfo.referenceField || refInfo.storageField || fieldDef.field
       }
-      // APPENDAGE 字段：使用 storageField 作为实际查询字段
-      if (fieldDef.type === 'APPENDAGE') {
+      // APPENDAGE / APPENDAGES 字段：使用 storageField 作为实际查询字段
+      if (fieldDef.type === 'APPENDAGE' || fieldDef.type === 'APPENDAGES') {
         var appInfo = (target.appendageMap && target.appendageMap[fieldDef.field]) || {}
         actualField = appInfo.storageField || fieldDef.field
       }
@@ -594,7 +594,7 @@ window.NovaTableJQ = (function ($) {
       var isDate = f.type === 'DATE'
       form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
       // REFERENCE / APPENDAGE 字段重置 _display 字段
-      if (f.type === 'REFERENCE' || f.type === 'APPENDAGE') {
+      if (f.type === 'REFERENCE' || f.type === 'APPENDAGE' || f.type === 'APPENDAGES') {
         form[f.field + '_display'] = ''
       }
     })

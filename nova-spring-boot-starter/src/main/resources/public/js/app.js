@@ -134,6 +134,7 @@ function mountApp(menuList) {
       const isDark     = ref(false)
       const openedTabs = ref([])
       const activeTab  = ref('')
+      const tabsKey    = ref(0)
       const expandedKeys = ref([])
 
       const theme = computed(() => isDark.value ? darkTheme : null)
@@ -149,6 +150,7 @@ function mountApp(menuList) {
         const meta = routeMeta[path] || { title: path, icon: null }
         if (!openedTabs.value.find(t => t.key === path)) {
           openedTabs.value.push({ key: path, title: meta.title, icon: meta.icon, closable: path !== '/home' })
+          setTimeout(function() { tabsKey.value++ }, 50)
         }
         activeTab.value = path
         // 自动展开当前路由的祖先菜单节点
@@ -183,6 +185,7 @@ function mountApp(menuList) {
             const last = openedTabs.value[openedTabs.value.length - 1]
             if (last) router.push(last.key)
           }
+          setTimeout(function() { tabsKey.value++ }, 50)
         }
       }
 
@@ -194,7 +197,7 @@ function mountApp(menuList) {
       const userDropdown   = [{ label: '个人中心', key: 'profile' }, { label: '退出登录', key: 'logout' }]
 
       return {
-        collapsed, isDark, theme, themeOverrides, openedTabs, activeTab, expandedKeys,
+        collapsed, isDark, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
         menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey,
         handleMenuSelect, handleTabClose, handleTabClick, userDropdown
       }
@@ -269,7 +272,7 @@ function mountApp(menuList) {
 
                   <!-- Tab 栏 -->
                   <div class="tab-bar" style="padding:8px 16px 0;display:flex;align-items:flex-start;gap:4px">
-                    <n-tabs type="line" :value="activeTab" :tabs-padding="0" @update:value="handleTabClick" style="flex:1;min-width:0">
+                    <n-tabs type="line" :key="tabsKey" :value="activeTab" :tabs-padding="0" @update:value="handleTabClick" style="flex:1;min-width:0">
                       <n-tab
                         v-for="tab in openedTabs" :key="tab.key" :name="tab.key"
                         :closable="tab.closable && openedTabs.length > 1" @close.stop="handleTabClose(tab.key)"

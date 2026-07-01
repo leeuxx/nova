@@ -5,10 +5,7 @@ import com.nova.annotation.NovaField;
 import com.nova.annotation.config.NovaId;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
-import com.nova.annotation.sub.nova.field.edit.AttachmentType;
-import com.nova.annotation.sub.nova.field.edit.DateType;
-import com.nova.annotation.sub.nova.field.edit.Readonly;
-import com.nova.annotation.sub.nova.field.edit.Search;
+import com.nova.annotation.sub.nova.field.edit.*;
 import com.nova.service.TestDemo3Service;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -34,6 +31,17 @@ public class TestDemo3View {
             )
     )
     private Long id;
+
+    @NovaField(
+            edit = @Edit(
+                    title = "用户信息",
+                    type = Edit.Type.REFERENCE,
+                    referenceType = @ReferenceType(
+                            referenceField = "demoId"
+                    )
+            )
+    )
+    private TestDemoView testDemoView;
 
     @NovaField(
             views = @View(title = "岗位名称", width = "25%"),

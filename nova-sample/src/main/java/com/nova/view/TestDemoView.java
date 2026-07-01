@@ -66,7 +66,7 @@ public class TestDemoView {
                     appendageType = @AppendageType(
                             referenceField = "demoId"
                     ),
-                    search = @Search(vague = true)
+                    search = @Search
             )
     )
     private TestDemo3View testDemo3View;
@@ -77,7 +77,8 @@ public class TestDemoView {
                     type = Edit.Type.APPENDAGES,
                     appendageType = @AppendageType(
                             referenceField = "demoId"
-                    )
+                    ),
+                    search = @Search(vague = true)
             )
     )
     private List<TestDemo4View> testDemo4Views;

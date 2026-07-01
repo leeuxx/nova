@@ -34,6 +34,9 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 .tab-bar {
   background: #fff;
 }
+.n-tabs { --n-tab-gap: 18px !important; }
+.n-tabs .n-tabs-tab { padding: 6px 12px !important; }
+
 
 .page-content {
   background: #f5f7fa !important;

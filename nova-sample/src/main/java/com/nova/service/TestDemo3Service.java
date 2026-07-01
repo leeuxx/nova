@@ -8,10 +8,12 @@ import com.nova.annotation.fun.DataProxy;
 import com.nova.annotation.fun.Details;
 import com.nova.annotation.fun.Fetch;
 import com.nova.annotation.fun.PromptSearch;
+import com.nova.entity.TestDemo;
 import com.nova.entity.TestDemo3;
 import com.nova.mapper.TestDemo3Mapper;
 import com.nova.utils.NovaQueryUtils;
 import com.nova.view.TestDemo3View;
+import com.nova.view.TestDemoView;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
@@ -19,10 +21,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Lazy)
 public class TestDemo3Service extends ServiceImpl<TestDemo3Mapper, TestDemo3> implements DataProxy<TestDemo3View> {
+
+    private TestDemoService testDemoService;
 
     @Override
     public Fetch.Vo<TestDemo3View> fetch(Fetch<TestDemo3View> fetch) {
@@ -31,10 +36,27 @@ public class TestDemo3Service extends ServiceImpl<TestDemo3Mapper, TestDemo3> im
         LambdaQueryWrapper<TestDemo3> wrapper = testDemo3Result.getWrapper();
         IPage<TestDemo3> iPage = page(page, wrapper);
         List<TestDemo3> records = iPage.getRecords();
+        List<Long> demo2IdList = records.stream()
+                .map(TestDemo3::getDemoId)
+                .filter(Objects::nonNull)
+                .toList();
+        List<TestDemo> testDemos = new ArrayList<>();
+        if (!demo2IdList.isEmpty()) {
+            testDemos = testDemoService.list(new LambdaQueryWrapper<TestDemo>()
+                    .in(TestDemo::getId, demo2IdList)
+            );
+        }
         List<TestDemo3View> testDemo3Views = new ArrayList<>();
         for (TestDemo3 record : records) {
             TestDemo3View testDemo3View = new TestDemo3View();
             BeanUtils.copyProperties(record, testDemo3View); // 源，目标
+            for (TestDemo testDemo : testDemos) {
+                if (testDemo.getId().equals(record.getDemoId())) {
+                    TestDemoView testDemoView = new TestDemoView();
+                    BeanUtils.copyProperties(testDemo, testDemoView);
+                    testDemo3View.setTestDemoView(testDemoView);
+                }
+            }
             testDemo3Views.add(testDemo3View);
         }
         return new Fetch.Vo<TestDemo3View>()
