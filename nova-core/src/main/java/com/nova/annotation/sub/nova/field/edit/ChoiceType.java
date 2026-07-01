@@ -19,6 +19,9 @@ public @interface ChoiceType {
     @Comment("可被fetchHandler接口获取到")
     String[] fetchHandlerParams() default {};
 
+    @Comment("tap级搜索项（注：一个table页面只能有一个tap级搜索项！）")
+    TapSearch tapSearch() default @TapSearch(showAll = false);
+
     enum ShowType {
         @Comment("下拉列表")
         SELECT,

@@ -78,6 +78,17 @@ public class NovaTableBuild {
             @Comment("表单提示信息")
             private String placeHolder;
 
+            @Comment("CHOICE组件tap级搜索配置")
+            private TapSearch tapSearch;
+
+            @Data
+            @Accessors(chain = true)
+            public static class TapSearch {
+
+                @Comment("是否显示全部项tap")
+                private Boolean showAll;
+
+            }
         }
 
         @Data

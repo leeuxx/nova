@@ -140,7 +140,9 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     public void update(TestDemoView testDemoView) {
         TestDemo testDemo = new TestDemo();
         BeanUtils.copyProperties(testDemoView, testDemo);
-        testDemo.setDemo2Id(testDemoView.getTestDemo2View().getId());
+        if (testDemoView.getTestDemo2View() != null) {
+            testDemo.setDemo2Id(testDemoView.getTestDemo2View().getId());
+        }
         updateById(testDemo);
         TestDemo3View testDemo3View = testDemoView.getTestDemo3View();
         if (testDemo3View != null) {

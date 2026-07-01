@@ -108,6 +108,34 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   margin-bottom: 6px;
 }
 
+/* ─── CHOICE tap 搜索栏 ────────────────────────────────────── */
+.choice-tab-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 10px;
+}
+.choice-tab-item {
+  padding: 6px 16px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+  user-select: none;
+}
+.choice-tab-item:hover { color: #2563eb; }
+.choice-tab-item.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 500; }
+
+/* 暗色 */
+.dark .choice-tab-bar { border-bottom-color: #2a2a2a; }
+.dark .choice-tab-item { color: #999; }
+.dark .choice-tab-item:hover { color: #60a5fa; }
+.dark .choice-tab-item.active { color: #60a5fa; border-bottom-color: #60a5fa; }
+
 .form-label {
   width: 56px;
   text-align: right;

@@ -175,6 +175,8 @@ const NovaTable = {
       selectedRowKey: null,
       searchFields:   [],
       filterForm:     {},
+      tapSearchField:  null,
+      tapSearchValue:  null,
       showForm:       false,
       formTab:        'form',
       formMode:       'add',
@@ -225,6 +227,15 @@ const NovaTable = {
       return window.__appDarkMode ? window.__appDarkMode.value : false
     },
     embSize() { return undefined },
+    tapSearchOptions() {
+      const f = this.tapSearchField
+      if (!f) return []
+      const info = this.choiceMap[f.field] || {}
+      const vals = info.values || []
+      const opts = vals.map(v => ({ value: v.value, label: v.label }))
+      if (f.tapSearch && f.tapSearch.showAll) opts.unshift({ value: null, label: '全部' })
+      return opts
+    },
     isEmbTab() { return !!(this.formTab && this.formTab.startsWith('emb_')) },
     // 固定列像素：checkbox 50 + 操作列 140
     colPixels() {
@@ -1459,8 +1470,16 @@ const NovaTable = {
       <!-- 表格卡片 -->
       <component :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : '')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : undefined">
         <div v-if="!pickerMode" class="table-card-header" :style="embeddedMode ? 'flex-shrink:0' : ''">
-          <span style="font-size:16px;font-weight:500">数据列表</span>
-          <div style="display:flex;gap:8px">
+          <!-- 标题/tap + 操作按钮行 -->
+            <div v-if="tapSearchField" class="choice-tab-bar" style="margin-bottom:0;border-bottom:none;flex:1">
+              <span v-for="opt in tapSearchOptions" :key="opt.value"
+                :class="['choice-tab-item', tapSearchValue === opt.value ? 'active' : '']"
+                @click="tapSearchValue = opt.value; handleQuery()">
+                {{ opt.label }}
+              </span>
+            </div>
+            <span v-else style="font-size:16px;font-weight:500">数据列表</span>
+            <div style="display:flex;gap:8px">
             <n-button v-if="checkedRowKeys.length > 0" :size="embSize" type="error" @click="handleBatchDelete">
               <template #icon><n-icon><iconify-icon icon="material-symbols:delete-outline"></iconify-icon></n-icon></template>
               删 除
@@ -1924,5 +1943,5 @@ const NovaTable = {
 
 NovaTable.components = { NovaTable }
 
-window.NovaTable = NovaTable
+window.NovaTable = NovaTable
 })()

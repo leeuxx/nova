@@ -134,13 +134,13 @@ public class TestDemoView {
                     type = Edit.Type.CHOICE,
                     choiceType = @ChoiceType(
                             selectType = ChoiceType.SelectType.MULTI,
-                            fetchHandler = TestDemoService.class
+                            fetchHandler = TestDemoService.class,
+                            tapSearch = @TapSearch(value = true)
                     ),
                     search = @Search(vague = true)
             )
     )
     private String hobby;
-
 
     @NovaField(
             edit = @Edit(
@@ -149,7 +149,6 @@ public class TestDemoView {
             )
     )
     public String divide1;
-
 
     @NovaField(
             views = @View(title = "创建时间", width = "15%"),

@@ -36,13 +36,17 @@ public class NovaTableServiceImpl implements NovaTableService {
         List<NovaTableBuild.Vo.Search> searchList = new ArrayList<>();
         List<NovaFieldUtils.SearchInfo> searchs = NovaFieldUtils.getSearch(novaTableBuild.getNovaName());
         for (NovaFieldUtils.SearchInfo search : searchs) {
-            // 构造返回值
-            searchList.add(new NovaTableBuild.Vo.Search()
+            NovaTableBuild.Vo.Search searchVo = new NovaTableBuild.Vo.Search()
                     .setField(search.getField())
                     .setTitle(search.getTitle())
                     .setType(search.getType().name())
-                    .setVague(search.getVague())
-            );
+                    .setVague(search.getVague());
+            if (search.getTapSearch() != null) {
+                searchVo.setTapSearch(new NovaTableBuild.Vo.Search.TapSearch()
+                        .setShowAll(search.getTapSearch().showAll())
+                );
+            }
+            searchList.add(searchVo);
         }
         vo.setSearch(searchList);
         // 获取表头列
@@ -315,7 +319,8 @@ public class NovaTableServiceImpl implements NovaTableService {
                     }
                     String v = fi.getValue();
                     if (v != null && !v.isEmpty()) {
-                        appCols.add(MixUtils.camelToSnake(fi.getField())); appVals.add(v);
+                        appCols.add(MixUtils.camelToSnake(fi.getField()));
+                        appVals.add(v);
                     }
                 }
                 Object appModel = DataProxyUtils.buildModel(appNovaName, appCols, appVals);

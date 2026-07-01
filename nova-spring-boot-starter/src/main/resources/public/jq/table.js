@@ -58,9 +58,25 @@ window.NovaTableJQ = (function ($) {
         target.referenceMap   = resp.data.reference   || {}
         target.appendageMap   = resp.data.appendage   || {}
         var fields = resp.data.search || []
-        target.searchFields = fields
+        // 提取 tapSearch 字段，从 searchFields 中移除
+        var tapSearchField = null
+        var normalFields = []
+        fields.forEach(function(f) {
+          if (f.tapSearch) { tapSearchField = f } else { normalFields.push(f) }
+        })
+        target.tapSearchField = tapSearchField
+        // 默认选中：showAll=true 时选"全部"(null)，否则选第一个选项值
+        if (tapSearchField) {
+          var tsChoiceVals = ((target.choiceMap[tapSearchField.field] || {}).values || [])
+          target.tapSearchValue = (tapSearchField.tapSearch && tapSearchField.tapSearch.showAll)
+            ? null
+            : (tsChoiceVals.length > 0 ? tsChoiceVals[0].value : null)
+        } else {
+          target.tapSearchValue = null
+        }
+        target.searchFields = normalFields
         var form = {}
-        fields.forEach(function (f) {
+        normalFields.forEach(function (f) {
           var choiceInfo = target.choiceMap[f.field]
           var isMultiChoice = f.type === 'CHOICE' && (choiceInfo && choiceInfo.selectType === 'MULTI' || f.vague)
           var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
@@ -384,6 +400,11 @@ window.NovaTableJQ = (function ($) {
       orders:  buildOrderItems(target.sortStates)
     }
     target.loading = true
+    // tapSearch 字段：注入 tab 选中值到 conditions
+    var tsf = target.tapSearchField
+    if (tsf && target.tapSearchValue != null) {
+      conditions[tsf.field] = { value: String(target.tapSearchValue), type: tsf.type || 'CHOICE', ext: 'SINGLE', vague: false }
+    }
     // embedded 模式：把 _sourceRefFields 中的 referenceField 注入 conditions
     var sourceRefFields = target._sourceRefFields || []
     sourceRefFields.forEach(function(rf) {

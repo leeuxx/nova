@@ -42,6 +42,7 @@ public class NovaFieldUtils {
             return searchInfos;
         }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        final TapSearch[] tapSearch = {null};
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
@@ -69,6 +70,14 @@ public class NovaFieldUtils {
                     .setType(novaFieldInfo.getType())
                     .setVague(search.vague())
                     .setSort(search.sort());
+            // 选择组件tap级搜索处理
+            if (edit.type() == Edit.Type.CHOICE) {
+                TapSearch tapSearchInfo = edit.choiceType().tapSearch();
+                if (tapSearch[0] == null && tapSearchInfo.value()) {
+                    tapSearch[0] = tapSearchInfo;
+                    searchInfo.setTapSearch(tapSearchInfo);
+                }
+            }
             searchInfos.add(searchInfo);
         });
         searchInfos.sort(Comparator.comparingInt(SearchInfo::getSort));
@@ -519,6 +528,9 @@ public class NovaFieldUtils {
 
         @Comment("显示顺序,正序")
         private Integer sort;
+
+        @Comment("下拉组件tap级搜索项")
+        private TapSearch tapSearch;
 
     }
 
