@@ -123,7 +123,7 @@ public class NovaTableBuild {
         @Accessors(chain = true)
         public static class Edit {
 
-            @Comment("tap类型 thisForm=自身详情表单 referenceForm=引用详情表单 appendageForm=附属对象表单")
+            @Comment("tap类型 thisForm=自身tap referenceForm=引用tap appendageForm=附属对象tap appendagesTable=附属集合tap")
             private String tapType;
 
             @Comment("tap名称")

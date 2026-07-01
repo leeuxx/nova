@@ -139,6 +139,7 @@ const NovaTable = {
   props: {
     pickerMode:         { type: Boolean, default: false },
     viewMode:           { type: Boolean, default: false },
+    embeddedMode:       { type: Boolean, default: false },
     viewRow:            { type: Object,  default: null },
     novaNameProp:       { type: String,  default: '' },
     sourceNovaNameProp: { type: String,  default: '' },
@@ -177,6 +178,7 @@ const NovaTable = {
       showForm:       false,
       formTab:        'form',
       formMode:       'add',
+      visitedEmbTabs: new Set(),
       currentRow:     null,
       formData:       {},
       editFields:        [],
@@ -222,6 +224,8 @@ const NovaTable = {
     isDark() {
       return window.__appDarkMode ? window.__appDarkMode.value : false
     },
+    embSize() { return undefined },
+    isEmbTab() { return !!(this.formTab && this.formTab.startsWith('emb_')) },
     // 固定列像素：checkbox 50 + 操作列 140
     colPixels() {
       const fixedPx = 50 + 140
@@ -474,6 +478,12 @@ const NovaTable = {
   beforeRouteUpdate() {},
 
   watch: {
+    showForm(val) {
+      if (!val) {
+        this.visitedEmbTabs = new Set()
+        this.formTab = 'form'
+      }
+    },
     formData: {
       deep: true,
       handler() {
@@ -532,6 +542,14 @@ const NovaTable = {
       this._vmKey = '__view_' + this.novaName + '_' + Date.now()
       window.vmMap[this._vmKey] = this
       if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onViewMounted(this.novaName, this._vmKey, this.viewRow, this.sourceNovaNameProp)
+    } else if (this.embeddedMode) {
+      this.novaName = this.novaNameProp || ''
+      this._vmKey = '__emb_' + this.novaName + '_' + Date.now()
+      window.vmMap[this._vmKey] = this
+      this.paginationConfig.onUpdatePage     = this.handlePageChange
+      this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
+      this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
+      if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onEmbeddedMounted(this.novaName, this._vmKey, this.sourceNovaNameProp || this.novaName, this.sourceFieldsProp || {})
     } else {
       this.novaName = this.$route.params.novaName || ''
       window.vmMap[this.novaName] = this
@@ -559,7 +577,7 @@ const NovaTable = {
 
   beforeUnmount() {
     this._isActive = false
-    if (this.pickerMode || this.viewMode) {
+    if (this.pickerMode || this.viewMode || this.embeddedMode) {
       if (this._vmKey && window.vmMap) delete window.vmMap[this._vmKey]
     } else {
       if (window.vmMap) delete window.vmMap[this.novaName]
@@ -577,11 +595,12 @@ const NovaTable = {
       const cur  = this.sortStates[field]
       const next = cur == null ? 'asc' : cur === 'asc' ? 'desc' : null
       this.sortStates = Object.assign({}, this.sortStates, { [field]: next })
-      const key = this.pickerMode ? this._vmKey : this.novaName
+      const key = (this.pickerMode || this.embeddedMode) ? this._vmKey : this.novaName
       window.NovaTableJQ.onSortChange(key)
     },
     toggleFilter() {
-      if (this.searchFields.length <= 3) return
+      const threshold = this.embeddedMode ? 1 : 3
+      if (this.searchFields.length <= threshold) return
       this.filterExpanded = !this.filterExpanded
       this.$nextTick(() => window.NovaTableJQ && window.NovaTableJQ.updateTableHeight())
     },
@@ -699,7 +718,18 @@ const NovaTable = {
     },
     handleCheck(keys)   { this.checkedRowKeys = keys },
     handleReset() {
-      if (this.pickerMode) {
+      if (this.pickerMode || this.embeddedMode) {
+        const form = {}
+        const choiceMap = this.choiceMap || {}
+        this.searchFields.forEach(f => {
+          const choiceInfo = choiceMap[f.field]
+          const isMultiChoice = f.type === 'CHOICE' && (choiceInfo && choiceInfo.selectType === 'MULTI' || f.vague)
+          const isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
+          form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || f.type === 'DATE' || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
+          if (f.type === 'REFERENCE' || f.type === 'APPENDAGE') form[f.field + '_display'] = ''
+        })
+        this.filterForm = form
+        this.paginationConfig.page = 1
         window.NovaTableJQ.loadData(this._vmKey)
       } else {
         window.NovaTableJQ.handleReset()
@@ -712,14 +742,14 @@ const NovaTable = {
         t.paginationConfig.page = 1
         t._lastFilterSnapshot = snapshot
       }
-      const key = t.pickerMode ? t._vmKey : t.novaName
+      const key = (t.pickerMode || t.embeddedMode) ? t._vmKey : t.novaName
       window.NovaTableJQ.loadData(key)
     },
-    handleAdd()         { window.NovaTableJQ.handleAdd() },
-    handleEdit(row)     { window.NovaTableJQ.handleEdit(row) },
-    handleDelete(row)   { window.NovaTableJQ.handleDelete(row) },
-    handleBatchDelete() { window.NovaTableJQ.handleBatchDelete() },
-    handleFormSubmit()  { window.NovaTableJQ.handleFormSubmit() },
+    handleAdd()         { if (this.embeddedMode) window.NovaTableJQ.handleAdd(this._vmKey); else window.NovaTableJQ.handleAdd() },
+    handleEdit(row)     { if (this.embeddedMode) window.NovaTableJQ.handleEdit(row, this._vmKey); else window.NovaTableJQ.handleEdit(row) },
+    handleDelete(row)   { if (this.embeddedMode) window.NovaTableJQ.handleDelete(row, this._vmKey); else window.NovaTableJQ.handleDelete(row) },
+    handleBatchDelete() { if (this.embeddedMode) window.NovaTableJQ.handleBatchDelete(this._vmKey); else window.NovaTableJQ.handleBatchDelete() },
+    handleFormSubmit()  { if (this.embeddedMode) window.NovaTableJQ.handleFormSubmit(this._vmKey); else window.NovaTableJQ.handleFormSubmit() },
     handleAttachmentChange(f, event, appNovaName) {
       const files = Array.from(event.target.files || [])
       event.target.value = ''
@@ -853,6 +883,20 @@ const NovaTable = {
         const picker = this.refPickerStack[this.refPickerStack.length - 1]
         if (picker) picker.visible = true
       })
+    },
+    buildEmbSourceFields(tab) {
+      const appendageMap = this.appendageMap || {}
+      for (const k in appendageMap) {
+        if (appendageMap[k].referenceName === tab.tapNovaName) {
+          const appInfo = appendageMap[k]
+          const storageField = appInfo.storageField || 'id'
+          const pkVal = this.currentRow && this.currentRow[storageField]
+          if (!pkVal) return {}
+          // key 用父表 PK 字段名（storageField），后端结合 sourceNovaName 做关联过滤
+          return { [storageField]: String(pkVal) }
+        }
+      }
+      return {}
     },
     buildPickerSourceFields(picker) {
       const fields = {}
@@ -1036,7 +1080,9 @@ const NovaTable = {
       this.$emit('pick', enrichedRow)
     },
     onFormTabChange(tab) {
-      if (tab.startsWith('ref_')) {
+      if (tab.startsWith('emb_')) {
+        this.visitedEmbTabs = new Set([...this.visitedEmbTabs, tab])
+      } else if (tab.startsWith('ref_')) {
         var refNovaName = tab.slice(4)
         if (this.refTabData[refNovaName] != null) return
         if (window.NovaTableJQ) window.NovaTableJQ.loadReferenceDetails(this.novaName, refNovaName)
@@ -1105,11 +1151,11 @@ const NovaTable = {
       return String(val)
     },
     handlePageChange(current) {
-      const key = this.pickerMode ? this._vmKey : this.novaName
+      const key = (this.pickerMode || this.embeddedMode) ? this._vmKey : this.novaName
       window.NovaTableJQ.onPageChange(key, current)
     },
     handlePageSizeChange(pageSize) {
-      const key = this.pickerMode ? this._vmKey : this.novaName
+      const key = (this.pickerMode || this.embeddedMode) ? this._vmKey : this.novaName
       window.NovaTableJQ.onPageSizeChange(key, pageSize)
     }
   },
@@ -1207,11 +1253,11 @@ const NovaTable = {
         </div>
       </n-modal>
     </div>
-    <div v-else :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : 'padding:16px'">
+    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : 'padding:16px')">
 
       <!-- 筛选卡片 -->
-      <n-card :bordered="false" class="page-card filter-card">
-        <div class="filter-grid">
+      <component :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
+        <div :class="['filter-grid', embeddedMode ? 'embedded' : '']" :style="embeddedMode ? 'padding:8px 0' : ''">
           <template v-for="(field, index) in searchFields" :key="field.field">
             <div v-if="filterExpanded || index < 3" style="display:flex;align-items:center;gap:8px;width:100%">
               <span class="form-label">{{ field.title }}</span>
@@ -1219,18 +1265,21 @@ const NovaTable = {
                 v-model:value="filterForm[field.field]"
                 :options="fieldOptions(field)"
                 :placeholder="'请选择' + field.title"
+                :size="embSize"
                 clearable style="flex:1"
               />
               <n-select v-else-if="field.type === 'CHOICE'"
                 v-model:value="filterForm[field.field]"
                 :options="fieldOptions(field)"
                 :placeholder="'请选择' + field.title"
+                :size="embSize"
                 multiple clearable style="flex:1"
               />
               <n-select v-else-if="field.type === 'TAG'"
                 v-model:value="filterForm[field.field]"
                 :options="tagOptions(field.field)"
                 :placeholder="'请选择' + field.title"
+                :size="embSize"
                 multiple clearable filterable
                 :tag="tagMap[field.field] && tagMap[field.field].allowExtension"
                 style="flex:1"
@@ -1239,6 +1288,7 @@ const NovaTable = {
                 v-model:value="filterForm[field.field]"
                 :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"
                 :placeholder="'请选择' + field.title"
+                :size="embSize"
                 clearable style="flex:1"
               />
               <div v-else-if="field.type === 'NUMBER' && field.vague" class="number-vague-field">
@@ -1267,6 +1317,7 @@ const NovaTable = {
                 :min="numberMap[field.field] && numberMap[field.field].min"
                 :max="numberMap[field.field] && numberMap[field.field].max"
                 :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
+                :size="embSize"
                 :show-button="false"
                 clearable style="flex:1"
               />
@@ -1275,6 +1326,7 @@ const NovaTable = {
                 :type="datePickerType(field.field, field.vague, false)"
                 :is-date-disabled="datePickerDisabled(field.field, false)"
                 :placeholder="field.vague ? ['开始时间', '结束时间'] : '请选择' + field.title"
+                :size="embSize"
                 clearable style="flex:1"
               />
               <!-- 筛选区 REFERENCE 非 vague：下拉搜索 -->
@@ -1284,6 +1336,7 @@ const NovaTable = {
                 :options="refSelectOptions['_f_' + field.field] || []"
                 :loading="!!refSelectLoading['_f_' + field.field]"
                 :placeholder="'输入关键词搜索'"
+                :size="embSize"
                 filterable
                 remote
                 clearable
@@ -1319,6 +1372,7 @@ const NovaTable = {
                 <n-input
                   :value="filterForm[field.field + '_display'] || filterForm[field.field] || ''"
                   :placeholder="'请选择' + field.title"
+                  :size="embSize"
                   readonly
                   clearable
                   @clear.stop="filterForm[field.field] = null; filterForm[field.field + '_display'] = ''"
@@ -1335,6 +1389,7 @@ const NovaTable = {
                 :options="refSelectOptions['_f_' + field.field] || []"
                 :loading="!!refSelectLoading['_f_' + field.field]"
                 :placeholder="'输入关键词搜索'"
+                :size="embSize"
                 filterable
                 remote
                 clearable
@@ -1370,6 +1425,7 @@ const NovaTable = {
                 <n-input
                   :value="filterForm[field.field + '_display'] || filterForm[field.field] || ''"
                   :placeholder="'请选择' + field.title"
+                  :size="embSize"
                   readonly
                   clearable
                   @clear.stop="filterForm[field.field] = null; filterForm[field.field + '_display'] = ''"
@@ -1382,14 +1438,15 @@ const NovaTable = {
               <n-input v-else
                 v-model:value="filterForm[field.field]"
                 :placeholder="'请输入' + field.title"
+                :size="embSize"
                 clearable style="flex:1"
               />
             </div>
           </template>
           <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;grid-column:4">
-            <n-button @click="handleReset">重 置</n-button>
-            <n-button type="primary" @click="handleQuery">查 询</n-button>
-            <n-button dashed @click="toggleFilter" :disabled="searchFields.length <= 3">
+            <n-button :size="embSize" @click="handleReset">重 置</n-button>
+            <n-button :size="embSize" type="primary" @click="handleQuery">查 询</n-button>
+            <n-button :size="embSize" dashed @click="toggleFilter" :disabled="searchFields.length <= 3">
               <template #icon>
                 <n-icon><iconify-icon :icon="filterExpanded ? 'material-symbols:keyboard-arrow-up' : 'material-symbols:keyboard-arrow-down'"></iconify-icon></n-icon>
               </template>
@@ -1397,27 +1454,27 @@ const NovaTable = {
             </n-button>
           </div>
         </div>
-      </n-card>
+      </component>
 
       <!-- 表格卡片 -->
-      <n-card :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : ''" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : ''">
-        <div v-if="!pickerMode" class="table-card-header">
+      <component :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : '')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : undefined">
+        <div v-if="!pickerMode" class="table-card-header" :style="embeddedMode ? 'flex-shrink:0' : ''">
           <span style="font-size:16px;font-weight:500">数据列表</span>
           <div style="display:flex;gap:8px">
-            <n-button v-if="checkedRowKeys.length > 0" type="error" @click="handleBatchDelete">
+            <n-button v-if="checkedRowKeys.length > 0" :size="embSize" type="error" @click="handleBatchDelete">
               <template #icon><n-icon><iconify-icon icon="material-symbols:delete-outline"></iconify-icon></n-icon></template>
               删 除
             </n-button>
-            <n-button type="primary" @click="handleAdd">
+            <n-button :size="embSize" type="primary" @click="handleAdd">
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
               新 增
             </n-button>
-            <n-button circle class="btn-circle" style="background:transparent" @click="handleQuery">
+            <n-button :size="embSize" circle class="btn-circle" style="background:transparent" @click="handleQuery">
               <template #icon><n-icon size="15"><iconify-icon icon="lucide:refresh-cw" style="font-size:15px"></iconify-icon></n-icon></template>
             </n-button>
             <n-popover trigger="click" placement="bottom-end">
               <template #trigger>
-                <n-button circle class="btn-circle" style="background:transparent">
+                <n-button :size="embSize" circle class="btn-circle" style="background:transparent">
                   <template #icon><n-icon size="15"><iconify-icon icon="lucide:settings" style="font-size:15px"></iconify-icon></n-icon></template>
                 </n-button>
               </template>
@@ -1438,7 +1495,7 @@ const NovaTable = {
             </n-popover>
           </div>
         </div>
-        <div id="table-wrapper" :style="pickerMode ? 'flex:1;min-height:0;overflow:hidden' : ''">
+        <div id="table-wrapper" :style="(pickerMode || embeddedMode) ? 'flex:1;min-height:0;overflow:hidden' : ''">
           <n-data-table
             :data="filteredData"
             :columns="columns"
@@ -1456,10 +1513,10 @@ const NovaTable = {
             style="width:100%;height:100%"
           />
         </div>
-      </n-card>
+      </component>
 
       <!-- 新增/编辑弹窗 -->
-      <n-modal v-model:show="showForm" preset="card" :title="formMode === 'add' ? '新增' : '编辑'" style="width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column" :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
+      <n-modal v-model:show="showForm" preset="card" :title="formMode === 'add' ? '新增' : '编辑'" :style="isEmbTab ? 'width:calc(100vw - 80px);max-width:1600px;margin-top:40px;max-height:calc(100vh - 80px);display:flex;flex-direction:column;transition:width 0.3s ease,max-height 0.3s ease,margin-top 0.3s ease' : 'width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column'" :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
         <n-tabs v-model:value="formTab" type="line"
           style="padding:0 20px;margin-top:-4px"
           :class="''"
@@ -1467,7 +1524,7 @@ const NovaTable = {
 
           <!-- Tab 1: 表单 -->
           <n-tab-pane name="form" style="padding:16px 0 20px 0">
-            <template #tab>基本信息<span v-if="tabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('form') }}</span><span v-else-if="tabTotalRequired('form') > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template>
+            <template #tab><iconify-icon icon="mdi:pencil-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>基本信息<span v-if="tabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('form') }}</span><span v-else-if="tabTotalRequired('form') > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template>
             <div :key="'tab_' + formTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
             <div :style="'display:grid;gap:16px 24px;' + (editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
           <template v-for="{field: f, visible: _vis} in visibleEditFields" :key="f.field">
@@ -1648,11 +1705,11 @@ const NovaTable = {
 
         <!-- referenceForm / appendageForm 统一按后端顺序渲染 -->
         <template v-for="tab in editExtraTabs" :key="tab.tapNovaName">
-        <n-tab-pane v-if="tab.tapShow !== false && (tab.tapType !== 'referenceForm' || formMode !== 'add') && (!tab.tapShowByExpr || evalShowExprSafe(tab.tapShowByExpr, formData))"
-          :name="(tab.tapType === 'referenceForm' ? 'ref_' : 'app_') + tab.tapNovaName"
+        <n-tab-pane v-if="tab.tapShow !== false && (tab.tapType !== 'referenceForm' || formMode !== 'add') && (tab.tapType !== 'appendagesTable' || formMode !== 'add') && (!tab.tapShowByExpr || evalShowExprSafe(tab.tapShowByExpr, formData))"
+          :name="(tab.tapType === 'referenceForm' ? 'ref_' : tab.tapType === 'appendagesTable' ? 'emb_' : 'app_') + tab.tapNovaName"
           display-directive="show"
-          style="padding:16px 0 20px 0">
-          <template #tab>{{ tab.tapTitle || tab.tapNovaName }}<template v-if="tab.tapType === 'appendageForm'"><span v-if="tabRequiredCount('app_' + tab.tapNovaName) > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('app_' + tab.tapNovaName) }}</span><span v-else-if="tabTotalRequired('app_' + tab.tapNovaName) > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template></template>
+          :style="tab.tapType === 'appendagesTable' ? ('padding:0 0 15px 0;overflow:hidden;height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px')) : 'padding:16px 0 20px 0'">
+          <template #tab><iconify-icon :icon="tab.tapType === 'referenceForm' ? 'mdi:eye-outline' : tab.tapType === 'appendagesTable' ? 'mdi:table' : 'mdi:note-outline'" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>{{ tab.tapTitle || tab.tapNovaName }}<template v-if="tab.tapType === 'appendageForm'"><span v-if="tabRequiredCount('app_' + tab.tapNovaName) > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('app_' + tab.tapNovaName) }}</span><span v-else-if="tabTotalRequired('app_' + tab.tapNovaName) > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template></template>
           <div :key="tab.tapNovaName" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
 
           <!-- referenceForm 内容 -->
@@ -1767,13 +1824,27 @@ const NovaTable = {
           </div>
           </template>
 
+          <!-- appendagesTable 内容 -->
+          <template v-else-if="tab.tapType === 'appendagesTable'">
+            <div :style="'display:flex;flex-direction:column;overflow:hidden;height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px')">
+              <nova-table
+                v-if="visitedEmbTabs.has('emb_' + tab.tapNovaName)"
+                :key="'emb_' + tab.tapNovaName + '_' + (currentRow && currentRow[novaIdFieldName])"
+                :embedded-mode="true"
+                :nova-name-prop="tab.tapNovaName"
+                :source-nova-name-prop="novaName"
+                :source-fields-prop="buildEmbSourceFields(tab)"
+              />
+            </div>
+          </template>
+
           </div>
         </n-tab-pane>
         </template>
 
         </n-tabs>
         <template #footer>
-          <n-space justify="end">
+          <n-space v-if="!formTab.startsWith('emb_') && !formTab.startsWith('ref_')" justify="end">
             <n-button @click="showForm = false">取 消</n-button>
             <n-button type="primary" @click="handleFormSubmit">确 定</n-button>
           </n-space>

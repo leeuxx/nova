@@ -13,6 +13,7 @@ import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Accessors(chain = true)
@@ -49,8 +50,7 @@ public class TestDemoView {
                             referenceField = "demo2Id"
                     ),
                     search = @Search(vague = true),
-                    notNull = true,
-                    show = false
+                    notNull = true
             )
     )
     private TestDemo2View testDemo2View;
@@ -70,6 +70,17 @@ public class TestDemoView {
             )
     )
     private TestDemo3View testDemo3View;
+
+    @NovaField(
+            edit = @Edit(
+                    title = "薪资信息",
+                    type = Edit.Type.APPENDAGES,
+                    appendageType = @AppendageType(
+                            referenceField = "demoId"
+                    )
+            )
+    )
+    private List<TestDemo4View> testDemo4Views;
 
     @NovaField(
             views = @View(title = "用户名", width = "10%"),

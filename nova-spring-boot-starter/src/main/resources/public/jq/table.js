@@ -36,8 +36,10 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── 动态构建查询条件 + 表头列 ─────────────────────────────────
-  function buildTable(novaName) {
+  // vmKey: 可选，embedded 模式下为 '__emb_xxx'；embSourceFields: embedded 模式下预注入的外键条件；sourceNovaName: 父表 novaName
+  function buildTable(novaName, vmKey, embSourceFields, sourceNovaName) {
     if (!novaName) return
+    var key = vmKey || novaName
     $.ajax({
       url:         '/nova/table/build',
       method:      'POST',
@@ -45,8 +47,7 @@ window.NovaTableJQ = (function ($) {
       data:        JSON.stringify({ novaName: novaName }),
       success: function (resp) {
         if (resp.code !== 200) return
-        // AJAX 回调用 novaName 直接索引，避免切 tab 后写错实例
-        var target = window.vmMap && window.vmMap[novaName]
+        var target = window.vmMap && window.vmMap[key]
         if (!target) return
         target.choiceMap  = resp.data.choice  || {}
         target.tagMap     = resp.data.tag     || {}
@@ -65,7 +66,6 @@ window.NovaTableJQ = (function ($) {
           var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
           var isDate = f.type === 'DATE'
           form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
-          // REFERENCE / APPENDAGE 字段初始化 _display 字段
           if (f.type === 'REFERENCE' || f.type === 'APPENDAGE') {
             form[f.field + '_display'] = ''
           }
@@ -84,11 +84,11 @@ window.NovaTableJQ = (function ($) {
         }
         if (layout.editLayout) target.editLayout = layout.editLayout
         var allEdit = resp.data.edit || []
+        var refMap = resp.data.reference || {}
         target.editFields = allEdit.filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
         target.editReferenceTabs = allEdit.filter(function(e) { return e.tapType === 'referenceForm' && e.tapShow !== false })
         target.editAppendageTabs = allEdit.filter(function(e) { return e.tapType === 'appendageForm' && e.tapShow !== false })
-        target.editExtraTabs = allEdit.filter(function(e) { return (e.tapType === 'referenceForm' || e.tapType === 'appendageForm') && e.tapShow !== false })
-        var refMap = resp.data.reference || {}
+        target.editExtraTabs = allEdit.filter(function(e) { return (e.tapType === 'referenceForm' || e.tapType === 'appendageForm' || e.tapType === 'appendagesTable') && e.tapShow !== false })
         target.editReferenceTabs.forEach(function(tab) {
           if (!tab.tapNovaName) return
           target.editFields.forEach(function(f) {
@@ -96,10 +96,41 @@ window.NovaTableJQ = (function ($) {
               tab.tapParamField = f.field
           })
         })
-        target.editAppendageTabs = allEdit.filter(function(e) { return e.tapType === 'appendageForm' && e.tapShow !== false })
         if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
-        // 构建完成后加载数据
-        loadData(novaName)
+        // embedded 模式：过滤 editFields 中外键已由 sourceFields 提供的 REFERENCE 字段
+        if (embSourceFields && Object.keys(embSourceFields).length > 0) {
+          target._sourceFields = embSourceFields
+          target._sourceNovaName = sourceNovaName || novaName
+          var sourceKeys = Object.keys(embSourceFields)
+          var hiddenRefNovas = []
+          var sourceRefFields = []
+          target.editFields = target.editFields.filter(function(f) {
+            if (f.type !== 'REFERENCE') return true
+            var refInfo = refMap[f.field] || {}
+            // storageField = 引用表的值字段（父表PK），与 sourceFields 的 key 对应
+            if (sourceKeys.indexOf(refInfo.storageField) !== -1) {
+              hiddenRefNovas.push(refInfo.referenceName)
+              sourceRefFields.push({ field: f.field, type: 'REFERENCE', referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
+              return false
+            }
+            return true
+          })
+          target._sourceRefFields = sourceRefFields
+          // 同步过滤搜索条件中的外键 REFERENCE 字段
+          target.searchFields = target.searchFields.filter(function(f) {
+            if (f.type !== 'REFERENCE') return true
+            var refInfo = refMap[f.field] || {}
+            return sourceKeys.indexOf(refInfo.storageField) === -1
+          })
+          // 同步过滤对应的 referenceForm tab
+          target.editExtraTabs = target.editExtraTabs.filter(function(tab) {
+            return !(tab.tapType === 'referenceForm' && hiddenRefNovas.indexOf(tab.tapNovaName) !== -1)
+          })
+          target.editReferenceTabs = target.editReferenceTabs.filter(function(tab) {
+            return hiddenRefNovas.indexOf(tab.tapNovaName) === -1
+          })
+        }
+        loadData(key)
       },
       error: function () {
         console.info('[Nova] build接口未就绪，novaName:', novaName)
@@ -225,8 +256,9 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── 懒加载 appendage sub-build（首次打开弹窗时调用）──────────────
-  function loadAppendageDetails(novaName, appNovaName) {
-    var target = window.vmMap && window.vmMap[novaName]
+  function loadAppendageDetails(novaName, appNovaName, vmKey) {
+    var key = vmKey || novaName
+    var target = window.vmMap && window.vmMap[key]
     if (!target) return
     var appendageMap = target.appendageMap || {}
     var appField = null
@@ -245,15 +277,16 @@ window.NovaTableJQ = (function ($) {
       data: JSON.stringify({ novaName: appNovaName, storageFieldValue: String(storageVal) }),
       success: function(resp) {
         if (resp.code !== 200 || !resp.data) return
-        var t = window.vmMap && window.vmMap[novaName]
+        var t = window.vmMap && window.vmMap[key]
         if (!t) return
         fillAppendageData(t, appNovaName, resp.data)
       }
     })
   }
 
-  function buildAppendageTabs(novaName, rowData) {
-    var target = window.vmMap && window.vmMap[novaName]
+  function buildAppendageTabs(novaName, rowData, vmKey) {
+    var key = vmKey || novaName
+    var target = window.vmMap && window.vmMap[key]
     if (!target) return
     ;(target.editAppendageTabs || []).forEach(function(appTab) {
       if (!appTab.tapNovaName) return
@@ -263,7 +296,7 @@ window.NovaTableJQ = (function ($) {
         data: JSON.stringify({ novaName: appNovaName }),
         success: function(br) {
           if (br.code !== 200) return
-          var t2 = window.vmMap && window.vmMap[novaName]
+          var t2 = window.vmMap && window.vmMap[key]
           if (!t2) return
           var bd = br.data
           var editFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
@@ -294,7 +327,7 @@ window.NovaTableJQ = (function ($) {
             Object.keys(appendageMap).forEach(function(k) { if (appendageMap[k].referenceName === appNovaName) appFieldKey = k })
             if (appFieldKey) fillAppendageData(t2, appNovaName, rowData[appFieldKey])
           }
-          loadAppendageDetails(novaName, appNovaName)
+          loadAppendageDetails(novaName, appNovaName, key)
         }
       })
     })
@@ -351,6 +384,13 @@ window.NovaTableJQ = (function ($) {
       orders:  buildOrderItems(target.sortStates)
     }
     target.loading = true
+    // embedded 模式：把 _sourceRefFields 中的 referenceField 注入 conditions
+    var sourceRefFields = target._sourceRefFields || []
+    sourceRefFields.forEach(function(rf) {
+      if (rf.referenceField && rf.value != null && rf.value !== '') {
+        conditions[rf.referenceField] = { value: String(rf.value), type: 'TEXT', ext: '', vague: false }
+      }
+    })
     $.ajax({
       url:         '/nova/table/data',
       method:      'POST',
@@ -542,10 +582,11 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── 打开新增弹窗 ──────────────────────────────────────────────
-  function handleAdd() {
+  function handleAdd(vmKey) {
+    var target = vmKey ? (window.vmMap && window.vmMap[vmKey]) : vm()
+    if (!target) return
     var formData = {}
-    var target = vm()
-    var choiceMap = (target && target.choiceMap) || {}
+    var choiceMap = target.choiceMap || {}
     var editFields = target.editFields || []
     editFields.forEach(function (f) {
       var choiceInfo = choiceMap[f.field]
@@ -553,22 +594,26 @@ window.NovaTableJQ = (function ($) {
       var isSingle = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE'
       var isDate   = f.type === 'DATE'
       formData[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (isSingle || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
-      // REFERENCE 字段初始化 _display 字段
       if (f.type === 'REFERENCE') {
         formData[f.field + '_display'] = ''
       }
     })
-    vm().currentRow              = null
-    vm()._rawDetailRow           = null
-    vm().appendageDetailsLoaded  = {}
-    vm().formMode                = 'add'
-    vm().formData   = formData
-    vm().formErrors = {}
-    vm().refTabData = {}
-    vm()._refCoord  = {}
+    // embedded 模式：预注入外键值
+    var sourceFields = target._sourceFields || {}
+    Object.keys(sourceFields).forEach(function(sk) {
+      formData[sk] = sourceFields[sk]
+    })
+    target.currentRow              = null
+    target._rawDetailRow           = null
+    target.appendageDetailsLoaded  = {}
+    target.formMode                = 'add'
+    target.formData   = formData
+    target.formErrors = {}
+    target.refTabData = {}
+    target._refCoord  = {}
     var appFds = {}
-    var appBuild = vm().appendageTabBuild || {}
-    ;(vm().editAppendageTabs || []).forEach(function(appTab) {
+    var appBuild = target.appendageTabBuild || {}
+    ;(target.editAppendageTabs || []).forEach(function(appTab) {
       var bd = appBuild[appTab.tapNovaName] || {}
       var fd = {}
       var cm = bd.choiceMap || {}
@@ -581,16 +626,17 @@ window.NovaTableJQ = (function ($) {
       })
       appFds[appTab.tapNovaName] = fd
     })
-    vm().appendageFormData   = appFds
-    vm().appendageFormErrors = {}
-    vm().formTab    = 'form'
-    buildAppendageTabs(vm().novaName)
-    vm().showForm   = true
+    target.appendageFormData   = appFds
+    target.appendageFormErrors = {}
+    target.formTab    = 'form'
+    buildAppendageTabs(target.novaName, null, vmKey)
+    target.showForm   = true
   }
 
   // ── 打开编辑弹窗 ──────────────────────────────────────────────
-  function handleEdit(row) {
-    var target = vm()
+  function handleEdit(row, vmKey) {
+    var target = vmKey ? (window.vmMap && window.vmMap[vmKey]) : vm()
+    if (!target) return
     var novaName = target.novaName
     var novaIdField = target.novaIdFieldName
     var pkVal = String(row[novaIdField])
@@ -602,7 +648,7 @@ window.NovaTableJQ = (function ($) {
       data: JSON.stringify({ novaName: novaName, storageFieldValue: pkVal }),
       success: function(resp) {
         if (resp.code !== 200) return
-        var t = window.vmMap && window.vmMap[novaName]
+        var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
         if (!t) return
         var detailRow = resp.data
         if (!detailRow) return
@@ -648,26 +694,28 @@ window.NovaTableJQ = (function ($) {
         t.refTabData = {}
         t._refCoord  = {}
         t.formTab    = 'form'
-        buildAppendageTabs(novaName, detailRow)
+        buildAppendageTabs(novaName, detailRow, vmKey)
         t.showForm   = true
       }
     })
   }
 
   // ── 删除单条 ──────────────────────────────────────────────────
-  function handleDelete(row) {
-    var target = vm()
+  function handleDelete(row, vmKey) {
+    var target = vmKey ? (window.vmMap && window.vmMap[vmKey]) : vm()
+    if (!target) return
     var novaIdField = target.novaIdFieldName
-    doDelete(target.novaName, novaIdField, [String(row[novaIdField])])
+    doDelete(target.novaName, novaIdField, [String(row[novaIdField])], vmKey)
   }
 
   // ── 批量删除 ──────────────────────────────────────────────────
-  function handleBatchDelete() {
-    var target = vm()
+  function handleBatchDelete(vmKey) {
+    var target = vmKey ? (window.vmMap && window.vmMap[vmKey]) : vm()
+    if (!target) return
     var novaIdField = target.novaIdFieldName
     var keys = target.checkedRowKeys.map(function (k) { return String(k) })
     if (!window.$dialog) {
-      doDelete(target.novaName, novaIdField, keys)
+      doDelete(target.novaName, novaIdField, keys, vmKey)
       return
     }
     window.$dialog.create({
@@ -680,25 +728,25 @@ window.NovaTableJQ = (function ($) {
       positiveButtonProps: { type: 'primary', size: 'medium' },
       negativeButtonProps: { size: 'medium' },
       onPositiveClick: function () {
-        doDelete(target.novaName, novaIdField, keys)
+        doDelete(target.novaName, novaIdField, keys, vmKey)
       }
     })
   }
 
   // ── 删除公共逻辑 ──────────────────────────────────────────────
-  function doDelete(novaName, novaIdFieldName, novaIdValues) {
+  function doDelete(novaName, novaIdFieldName, novaIdValues, vmKey) {
     $.ajax({
       url:         '/nova/table/delete',
       method:      'POST',
       contentType: 'application/json',
       data:        JSON.stringify({ novaName: novaName, novaIdFieldName: novaIdFieldName, novaIdValues: novaIdValues }),
       success: function (resp) {
-        var t = window.vmMap && window.vmMap[novaName]
+        var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
         if (!t) return
         if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '删除失败'); return }
         t.checkedRowKeys = []
         if (window.$message) window.$message.success('删除成功')
-        loadData(novaName)
+        loadData(vmKey || novaName)
       },
       error: function () {
         console.info('[Nova] delete接口请求失败，novaName:', novaName)
@@ -707,8 +755,8 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── 提交表单 ──────────────────────────────────────────────────
-  function handleFormSubmit() {
-    var target     = vm()
+  function handleFormSubmit(vmKey) {
+    var target     = vmKey ? (window.vmMap && window.vmMap[vmKey]) : vm()
     var formData   = target.formData
     var editFields = target.editFields || []
     var visibleSet = new Set((target.visibleEditFields || []).filter(function(v) { return v.visible }).map(function(v) { return v.field.field }))
@@ -793,18 +841,25 @@ window.NovaTableJQ = (function ($) {
         return item
       })
       formInfo.unshift({ field: novaIdField, value: pkValue, type: '' })
+      // embedded 模式：注入预置外键字段（按 REFERENCE 格式）
+      var _sf = target._sourceRefFields || []
+      _sf.forEach(function(rf) {
+        if (!formInfo.some(function(i) { return i.field === rf.field }) && rf.value != null && rf.value !== '') {
+          formInfo.push({ field: rf.field, value: String(rf.value), type: 'REFERENCE', reference: { field: rf.referenceField } })
+        }
+      })
       $.ajax({
         url:         '/nova/table/update',
         method:      'POST',
         contentType: 'application/json',
         data:        JSON.stringify({ novaName: novaName, formInfo: formInfo, appendageFormInfo: appendageFormInfo }),
         success: function (resp) {
-          var t = window.vmMap && window.vmMap[novaName]
+          var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
           if (!t) return
           if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '修改失败'); return }
           t.showForm = false
           if (window.$message) window.$message.success('修改成功')
-          loadData(novaName)
+          loadData(vmKey || novaName)
         },
         error: function () {
           console.info('[Nova] update接口请求失败，novaName:', novaName)
@@ -830,18 +885,25 @@ window.NovaTableJQ = (function ($) {
         }
         return item
       }).filter(function (item) { return item.value !== '' })
+      // embedded 模式：注入预置外键字段（按 REFERENCE 格式）
+      var _sf2 = target._sourceRefFields || []
+      _sf2.forEach(function(rf) {
+        if (!formInfo.some(function(i) { return i.field === rf.field }) && rf.value != null && rf.value !== '') {
+          formInfo.push({ field: rf.field, value: String(rf.value), type: 'REFERENCE', reference: { field: rf.referenceField } })
+        }
+      })
       $.ajax({
         url:         '/nova/table/add',
         method:      'POST',
         contentType: 'application/json',
         data:        JSON.stringify({ novaName: novaName, formInfo: formInfo, appendageFormInfo: appendageFormInfo }),
         success: function (resp) {
-          var t = window.vmMap && window.vmMap[novaName]
+          var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
           if (!t) return
           if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '新增失败'); return }
           t.showForm = false
           if (window.$message) window.$message.success('新增成功')
-          loadData(novaName)
+          loadData(vmKey || novaName)
         },
         error: function () {
           console.info('[Nova] add接口请求失败，novaName:', novaName)
@@ -948,12 +1010,17 @@ window.NovaTableJQ = (function ($) {
     })
   }
 
+  // ── embedded 模式初始化（嵌入在父表编辑弹窗的 tab 里）──────────
+  function onEmbeddedMounted(novaName, vmKey, sourceNovaName, sourceFields) {
+    buildTable(novaName, vmKey, sourceFields || {}, sourceNovaName)
+  }
+
   return {
     onMounted, onRouteChange, buildTable, updateTableHeight,
     handleReset, handleAdd, handleEdit, handleDelete,
     handleBatchDelete, handleFormSubmit,
     loadData, onPageChange, onPageSizeChange, onSortChange,
-    onPickerMounted, onViewMounted,
+    onPickerMounted, onViewMounted, onEmbeddedMounted,
     loadReferenceDetails, loadAppendageDetails
   }
 

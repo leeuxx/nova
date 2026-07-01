@@ -5,11 +5,8 @@ import com.nova.annotation.NovaField;
 import com.nova.annotation.config.NovaId;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
-import com.nova.annotation.sub.nova.field.edit.AttachmentType;
-import com.nova.annotation.sub.nova.field.edit.DateType;
-import com.nova.annotation.sub.nova.field.edit.Readonly;
-import com.nova.annotation.sub.nova.field.edit.Search;
-import com.nova.service.TestDemo3Service;
+import com.nova.annotation.sub.nova.field.edit.*;
+import com.nova.service.TestDemo4Service;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -18,16 +15,16 @@ import java.time.LocalDateTime;
 @Data
 @Accessors(chain = true)
 @Nova(
-        name = "测试功能3",
-        desc = "测试功能3描述",
+        name = "测试功能4",
+        desc = "测试功能4描述",
         orderBy = "id desc",
-        dataProxy = TestDemo3Service.class
+        dataProxy = TestDemo4Service.class
 )
-public class TestDemo3View {
+public class TestDemo4View {
 
     @NovaId
     @NovaField(
-            views = @View(title = "ID", width = "25%"),
+            views = @View(title = "ID", width = "10%"),
             edit = @Edit(
                     title = "ID",
                     show = false
@@ -36,9 +33,20 @@ public class TestDemo3View {
     private Long id;
 
     @NovaField(
-            views = @View(title = "岗位名称", width = "25%"),
             edit = @Edit(
-                    title = "岗位名称",
+                    title = "用户信息",
+                    type = Edit.Type.REFERENCE,
+                    referenceType = @ReferenceType(
+                            referenceField = "demoId"
+                    )
+            )
+    )
+    private TestDemoView testDemoView;
+
+    @NovaField(
+            views = @View(title = "薪资名称", width = "20%"),
+            edit = @Edit(
+                    title = "薪资名称",
                     notNull = true,
                     search = @Search
             )
@@ -46,16 +54,18 @@ public class TestDemo3View {
     private String name;
 
     @NovaField(
-            views = @View(title = "说明", width = "25%"),
+            views = @View(title = "说明", width = "20%"),
             edit = @Edit(
                     title = "说明",
-                    notNull = true
+                    notNull = true,
+                    search = @Search(vague = true)
+
             )
     )
     private String msg;
 
     @NovaField(
-            views = @View(title = "文件", width = "25%"),
+            views = @View(title = "文件", width = "15%"),
             edit = @Edit(
                     title = "文件",
                     type = Edit.Type.ATTACHMENT,
@@ -69,7 +79,7 @@ public class TestDemo3View {
     private String file;
 
     @NovaField(
-            views = @View(title = "创建时间", width = "25%"),
+            views = @View(title = "创建时间", width = "15%"),
             edit = @Edit(
                     title = "创建时间",
                     type = Edit.Type.DATE,

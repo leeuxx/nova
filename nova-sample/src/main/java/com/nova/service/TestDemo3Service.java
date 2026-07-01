@@ -12,7 +12,6 @@ import com.nova.entity.TestDemo3;
 import com.nova.mapper.TestDemo3Mapper;
 import com.nova.utils.NovaQueryUtils;
 import com.nova.view.TestDemo3View;
-import com.nova.view.TestDemoView;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
@@ -36,7 +35,6 @@ public class TestDemo3Service extends ServiceImpl<TestDemo3Mapper, TestDemo3> im
         for (TestDemo3 record : records) {
             TestDemo3View testDemo3View = new TestDemo3View();
             BeanUtils.copyProperties(record, testDemo3View); // 源，目标
-            testDemo3View.setTestDemoView(new TestDemoView().setId(record.getDemoId()));
             testDemo3Views.add(testDemo3View);
         }
         return new Fetch.Vo<TestDemo3View>()

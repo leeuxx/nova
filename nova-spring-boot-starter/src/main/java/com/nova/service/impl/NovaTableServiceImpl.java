@@ -187,7 +187,7 @@ public class NovaTableServiceImpl implements NovaTableService {
             referenceMap.put(field, reference);
         });
         vo.setReference(referenceMap);
-        // 获取附属对象组件信息
+        // 获取附属对象/集合组件信息
         Map<String, NovaTableBuild.Vo.AppendageType> appendageMap = new LinkedHashMap<>();
         Map<String, NovaFieldUtils.AppendageTypeInfo> appendages = NovaFieldUtils.getAppendage(novaTableBuild.getNovaName());
         appendages.forEach((field, appendageInfo) -> {

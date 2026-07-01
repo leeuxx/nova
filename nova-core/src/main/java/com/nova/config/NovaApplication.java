@@ -23,6 +23,8 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -68,9 +70,20 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
                 if (field.isAnnotationPresent(NovaField.class)) {
                     NovaField novaField = field.getDeclaredAnnotation(NovaField.class);
                     Edit.Type type = novaFieldAutoTypeChange(field.getType(), novaField.edit().type());
+                    // 附属集合取泛型
+                    Class<?> fieldClass = field.getType();
+                    if (type == Edit.Type.APPENDAGES) {
+                        Type genericType = field.getGenericType();
+                        if (genericType instanceof ParameterizedType parameterizedType) {
+                            Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                            fieldClass = (Class<?>) actualTypeArguments[0];
+                        } else {
+                            throw new RuntimeException(Edit.Type.APPENDAGES.name() + "必须是集合类型");
+                        }
+                    }
                     novaFields.put(field.getName(), new ScanNova.NovaFieldInfo()
                             .setType(type)
-                            .setFieldClass(field.getType())
+                            .setFieldClass(fieldClass)
                             .setNovaField(novaField)
                     );
                 }

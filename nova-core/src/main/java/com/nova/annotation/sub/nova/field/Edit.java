@@ -88,7 +88,7 @@ public @interface Edit {
         @Comment("附属对象组件")
         APPENDAGE,
 
-        @Comment("附属集合组件")
+        @Comment("附属对象集合组件")
         APPENDAGES,
 
         @Comment("集合引用组件")

@@ -130,7 +130,7 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            // 自身详情表单
+            // 自身详情tap
             if (edit.show()) {
                 // 排除附属对象
                 if (edit.type() != Edit.Type.APPENDAGE) {
@@ -149,7 +149,7 @@ public class NovaFieldUtils {
                     thisForms.add(thisForm);
                 }
             }
-            // 引用详情表单
+            // 引用详情tap
             if (edit.type() == Edit.Type.REFERENCE) {
                 ReferenceType referenceType = edit.referenceType();
                 if (referenceType.tapShow()) {
@@ -160,11 +160,11 @@ public class NovaFieldUtils {
                             .setTapTitle(edit.title())
                             .setTapShow(referenceType.tapShow())
                             .setTapShowByExpr(referenceType.tapShowBy().value())
-                            .setTapSort(2)
+                            .setTapSort(3)
                     );
                 }
             }
-            // 附属对象详情表单
+            // 附属对象tap
             if (edit.type() == Edit.Type.APPENDAGE) {
                 AppendageType appendageType = edit.appendageType();
                 if (appendageType.tapShow()) {
@@ -176,6 +176,21 @@ public class NovaFieldUtils {
                             .setTapShow(appendageType.tapShow())
                             .setTapShowByExpr(appendageType.tapShowBy().value())
                             .setTapSort(1)
+                    );
+                }
+            }
+            // 附属集合tap
+            if (edit.type() == Edit.Type.APPENDAGES) {
+                AppendageType appendageType = edit.appendageType();
+                if (appendageType.tapShow()) {
+                    Class<?> fieldClass = novaFieldInfo.getFieldClass();
+                    editInfos.add(new EditInfo()
+                            .setTapType("appendagesTable")
+                            .setTapNovaName(fieldClass.getSimpleName())
+                            .setTapTitle(edit.title())
+                            .setTapShow(appendageType.tapShow())
+                            .setTapShowByExpr(appendageType.tapShowBy().value())
+                            .setTapSort(2)
                     );
                 }
             }
@@ -457,7 +472,7 @@ public class NovaFieldUtils {
     }
 
     /**
-     * 获取附属对象参数信息
+     * 获取附属对象/集合参数信息
      *
      * @param className 类名
      * @return 附件参数信息
@@ -473,7 +488,7 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            if (edit.type() == Edit.Type.APPENDAGE) {
+            if (edit.type() == Edit.Type.APPENDAGE || edit.type() == Edit.Type.APPENDAGES) {
                 AppendageType appendageType = edit.appendageType();
                 AppendageTypeInfo appendageTypeInfo = new AppendageTypeInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
@@ -535,7 +550,7 @@ public class NovaFieldUtils {
     @Accessors(chain = true)
     public static class EditInfo {
 
-        @Comment("tap类型 thisForm=自身详情表单 referenceForm=引用详情表单 appendageForm=附属对象表单")
+        @Comment("tap类型 thisForm=自身tap referenceForm=引用tap appendageForm=附属对象tap appendagesTable=附属集合tap")
         private String tapType;
 
         @Comment("tap名称")
