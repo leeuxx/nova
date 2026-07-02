@@ -34,8 +34,24 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 .tab-bar {
   background: #fff;
 }
-.n-tabs { --n-tab-gap: 18px !important; }
-.n-tabs .n-tabs-tab { padding: 6px 12px !important; }
+.n-tabs { --n-tab-gap: 6px !important; }
+.n-tabs .n-tabs-tab { padding: 6px 12px !important; box-sizing: border-box; border-radius: 6px !important; }
+.n-tabs .n-tabs-tab--active { color: #2563eb; }
+.tab-bar-wrap .n-tabs .n-tabs-bar { display: none !important; }
+.tab-bar-wrap { position: relative; }
+.tab-bar-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: #2563eb;
+  border-radius: 2px;
+  pointer-events: none;
+  will-change: transform, width;
+}
+.tab-bar-line.bar-ready {
+  transition: transform 0.2s cubic-bezier(.4,0,.2,1), width 0.2s cubic-bezier(.4,0,.2,1);
+}
 
 
 .page-content {
@@ -215,6 +231,7 @@ body.dark { background: #151515 !important; }
 .dark .n-breadcrumb-item { color: #b0b0b0 !important; }
 .dark .n-tab             { color: #b0b0b0; }
 .dark .n-tab--active     { color: #2563eb !important; }
+.dark .n-tabs .n-tabs-bar { background: #2563eb !important; }
 .dark .n-form-item-label { color: #e0e0e0; }
 .dark .n-pagination      { color: #e0e0e0; }
 .dark .n-pagination-item { background: #252525; }

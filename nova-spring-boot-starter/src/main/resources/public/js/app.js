@@ -150,7 +150,6 @@ function mountApp(menuList) {
         const meta = routeMeta[path] || { title: path, icon: null }
         if (!openedTabs.value.find(t => t.key === path)) {
           openedTabs.value.push({ key: path, title: meta.title, icon: meta.icon, closable: path !== '/home' })
-          setTimeout(function() { tabsKey.value++ }, 50)
         }
         activeTab.value = path
         // 自动展开当前路由的祖先菜单节点
@@ -185,7 +184,6 @@ function mountApp(menuList) {
             const last = openedTabs.value[openedTabs.value.length - 1]
             if (last) router.push(last.key)
           }
-          setTimeout(function() { tabsKey.value++ }, 50)
         }
       }
 
@@ -196,10 +194,39 @@ function mountApp(menuList) {
       const handleTabClick = (key) => router.push(key)
       const userDropdown   = [{ label: '个人中心', key: 'profile' }, { label: '退出登录', key: 'logout' }]
 
+      // 自定义下横线
+      const barStyle = ref({ transform: 'translateX(0px)', width: '0px', opacity: 0 })
+      const barReady = ref(false)
+      const tabBarRef = ref(null)
+
+      const updateBar = (animate) => {
+        nextTick(() => {
+          if (!tabBarRef.value) return
+          const wrapEl   = tabBarRef.value
+          const activeEl = wrapEl.querySelector('.n-tabs-tab--active')
+          if (!activeEl) return
+          let left = 0
+          let el   = activeEl
+          while (el && el !== wrapEl) {
+            left += el.offsetLeft
+            el    = el.offsetParent
+          }
+          if (!animate) barReady.value = false
+          barStyle.value = { transform: 'translateX(' + left + 'px)', width: activeEl.offsetWidth + 'px', opacity: 1 }
+          if (!animate) nextTick(() => { barReady.value = true })
+        })
+      }
+
+      watch(activeTab, () => updateBar(true))
+      watch(openedTabs, () => updateBar(true), { deep: true })
+      // 首次定位不播动画
+      watch(tabBarRef, (el) => { if (el) updateBar(false) }, { once: true })
+
       return {
         collapsed, isDark, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
         menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey,
-        handleMenuSelect, handleTabClose, handleTabClick, userDropdown
+        handleMenuSelect, handleTabClose, handleTabClick, userDropdown,
+        barStyle, barReady, tabBarRef
       }
     },
 
@@ -271,7 +298,7 @@ function mountApp(menuList) {
                   </n-layout-header>
 
                   <!-- Tab 栏 -->
-                  <div class="tab-bar" style="padding:8px 16px 0;display:flex;align-items:flex-start;gap:4px">
+                  <div class="tab-bar tab-bar-wrap" style="padding:8px 16px 0;display:flex;align-items:flex-start;gap:4px" ref="tabBarRef">
                     <n-tabs type="line" :key="tabsKey" :value="activeTab" :tabs-padding="0" @update:value="handleTabClick" style="flex:1;min-width:0">
                       <n-tab
                         v-for="tab in openedTabs" :key="tab.key" :name="tab.key"
@@ -287,6 +314,7 @@ function mountApp(menuList) {
                         </span>
                       </n-tab>
                     </n-tabs>
+                    <div class="tab-bar-line" :class="{ 'bar-ready': barReady }" :style="barStyle"></div>
                   </div>
 
                   <!-- 内容区 -->
