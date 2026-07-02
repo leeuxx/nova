@@ -13,7 +13,7 @@ public @interface ReferenceType {
     @Comment("引用类显示属性名，替代 storageField 展示，默认 name")
     String displayField() default "name";
 
-    @Comment("当前类获取引用类数据时，额外向引用类 DataProxy.fetch 传递的当前类表单上下文信息，用于动态筛选")
+    @Comment("当前类获取引用类数据时（弹窗选取 or 下拉选取），额外向引用类 DataProxy.fetch 传递的当前类表单上下文信息，用于动态筛选")
     String[] referenceTransmitField() default {};
 
     @Comment("tap页显示")
