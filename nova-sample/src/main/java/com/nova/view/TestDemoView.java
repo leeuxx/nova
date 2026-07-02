@@ -13,7 +13,6 @@ import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Accessors(chain = true)
@@ -66,7 +65,7 @@ public class TestDemoView {
                     appendageType = @AppendageType(
                             referenceField = "demoId"
                     ),
-                    search = @Search
+                    search = @Search(vague = true)
             )
     )
     private TestDemo3View testDemo3View;
@@ -78,10 +77,10 @@ public class TestDemoView {
                     appendageType = @AppendageType(
                             referenceField = "demoId"
                     ),
-                    search = @Search(vague = true)
+                    search = @Search
             )
     )
-    private List<TestDemo4View> testDemo4Views;
+    private TestDemo4View testDemo4View;
 
     @NovaField(
             views = @View(title = "用户名", width = "10%"),

@@ -104,18 +104,20 @@ public class NovaFieldUtils {
             Edit edit = novaField.edit();
             Edit.Type type = edit.type();
             boolean isReference = (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE);
+            boolean isAppendages = type == Edit.Type.APPENDAGES;
             for (View view : views) {
-                if (view.show()) {
-                    String fieldName = isReference ? field + "." + view.column() : field;
-                    TableColumnInfo tableColumnInfo = new TableColumnInfo()
-                            .setField(fieldName)
-                            .setTitle(view.title())
-                            .setDesc(view.desc())
-                            .setWidth(view.width())
-                            .setSortable(view.sortable())
-                            .setType(novaFieldInfo.getType());
-                    tableColumnInfos.add(tableColumnInfo);
+                if (!view.show() || isAppendages) {
+                    continue;
                 }
+                String fieldName = isReference ? field + "." + view.column() : field;
+                TableColumnInfo tableColumnInfo = new TableColumnInfo()
+                        .setField(fieldName)
+                        .setTitle(view.title())
+                        .setDesc(view.desc())
+                        .setWidth(view.width())
+                        .setSortable(view.sortable())
+                        .setType(novaFieldInfo.getType());
+                tableColumnInfos.add(tableColumnInfo);
             }
         });
         return tableColumnInfos;
