@@ -88,6 +88,7 @@ public @interface Edit {
         @Comment("文件上传组件")
         ATTACHMENT,
 
+
         @Comment("对象引用组件")
         REFERENCE,
 
@@ -99,6 +100,9 @@ public @interface Edit {
 
         @Comment("集合引用组件")
         LINK,
+
+        @Comment("集合引用目标组件")
+        LINK_TARGET,
 
 
         @Comment("分割线")

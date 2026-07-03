@@ -6,12 +6,9 @@ import com.nova.annotation.config.NovaId;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.LinkTargetType;
-import com.nova.annotation.sub.nova.field.edit.ReferenceType;
 import com.nova.service.TestDemoRefService;
 import lombok.Data;
 import lombok.experimental.Accessors;
-
-import java.util.List;
 
 @Data
 @Accessors(chain = true)
@@ -25,7 +22,7 @@ public class TestDemoRefView {
 
     @NovaId
     @NovaField(
-            views = @View(title = "ID", width = "10%"),
+            views = @View(title = "ID", width = "25%"),
             edit = @Edit(
                     title = "ID",
                     show = false
@@ -34,10 +31,13 @@ public class TestDemoRefView {
     private Long id;
 
     @NovaField(
+            views = {
+                    @View(title = "用户名称", column = "name", width = "25%")
+            },
             edit = @Edit(
                     title = "用户信息",
-                    type = Edit.Type.REFERENCE,
-                    referenceType = @ReferenceType(
+                    type = Edit.Type.LINK_TARGET,
+                    linkTargetType = @LinkTargetType(
                             referenceField = "demoId"
                     )
             )
@@ -45,14 +45,19 @@ public class TestDemoRefView {
     private TestDemoView testDemoView;
 
     @NovaField(
+            views = {
+                    @View(title = "薪资名称", column = "name", width = "25%"),
+                    @View(title = "薪资说明", column = "msg", width = "25%"),
+            },
             edit = @Edit(
                     title = "引用薪资",
-                    type = Edit.Type.LINK,
+                    type = Edit.Type.LINK_TARGET,
                     linkTargetType = @LinkTargetType(
-                            referenceField = "demo4Id"
+                            referenceField = "demo4Id",
+                            type = LinkTargetType.Type.SELECT
                     )
             )
     )
-    private List<TestDemo4View> testDemo4Views;
+    private TestDemo4View testDemo4View;
 
 }

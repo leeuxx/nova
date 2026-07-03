@@ -23,6 +23,9 @@ public interface NovaTableService {
     @Comment("新增表格数据")
     NovaTableAdd.Vo add(NovaTableAdd novaTableAdd);
 
+    @Comment("新增LINK_TARGET关联数据")
+    NovaTableAdd.Vo addLinkTarget(NovaTableAdd novaTableAdd);
+
     @Comment("修改表格数据")
     NovaTableUpdate.Vo update(NovaTableUpdate novaTableUpdate);
 

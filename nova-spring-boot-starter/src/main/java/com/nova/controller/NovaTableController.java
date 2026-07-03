@@ -46,6 +46,13 @@ public class NovaTableController {
         return R.ok(add);
     }
 
+    @Comment("新增LINK_TARGET关联数据")
+    @PostMapping("addLinkTarget")
+    public R<NovaTableAdd.Vo> addLinkTarget(@RequestBody @Validated NovaTableAdd novaTableAdd) {
+        NovaTableAdd.Vo add = novaTableService.addLinkTarget(novaTableAdd);
+        return R.ok(add);
+    }
+
     @Comment("关键词搜索")
     @PostMapping("promptSearch")
     public R<PageBean<NovaTablePromptSearch.Vo>> promptSearch(@RequestBody @Validated NovaTablePromptSearch novaTablePromptSearch) {

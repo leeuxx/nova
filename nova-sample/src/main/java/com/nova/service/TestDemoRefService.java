@@ -1,5 +1,7 @@
 package com.nova.service;
 
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -28,21 +30,19 @@ import java.util.Objects;
 @AllArgsConstructor(onConstructor_ = @Lazy)
 public class TestDemoRefService extends ServiceImpl<TestDemoRefMapper, TestDemoRef> implements DataProxy<TestDemoRefView> {
 
+    private TestDemoService testDemoService;
+
     private TestDemo4Service testDemo4Service;
 
     @Override
     public void add(TestDemoRefView testDemoRefView) {
         TestDemoView testDemoView = testDemoRefView.getTestDemoView();
-        List<TestDemo4View> testDemo4Views = testDemoRefView.getTestDemo4Views();
-        List<TestDemoRef> testDemoRefs = new ArrayList<>();
-        for (TestDemo4View testDemo4View : testDemo4Views) {
-            TestDemoRef testDemoRef = new TestDemoRef()
-                    .setId(YitIdHelper.nextId())
-                    .setDemoId(testDemoView.getId())
-                    .setDemo4Id(testDemo4View.getId());
-            testDemoRefs.add(testDemoRef);
-        }
-        saveBatch(testDemoRefs);
+        TestDemo4View testDemo4View = testDemoRefView.getTestDemo4View();
+        TestDemoRef testDemoRef = new TestDemoRef()
+                .setId(YitIdHelper.nextId())
+                .setDemoId(testDemoView.getId())
+                .setDemo4Id(testDemo4View.getId());
+        save(testDemoRef);
     }
 
     @Override
@@ -58,6 +58,10 @@ public class TestDemoRefService extends ServiceImpl<TestDemoRefMapper, TestDemoR
 
     @Override
     public Fetch.Vo<TestDemoRefView> fetch(Fetch<TestDemoRefView> fetch) {
+        JSONObject jsonObject = JSONUtil.parseObj(fetch.getConditions().get("demoId"));
+        TestDemo testDemo = testDemoService.getById(jsonObject.getLong("value"));
+        TestDemoView testDemoView = new TestDemoView();
+        BeanUtils.copyProperties(testDemo, testDemoView); // 源，目标
         NovaQueryUtils.Result<TestDemoRef> testDemoRefResult = NovaQueryUtils.buildWrapper(TestDemoRefView.class, fetch, TestDemoRef.class);
         Page<TestDemoRef> page = testDemoRefResult.getPage();
         LambdaQueryWrapper<TestDemoRef> wrapper = testDemoRefResult.getWrapper();
@@ -73,17 +77,17 @@ public class TestDemoRefService extends ServiceImpl<TestDemoRefMapper, TestDemoR
         }
         List<TestDemoRefView> testDemoRefViews = new ArrayList<>();
         for (TestDemoRef testDemoRef : records) {
-            List<TestDemo4View> testDemo4Views = new ArrayList<>();
+            TestDemoRefView testDemoRefView = new TestDemoRefView();
+            BeanUtils.copyProperties(testDemoRef, testDemoRefView); // 源，目标
             for (TestDemo4 testDemo4 : testDemo4s) {
                 if (testDemo4.getId().equals(testDemoRef.getDemo4Id())) {
                     TestDemo4View testDemo4View = new TestDemo4View();
                     BeanUtils.copyProperties(testDemo4, testDemo4View); // 源，目标
-                    testDemo4Views.add(testDemo4View);
+                    testDemoRefView.setTestDemo4View(testDemo4View);
                 }
             }
-            TestDemoRefView testDemoRefView = new TestDemoRefView();
-            BeanUtils.copyProperties(testDemoRef, testDemoRefView); // 源，目标
-            testDemoRefView.setTestDemo4Views(testDemo4Views);
+            testDemoRefView.setTestDemoView(testDemoView);
+            testDemoRefViews.add(testDemoRefView);
         }
         return new Fetch.Vo<TestDemoRefView>()
                 .setTotal(iPage.getTotal())

@@ -46,6 +46,15 @@ public class NovaQueryUtils {
             ));
         }
 
+        // 处理透传字段（referenceTransmitField），作为 eq 条件注入查询
+        /*Map<String, String> sourceFields = fetch.getSourceFields();
+        if (sourceFields != null) {
+            sourceFields.forEach((field, val) -> {
+                if ("ids".equals(field) || val == null || val.isEmpty()) return;
+                wrapper.eq(MixUtils.camelToSnake(field), val);
+            });
+        }*/
+
         List<Fetch.OrderItemBean> orders = fetch.getOrders();
         if (orders != null && !orders.isEmpty()) {
             orders.forEach(o -> {

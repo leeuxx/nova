@@ -206,6 +206,26 @@ public class NovaTableServiceImpl implements NovaTableService {
             appendageMap.put(field, appendage);
         });
         vo.setAppendage(appendageMap);
+        // 获取集合引用组件信息
+        Map<String, NovaTableBuild.Vo.Link> linkMap = new LinkedHashMap<>();
+        Map<String, NovaFieldUtils.LinkInfo> links = NovaFieldUtils.getLink(novaTableBuild.getNovaName());
+        links.forEach((field, linkInfo) -> {
+            NovaTableBuild.Vo.Link link = new NovaTableBuild.Vo.Link()
+                    .setReferenceName(linkInfo.getReferenceClass().getSimpleName())
+                    .setReferenceTransmitField(linkInfo.getReferenceTransmitField());
+            linkMap.put(field, link);
+        });
+        vo.setLink(linkMap);
+        // 获取集合引用目标组件信息
+        NovaTableBuild.Vo.LinkTarget linkTarget = new NovaTableBuild.Vo.LinkTarget();
+        NovaFieldUtils.LinkTargetInfo linkTargetInfo = NovaFieldUtils.getLinkTarget(novaTableBuild.getNovaName());
+        linkTarget.setThisReferenceName(linkTargetInfo.getThisReferenceClass() != null ? linkTargetInfo.getThisReferenceClass().getSimpleName() : null)
+                .setThisReferenceField(linkTargetInfo.getThisReferenceField())
+                .setThisStorageField(linkTargetInfo.getThisStorageField())
+                .setLinkReferenceName(linkTargetInfo.getLinkReferenceClass() != null ? linkTargetInfo.getLinkReferenceClass().getSimpleName() : null)
+                .setLinkReferenceField(linkTargetInfo.getLinkReferenceField())
+                .setLinkStorageField(linkTargetInfo.getLinkStorageField());
+        vo.setLinkTarget(linkTarget);
         return vo;
     }
 
@@ -307,6 +327,8 @@ public class NovaTableServiceImpl implements NovaTableService {
                 DataProxyUtils.setReferenceField(novaName, model, formInfo.getField(), formInfo.getValue());
             }
         }
+        //noinspection unchecked,rawtypes
+        ((DataProxy) DataProxyUtils.getDataProxy(novaName)).add(model);
         Map<String, List<NovaTableAdd.FormInfo>> appendageFormInfo = novaTableAdd.getAppendageFormInfo();
         if (appendageFormInfo != null) {
             for (Map.Entry<String, List<NovaTableAdd.FormInfo>> entry : appendageFormInfo.entrySet()) {
@@ -332,8 +354,36 @@ public class NovaTableServiceImpl implements NovaTableService {
                 DataProxyUtils.setAppendageField(novaName, model, appNovaName, appModel);
             }
         }
-        //noinspection unchecked,rawtypes
-        ((DataProxy) DataProxyUtils.getDataProxy(novaName)).add(model);
+        return new NovaTableAdd.Vo();
+    }
+
+    @Override
+    public NovaTableAdd.Vo addLinkTarget(NovaTableAdd novaTableAdd) {
+        String novaName = novaTableAdd.getNovaName();
+        List<NovaTableAdd.FormInfo> formInfo = novaTableAdd.getFormInfo();
+        // 找到多选字段（JSON数组值）和单选字段
+        String multiField = null;
+        List<String> multiValues = null;
+        for (NovaTableAdd.FormInfo fi : formInfo) {
+            String val = fi.getValue();
+            if (val != null && val.startsWith("[") && val.endsWith("]")) {
+                multiField = fi.getField();
+                multiValues = DataProxyUtils.parseJsonArray(val);
+                break;
+            }
+        }
+        // noinspection rawtypes
+        DataProxy dataProxy = DataProxyUtils.getDataProxy(novaName);
+        if (multiValues != null && !multiValues.isEmpty()) {
+            for (String targetId : multiValues) {
+                Object model = DataProxyUtils.buildModel(novaName, List.of(), List.of());
+                for (NovaTableAdd.FormInfo fi : formInfo) {
+                    String v = fi.getField().equals(multiField) ? targetId : fi.getValue();
+                    DataProxyUtils.setLinkTargetField(novaName, model, fi.getField(), v);
+                }
+                dataProxy.add(model);
+            }
+        }
         return new NovaTableAdd.Vo();
     }
 

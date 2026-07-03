@@ -140,13 +140,15 @@ const NovaTable = {
     pickerMode:         { type: Boolean, default: false },
     viewMode:           { type: Boolean, default: false },
     embeddedMode:       { type: Boolean, default: false },
+    linkMode:           { type: Boolean, default: false },
+    pickerMulti:        { type: Boolean, default: false },
     viewRow:            { type: Object,  default: null },
     novaNameProp:       { type: String,  default: '' },
     sourceNovaNameProp: { type: String,  default: '' },
     sourceFieldsProp:   { type: Object,  default: () => ({}) }
   },
 
-  emits: ['pick'],
+  emits: ['pick', 'link-add', 'check'],
 
   data() {
     return {
@@ -193,6 +195,16 @@ const NovaTable = {
       appendageFormErrors: {},
       appendageDetailsLoaded: {},
       editLayout:     'DEFAULT',
+      linkMap:        {},
+      linkTargetInfo: {},
+      linkTabBuild:     {},
+      linkFormData:     {},
+      linkPickerShow:            false,
+      linkPickerTargetNova:       '',
+      linkPickerCurrentTab:       '',
+      linkPickerSelectedKeys:     [],
+      linkPickerSourceFields:     {},
+      linkPickerTitle:            '',
       formErrors:     {},
       striped:        true,
       tableSize:      'medium',
@@ -236,7 +248,7 @@ const NovaTable = {
       if (f.tapSearch && f.tapSearch.showAll) opts.unshift({ value: null, label: '全部' })
       return opts
     },
-    isEmbTab() { return !!(this.formTab && this.formTab.startsWith('emb_')) },
+    isEmbTab() { return !!(this.formTab && (this.formTab.startsWith('emb_') || this.formTab.startsWith('link_'))) },
     // 固定列像素：checkbox 50 + 操作列 140
     colPixels() {
       const fixedPx = 50 + 140
@@ -291,19 +303,23 @@ const NovaTable = {
       const cols = []
 
       if (vm.pickerMode) {
-        cols.push({
-          key: '__radio__', width: 50, title: '',
-          render(row) {
-            return h('div', { style: 'display:flex;align-items:center;justify-content:center;width:100%;height:100%' }, [
-              h(NRadio, {
-                value: row[vm.novaIdFieldName],
-                checked: vm.selectedRowKey === row[vm.novaIdFieldName],
-                onClick: () => vm.selectRow(row),
-                style: { transform: 'scale(1.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }
-              })
-            ])
-          }
-        })
+        if (vm.pickerMulti) {
+          cols.push({ type: 'selection', title: '', key: 'selection', width: 50 })
+        } else {
+          cols.push({
+            key: '__radio__', width: 50, title: '',
+            render(row) {
+              return h('div', { style: 'display:flex;align-items:center;justify-content:center;width:100%;height:100%' }, [
+                h(NRadio, {
+                  value: row[vm.novaIdFieldName],
+                  checked: vm.selectedRowKey === row[vm.novaIdFieldName],
+                  onClick: () => vm.selectRow(row),
+                  style: { transform: 'scale(1.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+                })
+              ])
+            }
+          })
+        }
       } else {
         cols.push({ type: 'selection', title: '', key: 'selection', width: 50 })
       }
@@ -464,22 +480,22 @@ const NovaTable = {
 
       if (!vm.pickerMode) {
         cols.push({
-          title: '操作', key: 'actions', width: 140, fixed: 'right',
+          title: '操作', key: 'actions', width: vm.linkMode ? 80 : 140, fixed: 'right',
           render(row) {
-            return h(NSpace, { size: 8 }, {
-              default: () => [
-                h('span', { style: { color: '#2080f0', cursor: 'pointer', fontSize: '13px' }, onClick: () => vm.handleEdit(row) }, '编辑'),
-                h(NPopconfirm,
-                  { onPositiveClick: () => vm.handleDelete(row), positiveText: '确定', negativeText: '取消' },
-                  {
-                    default: () => '确定删除吗？',
-                    trigger:  () => h('span', { style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除')
-                  }
-                )
-            ]
-          })
-        }
-      })
+            var buttons = []
+            if (!vm.linkMode) {
+              buttons.push(h('span', { style: { color: '#2080f0', cursor: 'pointer', fontSize: '13px' }, onClick: () => vm.handleEdit(row) }, '编辑'))
+            }
+            buttons.push(h(NPopconfirm,
+              { onPositiveClick: () => vm.handleDelete(row), positiveText: '确定', negativeText: '取消' },
+              {
+                default: () => '确定删除吗？',
+                trigger:  () => h('span', { style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除')
+              }
+            ))
+            return h(NSpace, { size: 8 }, { default: () => buttons })
+          }
+        })
       }
 
       return cols
@@ -727,7 +743,14 @@ const NovaTable = {
       if (dateInfo.pickerMode === 'HISTORY') return (ts) => ts > todayTs
       return undefined
     },
-    handleCheck(keys)   { this.checkedRowKeys = keys },
+    handleCheck(keys)   { this.checkedRowKeys = keys; if (this.pickerMulti) this.$emit('check', keys) },
+    toggleCheckedRow(row) {
+      const key = row[this.novaIdFieldName]
+      const idx = this.checkedRowKeys.indexOf(key)
+      if (idx >= 0) this.checkedRowKeys.splice(idx, 1)
+      else this.checkedRowKeys.push(key)
+      this.$emit('check', this.checkedRowKeys.slice())
+    },
     handleReset() {
       if (this.pickerMode || this.embeddedMode) {
         const form = {}
@@ -987,6 +1010,80 @@ const NovaTable = {
 
       this.closePickerAtLevel(level)
     },
+    // ── LINK 组件方法 ──────────────────────────────────────────
+    buildLinkSourceFields(tab) {
+      const build = this.linkTabBuild[tab.tapNovaName]
+      if (!build) return {}
+      const lt = build.linkTarget || {}
+      const refField = lt.thisReferenceField
+      if (!refField) return {}
+      const pkVal = this.currentRow && this.currentRow[this.novaIdFieldName]
+      if (pkVal === null || pkVal === undefined) return {}
+      return { [refField]: String(pkVal) }
+    },
+    openLinkPicker(linkNovaName, tapTitle) {
+      const build = this.linkTabBuild[linkNovaName]
+      if (!build) return
+      const lt = build.linkTarget || {}
+      const targetNova = lt.linkReferenceName
+      if (!targetNova) {
+        if (window.$message) window.$message.warning('未找到目标表')
+        return
+      }
+      this.linkPickerTitle = '选择 ' + (tapTitle || '关联数据')
+      // 从 linkMap 中查找对应字段的 referenceTransmitField 并构建透传参数
+      const srcFields = {}
+      const linkMap = this.linkMap || {}
+      for (const field in linkMap) {
+        if (linkMap[field] && linkMap[field].referenceName === linkNovaName) {
+          const transmit = linkMap[field].referenceTransmitField
+          if (transmit && transmit.length) {
+            transmit.forEach(f => {
+              const v = this.formData[f]
+              if (v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0))
+                srcFields[f] = String(v)
+            })
+          }
+          break
+        }
+      }
+      this.linkPickerTargetNova = targetNova
+      this.linkPickerCurrentTab = linkNovaName
+      this.linkPickerSelectedKeys = []
+      this.linkPickerSourceFields = srcFields
+      this.linkPickerShow = true
+    },
+    closeLinkPicker() {
+      this.linkPickerShow = false
+      this.linkPickerTargetNova = ''
+      this.linkPickerCurrentTab = ''
+      this.linkPickerSelectedKeys = []
+    },
+    onLinkPickerPick(selectedKeys) {
+      this.linkPickerSelectedKeys = selectedKeys || []
+    },
+    confirmLinkPickerSelect() {
+      if (!this.linkPickerSelectedKeys.length) {
+        if (window.$message) window.$message.warning('请至少选择一行')
+        return
+      }
+      var linkNovaName = this.linkPickerCurrentTab
+      var build = this.linkTabBuild[linkNovaName]
+      if (!build) return
+      var sourceField = build.sourceFieldName
+      var targetField = build.targetFieldName
+      var sourceValue = this.currentRow && this.currentRow[this.novaIdFieldName]
+      if (!sourceField) { console.error('[Nova] 缺少 sourceField', build); if (window.$message) window.$message.error('关联参数不完整: 缺少源字段名'); return }
+      if (!targetField) { console.error('[Nova] 缺少 targetField', build); if (window.$message) window.$message.error('关联参数不完整: 缺少目标字段名'); return }
+      if (sourceValue == null) { console.error('[Nova] 缺少 sourceValue', this.currentRow, this.novaIdFieldName); if (window.$message) window.$message.error('关联参数不完整: 缺少源记录ID'); return }
+      window.NovaTableJQ.handleLinkAdd(
+        this.novaName, linkNovaName,
+        sourceField, sourceValue,
+        targetField, this.linkPickerSelectedKeys,
+        this._vmKey || this.novaName
+      )
+      this.closeLinkPicker()
+    },
     _doRefSelectRequest(field, refField, query, page, append, onDone) {
       const refInfo = this.referenceMap[refField] || (this.appendageMap && this.appendageMap[refField]) || {}
       const isForFilter = String(field).startsWith('_f_')
@@ -1096,7 +1193,7 @@ const NovaTable = {
       this.$emit('pick', enrichedRow)
     },
     onFormTabChange(tab) {
-      if (tab.startsWith('emb_')) {
+      if (tab.startsWith('emb_') || tab.startsWith('link_')) {
         this.visitedEmbTabs = new Set([...this.visitedEmbTabs, tab])
       } else if (tab.startsWith('ref_')) {
         var refNovaName = tab.slice(4)
@@ -1272,7 +1369,7 @@ const NovaTable = {
     <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : 'padding:16px')">
 
       <!-- 筛选卡片 -->
-      <component :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
+      <component v-if="!linkMode" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
         <div :class="['filter-grid', embeddedMode ? 'embedded' : '']" :style="embeddedMode ? 'padding:8px 0' : ''">
           <template v-for="(field, index) in searchFields" :key="field.field">
             <div v-if="filterExpanded || index < 3" style="display:flex;align-items:center;gap:8px;width:100%">
@@ -1491,7 +1588,11 @@ const NovaTable = {
               <template #icon><n-icon><iconify-icon icon="material-symbols:delete-outline"></iconify-icon></n-icon></template>
               删 除
             </n-button>
-            <n-button :size="embSize" type="primary" @click="handleAdd">
+            <n-button v-if="linkMode" :size="embSize" type="primary" @click="$emit('link-add')">
+              <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
+              新增
+            </n-button>
+            <n-button v-else :size="embSize" type="primary" @click="handleAdd">
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
               新 增
             </n-button>
@@ -1528,7 +1629,7 @@ const NovaTable = {
             :row-key="row => row[novaIdFieldName]"
             :checked-row-keys="checkedRowKeys"
             @update:checked-row-keys="handleCheck"
-            :row-props="pickerMode ? (row) => ({ style: 'cursor:pointer', onClick: () => selectRow(row) }) : undefined"
+            :row-props="(pickerMode || pickerMulti) ? (row) => ({ style: 'cursor:pointer', onClick: () => pickerMulti ? toggleCheckedRow(row) : selectRow(row) }) : undefined"
             :loading="loading"
             :remote="true"
             :pagination="paginationConfig"
@@ -1731,11 +1832,11 @@ const NovaTable = {
 
         <!-- referenceForm / appendageForm 统一按后端顺序渲染 -->
         <template v-for="tab in editExtraTabs" :key="tab.tapNovaName">
-        <n-tab-pane v-if="tab.tapShow !== false && (tab.tapType !== 'referenceForm' || formMode !== 'add') && (tab.tapType !== 'appendagesTable' || formMode !== 'add') && (!tab.tapShowByExpr || evalShowExprSafe(tab.tapShowByExpr, formData))"
-          :name="(tab.tapType === 'referenceForm' ? 'ref_' : tab.tapType === 'appendagesTable' ? 'emb_' : 'app_') + tab.tapNovaName"
+        <n-tab-pane v-if="tab.tapShow !== false && (tab.tapType !== 'referenceForm' || formMode !== 'add') && (tab.tapType !== 'appendagesTable' || formMode !== 'add') && (tab.tapType !== 'linkForm' || formMode !== 'add') && (!tab.tapShowByExpr || evalShowExprSafe(tab.tapShowByExpr, formData))"
+          :name="(tab.tapType === 'referenceForm' ? 'ref_' : tab.tapType === 'appendagesTable' ? 'emb_' : tab.tapType === 'linkForm' ? 'link_' : 'app_') + tab.tapNovaName"
           display-directive="show"
           :style="tab.tapType === 'appendagesTable' ? ('padding:0 0 15px 0;overflow:hidden;height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px')) : 'padding:16px 0 20px 0'">
-          <template #tab><iconify-icon :icon="tab.tapType === 'referenceForm' ? 'mdi:eye-outline' : tab.tapType === 'appendagesTable' ? 'mdi:table' : 'mdi:note-outline'" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>{{ tab.tapTitle || tab.tapNovaName }}<template v-if="tab.tapType === 'appendageForm'"><span v-if="tabRequiredCount('app_' + tab.tapNovaName) > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('app_' + tab.tapNovaName) }}</span><span v-else-if="tabTotalRequired('app_' + tab.tapNovaName) > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template></template>
+          <template #tab><iconify-icon :icon="tab.tapType === 'referenceForm' ? 'mdi:eye-outline' : tab.tapType === 'appendagesTable' ? 'mdi:table' : tab.tapType === 'linkForm' ? 'mdi:link-variant' : 'mdi:note-outline'" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>{{ tab.tapTitle || tab.tapNovaName }}<template v-if="tab.tapType === 'appendageForm'"><span v-if="tabRequiredCount('app_' + tab.tapNovaName) > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('app_' + tab.tapNovaName) }}</span><span v-else-if="tabTotalRequired('app_' + tab.tapNovaName) > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template></template>
           <div :key="tab.tapNovaName" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
 
           <!-- referenceForm 内容 -->
@@ -1864,13 +1965,29 @@ const NovaTable = {
             </div>
           </template>
 
+          <!-- linkForm 内容（中间表嵌入式表格） -->
+          <template v-else-if="tab.tapType === 'linkForm'">
+            <div :style="'display:flex;flex-direction:column;overflow:hidden;height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px')">
+              <nova-table
+                v-if="visitedEmbTabs.has('link_' + tab.tapNovaName)"
+                :key="'link_' + tab.tapNovaName + '_' + (currentRow && currentRow[novaIdFieldName])"
+                :embedded-mode="true"
+                :link-mode="true"
+                :nova-name-prop="tab.tapNovaName"
+                :source-nova-name-prop="novaName"
+                :source-fields-prop="buildLinkSourceFields(tab)"
+                @link-add="openLinkPicker(tab.tapNovaName, tab.tapTitle)"
+              />
+            </div>
+          </template>
+
           </div>
         </n-tab-pane>
         </template>
 
         </n-tabs>
         <template #footer>
-          <n-space v-if="!formTab.startsWith('emb_') && !formTab.startsWith('ref_')" justify="end">
+          <n-space v-if="!formTab.startsWith('emb_') && !formTab.startsWith('ref_') && !formTab.startsWith('link_')" justify="end">
             <n-button @click="showForm = false">取 消</n-button>
             <n-button type="primary" @click="handleFormSubmit">确 定</n-button>
           </n-space>
@@ -1940,6 +2057,19 @@ const NovaTable = {
           <div style="display:flex;justify-content:flex-end;gap:8px;width:100%">
             <n-button @click="closePickerAtLevel(picker.level)">关闭 (Esc)</n-button>
             <n-button type="primary" @click="confirmPickerSelect(picker.level)">选 择</n-button>
+          </div>
+        </template>
+      </n-modal>
+
+      <!-- LINK 多选关联弹窗 -->
+      <n-modal v-model:show="linkPickerShow" preset="card" class="ref-picker-modal" :title="linkPickerTitle || '选择关联数据'" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="3500">
+        <div :style="{ height: 'calc(100vh - 180px)', maxHeight: '700px', overflow: 'hidden' }">
+          <nova-table v-if="linkPickerShow" :picker-mode="true" :picker-multi="true" :nova-name-prop="linkPickerTargetNova" :source-fields-prop="linkPickerSourceFields" @check="onLinkPickerPick" />
+        </div>
+        <template #footer>
+          <div style="display:flex;justify-content:flex-end;gap:8px;width:100%">
+            <n-button @click="closeLinkPicker">关闭 (Esc)</n-button>
+            <n-button type="primary" @click="confirmLinkPickerSelect">选 择</n-button>
           </div>
         </template>
       </n-modal>

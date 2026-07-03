@@ -23,8 +23,6 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -71,9 +69,9 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
                     NovaField novaField = field.getDeclaredAnnotation(NovaField.class);
                     Edit.Type type = novaFieldAutoTypeChange(field.getType(), novaField.edit().type());
                     novaFields.put(field.getName(), new ScanNova.NovaFieldInfo()
+                            .setNovaField(novaField)
                             .setType(type)
                             .setFieldClass(field.getType())
-                            .setNovaField(novaField)
                     );
                 }
                 if (field.isAnnotationPresent(NovaId.class)) {
@@ -117,14 +115,14 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
         @Accessors(chain = true)
         public static class NovaFieldInfo {
 
+            @Comment("NovaField注解")
+            private NovaField novaField;
+
             @Comment("组件类型（自动类型转换）")
             private Edit.Type type;
 
             @Comment("属性类型")
             private Class<?> fieldClass;
-
-            @Comment("NovaField注解")
-            private NovaField novaField;
 
         }
     }

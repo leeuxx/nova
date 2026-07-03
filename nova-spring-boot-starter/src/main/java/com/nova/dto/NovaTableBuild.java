@@ -59,6 +59,12 @@ public class NovaTableBuild {
         @Comment("附属对象组件信息")
         private Map<String, AppendageType> appendage;
 
+        @Comment("集合引用组件信息")
+        private Map<String, Link> link;
+
+        @Comment("集合引用目标组件信息")
+        private LinkTarget linkTarget;
+
         @Data
         @Accessors(chain = true)
         public static class Search {
@@ -340,5 +346,42 @@ public class NovaTableBuild {
             private String novaIdFieldName;
 
         }
+
+        @Data
+        @Accessors(chain = true)
+        public static class Link {
+
+            @Comment("关联类名")
+            private String referenceName;
+
+            @Comment("中间类获取目标引用类数据时（弹窗选取），额外透传向引用类 DataProxy.fetch 传递的当前类表单上下文信息")
+            private List<String> referenceTransmitField;
+
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class LinkTarget {
+
+            @Comment("当前关联类名")
+            private String thisReferenceName;
+
+            @Comment("中间类存储当前引用类的关联属性名，例如 userId")
+            private String thisReferenceField;
+
+            @Comment("中间类存储当前引用类值属性名，默认id，即当前类的 thisReferenceField 对应当前引用类的哪个属性（通常为主键）")
+            private String thisStorageField;
+
+            @Comment("目标关联类名")
+            private String linkReferenceName;
+
+            @Comment("中间类存储目标引用类的关联属性名，例如 ordersId")
+            private String linkReferenceField;
+
+            @Comment("中间类存储目标引用类值属性名，默认id，即当前类的 linkReferenceField 对应目标引用类的哪个属性（通常为主键）")
+            private String linkStorageField;
+
+        }
+
     }
 }

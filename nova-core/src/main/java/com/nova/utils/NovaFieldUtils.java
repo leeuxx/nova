@@ -103,7 +103,7 @@ public class NovaFieldUtils {
             View[] views = novaField.views();
             Edit edit = novaField.edit();
             Edit.Type type = edit.type();
-            boolean isReference = (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE);
+            boolean isReference = (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE || type == Edit.Type.LINK_TARGET);
             boolean isAppendages = type == Edit.Type.APPENDAGES;
             boolean isLink = type == Edit.Type.LINK;
             for (View view : views) {
@@ -158,6 +158,10 @@ public class NovaFieldUtils {
                                     .setEdit(readonly.edit())
                             )
                             .setShowBy(edit.showBy());
+                    // LINK_TARGET 字段：附带 referenceField（中间表FK列名）
+                    if (edit.type() == Edit.Type.LINK_TARGET) {
+                        thisForm.setReferenceField(edit.linkTargetType().referenceField());
+                    }
                     thisForms.add(thisForm);
                 }
             }
@@ -528,6 +532,67 @@ public class NovaFieldUtils {
         return appendageTypeInfos;
     }
 
+    /**
+     * 获取集合引用参数信息
+     *
+     * @param className 类名
+     * @return 集合引用参数信息
+     */
+    public static Map<String, LinkInfo> getLink(String className) {
+        Map<String, LinkInfo> linkInfos = new LinkedHashMap<>();
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return linkInfos;
+        }
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
+            Edit edit = novaField.edit();
+            if (edit.type() == Edit.Type.LINK) {
+                LinkType linkType = edit.linkType();
+                LinkInfo linkInfo = new LinkInfo()
+                        .setReferenceClass(novaFieldInfo.getFieldClass())
+                        .setReferenceTransmitField(Arrays.asList(linkType.referenceTransmitField()));
+                linkInfos.put(field, linkInfo);
+            }
+        });
+        return linkInfos;
+    }
+
+    /**
+     * 获取集合引用目标参数信息
+     *
+     * @param className 类名
+     * @return 集合引用目标参数信息
+     */
+    public static LinkTargetInfo getLinkTarget(String className) {
+        LinkTargetInfo linkTargetInfo = new LinkTargetInfo();
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return linkTargetInfo;
+        }
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
+            Edit edit = novaField.edit();
+            if (edit.type() == Edit.Type.LINK_TARGET) {
+                LinkTargetType linkTargetType = edit.linkTargetType();
+                if (linkTargetType.type() == LinkTargetType.Type.SELECT) {
+                    linkTargetInfo.setLinkReferenceClass(novaFieldInfo.getFieldClass())
+                            .setLinkReferenceField(linkTargetType.referenceField())
+                            .setLinkStorageField(linkTargetType.storageField());
+                } else {
+                    linkTargetInfo.setThisReferenceClass(novaFieldInfo.getFieldClass())
+                            .setThisReferenceField(linkTargetType.referenceField())
+                            .setThisStorageField(linkTargetType.storageField());
+                }
+            }
+        });
+        return linkTargetInfo;
+    }
+
     @Data
     @Accessors(chain = true)
     public static class SearchInfo {
@@ -625,6 +690,9 @@ public class NovaFieldUtils {
 
             @Comment("动态是否显示")
             private ShowBy showBy;
+
+            @Comment("引用属性名（LINK_TARGET专用，中间表FK列名）")
+            private String referenceField;
 
             @Data
             @Accessors(chain = true)
@@ -785,4 +853,41 @@ public class NovaFieldUtils {
         private String displayField;
 
     }
+
+    @Data
+    @Accessors(chain = true)
+    public static class LinkInfo {
+
+        @Comment("关联类")
+        private Class<?> referenceClass;
+
+        @Comment("中间类获取目标引用类数据时（弹窗选取），额外透传向引用类 DataProxy.fetch 传递的当前类表单上下文信息")
+        private List<String> referenceTransmitField;
+
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class LinkTargetInfo {
+
+        @Comment("当前关联类")
+        private Class<?> thisReferenceClass;
+
+        @Comment("中间类存储当前引用类的关联属性名，例如 userId")
+        private String thisReferenceField;
+
+        @Comment("中间类存储当前引用类值属性名，默认id，即当前类的 thisReferenceField 对应当前引用类的哪个属性（通常为主键）")
+        private String thisStorageField;
+
+        @Comment("目标关联类")
+        private Class<?> linkReferenceClass;
+
+        @Comment("中间类存储目标引用类的关联属性名，例如 ordersId")
+        private String linkReferenceField;
+
+        @Comment("中间类存储目标引用类值属性名，默认id，即当前类的 linkReferenceField 对应目标引用类的哪个属性（通常为主键）")
+        private String linkStorageField;
+
+    }
+
 }

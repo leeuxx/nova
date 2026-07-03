@@ -1,6 +1,8 @@
 package com.nova.utils;
 
+import com.nova.annotation.NovaField;
 import com.nova.annotation.fun.DataProxy;
+import com.nova.annotation.sub.nova.field.edit.LinkTargetType;
 import com.nova.config.NovaApplication;
 import lombok.SneakyThrows;
 import org.springframework.core.convert.ConversionService;
@@ -131,6 +133,31 @@ public class DataProxyUtils {
     }
 
     /**
+     * 设置 LINK_TARGET 组件字段，根据注解的 type 区分源引用 / 目标引用
+     */
+    @SneakyThrows
+    public static void setLinkTargetField(String novaName, Object model, String fieldName, String value) {
+        NovaFieldUtils.LinkTargetInfo lt = NovaFieldUtils.getLinkTarget(novaName);
+        Field modelField = model.getClass().getDeclaredField(fieldName);
+        modelField.setAccessible(true);
+        if (value == null || value.isEmpty()) {
+            modelField.set(model, null);
+            return;
+        }
+        // 根据字段注解的 type 决定引用信息
+        NovaField nf = modelField.getAnnotation(NovaField.class);
+        LinkTargetType ltt = nf.edit().linkTargetType();
+        boolean isOperate = ltt.type() == LinkTargetType.Type.OPERATE;
+        Class<?> refClass = isOperate ? lt.getThisReferenceClass() : lt.getLinkReferenceClass();
+        String storageField = isOperate ? lt.getThisStorageField() : lt.getLinkStorageField();
+        Object ref = refClass.getDeclaredConstructor().newInstance();
+        Field sf = refClass.getDeclaredField(storageField);
+        sf.setAccessible(true);
+        sf.set(ref, convertValue(value, sf.getType()));
+        modelField.set(model, ref);
+    }
+
+    /**
      * 将字符串转为指定类型
      */
     private static Object convertValue(String value, Class<?> type) {
@@ -148,5 +175,21 @@ public class DataProxyUtils {
         ConversionService cs = SpringBeanUtils.getBean(ConversionService.class);
         if (cs.canConvert(String.class, type)) return cs.convert(value, type);
         return value;
+    }
+
+    /**
+     * 解析 ["a","b","c"] 格式的 JSON 字符串数组
+     */
+    public static List<String> parseJsonArray(String raw) {
+        List<String> result = new ArrayList<>();
+        if (raw == null || raw.isBlank()) return result;
+        String s = raw.trim();
+        if (s.startsWith("[")) s = s.substring(1);
+        if (s.endsWith("]")) s = s.substring(0, s.length() - 1);
+        for (String part : s.split(",")) {
+            String id = part.trim().replaceAll("^\"|\"$", "");
+            if (!id.isEmpty()) result.add(id);
+        }
+        return result;
     }
 }

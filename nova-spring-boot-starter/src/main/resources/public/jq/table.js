@@ -57,6 +57,8 @@ window.NovaTableJQ = (function ($) {
         target.attachmentMap  = resp.data.attachment  || {}
         target.referenceMap   = resp.data.reference   || {}
         target.appendageMap   = resp.data.appendage   || {}
+        target.linkMap        = resp.data.link        || {}
+        target.linkTargetInfo = resp.data.linkTarget  || {}
         var fields = resp.data.search || []
         // 提取 tapSearch 字段，从 searchFields 中移除
         var tapSearchField = null
@@ -104,7 +106,7 @@ window.NovaTableJQ = (function ($) {
         target.editFields = allEdit.filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
         target.editReferenceTabs = allEdit.filter(function(e) { return e.tapType === 'referenceForm' && e.tapShow !== false })
         target.editAppendageTabs = allEdit.filter(function(e) { return e.tapType === 'appendageForm' && e.tapShow !== false })
-        target.editExtraTabs = allEdit.filter(function(e) { return (e.tapType === 'referenceForm' || e.tapType === 'appendageForm' || e.tapType === 'appendagesTable') && e.tapShow !== false })
+        target.editExtraTabs = allEdit.filter(function(e) { return (e.tapType === 'referenceForm' || e.tapType === 'appendageForm' || e.tapType === 'appendagesTable' || e.tapType === 'linkForm') && e.tapShow !== false })
         target.editReferenceTabs.forEach(function(tab) {
           if (!tab.tapNovaName) return
           target.editFields.forEach(function(f) {
@@ -145,6 +147,18 @@ window.NovaTableJQ = (function ($) {
           target.editReferenceTabs = target.editReferenceTabs.filter(function(tab) {
             return hiddenRefNovas.indexOf(tab.tapNovaName) === -1
           })
+        }
+        // 处理 LINK_TARGET 嵌入过滤：sourceFields 中有 FK 列名时注入为过滤条件
+        if (embSourceFields && Object.keys(embSourceFields).length > 0) {
+          var linkTargetInfo = resp.data.linkTarget || {}
+          var existingRefFields = target._sourceRefFields || []
+          var ltFields = [linkTargetInfo.thisReferenceField, linkTargetInfo.linkReferenceField]
+          ltFields.forEach(function(refField) {
+            if (refField && embSourceFields[refField] != null) {
+              existingRefFields.push({ field: refField, type: 'LINK_TARGET', referenceField: refField, value: embSourceFields[refField] })
+            }
+          })
+          target._sourceRefFields = existingRefFields
         }
         loadData(key)
       },
@@ -344,6 +358,66 @@ window.NovaTableJQ = (function ($) {
             if (appFieldKey) fillAppendageData(t2, appNovaName, rowData[appFieldKey])
           }
           loadAppendageDetails(novaName, appNovaName, key)
+        }
+      })
+    })
+  }
+
+  // ── 懒加载 link sub-build（首次打开弹窗时调用）─────────────────
+  function buildLinkTabs(novaName, rowData, vmKey) {
+    var key = vmKey || novaName
+    var target = window.vmMap && window.vmMap[key]
+    if (!target) return
+    ;(target.editExtraTabs || []).forEach(function(linkTab) {
+      if (linkTab.tapType !== 'linkForm' || !linkTab.tapNovaName) return
+      var linkNovaName = linkTab.tapNovaName
+      $.ajax({
+        url: '/nova/table/build', method: 'POST', contentType: 'application/json',
+        data: JSON.stringify({ novaName: linkNovaName }),
+        success: function(br) {
+          if (br.code !== 200) return
+          var t2 = window.vmMap && window.vmMap[key]
+          if (!t2) return
+          var bd = br.data
+          var editFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
+          var lt = bd.linkTarget || {}
+          var sourceFieldName = null
+          var targetFieldName = null
+          // 优先用 referenceField 精确匹配
+          editFields.forEach(function(f) {
+            if (f.type !== 'LINK_TARGET') return
+            var rf = f.referenceField || ''
+            if (rf && rf === lt.thisReferenceField) sourceFieldName = f.field
+            if (rf && rf === lt.linkReferenceField) targetFieldName = f.field
+          })
+          // fallback：按类名推断（字段名通常以类名小写开头）
+          if (!sourceFieldName || !targetFieldName) {
+            var thisRefLower = (lt.thisReferenceName || '').toLowerCase()
+            var linkRefLower = (lt.linkReferenceName || '').toLowerCase()
+            editFields.forEach(function(f) {
+              if (f.type !== 'LINK_TARGET') return
+              var fl = f.field.toLowerCase()
+              if (thisRefLower && fl.indexOf(thisRefLower) !== -1) sourceFieldName = f.field
+              if (linkRefLower && fl.indexOf(linkRefLower) !== -1) targetFieldName = f.field
+            })
+          }
+          console.log('[Nova] buildLinkTabs sourceField:', sourceFieldName, 'targetField:', targetFieldName, 'linkTarget:', lt, 'editFields:', editFields)
+          var newBuild = Object.assign({}, t2.linkTabBuild)
+          newBuild[linkNovaName] = {
+            editFields: editFields,
+            tableColumns: bd.tableColumns || [],
+            novaIdFieldName: bd.novaIdFieldName,
+            linkTarget: lt,
+            sourceFieldName: sourceFieldName,
+            targetFieldName: targetFieldName,
+            choiceMap: bd.choice || {},
+            referenceMap: bd.reference || {},
+            linkMap: bd.link || {}
+          }
+          t2.linkTabBuild = newBuild
+          var newFds = Object.assign({}, t2.linkFormData)
+          newFds[linkNovaName] = { targetIds: [] }
+          t2.linkFormData = newFds
         }
       })
     })
@@ -649,8 +723,11 @@ window.NovaTableJQ = (function ($) {
     })
     target.appendageFormData   = appFds
     target.appendageFormErrors = {}
+    target.linkFormData  = {}
+    target.linkTabBuild  = {}
     target.formTab    = 'form'
     buildAppendageTabs(target.novaName, null, vmKey)
+    buildLinkTabs(target.novaName, null, vmKey)
     target.showForm   = true
   }
 
@@ -714,8 +791,11 @@ window.NovaTableJQ = (function ($) {
         t.formErrors = {}
         t.refTabData = {}
         t._refCoord  = {}
+        t.linkFormData  = {}
+        t.linkTabBuild  = {}
         t.formTab    = 'form'
         buildAppendageTabs(novaName, detailRow, vmKey)
+        buildLinkTabs(novaName, detailRow, vmKey)
         t.showForm   = true
       }
     })
@@ -773,6 +853,42 @@ window.NovaTableJQ = (function ($) {
         console.info('[Nova] delete接口请求失败，novaName:', novaName)
       }
     })
+  }
+
+  // ── LINK 新增关联（中间表新增，目标ID数组由后端循环处理）─────
+  function handleLinkAdd(novaName, linkNovaName, sourceField, sourceValue, targetField, targetIds, vmKey) {
+    var key = vmKey || novaName
+    var formInfo = [
+      { field: sourceField, value: String(sourceValue), type: 'LINK_TARGET' },
+      { field: targetField, value: JSON.stringify(targetIds.map(String)), type: 'LINK_TARGET' }
+    ]
+    $.ajax({
+      url:         '/nova/table/addLinkTarget',
+      method:      'POST',
+      contentType: 'application/json',
+      data:        JSON.stringify({ novaName: linkNovaName, formInfo: formInfo }),
+      success: function (resp) {
+        var t = window.vmMap && window.vmMap[key]
+        if (!t) return
+        if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '新增失败'); return }
+        if (window.$message) window.$message.success('新增成功')
+        // 刷新嵌入的 link 表格
+        var embVmKey = findEmbVmKey(linkNovaName)
+        if (embVmKey) loadData(embVmKey)
+      },
+      error: function () {
+        console.info('[Nova] link add接口请求失败，novaName:', linkNovaName)
+      }
+    })
+  }
+
+  // 查找嵌入式 vmKey
+  function findEmbVmKey(novaName) {
+    var keys = Object.keys(window.vmMap || {})
+    for (var i = 0; i < keys.length; i++) {
+      if (keys[i].indexOf('__emb_' + novaName) === 0) return keys[i]
+    }
+    return null
   }
 
   // ── 提交表单 ──────────────────────────────────────────────────
@@ -1042,7 +1158,8 @@ window.NovaTableJQ = (function ($) {
     handleBatchDelete, handleFormSubmit,
     loadData, onPageChange, onPageSizeChange, onSortChange,
     onPickerMounted, onViewMounted, onEmbeddedMounted,
-    loadReferenceDetails, loadAppendageDetails
+    loadReferenceDetails, loadAppendageDetails,
+    buildLinkTabs, handleLinkAdd
   }
 
 })(jQuery)
