@@ -105,8 +105,9 @@ public class NovaFieldUtils {
             Edit.Type type = edit.type();
             boolean isReference = (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE);
             boolean isAppendages = type == Edit.Type.APPENDAGES;
+            boolean isLink = type == Edit.Type.LINK;
             for (View view : views) {
-                if (!view.show() || isAppendages) {
+                if (!view.show() || isAppendages || isLink) {
                     continue;
                 }
                 String fieldName = isReference ? field + "." + view.column() : field;
@@ -160,21 +161,6 @@ public class NovaFieldUtils {
                     thisForms.add(thisForm);
                 }
             }
-            // 引用详情tap
-            if (edit.type() == Edit.Type.REFERENCE) {
-                ReferenceType referenceType = edit.referenceType();
-                if (referenceType.tapShow()) {
-                    Class<?> fieldClass = novaFieldInfo.getFieldClass();
-                    editInfos.add(new EditInfo()
-                            .setTapType("referenceForm")
-                            .setTapNovaName(fieldClass.getSimpleName())
-                            .setTapTitle(edit.title())
-                            .setTapShow(referenceType.tapShow())
-                            .setTapShowByExpr(referenceType.tapShowBy().value())
-                            .setTapSort(3)
-                    );
-                }
-            }
             // 附属对象tap
             if (edit.type() == Edit.Type.APPENDAGE) {
                 AppendageType appendageType = edit.appendageType();
@@ -202,6 +188,36 @@ public class NovaFieldUtils {
                             .setTapShow(appendageType.tapShow())
                             .setTapShowByExpr(appendageType.tapShowBy().value())
                             .setTapSort(2)
+                    );
+                }
+            }
+            // 集合引用tap
+            if (edit.type() == Edit.Type.LINK) {
+                LinkType linkType = edit.linkType();
+                if (linkType.tapShow()) {
+                    Class<?> fieldClass = novaFieldInfo.getFieldClass();
+                    editInfos.add(new EditInfo()
+                            .setTapType("linkForm")
+                            .setTapNovaName(fieldClass.getSimpleName())
+                            .setTapTitle(edit.title())
+                            .setTapShow(linkType.tapShow())
+                            .setTapShowByExpr(linkType.tapShowBy().value())
+                            .setTapSort(3)
+                    );
+                }
+            }
+            // 引用详情tap
+            if (edit.type() == Edit.Type.REFERENCE) {
+                ReferenceType referenceType = edit.referenceType();
+                if (referenceType.tapShow()) {
+                    Class<?> fieldClass = novaFieldInfo.getFieldClass();
+                    editInfos.add(new EditInfo()
+                            .setTapType("referenceForm")
+                            .setTapNovaName(fieldClass.getSimpleName())
+                            .setTapTitle(edit.title())
+                            .setTapShow(referenceType.tapShow())
+                            .setTapShowByExpr(referenceType.tapShowBy().value())
+                            .setTapSort(4)
                     );
                 }
             }
@@ -564,7 +580,7 @@ public class NovaFieldUtils {
     @Accessors(chain = true)
     public static class EditInfo {
 
-        @Comment("tap类型 thisForm=自身tap referenceForm=引用tap appendageForm=附属对象tap appendagesTable=附属集合tap")
+        @Comment("tap类型 thisForm=自身tap referenceForm=引用tap appendageForm=附属对象tap appendagesTable=附属集合tap linkForm=集合引用tap")
         private String tapType;
 
         @Comment("tap名称")

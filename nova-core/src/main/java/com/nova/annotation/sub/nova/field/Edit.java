@@ -53,6 +53,12 @@ public @interface Edit {
     @Comment("附属对象组件配置")
     AppendageType appendageType() default @AppendageType(referenceField = "");
 
+    @Comment("集合引用组件配置")
+    LinkType linkType() default @LinkType;
+
+    @Comment("集合引用目标组件配置")
+    LinkTargetType linkTargetType() default @LinkTargetType(referenceField = "");
+
     enum Type {
 
         @Comment("自动匹配")

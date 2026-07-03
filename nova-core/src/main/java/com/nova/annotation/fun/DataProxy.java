@@ -18,12 +18,12 @@ public interface DataProxy<MODEL> {
     default void update(MODEL model) {
     }
 
-    @Comment("查询（表格内容渲染）")
+    @Comment("查询")
     default Fetch.Vo<MODEL> fetch(Fetch<MODEL> fetch) {
         return null;
     }
 
-    @Comment("详情（编辑详情）")
+    @Comment("详情")
     default MODEL details(Details details) {
         return null;
     }

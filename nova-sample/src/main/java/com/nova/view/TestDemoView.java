@@ -83,6 +83,19 @@ public class TestDemoView {
     private TestDemo4View testDemo4View;
 
     @NovaField(
+            edit = @Edit(
+                    title = "引用薪资",
+                    type = Edit.Type.LINK,
+                    linkType = @LinkType(
+                            referenceTransmitField = {
+                                    "name"
+                            }
+                    )
+            )
+    )
+    private TestDemoRefView testDemoRefView;
+
+    @NovaField(
             views = @View(title = "用户名", width = "10%"),
             edit = @Edit(
                     title = "用户名",
