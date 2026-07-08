@@ -75,7 +75,8 @@ public class TestDemoView {
                     title = "薪资信息",
                     type = Edit.Type.APPENDAGES,
                     appendageType = @AppendageType(
-                            referenceField = "demoId"
+                            referenceField = "demoId",
+                            dualTable = true
                     ),
                     search = @Search
             )
@@ -89,7 +90,8 @@ public class TestDemoView {
                     linkType = @LinkType(
                             referenceTransmitField = {
                                     "name"
-                            }
+                            },
+                            dualTable = true
                     ),
                     search = @Search(vague = true)
             )

@@ -345,6 +345,9 @@ public class NovaTableBuild {
             @Comment("novaId属性名")
             private String novaIdFieldName;
 
+            @Comment("是否支持双表视图")
+            private Boolean dualTable;
+
         }
 
         @Data
@@ -359,6 +362,9 @@ public class NovaTableBuild {
 
             @Comment("中间类选取引用类信息")
             private SelectInfo selectInfo;
+
+            @Comment("是否支持双表视图")
+            private Boolean dualTable;
 
             @Data
             @Accessors(chain = true)

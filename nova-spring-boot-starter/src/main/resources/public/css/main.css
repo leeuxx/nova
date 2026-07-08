@@ -59,6 +59,25 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   overflow: hidden;
 }
 
+/* 双表视图：page-content 变 flex row，左主表 + 右面板并排 */
+.page-content.dual-mode {
+  display: flex;
+}
+.page-content.dual-mode > div:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.dual-right-panel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--n-border-color);
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
 
 .page-card {
   background: #ffffff;

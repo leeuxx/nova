@@ -202,7 +202,8 @@ public class NovaTableServiceImpl implements NovaTableService {
                     .setReferenceName(simpleName)
                     .setReferenceField(appendageInfo.getReferenceField())
                     .setStorageField(appendageInfo.getStorageField())
-                    .setDisplayField(appendageInfo.getDisplayField());
+                    .setDisplayField(appendageInfo.getDisplayField())
+                    .setDualTable(appendageInfo.getDualTable());
             appendageMap.put(field, appendage);
         });
         vo.setAppendage(appendageMap);
@@ -214,6 +215,7 @@ public class NovaTableServiceImpl implements NovaTableService {
             NovaTableBuild.Vo.Link link = new NovaTableBuild.Vo.Link()
                     .setReferenceName(linkInfo.getReferenceClass().getSimpleName())
                     .setReferenceTransmitField(linkInfo.getReferenceTransmitField())
+                    .setDualTable(linkInfo.getDualTable())
                     .setSelectInfo(new NovaTableBuild.Vo.Link.SelectInfo()
                             .setReferenceName(selectInfo.getReferenceClass().getSimpleName())
                             .setStorageField(selectInfo.getStorageField())

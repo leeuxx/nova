@@ -19,4 +19,7 @@ public @interface AppendageType {
     @Comment("tap页是否显示动态判断,使用此方式必须把show设置为true")
     ShowBy tapShowBy() default @ShowBy("");
 
+    @Comment("是否支持双表视图")
+    boolean dualTable() default false;
+
 }

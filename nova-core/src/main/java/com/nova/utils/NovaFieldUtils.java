@@ -526,7 +526,8 @@ public class NovaFieldUtils {
                         .setReferenceClass(novaFieldInfo.getFieldClass())
                         .setReferenceField(appendageType.referenceField())
                         .setStorageField(appendageType.storageField())
-                        .setDisplayField(appendageType.displayField());
+                        .setDisplayField(appendageType.displayField())
+                        .setDualTable(appendageType.dualTable());
                 appendageTypeInfos.put(field, appendageTypeInfo);
             }
         });
@@ -554,7 +555,8 @@ public class NovaFieldUtils {
                 LinkType linkType = edit.linkType();
                 LinkInfo linkInfo = new LinkInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
-                        .setReferenceTransmitField(Arrays.asList(linkType.referenceTransmitField()));
+                        .setReferenceTransmitField(Arrays.asList(linkType.referenceTransmitField()))
+                        .setDualTable(linkType.dualTable());
                 linkInfos.put(field, linkInfo);
                 // 获取中间类中的选取类声明属性
                 Class<?> fieldClass = novaFieldInfo.getFieldClass();
@@ -872,6 +874,9 @@ public class NovaFieldUtils {
         @Comment("附属类显示属性名")
         private String displayField;
 
+        @Comment("是否支持双表视图")
+        private Boolean dualTable;
+
     }
 
     @Data
@@ -886,6 +891,9 @@ public class NovaFieldUtils {
 
         @Comment("中间类选取引用类信息")
         private SelectInfo selectInfo;
+
+        @Comment("是否支持双表视图")
+        private Boolean dualTable;
 
         @Data
         @Accessors(chain = true)

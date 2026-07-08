@@ -142,6 +142,8 @@ const NovaTable = {
     embeddedMode:       { type: Boolean, default: false },
     linkMode:           { type: Boolean, default: false },
     pickerMulti:        { type: Boolean, default: false },
+    readonly:           { type: Boolean, default: false },
+    dualMode:           { type: Boolean, default: false },
     viewRow:            { type: Object,  default: null },
     novaNameProp:       { type: String,  default: '' },
     sourceNovaNameProp: { type: String,  default: '' },
@@ -205,6 +207,13 @@ const NovaTable = {
       linkPickerSelectedKeys:     [],
       linkPickerSourceFields:     {},
       linkPickerTitle:            '',
+      dualTableViewActive:        false,
+      dualTableCurrentKey:        '',
+      dualTableCurrentNova:       '',
+      dualTableCurrentLabel:      '',
+      dualTableSourceFields:      {},
+      _dualSelectedRow:           null,
+      _dualTableVersion:         0,
       formErrors:     {},
       striped:        true,
       tableSize:      'medium',
@@ -249,6 +258,27 @@ const NovaTable = {
       return opts
     },
     isEmbTab() { return !!(this.formTab && (this.formTab.startsWith('emb_') || this.formTab.startsWith('link_'))) },
+    dualTableSubTables() {
+      const list = []
+      const appendageMap = this.appendageMap || {}
+      for (const field in appendageMap) {
+        const info = appendageMap[field]
+        if (info && info.dualTable) {
+          list.push({ label: info.referenceName, novaName: info.referenceName, type: 'appendage', field, fieldInfo: info })
+        }
+      }
+      const linkMap = this.linkMap || {}
+      for (const field in linkMap) {
+        const info = linkMap[field]
+        if (info && info.dualTable) {
+          list.push({ label: info.referenceName, novaName: info.referenceName, type: 'link', field, fieldInfo: info })
+        }
+      }
+      return list
+    },
+    dualTableEnabled() {
+      return this.dualTableSubTables.length > 0 && !this.pickerMode && !this.embeddedMode
+    },
     // 固定列像素：checkbox 50 + 操作列 140
     colPixels() {
       const fixedPx = 50 + 140
@@ -320,7 +350,7 @@ const NovaTable = {
             }
           })
         }
-      } else {
+      } else if (!vm.readonly) {
         cols.push({ type: 'selection', title: '', key: 'selection', width: 50 })
       }
 
@@ -484,13 +514,13 @@ const NovaTable = {
           render(row) {
             var buttons = []
             if (!vm.linkMode) {
-              buttons.push(h('span', { style: { color: '#2080f0', cursor: 'pointer', fontSize: '13px' }, onClick: () => vm.handleEdit(row) }, '编辑'))
+              buttons.push(h('span', { class: 'row-action-btn', style: { color: '#2080f0', cursor: 'pointer', fontSize: '13px' }, onClick: () => vm.handleEdit(row) }, '编辑'))
             }
             buttons.push(h(NPopconfirm,
               { onPositiveClick: () => vm.handleDelete(row), positiveText: '确定', negativeText: '取消' },
               {
                 default: () => '确定删除吗？',
-                trigger:  () => h('span', { style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除')
+                trigger:  () => h('span', { class: 'row-action-btn', style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除')
               }
             ))
             return h(NSpace, { size: 8 }, { default: () => buttons })
@@ -569,6 +599,14 @@ const NovaTable = {
       this._vmKey = '__view_' + this.novaName + '_' + Date.now()
       window.vmMap[this._vmKey] = this
       if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onViewMounted(this.novaName, this._vmKey, this.viewRow, this.sourceNovaNameProp)
+    } else if (this.dualMode) {
+      this.novaName = this.novaNameProp || ''
+      this._vmKey = '__dual_' + this.novaName + '_' + Date.now()
+      window.vmMap[this._vmKey] = this
+      this.paginationConfig.onUpdatePage     = this.handlePageChange
+      this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
+      this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
+      if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onEmbeddedMounted(this.novaName, this._vmKey, this.sourceNovaNameProp || this.novaName, this.sourceFieldsProp || {})
     } else if (this.embeddedMode) {
       this.novaName = this.novaNameProp || ''
       this._vmKey = '__emb_' + this.novaName + '_' + Date.now()
@@ -604,7 +642,7 @@ const NovaTable = {
 
   beforeUnmount() {
     this._isActive = false
-    if (this.pickerMode || this.viewMode || this.embeddedMode) {
+    if (this.pickerMode || this.viewMode || this.embeddedMode || this.dualMode) {
       if (this._vmKey && window.vmMap) delete window.vmMap[this._vmKey]
     } else {
       if (window.vmMap) delete window.vmMap[this.novaName]
@@ -622,7 +660,7 @@ const NovaTable = {
       const cur  = this.sortStates[field]
       const next = cur == null ? 'asc' : cur === 'asc' ? 'desc' : null
       this.sortStates = Object.assign({}, this.sortStates, { [field]: next })
-      const key = (this.pickerMode || this.embeddedMode) ? this._vmKey : this.novaName
+      const key = (this.pickerMode || this.embeddedMode || this.dualMode) ? this._vmKey : this.novaName
       window.NovaTableJQ.onSortChange(key)
     },
     toggleFilter() {
@@ -781,14 +819,14 @@ const NovaTable = {
         t.paginationConfig.page = 1
         t._lastFilterSnapshot = snapshot
       }
-      const key = (t.pickerMode || t.embeddedMode) ? t._vmKey : t.novaName
+      const key = (t.pickerMode || t.embeddedMode || t.dualMode) ? t._vmKey : t.novaName
       window.NovaTableJQ.loadData(key)
     },
-    handleAdd()         { if (this.embeddedMode) window.NovaTableJQ.handleAdd(this._vmKey); else window.NovaTableJQ.handleAdd() },
-    handleEdit(row)     { if (this.embeddedMode) window.NovaTableJQ.handleEdit(row, this._vmKey); else window.NovaTableJQ.handleEdit(row) },
-    handleDelete(row)   { if (this.embeddedMode) window.NovaTableJQ.handleDelete(row, this._vmKey); else window.NovaTableJQ.handleDelete(row) },
-    handleBatchDelete() { if (this.embeddedMode) window.NovaTableJQ.handleBatchDelete(this._vmKey); else window.NovaTableJQ.handleBatchDelete() },
-    handleFormSubmit()  { if (this.embeddedMode) window.NovaTableJQ.handleFormSubmit(this._vmKey); else window.NovaTableJQ.handleFormSubmit() },
+    handleAdd()         { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleAdd(this._vmKey); else window.NovaTableJQ.handleAdd() },
+    handleEdit(row)     { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleEdit(row, this._vmKey); else window.NovaTableJQ.handleEdit(row) },
+    handleDelete(row)   { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleDelete(row, this._vmKey); else window.NovaTableJQ.handleDelete(row) },
+    handleBatchDelete() { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleBatchDelete(this._vmKey); else window.NovaTableJQ.handleBatchDelete() },
+    handleFormSubmit()  { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleFormSubmit(this._vmKey); else window.NovaTableJQ.handleFormSubmit() },
     handleAttachmentChange(f, event, appNovaName) {
       const files = Array.from(event.target.files || [])
       event.target.value = ''
@@ -1099,6 +1137,49 @@ const NovaTable = {
       )
       this.closeLinkPicker()
     },
+    toggleDualTableView() {
+      this.dualTableViewActive = !this.dualTableViewActive
+      if (this.dualTableViewActive && this.dualTableSubTables.length > 0) {
+        const first = this.dualTableSubTables[0]
+        this._dualTableVersion++
+        this.dualTableCurrentNova = first.novaName
+        this.dualTableCurrentLabel = first.label
+        this.dualTableCurrentKey = '__dual_' + first.novaName + '_v' + this._dualTableVersion
+        this.buildDualTableSourceFields()
+      }
+      this._syncDualTableClass()
+    },
+    buildDualTableSourceFields() {
+      const row = this._dualSelectedRow
+      if (!row) { this.dualTableSourceFields = {}; return }
+      const idField = this.novaIdFieldName || 'id'
+      const idVal = row[idField]
+      if (idVal == null) { this.dualTableSourceFields = {}; return }
+      this.dualTableSourceFields = { [idField]: String(idVal) }
+    },
+    onDualTableRowClick(row) {
+      if (!this.dualTableViewActive) return
+      this._dualSelectedRow = row
+      this._dualTableVersion++
+      this.buildDualTableSourceFields()
+      this.dualTableCurrentKey = '__dual_' + this.dualTableCurrentNova + '_v' + this._dualTableVersion
+    },
+    onDualTableSubChange(novaName) {
+      const item = this.dualTableSubTables.find(s => s.novaName === novaName)
+      if (!item) return
+      this._dualTableVersion++
+      this.dualTableCurrentNova = item.novaName
+      this.dualTableCurrentLabel = item.label
+      this.dualTableCurrentKey = '__dual_' + item.novaName + '_v' + this._dualTableVersion
+      this.buildDualTableSourceFields()
+    },
+    _syncDualTableClass() {
+      const el = document.querySelector('.page-content')
+      if (el) {
+        if (this.dualTableViewActive) el.classList.add('dual-mode')
+        else el.classList.remove('dual-mode')
+      }
+    },
     _doRefSelectRequest(field, refField, query, page, append, onDone) {
       const refInfo = this.referenceMap[refField] || (this.appendageMap && this.appendageMap[refField]) || (this.linkMap && this.linkMap[refField]) || {}
       const isLink = this.linkMap && this.linkMap[refField]
@@ -1282,12 +1363,19 @@ const NovaTable = {
       return String(val)
     },
     handlePageChange(current) {
-      const key = (this.pickerMode || this.embeddedMode) ? this._vmKey : this.novaName
+      const key = (this.pickerMode || this.embeddedMode || this.dualMode) ? this._vmKey : this.novaName
       window.NovaTableJQ.onPageChange(key, current)
     },
     handlePageSizeChange(pageSize) {
-      const key = (this.pickerMode || this.embeddedMode) ? this._vmKey : this.novaName
+      const key = (this.pickerMode || this.embeddedMode || this.dualMode) ? this._vmKey : this.novaName
       window.NovaTableJQ.onPageSizeChange(key, pageSize)
+    }
+  },
+
+  watch: {
+    dualTableViewActive: {
+      handler(val) { this._syncDualTableClass() },
+      immediate: false
     }
   },
 
@@ -1384,7 +1472,7 @@ const NovaTable = {
         </div>
       </n-modal>
     </div>
-    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : 'padding:16px')">
+    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : 'padding:16px')">
 
       <!-- 筛选卡片 -->
       <component v-if="!linkMode" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
@@ -1641,7 +1729,7 @@ const NovaTable = {
       </component>
 
       <!-- 表格卡片 -->
-      <component :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : '')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : undefined">
+      <component :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (dualMode ? 'flex:1;min-height:0' : embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : '')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : (dualMode ? 'display:flex;flex-direction:column;overflow:hidden;flex:1' : undefined)">
         <div v-if="!pickerMode" class="table-card-header" :style="embeddedMode ? 'flex-shrink:0' : ''">
           <!-- 标题/tap + 操作按钮行 -->
             <n-tabs v-if="tapSearchField" type="line" :tabs-padding="0"
@@ -1655,20 +1743,40 @@ const NovaTable = {
             </n-tabs>
             <span v-else style="font-size:16px;font-weight:500">数据列表</span>
             <div style="display:flex;gap:8px">
-            <n-button v-if="checkedRowKeys.length > 0" :size="embSize" type="error" @click="handleBatchDelete">
+            <n-button v-if="checkedRowKeys.length > 0 && !readonly" :size="embSize" type="error" @click="handleBatchDelete">
               <template #icon><n-icon><iconify-icon icon="material-symbols:delete-outline"></iconify-icon></n-icon></template>
               删 除
             </n-button>
-            <n-button v-if="linkMode" :size="embSize" type="primary" @click="$emit('link-add')">
+            <n-button v-if="linkMode && !readonly" :size="embSize" type="primary" @click="$emit('link-add')">
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
               新增
             </n-button>
-            <n-button v-else :size="embSize" type="primary" @click="handleAdd">
+            <n-button v-if="!readonly" :size="embSize" type="primary" @click="handleAdd">
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
               新 增
             </n-button>
             <n-button :size="embSize" circle class="btn-circle" style="background:transparent" @click="handleQuery">
               <template #icon><n-icon size="15"><iconify-icon icon="lucide:refresh-cw" style="font-size:15px"></iconify-icon></n-icon></template>
+            </n-button>
+            <n-popover v-if="dualTableEnabled && !dualMode && dualTableViewActive && dualTableSubTables.length > 1" trigger="hover" placement="bottom" :show-arrow="false">
+              <template #trigger>
+                <n-button :size="embSize" circle class="btn-circle" type="default" :style="{ color: '#2563eb', background: 'transparent' }" @click="toggleDualTableView" title="关闭双表视图">
+                  <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
+                </n-button>
+              </template>
+              <div style="display:flex;flex-direction:column;gap:2px;font-size:13px;min-width:120px;padding:4px 0">
+                <div v-for="s in dualTableSubTables" :key="s.novaName"
+                  style="padding:6px 10px;cursor:pointer;border-radius:4px;transition:background .15s"
+                  :style="{ color: s.novaName === dualTableCurrentNova ? '#2563eb' : '' }"
+                  @click="onDualTableSubChange(s.novaName)"
+                  @mouseenter="e => e.target.style.background='rgba(37,99,235,0.06)'"
+                  @mouseleave="e => e.target.style.background=''">
+                  {{ s.label }}
+                </div>
+              </div>
+            </n-popover>
+            <n-button v-else-if="dualTableEnabled && !dualMode" :size="embSize" circle class="btn-circle" type="default" :style="dualTableViewActive ? { color: '#2563eb', background: 'transparent' } : { background: 'transparent' }" @click="toggleDualTableView" :title="dualTableViewActive ? '关闭双表视图' : '开启双表视图'">
+              <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
             </n-button>
             <n-popover trigger="click" placement="bottom-end">
               <template #trigger>
@@ -1693,14 +1801,14 @@ const NovaTable = {
             </n-popover>
           </div>
         </div>
-        <div id="table-wrapper" :style="(pickerMode || embeddedMode) ? 'flex:1;min-height:0;overflow:hidden' : ''">
+        <div id="table-wrapper" :style="(pickerMode || embeddedMode || dualMode) ? 'flex:1;min-height:0;overflow:hidden' : ''">
           <n-data-table
             :data="filteredData"
             :columns="columns"
             :row-key="row => row[novaIdFieldName]"
             :checked-row-keys="checkedRowKeys"
             @update:checked-row-keys="handleCheck"
-            :row-props="(pickerMode || pickerMulti) ? (row) => ({ style: 'cursor:pointer', onClick: () => pickerMulti ? toggleCheckedRow(row) : selectRow(row) }) : undefined"
+            :row-props="(pickerMode || pickerMulti) ? (row) => ({ style: 'cursor:pointer', onClick: () => pickerMulti ? toggleCheckedRow(row) : selectRow(row) }) : (dualTableViewActive ? (row) => ({ style: 'cursor:pointer;background:var(--n-color-target)', onClick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; onDualTableRowClick(row) } }) : undefined)"
             :loading="loading"
             :remote="true"
             :pagination="paginationConfig"
@@ -2145,6 +2253,10 @@ const NovaTable = {
         </template>
       </n-modal>
 
+      <!-- 双表视图右面板：Teleport 到 .page-content 作为 flex 兄弟元素 -->
+      <Teleport to=".page-content" v-if="dualTableViewActive && dualTableEnabled && dualTableCurrentNova">
+        <nova-table :key="dualTableCurrentKey" :dual-mode="true" :nova-name-prop="dualTableCurrentNova" :source-nova-name-prop="novaName" :source-fields-prop="dualTableSourceFields" class="dual-right-panel" />
+      </Teleport>
     </div>
   `
 }
