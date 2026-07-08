@@ -9,6 +9,7 @@ import com.nova.config.NovaApplication;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.lang.reflect.Field;
 import java.util.*;
 
 public class NovaFieldUtils {
@@ -555,6 +556,25 @@ public class NovaFieldUtils {
                         .setReferenceClass(novaFieldInfo.getFieldClass())
                         .setReferenceTransmitField(Arrays.asList(linkType.referenceTransmitField()));
                 linkInfos.put(field, linkInfo);
+                // 获取中间类中的选取类声明属性
+                Class<?> fieldClass = novaFieldInfo.getFieldClass();
+                Field[] fields = fieldClass.getDeclaredFields();
+                for (Field field2 : fields) {
+                    if (!field2.isAnnotationPresent(NovaField.class)) {
+                        continue;
+                    }
+                    NovaField novaField2 = field2.getDeclaredAnnotation(NovaField.class);
+                    LinkTargetType linkTargetType = novaField2.edit().linkTargetType();
+                    if (linkTargetType.type() != LinkTargetType.Type.SELECT) {
+                        continue;
+                    }
+                    linkInfo.setSelectInfo(new LinkInfo.SelectInfo()
+                            .setReferenceClass(field2.getType())
+                            .setStorageField(linkTargetType.storageField())
+                            .setDisplayField(linkTargetType.displayField())
+                    );
+                    break;
+                }
             }
         });
         return linkInfos;
@@ -864,6 +884,22 @@ public class NovaFieldUtils {
         @Comment("中间类获取目标引用类数据时（弹窗选取），额外透传向引用类 DataProxy.fetch 传递的当前类表单上下文信息")
         private List<String> referenceTransmitField;
 
+        @Comment("中间类选取引用类信息")
+        private SelectInfo selectInfo;
+
+        @Data
+        @Accessors(chain = true)
+        public static class SelectInfo {
+
+            @Comment("关联类")
+            private Class<?> referenceClass;
+
+            @Comment("中间类存储选取引用类值属性名，既对应引用类的哪个属性")
+            private String storageField;
+
+            @Comment("中间类存储选取引用类值显示属性名，替代 storageField 展示")
+            private String displayField;
+        }
     }
 
     @Data

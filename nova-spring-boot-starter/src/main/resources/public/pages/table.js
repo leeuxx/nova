@@ -923,6 +923,16 @@ const NovaTable = {
         if (picker) picker.visible = true
       })
     },
+    openLinkModalForFilter(f) {
+      const linkInfo = this.linkMap && this.linkMap[f.field]
+      const selectInfo = linkInfo && linkInfo.selectInfo
+      if (!selectInfo || !selectInfo.referenceName) return
+      this.refPickerStack.push({ level: 1, novaName: selectInfo.referenceName, field: f, row: null, isForFilter: true, visible: false })
+      this.$nextTick(() => {
+        const picker = this.refPickerStack[this.refPickerStack.length - 1]
+        if (picker) picker.visible = true
+      })
+    },
     buildEmbSourceFields(tab) {
       const appendageMap = this.appendageMap || {}
       for (const k in appendageMap) {
@@ -940,8 +950,11 @@ const NovaTable = {
     buildPickerSourceFields(picker) {
       const fields = {}
       if (!picker.isForFilter && this.currentRow) fields.ids = String(this.currentRow[this.novaIdFieldName] || '')
-      const refInfo = this.referenceMap[picker.field.field]
-      const transmit = refInfo && refInfo.referenceTransmitField
+      const isLink = picker.field.type === 'LINK'
+      const fieldInfo = isLink
+        ? (this.linkMap && this.linkMap[picker.field.field])
+        : this.referenceMap[picker.field.field]
+      const transmit = fieldInfo && fieldInfo.referenceTransmitField
       if (!transmit || !transmit.length) return fields
       const src = picker.isForFilter ? this.filterForm : this.formData
       transmit.forEach(f => {
@@ -978,10 +991,12 @@ const NovaTable = {
       const refInfo = picker.appNovaName
         ? (this.appBuild(picker.appNovaName).referenceMap || {})[picker.field.field]
         : this.referenceMap[picker.field.field]
-      const appInfo = (!picker.appNovaName && picker.isForFilter) ? (this.appendageMap && this.appendageMap[picker.field.field]) : null
+      const appInfo = (!picker.appNovaName && picker.isForFilter && picker.field.type !== 'LINK') ? (this.appendageMap && this.appendageMap[picker.field.field]) : null
+      const linkInfo = (!picker.appNovaName && picker.isForFilter && picker.field.type === 'LINK') ? (this.linkMap && this.linkMap[picker.field.field]) : null
+      const linkSelectInfo = linkInfo && linkInfo.selectInfo
       // APPENDAGE filter：key=storageField（主表字段），value=行里 referenceField 的值（附属对象存的主表外键）
-      const storageField = appInfo ? (appInfo.referenceField || 'id') : ((refInfo && refInfo.storageField) || 'id')
-      const displayField = appInfo ? (appInfo.displayField || storageField) : ((refInfo && refInfo.displayField) || storageField)
+      const storageField = linkSelectInfo ? (linkSelectInfo.storageField || 'id') : (appInfo ? (appInfo.referenceField || 'id') : ((refInfo && refInfo.storageField) || 'id'))
+      const displayField = linkSelectInfo ? (linkSelectInfo.displayField || storageField) : (appInfo ? (appInfo.displayField || storageField) : ((refInfo && refInfo.displayField) || storageField))
       const row = picker.selectedRow
 
       if (picker.appNovaName) {
@@ -1085,7 +1100,10 @@ const NovaTable = {
       this.closeLinkPicker()
     },
     _doRefSelectRequest(field, refField, query, page, append, onDone) {
-      const refInfo = this.referenceMap[refField] || (this.appendageMap && this.appendageMap[refField]) || {}
+      const refInfo = this.referenceMap[refField] || (this.appendageMap && this.appendageMap[refField]) || (this.linkMap && this.linkMap[refField]) || {}
+      const isLink = this.linkMap && this.linkMap[refField]
+      const selectInfo = isLink && isLink.selectInfo
+      const refNovaName = selectInfo ? selectInfo.referenceName : (refInfo.referenceName || refField)
       const isForFilter = String(field).startsWith('_f_')
       const src = isForFilter ? this.filterForm : this.formData
       const transmit = refInfo.referenceTransmitField
@@ -1104,7 +1122,7 @@ const NovaTable = {
         method: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({
-          novaName: refInfo.referenceName,
+          novaName: refNovaName,
           sourceNovaName: this.novaName,
           sourceFields,
           prompt: query,
@@ -1535,6 +1553,59 @@ const NovaTable = {
               </n-select>
               <!-- 筛选区 APPENDAGE / APPENDAGES vague=false：弹窗选择 -->
               <div v-else-if="(field.type === 'APPENDAGE' || field.type === 'APPENDAGES') && appendageMap && appendageMap[field.field]" @click="openAppendageModalForFilter(field)" style="flex:1;cursor:pointer">
+                <n-input
+                  :value="filterForm[field.field + '_display'] || filterForm[field.field] || ''"
+                  :placeholder="'请选择' + field.title"
+                  :size="embSize"
+                  readonly
+                  clearable
+                  @clear.stop="filterForm[field.field] = null; filterForm[field.field + '_display'] = ''"
+                >
+                  <template #suffix>
+                    <iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon>
+                  </template>
+                </n-input>
+              </div>
+              <!-- 筛选区 LINK vague=true：下拉搜索 -->
+              <n-select
+                v-else-if="field.type === 'LINK' && linkMap && linkMap[field.field] && field.vague"
+                :value="filterForm[field.field] || null"
+                :options="refSelectOptions['_f_' + field.field] || []"
+                :loading="!!refSelectLoading['_f_' + field.field]"
+                :placeholder="'输入关键词搜索'"
+                :size="embSize"
+                filterable
+                remote
+                clearable
+                :clear-filter-after-select="false"
+                style="flex:1"
+                @search="(q) => onRefSelectSearch({ field: '_f_' + field.field, _refField: field.field }, q)"
+                @update:value="(v, opt) => { filterForm[field.field] = v; filterForm[field.field + '_display'] = opt ? opt.label : '' }"
+                @clear="filterForm[field.field] = null; filterForm[field.field + '_display'] = ''"
+              >
+                <template #empty>
+                  <div style="padding:12px;text-align:center;color:#aaa;font-size:13px">
+                    {{ refSelectLoading['_f_' + field.field] ? '搜索中…' : '输入关键词开始搜索' }}
+                  </div>
+                </template>
+                <template #action>
+                  <div style="display:flex;align-items:center;justify-content:center;padding:6px 8px">
+                    <div v-if="(refSelectOptions['_f_' + field.field] || []).length < (refSelectTotal['_f_' + field.field] || 0)"
+                      style="display:flex;align-items:center;gap:4px;font-size:12px;color:#2563eb;cursor:pointer;padding:2px 6px;border-radius:4px;transition:background .15s"
+                      @mouseenter="$event.currentTarget.style.background='#eff6ff'"
+                      @mouseleave="$event.currentTarget.style.background='transparent'"
+                      @click.stop="loadMoreRefSelect('_f_' + field.field, field.field)">
+                      <iconify-icon icon="mdi:chevron-down" style="font-size:14px"></iconify-icon>
+                      加载更多({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
+                    </div>
+                    <span v-else-if="(refSelectOptions['_f_' + field.field] || []).length > 0" style="font-size:12px;color:#aaa">
+                      已全部加载({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
+                    </span>
+                  </div>
+                </template>
+              </n-select>
+              <!-- 筛选区 LINK vague=false：弹窗选择 -->
+              <div v-else-if="field.type === 'LINK' && linkMap && linkMap[field.field]" @click="openLinkModalForFilter(field)" style="flex:1;cursor:pointer">
                 <n-input
                   :value="filterForm[field.field + '_display'] || filterForm[field.field] || ''"
                   :placeholder="'请选择' + field.title"

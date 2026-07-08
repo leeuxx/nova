@@ -1,6 +1,7 @@
 package com.nova.dto;
 
 import com.nova.annotation.config.Comment;
+import com.nova.annotation.fun.Fetch;
 import com.nova.dto.page.PageBean;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -30,6 +31,9 @@ public class NovaTableData {
 
     @Comment("来源上下文属性集合")
     private Map<String, String> sourceFields;
+
+    @Comment("LINK组件查询条件")
+    private Map<String, Map<String, String>> linkConditions;
 
     @Data
     @Accessors(chain = true)

@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Data
 @Accessors(chain = true)
-public class Fetch<T> {
+public class Fetch {
 
     @Comment("当前页")
     private long current = 1;
@@ -19,17 +19,20 @@ public class Fetch<T> {
     @Comment("显示行数")
     private long size = 10;
 
-    @Comment("查询条件")
-    private Map<String, Search> conditions;
-
     @Comment("排序")
     private List<OrderItemBean> orders = new ArrayList<>();
+
+    @Comment("查询条件")
+    private Map<String, Search> conditions;
 
     @Comment("来源nova名称")
     private String novaName;
 
     @Comment("来源上下文属性集合")
     private Map<String, String> sourceFields;
+
+    @Comment("LINK组件查询条件")
+    private Map<String, Map<String, String>> linkConditions;
 
     @Data
     @Accessors(chain = true)

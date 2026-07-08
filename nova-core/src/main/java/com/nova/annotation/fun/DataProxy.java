@@ -19,7 +19,7 @@ public interface DataProxy<MODEL> {
     }
 
     @Comment("查询")
-    default Fetch.Vo<MODEL> fetch(Fetch<MODEL> fetch) {
+    default Fetch.Vo<MODEL> fetch(Fetch fetch) {
         return null;
     }
 

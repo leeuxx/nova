@@ -1,7 +1,5 @@
 package com.nova.service;
 
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -13,18 +11,20 @@ import com.nova.entity.TestDemo;
 import com.nova.entity.TestDemo4;
 import com.nova.entity.TestDemoRef;
 import com.nova.mapper.TestDemoRefMapper;
+import com.nova.utils.Beans;
+import com.nova.utils.Emptys;
 import com.nova.utils.NovaQueryUtils;
+import com.nova.utils.collections.list.JArrayList;
+import com.nova.utils.collections.map.JMap;
 import com.nova.view.TestDemo4View;
 import com.nova.view.TestDemoRefView;
 import com.nova.view.TestDemoView;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Lazy)
@@ -57,37 +57,28 @@ public class TestDemoRefService extends ServiceImpl<TestDemoRefMapper, TestDemoR
     }
 
     @Override
-    public Fetch.Vo<TestDemoRefView> fetch(Fetch<TestDemoRefView> fetch) {
-        JSONObject jsonObject = JSONUtil.parseObj(fetch.getConditions().get("demoId"));
-        TestDemo testDemo = testDemoService.getById(jsonObject.getLong("value"));
-        TestDemoView testDemoView = new TestDemoView();
-        BeanUtils.copyProperties(testDemo, testDemoView); // 源，目标
+    public Fetch.Vo<TestDemoRefView> fetch(Fetch fetch) {
         NovaQueryUtils.Result<TestDemoRef> testDemoRefResult = NovaQueryUtils.buildWrapper(TestDemoRefView.class, fetch, TestDemoRef.class);
         Page<TestDemoRef> page = testDemoRefResult.getPage();
         LambdaQueryWrapper<TestDemoRef> wrapper = testDemoRefResult.getWrapper();
         IPage<TestDemoRef> iPage = page(page, wrapper);
         List<TestDemoRef> records = iPage.getRecords();
-        List<Long> demo4IdList = records.stream()
-                .map(TestDemoRef::getDemo4Id)
-                .filter(Objects::nonNull)
-                .toList();
-        List<TestDemo4> testDemo4s = new ArrayList<>();
-        if (!demo4IdList.isEmpty()) {
-            testDemo4s = testDemo4Service.listByIds(demo4IdList);
-        }
         List<TestDemoRefView> testDemoRefViews = new ArrayList<>();
-        for (TestDemoRef testDemoRef : records) {
-            TestDemoRefView testDemoRefView = new TestDemoRefView();
-            BeanUtils.copyProperties(testDemoRef, testDemoRefView); // 源，目标
-            for (TestDemo4 testDemo4 : testDemo4s) {
-                if (testDemo4.getId().equals(testDemoRef.getDemo4Id())) {
-                    TestDemo4View testDemo4View = new TestDemo4View();
-                    BeanUtils.copyProperties(testDemo4, testDemo4View); // 源，目标
-                    testDemoRefView.setTestDemo4View(testDemo4View);
-                }
+        if (Emptys.check(records)) {
+            List<TestDemo> testDemos = testDemoService.listByIds(new JArrayList<>(records).getProperty(TestDemoRef::getDemoId).comparing());
+            JMap<Long, TestDemo> testDemoJMaps = new JArrayList<>(testDemos).toMap(TestDemo::getId).cover();
+            List<TestDemo4> testDemo4s = testDemo4Service.listByIds(new JArrayList<>(records).getProperty(TestDemoRef::getDemo4Id).comparing());
+            JMap<Long, TestDemo4> testDemo4JMaps = new JArrayList<>(testDemo4s).toMap(TestDemo4::getId).cover();
+            for (TestDemoRef testDemoRef : records) {
+                TestDemo testDemo = testDemoJMaps.get(testDemoRef.getDemoId());
+                TestDemoView testDemoView = Beans.copy(TestDemoView.class, testDemo);
+                TestDemo4 testDemo4 = testDemo4JMaps.get(testDemoRef.getDemo4Id());
+                TestDemo4View testDemo4View = Beans.copy(TestDemo4View.class, testDemo4);
+                TestDemoRefView testDemoRefView = Beans.copy(TestDemoRefView.class, testDemoRef)
+                        .setTestDemo4View(testDemo4View)
+                        .setTestDemoView(testDemoView);
+                testDemoRefViews.add(testDemoRefView);
             }
-            testDemoRefView.setTestDemoView(testDemoView);
-            testDemoRefViews.add(testDemoRefView);
         }
         return new Fetch.Vo<TestDemoRefView>()
                 .setTotal(iPage.getTotal())

@@ -210,9 +210,15 @@ public class NovaTableServiceImpl implements NovaTableService {
         Map<String, NovaTableBuild.Vo.Link> linkMap = new LinkedHashMap<>();
         Map<String, NovaFieldUtils.LinkInfo> links = NovaFieldUtils.getLink(novaTableBuild.getNovaName());
         links.forEach((field, linkInfo) -> {
+            NovaFieldUtils.LinkInfo.SelectInfo selectInfo = linkInfo.getSelectInfo();
             NovaTableBuild.Vo.Link link = new NovaTableBuild.Vo.Link()
                     .setReferenceName(linkInfo.getReferenceClass().getSimpleName())
-                    .setReferenceTransmitField(linkInfo.getReferenceTransmitField());
+                    .setReferenceTransmitField(linkInfo.getReferenceTransmitField())
+                    .setSelectInfo(new NovaTableBuild.Vo.Link.SelectInfo()
+                            .setReferenceName(selectInfo.getReferenceClass().getSimpleName())
+                            .setStorageField(selectInfo.getStorageField())
+                            .setDisplayField(selectInfo.getDisplayField())
+                    );
             linkMap.put(field, link);
         });
         vo.setLink(linkMap);
@@ -256,7 +262,8 @@ public class NovaTableServiceImpl implements NovaTableService {
                 .setConditions(requestConditions)
                 .setOrders(requestOrders)
                 .setNovaName(novaTableData.getSourceNovaName())
-                .setSourceFields(novaTableData.getSourceFields());
+                .setSourceFields(novaTableData.getSourceFields())
+                .setLinkConditions(novaTableData.getLinkConditions());
         // 调用代理，获取实体列表
         DataProxy<?> dataProxy = DataProxyUtils.getDataProxy(novaName);
         Fetch.Vo<?> fetch = dataProxy.fetch(queryRequest);

@@ -30,7 +30,7 @@ public class NovaQueryUtils {
      * @param fetch       框架传入的查询请求
      * @param entityClass 实体类（用于 Page 泛型）
      */
-    public static <T> Result<T> buildWrapper(Class<?> viewClass, Fetch<?> fetch, Class<T> entityClass) {
+    public static <T> Result<T> buildWrapper(Class<?> viewClass, Fetch fetch, Class<T> entityClass) {
         String novaName = viewClass.getSimpleName();
         QueryWrapper<T> wrapper = new QueryWrapper<>();
 

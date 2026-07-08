@@ -84,7 +84,7 @@ window.NovaTableJQ = (function ($) {
           var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
           var isDate = f.type === 'DATE'
           form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
-          if (f.type === 'REFERENCE' || f.type === 'APPENDAGE' || f.type === 'APPENDAGES') {
+          if (f.type === 'REFERENCE' || f.type === 'APPENDAGE' || f.type === 'APPENDAGES' || f.type === 'LINK') {
             form[f.field + '_display'] = ''
           }
         })
@@ -432,6 +432,9 @@ window.NovaTableJQ = (function ($) {
     var queryName = target.novaName || vmKey
     // 过滤空值条件，按后端结构组装
     var conditions = {}
+    var sourceFields = Object.assign({}, target._sourceFields || {})
+    var sourceNovaName = target._sourceNovaName || queryName
+    var linkConditions = {}
     var form = target.filterForm || {}
     var searchFields = target.searchFields || []
     searchFields.forEach(function (fieldDef) {
@@ -449,6 +452,18 @@ window.NovaTableJQ = (function ($) {
         strVal = Array.isArray(val) ? val.join(',') : String(val)
       } else {
         strVal = Array.isArray(val) ? val.join(',') : String(val)
+      }
+      // LINK 字段：值移入 linkConditions，不放入 conditions
+      if (fieldDef.type === 'LINK') {
+        var linkInfo2 = (target.linkMap && target.linkMap[fieldDef.field]) || {}
+        var selectInfo = linkInfo2.selectInfo || {}
+        var sfKey = selectInfo.storageField || 'id'
+        var refName = selectInfo.referenceName
+        if (refName) {
+          if (!linkConditions[refName]) linkConditions[refName] = {}
+          linkConditions[refName][sfKey] = strVal
+        }
+        return
       }
       // REFERENCE 字段：使用 referenceField 作为实际查询字段
       var actualField = fieldDef.field
@@ -490,7 +505,7 @@ window.NovaTableJQ = (function ($) {
       url:         '/nova/table/data',
       method:      'POST',
       contentType: 'application/json',
-      data:        JSON.stringify({ novaName: queryName, sourceNovaName: target._sourceNovaName || queryName, sourceFields: target._sourceFields || {}, pageBean: pageBean, conditions: conditions }),
+      data:        JSON.stringify({ novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, linkConditions: linkConditions, pageBean: pageBean, conditions: conditions }),
       success: function (resp) {
         var t = window.vmMap && window.vmMap[vmKey]
         if (!t) return
@@ -667,8 +682,8 @@ window.NovaTableJQ = (function ($) {
       var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
       var isDate = f.type === 'DATE'
       form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
-      // REFERENCE / APPENDAGE 字段重置 _display 字段
-      if (f.type === 'REFERENCE' || f.type === 'APPENDAGE' || f.type === 'APPENDAGES') {
+      // REFERENCE / APPENDAGE / LINK 字段重置 _display 字段
+      if (f.type === 'REFERENCE' || f.type === 'APPENDAGE' || f.type === 'APPENDAGES' || f.type === 'LINK') {
         form[f.field + '_display'] = ''
       }
     })
@@ -1075,6 +1090,8 @@ window.NovaTableJQ = (function ($) {
         target.booleanMap    = resp.data.booleanInfo || {}
         target.attachmentMap = resp.data.attachment  || {}
         target.referenceMap  = resp.data.reference   || {}
+        target.appendageMap  = resp.data.appendage   || {}
+        target.linkMap       = resp.data.link        || {}
         var fields = resp.data.search || []
         target.searchFields = fields
         var form = {}
@@ -1084,7 +1101,7 @@ window.NovaTableJQ = (function ($) {
           var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
           var isDate = f.type === 'DATE'
           form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
-          if (f.type === 'REFERENCE' || f.type === 'APPENDAGE') form[f.field + '_display'] = ''
+          if (f.type === 'REFERENCE' || f.type === 'APPENDAGE' || f.type === 'LINK') form[f.field + '_display'] = ''
         })
         target.filterForm = form
         var cols = resp.data.tableColumns || []

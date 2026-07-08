@@ -13,6 +13,9 @@ public @interface LinkTargetType {
     @Comment("引用类值属性名，默认id，即当前类的 referenceField 对应引用类的哪个属性（通常为主键）")
     String storageField() default "id";
 
+    @Comment("引用类显示属性名，替代 storageField 展示，默认 name")
+    String displayField() default "name";
+
     enum Type {
         @Comment("操作类")
         OPERATE,

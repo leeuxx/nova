@@ -90,7 +90,8 @@ public class TestDemoView {
                             referenceTransmitField = {
                                     "name"
                             }
-                    )
+                    ),
+                    search = @Search(vague = true)
             )
     )
     private TestDemoRefView testDemoRefView;
