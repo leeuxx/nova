@@ -37,8 +37,9 @@ window.NovaTableJQ = (function ($) {
 
   // ── 动态构建查询条件 + 表头列 ─────────────────────────────────
   // vmKey: 可选，embedded 模式下为 '__emb_xxx'；embSourceFields: embedded 模式下预注入的外键条件；sourceNovaName: 父表 novaName
-  function buildTable(novaName, vmKey, embSourceFields, sourceNovaName) {
+  function buildTable(novaName, vmKey, embSourceFields, sourceNovaName, deferDataLoad) {
     if (!novaName) return
+    console.log('[Dual] buildTable called, novaName:', novaName, 'vmKey:', vmKey)
     var key = vmKey || novaName
     $.ajax({
       url:         '/nova/table/build',
@@ -115,10 +116,10 @@ window.NovaTableJQ = (function ($) {
           })
         })
         if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
-        // embedded 模式：过滤 editFields 中外键已由 sourceFields 提供的 REFERENCE 字段
+        // embedded 模式：始终记录 source 信息，sourceFields 非空时过滤编辑/搜索字段
+        target._sourceFields = embSourceFields || {}
+        target._sourceNovaName = sourceNovaName || novaName
         if (embSourceFields && Object.keys(embSourceFields).length > 0) {
-          target._sourceFields = embSourceFields
-          target._sourceNovaName = sourceNovaName || novaName
           var sourceKeys = Object.keys(embSourceFields)
           var hiddenRefNovas = []
           var sourceRefFields = []
@@ -160,7 +161,7 @@ window.NovaTableJQ = (function ($) {
           })
           target._sourceRefFields = existingRefFields
         }
-        loadData(key)
+        if (!deferDataLoad) loadData(key)
       },
       error: function () {
         console.info('[Nova] build接口未就绪，novaName:', novaName)
@@ -501,6 +502,7 @@ window.NovaTableJQ = (function ($) {
         conditions[rf.referenceField] = { value: String(rf.value), type: 'TEXT', ext: '', vague: false }
       }
     })
+    console.log('[Dual] loadData request:', JSON.stringify({ novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, linkConditions: linkConditions, pageBean: pageBean, conditions: conditions }))
     $.ajax({
       url:         '/nova/table/data',
       method:      'POST',
@@ -1165,8 +1167,8 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── embedded 模式初始化（嵌入在父表编辑弹窗的 tab 里）──────────
-  function onEmbeddedMounted(novaName, vmKey, sourceNovaName, sourceFields) {
-    buildTable(novaName, vmKey, sourceFields || {}, sourceNovaName)
+  function onEmbeddedMounted(novaName, vmKey, sourceNovaName, sourceFields, deferDataLoad) {
+    buildTable(novaName, vmKey, sourceFields || {}, sourceNovaName, deferDataLoad)
   }
 
   return {

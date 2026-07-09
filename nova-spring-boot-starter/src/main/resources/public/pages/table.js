@@ -582,6 +582,39 @@ const NovaTable = {
           }
         }
       }
+    },
+
+    'sourceFieldsProp': {
+      handler(newVal) {
+        console.log('[Dual] sourceFieldsProp watcher fired, dualMode:', this.dualMode, 'vmKey:', this._vmKey, 'newVal:', JSON.stringify(newVal))
+        if (!this.dualMode || !this._vmKey) return
+        var target = window.vmMap && window.vmMap[this._vmKey]
+        console.log('[Dual] target found:', !!target)
+        if (!target) return
+        var embSourceFields = newVal || {}
+        target._sourceFields = embSourceFields
+        var sourceKeys = Object.keys(embSourceFields)
+        var sourceRefFields = []
+        if (sourceKeys.length > 0 && target.editFields) {
+          target.editFields.forEach(function(f) {
+            if (f.type === 'REFERENCE' && f.reference && f.reference.referenceField && sourceKeys.includes(f.reference.referenceField)) {
+              sourceRefFields.push({ field: f.field, type: 'REFERENCE', referenceField: f.reference.referenceField, value: embSourceFields[f.reference.referenceField] })
+            }
+          })
+        }
+        var linkInfo = target.linkTargetInfo
+        if (linkInfo && sourceKeys.length > 0) {
+          var ltFields = [linkInfo.thisReferenceField, linkInfo.linkReferenceField]
+          ltFields.forEach(function(refField) {
+            if (refField && embSourceFields[refField] != null && !sourceRefFields.some(function(s) { return s.field === refField })) {
+              sourceRefFields.push({ field: refField, type: 'LINK_TARGET', referenceField: refField, value: embSourceFields[refField] })
+            }
+          })
+        }
+        target._sourceRefFields = sourceRefFields
+        window.NovaTableJQ.loadData(this._vmKey)
+      },
+      deep: true
     }
   },
 
@@ -608,7 +641,7 @@ const NovaTable = {
       this.paginationConfig.onUpdatePage     = this.handlePageChange
       this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
       this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
-      if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onEmbeddedMounted(this.novaName, this._vmKey, this.sourceNovaNameProp || this.novaName, this.sourceFieldsProp || {})
+      if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onEmbeddedMounted(this.novaName, this._vmKey, this.sourceNovaNameProp || this.novaName, this.sourceFieldsProp || {}, true)
     } else if (this.embeddedMode) {
       this.novaName = this.novaNameProp || ''
       this._vmKey = '__emb_' + this.novaName + '_' + Date.now()
@@ -1154,17 +1187,74 @@ const NovaTable = {
     buildDualTableSourceFields() {
       const row = this._dualSelectedRow
       if (!row) { this.dualTableSourceFields = {}; return }
-      const idField = this.novaIdFieldName || 'id'
-      const idVal = row[idField]
-      if (idVal == null) { this.dualTableSourceFields = {}; return }
-      this.dualTableSourceFields = { [idField]: String(idVal) }
+      // 查找当前子表在 dualTableSubTables 中的类型
+      const sub = this.dualTableSubTables.find(s => s.novaName === this.dualTableCurrentNova)
+      if (!sub) { this.dualTableSourceFields = {}; return }
+
+      if (sub.type === 'link') {
+        // LINK 类型：取 linkTabBuild 中的 thisReferenceField，值为当前行 PK
+        const build = this.linkTabBuild[sub.novaName]
+        if (!build) { this.dualTableSourceFields = {}; return }
+        const lt = build.linkTarget || {}
+        const refField = lt.thisReferenceField
+        if (!refField) { this.dualTableSourceFields = {}; return }
+        const pkVal = row[this.novaIdFieldName || 'id']
+        if (pkVal == null) { this.dualTableSourceFields = {}; return }
+        this.dualTableSourceFields = { [refField]: String(pkVal) }
+      } else {
+        // APPENDAGES 类型：取 fieldInfo.storageField，值为当前行对应字段值
+        const appInfo = sub.fieldInfo || {}
+        const storageField = appInfo.storageField || 'id'
+        const val = row[storageField]
+        if (val == null) { this.dualTableSourceFields = {}; return }
+        this.dualTableSourceFields = { [storageField]: String(val) }
+      }
+    },
+    _applyDualSourceFields(target) {
+      var embSourceFields = this.dualTableSourceFields || {}
+      target._sourceFields = embSourceFields
+      var sourceKeys = Object.keys(embSourceFields)
+      var sourceRefFields = []
+      if (sourceKeys.length > 0) {
+        var refMap = target.referenceMap || {}
+        for (var field in refMap) {
+          var refInfo = refMap[field]
+          if (refInfo.storageField && sourceKeys.indexOf(refInfo.storageField) !== -1) {
+            sourceRefFields.push({ field: field, type: 'REFERENCE', referenceField: refInfo.referenceField || 'id', value: embSourceFields[refInfo.storageField] })
+          }
+        }
+      }
+      var linkInfo = target.linkTargetInfo
+      if (linkInfo && sourceKeys.length > 0) {
+        var ltFields = [linkInfo.thisReferenceField, linkInfo.linkReferenceField]
+        ltFields.forEach(function(refField) {
+          if (refField && embSourceFields[refField] != null && !sourceRefFields.some(function(s) { return s.field === refField })) {
+            sourceRefFields.push({ field: refField, type: 'LINK_TARGET', referenceField: refField, value: embSourceFields[refField] })
+          }
+        })
+      }
+      target._sourceRefFields = sourceRefFields
     },
     onDualTableRowClick(row) {
       if (!this.dualTableViewActive) return
+      console.log('[Dual] onDualTableRowClick called, row:', row)
       this._dualSelectedRow = row
-      this._dualTableVersion++
       this.buildDualTableSourceFields()
-      this.dualTableCurrentKey = '__dual_' + this.dualTableCurrentNova + '_v' + this._dualTableVersion
+      console.log('[Dual] dualTableSourceFields after build:', JSON.stringify(this.dualTableSourceFields))
+      // 直接通过 $refs 更新双表 VM 的 source fields 并触发 loadData
+      var self = this
+      this.$nextTick(function() {
+        var dualVm = self.$refs.dualTableRef
+        console.log('[Dual] dualVm from $refs:', !!dualVm, dualVm && dualVm._vmKey)
+        if (dualVm && dualVm._vmKey) {
+          var target = window.vmMap && window.vmMap[dualVm._vmKey]
+          console.log('[Dual] target from vmMap:', !!target)
+          if (target) {
+            self._applyDualSourceFields(target)
+            window.NovaTableJQ.loadData(dualVm._vmKey)
+          }
+        }
+      })
     },
     onDualTableSubChange(novaName) {
       const item = this.dualTableSubTables.find(s => s.novaName === novaName)
@@ -2257,7 +2347,7 @@ const NovaTable = {
 
       <!-- 双表视图右面板：Teleport 到 .page-content 作为 flex 兄弟元素 -->
       <Teleport to=".page-content" v-if="dualTableViewActive && dualTableEnabled && dualTableCurrentNova">
-        <nova-table :key="dualTableCurrentKey" :dual-mode="true" :nova-name-prop="dualTableCurrentNova" :source-nova-name-prop="novaName" :source-fields-prop="dualTableSourceFields" class="dual-right-panel" />
+        <nova-table ref="dualTableRef" :key="dualTableCurrentKey" :dual-mode="true" :nova-name-prop="dualTableCurrentNova" :source-nova-name-prop="novaName" :source-fields-prop="dualTableSourceFields" class="dual-right-panel" />
       </Teleport>
     </div>
   `
