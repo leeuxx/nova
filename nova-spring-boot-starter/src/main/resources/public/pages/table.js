@@ -209,6 +209,7 @@ const NovaTable = {
       linkPickerSourceFields:     {},
       linkPickerTitle:            '',
       dualTableViewActive:        false,
+      dualTableClosing:           false,
       dualTableCurrentKey:        '',
       dualTableCurrentNova:       '',
       dualTableCurrentLabel:      '',
@@ -1192,16 +1193,27 @@ const NovaTable = {
       this.closeLinkPicker()
     },
     toggleDualTableView() {
-      this.dualTableViewActive = !this.dualTableViewActive
-      if (this.dualTableViewActive && this.dualTableSubTables.length > 0) {
-        const first = this.dualTableSubTables[0]
-        this._dualTableVersion++
-        this.dualTableCurrentNova = first.novaName
-        this.dualTableCurrentLabel = first.label
-        this.dualTableCurrentKey = '__dual_' + first.novaName + '_v' + this._dualTableVersion
-        this.buildDualTableSourceFields()
+      if (this.dualTableViewActive) {
+        // 收起：先标记关闭状态触发动画，动画完再真正卸载
+        this.dualTableClosing = true
+        this._syncDualTableClass()
+        setTimeout(() => {
+          this.dualTableViewActive = false
+          this.dualTableClosing = false
+        }, 350)
+      } else {
+        // 展开：直接挂载，CSS自动播放进入动画
+        this.dualTableViewActive = true
+        if (this.dualTableSubTables.length > 0) {
+          const first = this.dualTableSubTables[0]
+          this._dualTableVersion++
+          this.dualTableCurrentNova = first.novaName
+          this.dualTableCurrentLabel = first.label
+          this.dualTableCurrentKey = '__dual_' + first.novaName + '_v' + this._dualTableVersion
+          this.buildDualTableSourceFields()
+        }
+        this._syncDualTableClass()
       }
-      this._syncDualTableClass()
     },
     buildDualTableSourceFields() {
       const row = this._dualSelectedRow
@@ -2388,8 +2400,8 @@ const NovaTable = {
       </n-modal>
 
       <!-- 双表视图右面板：Teleport 到 .page-content 作为 flex 兄弟元素 -->
-      <Teleport to=".page-content" v-if="dualTableViewActive && dualTableEnabled && dualTableCurrentNova">
-        <nova-table ref="dualTableRef" :key="dualTableCurrentKey" :dual-mode="true" :nova-name-prop="dualTableCurrentNova" :source-nova-name-prop="novaName" :source-fields-prop="dualTableSourceFields" class="dual-right-panel" />
+      <Teleport to=".page-content" v-if="(dualTableViewActive || dualTableClosing) && dualTableEnabled && dualTableCurrentNova">
+        <nova-table ref="dualTableRef" :key="dualTableCurrentKey" :dual-mode="true" :nova-name-prop="dualTableCurrentNova" :source-nova-name-prop="novaName" :source-fields-prop="dualTableSourceFields" class="dual-right-panel" :class="{ 'is-closing': dualTableClosing }" />
       </Teleport>
     </div>
   `
