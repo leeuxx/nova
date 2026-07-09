@@ -183,6 +183,7 @@ const NovaTable = {
       tapSearchValue:  null,
       showForm:       false,
       formTab:        'form',
+      openingForm:    false,         // 弹窗打开瞬间置 true，nextTick 置 false，期间忽略 onFormTabChange
       formMode:       'add',
       visitedEmbTabs: new Set(),
       currentRow:     null,
@@ -539,8 +540,23 @@ const NovaTable = {
   watch: {
     showForm(val) {
       if (!val) {
-        this.visitedEmbTabs = new Set()
-        this.formTab = 'form'
+        // 弹窗关闭：清空所有 tab 相关缓存，确保下次打开完全等同于第一次
+        this.visitedEmbTabs      = new Set()
+        this.formTab             = 'form'
+        this.appendageDetailsLoaded = {}
+        this.appendageTabBuild      = {}
+        this.appendageFormData      = {}
+        this.appendageFormErrors    = {}
+        this.refTabData          = {}
+        this._refCoord           = {}
+        this.linkFormData        = {}
+        this.linkTabBuild        = {}
+      } else {
+        // 弹窗打开：置标记屏蔽 n-tabs 因 value 同步触发的 onFormTabChange
+        this.openingForm = true
+        this.formTab     = 'form'
+        // 用 setTimeout 确保在 n-tabs 同步完成、所有 emit 结束后再解除屏蔽
+        setTimeout(() => { this.openingForm = false }, 0)
       }
     },
     formData: {
@@ -586,10 +602,8 @@ const NovaTable = {
 
     'sourceFieldsProp': {
       handler(newVal) {
-        console.log('[Dual] sourceFieldsProp watcher fired, dualMode:', this.dualMode, 'vmKey:', this._vmKey, 'newVal:', JSON.stringify(newVal))
-        if (!this.dualMode || !this._vmKey) return
+        if (!this._vmKey) return
         var target = window.vmMap && window.vmMap[this._vmKey]
-        console.log('[Dual] target found:', !!target)
         if (!target) return
         var embSourceFields = newVal || {}
         target._sourceFields = embSourceFields
@@ -612,7 +626,10 @@ const NovaTable = {
           })
         }
         target._sourceRefFields = sourceRefFields
-        window.NovaTableJQ.loadData(this._vmKey)
+        // dualMode / embeddedMode 都需要在 sourceFields 变化时重新加载数据
+        if (this.dualMode || this.embeddedMode) {
+          window.NovaTableJQ.loadData(this._vmKey)
+        }
       },
       deep: true
     }
@@ -1104,10 +1121,12 @@ const NovaTable = {
       if (!build) return {}
       const lt = build.linkTarget || {}
       const refField = lt.thisReferenceField
+      const storageField = lt.thisStorageField || refField
       if (!refField) return {}
-      const pkVal = this.currentRow && this.currentRow[this.novaIdFieldName]
-      if (pkVal === null || pkVal === undefined) return {}
-      return { [refField]: String(pkVal) }
+      // 取值用 storageField（实际存储关联值的字段），key 用 refField（关联字段名）
+      const refVal = this.currentRow && this.currentRow[storageField]
+      if (refVal === null || refVal === undefined) return {}
+      return { [refField]: String(refVal) }
     },
     openLinkPicker(linkNovaName, tapTitle) {
       const build = this.linkTabBuild[linkNovaName]
@@ -1404,8 +1423,11 @@ const NovaTable = {
       this.$emit('pick', enrichedRow)
     },
     onFormTabChange(tab) {
+      // 弹窗打开瞬间的 v-model 同步不应触发按需加载
+      if (this.openingForm) return
       if (tab.startsWith('emb_') || tab.startsWith('link_')) {
         this.visitedEmbTabs = new Set([...this.visitedEmbTabs, tab])
+        // linkForm 的 linkTarget 等元数据在子 <nova-table> 自行 /build 后由 syncLinkTabBuild 同步
       } else if (tab.startsWith('ref_')) {
         var refNovaName = tab.slice(4)
         if (this.refTabData[refNovaName] != null) return
@@ -1863,7 +1885,7 @@ const NovaTable = {
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
               新增
             </n-button>
-            <n-button v-if="!readonly" :size="embSize" type="primary" @click="handleAdd">
+            <n-button v-if="!readonly && !linkMode" :size="embSize" type="primary" @click="handleAdd">
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
               新 增
             </n-button>
@@ -1934,7 +1956,7 @@ const NovaTable = {
       </component>
 
       <!-- 新增/编辑弹窗 -->
-      <n-modal v-model:show="showForm" preset="card" :title="formMode === 'add' ? '新增' : '编辑'" :style="isEmbTab ? 'width:calc(100vw - 80px);max-width:1600px;margin-top:40px;max-height:calc(100vh - 80px);display:flex;flex-direction:column;transition:width 0.3s ease,max-height 0.3s ease,margin-top 0.3s ease' : 'width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column'" :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
+      <n-modal v-model:show="showForm" display-directive="if" preset="card" :title="formMode === 'add' ? '新增' : '编辑'" :style="isEmbTab ? 'width:calc(100vw - 80px);max-width:1600px;margin-top:40px;max-height:calc(100vh - 80px);display:flex;flex-direction:column;transition:width 0.3s ease,max-height 0.3s ease,margin-top 0.3s ease' : 'width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column'" :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
         <n-tabs v-model:value="formTab" type="line"
           style="padding:0 20px;margin-top:-4px"
           :class="''"
@@ -2125,7 +2147,7 @@ const NovaTable = {
         <template v-for="tab in editExtraTabs" :key="tab.tapNovaName">
         <n-tab-pane v-if="tab.tapShow !== false && (tab.tapType !== 'referenceForm' || formMode !== 'add') && (tab.tapType !== 'appendagesTable' || formMode !== 'add') && (tab.tapType !== 'linkForm' || formMode !== 'add') && (!tab.tapShowByExpr || evalShowExprSafe(tab.tapShowByExpr, formData))"
           :name="(tab.tapType === 'referenceForm' ? 'ref_' : tab.tapType === 'appendagesTable' ? 'emb_' : tab.tapType === 'linkForm' ? 'link_' : 'app_') + tab.tapNovaName"
-          display-directive="show"
+          display-directive="if"
           :style="tab.tapType === 'appendagesTable' ? ('padding:0 0 15px 0;overflow:hidden;height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px')) : 'padding:16px 0 20px 0'">
           <template #tab><iconify-icon :icon="tab.tapType === 'referenceForm' ? 'mdi:eye-outline' : tab.tapType === 'appendagesTable' ? 'mdi:table' : tab.tapType === 'linkForm' ? 'mdi:link-variant' : 'mdi:note-outline'" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>{{ tab.tapTitle || tab.tapNovaName }}<template v-if="tab.tapType === 'appendageForm'"><span v-if="tabRequiredCount('app_' + tab.tapNovaName) > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('app_' + tab.tapNovaName) }}</span><span v-else-if="tabTotalRequired('app_' + tab.tapNovaName) > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template></template>
           <div :key="tab.tapNovaName" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
@@ -2246,7 +2268,7 @@ const NovaTable = {
           <template v-else-if="tab.tapType === 'appendagesTable'">
             <div :style="'display:flex;flex-direction:column;overflow:hidden;height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px')">
               <nova-table
-                v-if="visitedEmbTabs.has('emb_' + tab.tapNovaName)"
+                v-if="showForm && visitedEmbTabs.has('emb_' + tab.tapNovaName)"
                 :key="'emb_' + tab.tapNovaName + '_' + (currentRow && currentRow[novaIdFieldName])"
                 :embedded-mode="true"
                 :nova-name-prop="tab.tapNovaName"
@@ -2260,7 +2282,7 @@ const NovaTable = {
           <template v-else-if="tab.tapType === 'linkForm'">
             <div :style="'display:flex;flex-direction:column;overflow:hidden;height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px')">
               <nova-table
-                v-if="visitedEmbTabs.has('link_' + tab.tapNovaName)"
+                v-if="showForm && visitedEmbTabs.has('link_' + tab.tapNovaName)"
                 :key="'link_' + tab.tapNovaName + '_' + (currentRow && currentRow[novaIdFieldName])"
                 :embedded-mode="true"
                 :link-mode="true"

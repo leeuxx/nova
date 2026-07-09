@@ -161,7 +161,66 @@ window.NovaTableJQ = (function ($) {
           })
           target._sourceRefFields = existingRefFields
         }
-        if (!deferDataLoad) loadData(key)
+        // LINK embedded 模式：子组件 build 完成后，把 linkTarget 等元数据同步到父组件 linkTabBuild
+        if (sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField) {
+          var parentVm = window.vmMap && window.vmMap[sourceNovaName]
+          if (parentVm && parentVm.linkTabBuild !== undefined) {
+            var lt = resp.data.linkTarget
+            var ltEditFields = target.editFields || []
+            var ltSourceField = null, ltTargetField = null
+            // 优先用 referenceField 精确匹配
+            ltEditFields.forEach(function(f) {
+              if (f.type !== 'LINK_TARGET') return
+              var rf = f.referenceField || ''
+              if (rf && rf === lt.thisReferenceField) ltSourceField = f.field
+              if (rf && rf === lt.linkReferenceField) ltTargetField = f.field
+            })
+            // fallback：按类名推断（字段名通常以类名小写开头）
+            if (!ltSourceField || !ltTargetField) {
+              var thisRefLower = (lt.thisReferenceName || '').toLowerCase()
+              var linkRefLower = (lt.linkReferenceName || '').toLowerCase()
+              ltEditFields.forEach(function(f) {
+                if (f.type !== 'LINK_TARGET') return
+                var fl = f.field.toLowerCase()
+                if (thisRefLower && fl.indexOf(thisRefLower) !== -1) ltSourceField = f.field
+                if (linkRefLower && fl.indexOf(linkRefLower) !== -1) ltTargetField = f.field
+              })
+            }
+            var newBuild = Object.assign({}, parentVm.linkTabBuild)
+            newBuild[novaName] = {
+              linkTarget: lt,
+              sourceFieldName: ltSourceField,
+              targetFieldName: ltTargetField,
+              editFields: ltEditFields,
+              tableColumns: resp.data.tableColumns || [],
+              novaIdFieldName: resp.data.novaIdFieldName,
+              choiceMap: resp.data.choice || {},
+              referenceMap: resp.data.reference || {},
+              linkMap: resp.data.link || {}
+            }
+            parentVm.linkTabBuild = newBuild
+            // linkForm：同步完成后设置 sourceFields，然后 loadData
+            console.log('[Nova-link] buildTable success, lt:', lt, 'parentVm:', parentVm, 'currentRow:', parentVm && parentVm.currentRow, 'deferDataLoad:', deferDataLoad)
+            if (!deferDataLoad && lt.thisReferenceField && parentVm && parentVm.currentRow) {
+              // 取值用 thisStorageField（实际存储关联值的字段），key 用 thisReferenceField（关联字段名）
+              var storageField = lt.thisStorageField || lt.thisReferenceField
+              var refVal = parentVm.currentRow[storageField]
+              console.log('[Nova-link] refVal:', refVal, 'storageField:', storageField, 'thisReferenceField:', lt.thisReferenceField)
+              target._sourceFields = refVal != null ? { [lt.thisReferenceField]: String(refVal) } : {}
+              var srf = []
+              if (refVal != null) {
+                srf.push({ field: lt.thisReferenceField, type: 'LINK_TARGET', referenceField: lt.thisReferenceField, value: String(refVal) })
+              }
+              target._sourceRefFields = srf
+              console.log('[Nova-link] _sourceFields:', target._sourceFields, '_sourceRefFields:', target._sourceRefFields)
+              loadData(key)
+            }
+          }
+        }
+        // 非 linkForm 的 embedded 模式仍走原来的 loadData
+        if (!deferDataLoad && !(sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField)) {
+          loadData(key)
+        }
       },
       error: function () {
         console.info('[Nova] build接口未就绪，novaName:', novaName)
@@ -341,13 +400,20 @@ window.NovaTableJQ = (function ($) {
             editLayout: (bd.layout && bd.layout.editLayout) || 'DEFAULT'
           }
           t2.appendageTabBuild = newBuild
+          // 保留用户已输入的值，不覆盖
+          var existingFd = (t2.appendageFormData || {})[appNovaName] || {}
           var fd = {}
           editFields.forEach(function(f) {
             var ci = cm[f.field]
             var isMulti = f.type === 'CHOICE' && ci && ci.selectType === 'MULTI'
             var isSingle = f.type === 'CHOICE' && ci && ci.selectType === 'SINGLE'
-            fd[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (isSingle || f.type === 'DATE' || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
-            if (f.type === 'REFERENCE') fd[f.field + '_display'] = ''
+            // 如果用户已输入过值，保留；否则用默认值
+            if (existingFd[f.field] !== undefined) {
+              fd[f.field] = existingFd[f.field]
+            } else {
+              fd[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (isSingle || f.type === 'DATE' || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
+            }
+            if (f.type === 'REFERENCE') fd[f.field + '_display'] = existingFd[f.field + '_display'] || ''
           })
           var newFds = Object.assign({}, t2.appendageFormData)
           newFds[appNovaName] = fd
@@ -358,6 +424,7 @@ window.NovaTableJQ = (function ($) {
             Object.keys(appendageMap).forEach(function(k) { if (appendageMap[k].referenceName === appNovaName) appFieldKey = k })
             if (appFieldKey) fillAppendageData(t2, appNovaName, rowData[appFieldKey])
           }
+          // APPENDAGE 组件的 /details 立即加载（需求 1）
           loadAppendageDetails(novaName, appNovaName, key)
         }
       })
@@ -717,6 +784,7 @@ window.NovaTableJQ = (function ($) {
     })
     target.currentRow              = null
     target._rawDetailRow           = null
+    // appendageDetailsLoaded 需清空：让切换 tab 时能按需重新请求 /details
     target.appendageDetailsLoaded  = {}
     target.formMode                = 'add'
     target.formData   = formData
@@ -743,8 +811,9 @@ window.NovaTableJQ = (function ($) {
     target.linkFormData  = {}
     target.linkTabBuild  = {}
     target.formTab    = 'form'
+    // 立即：APPENDAGE /build + APPENDAGE /details（编辑弹窗里）
     buildAppendageTabs(target.novaName, null, vmKey)
-    buildLinkTabs(target.novaName, null, vmKey)
+    // linkForm / referenceForm / appendagesTable 改为点击 tab 后由子 nova-table 自行 /build
     target.showForm   = true
   }
 
@@ -802,6 +871,7 @@ window.NovaTableJQ = (function ($) {
 
         t.currentRow            = $.extend({}, source)
         t._rawDetailRow         = detailRow
+        // appendageDetailsLoaded 需清空：让切换 tab 时能按需重新请求 /details
         t.appendageDetailsLoaded = {}
         t.formMode              = 'edit'
         t.formData   = $.extend({}, source)
@@ -811,8 +881,9 @@ window.NovaTableJQ = (function ($) {
         t.linkFormData  = {}
         t.linkTabBuild  = {}
         t.formTab    = 'form'
+        // 立即：当前 nova /details + APPENDAGE /build + APPENDAGE /details
         buildAppendageTabs(novaName, detailRow, vmKey)
-        buildLinkTabs(novaName, detailRow, vmKey)
+        // LINK 的 build 改为点击 tab 后由 onFormTabChange 触发
         t.showForm   = true
       }
     })
@@ -959,6 +1030,7 @@ window.NovaTableJQ = (function ($) {
       if (appTab.tapShow === false || (appTab.tapShowByExpr && window.evalShowExpr && !window.evalShowExpr(appTab.tapShowByExpr, formData))) return
       var build = (target.appendageTabBuild || {})[n] || {}
       var fd = (target.appendageFormData || {})[n] || {}
+      console.log('[Nova-submit] appendageFormInfo for', n, 'build.editFields:', (build.editFields || []).length, 'fd:', fd)
       var refMap = build.referenceMap || {}
       appendageFormInfo[n] = (build.editFields || []).filter(function(f) { return f.type !== 'DIVIDE' && f.type !== 'EMPTY' }).map(function(f) {
         var val = fd[f.field]
@@ -971,6 +1043,7 @@ window.NovaTableJQ = (function ($) {
         return item
       })
     })
+    console.log('[Nova-submit] final appendageFormInfo:', JSON.stringify(appendageFormInfo))
 
     if (target.currentRow) {
       // 编辑

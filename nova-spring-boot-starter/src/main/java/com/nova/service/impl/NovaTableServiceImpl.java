@@ -332,11 +332,9 @@ public class NovaTableServiceImpl implements NovaTableService {
             if (Edit.Type.REFERENCE.name().equals(formInfo.getType())) {
                 continue;
             }
+            columns.add(MixUtils.camelToSnake(formInfo.getField()));
             String value = formInfo.getValue();
-            if (value != null && !value.isEmpty()) {
-                columns.add(MixUtils.camelToSnake(formInfo.getField()));
-                values.add(value);
-            }
+            values.add((value == null || value.isEmpty()) ? null : value);
         }
         Object model = DataProxyUtils.buildModel(novaName, columns, values);
         for (NovaTableAdd.FormInfo formInfo : novaTableAdd.getFormInfo()) {
@@ -344,8 +342,6 @@ public class NovaTableServiceImpl implements NovaTableService {
                 DataProxyUtils.setReferenceField(novaName, model, formInfo.getField(), formInfo.getValue());
             }
         }
-        //noinspection unchecked,rawtypes
-        ((DataProxy) DataProxyUtils.getDataProxy(novaName)).add(model);
         Map<String, List<NovaTableAdd.FormInfo>> appendageFormInfo = novaTableAdd.getAppendageFormInfo();
         if (appendageFormInfo != null) {
             for (Map.Entry<String, List<NovaTableAdd.FormInfo>> entry : appendageFormInfo.entrySet()) {
@@ -356,11 +352,9 @@ public class NovaTableServiceImpl implements NovaTableService {
                     if (Edit.Type.REFERENCE.name().equals(fi.getType())) {
                         continue;
                     }
+                    appCols.add(MixUtils.camelToSnake(fi.getField()));
                     String v = fi.getValue();
-                    if (v != null && !v.isEmpty()) {
-                        appCols.add(MixUtils.camelToSnake(fi.getField()));
-                        appVals.add(v);
-                    }
+                    appVals.add((v == null || v.isEmpty()) ? null : v);
                 }
                 Object appModel = DataProxyUtils.buildModel(appNovaName, appCols, appVals);
                 for (NovaTableAdd.FormInfo fi : entry.getValue()) {
@@ -371,6 +365,8 @@ public class NovaTableServiceImpl implements NovaTableService {
                 DataProxyUtils.setAppendageField(novaName, model, appNovaName, appModel);
             }
         }
+        //noinspection unchecked,rawtypes
+        ((DataProxy) DataProxyUtils.getDataProxy(novaName)).add(model);
         return new NovaTableAdd.Vo();
     }
 

@@ -145,8 +145,8 @@ public class NovaFieldUtils {
             Edit edit = novaField.edit();
             // 自身详情tap
             if (edit.show()) {
-                // 排除附属对象
-                if (edit.type() != Edit.Type.APPENDAGE) {
+                // 排除附属对象、附属集合、集合引用
+                if (edit.type() != Edit.Type.APPENDAGE && edit.type() != Edit.Type.APPENDAGES && edit.type() != Edit.Type.LINK) {
                     Readonly readonly = edit.readonly();
                     EditInfo.ThisForm thisForm = new EditInfo.ThisForm()
                             .setField(field)
@@ -159,10 +159,6 @@ public class NovaFieldUtils {
                                     .setEdit(readonly.edit())
                             )
                             .setShowBy(edit.showBy());
-                    // LINK_TARGET 字段：附带 referenceField（中间表FK列名）
-                    if (edit.type() == Edit.Type.LINK_TARGET) {
-                        thisForm.setReferenceField(edit.linkTargetType().referenceField());
-                    }
                     thisForms.add(thisForm);
                 }
             }
@@ -722,9 +718,6 @@ public class NovaFieldUtils {
 
             @Comment("动态是否显示")
             private ShowBy showBy;
-
-            @Comment("引用属性名（LINK_TARGET专用，中间表FK列名）")
-            private String referenceField;
 
             @Data
             @Accessors(chain = true)
