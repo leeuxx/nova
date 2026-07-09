@@ -717,7 +717,7 @@ const NovaTable = {
       window.NovaTableJQ.onSortChange(key)
     },
     toggleFilter() {
-      const threshold = this.embeddedMode ? 1 : 3
+      const threshold = (this.embeddedMode || this.dualMode || this.dualTableViewActive) ? 1 : 3
       if (this.searchFields.length <= threshold) return
       this.filterExpanded = !this.filterExpanded
       this.$nextTick(() => window.NovaTableJQ && window.NovaTableJQ.updateTableHeight())
@@ -1622,9 +1622,9 @@ const NovaTable = {
 
       <!-- 筛选卡片 -->
       <component v-if="!linkMode" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
-        <div :class="['filter-grid', embeddedMode ? 'embedded' : '']" :style="embeddedMode ? 'padding:8px 0' : ''">
+        <div :class="['filter-grid', embeddedMode ? 'embedded' : '', (dualMode || dualTableViewActive) ? 'dual' : '']" :style="embeddedMode ? 'padding:8px 0' : ''">
           <template v-for="(field, index) in searchFields" :key="field.field">
-            <div v-if="filterExpanded || index < 3" style="display:flex;align-items:center;gap:8px;width:100%">
+            <div v-if="filterExpanded || index < ((dualMode || dualTableViewActive) ? 1 : 3)" style="display:flex;align-items:center;gap:8px;width:100%">
               <span class="form-label">{{ field.title }}</span>
               <n-select v-if="field.type === 'CHOICE' && choiceMap[field.field] && choiceMap[field.field].selectType === 'SINGLE' && !field.vague"
                 v-model:value="filterForm[field.field]"
@@ -1861,10 +1861,10 @@ const NovaTable = {
               />
             </div>
           </template>
-          <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;grid-column:4">
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px" :style="(dualMode || dualTableViewActive) ? 'grid-column:2' : 'grid-column:4'">
             <n-button :size="embSize" @click="handleReset">重 置</n-button>
             <n-button :size="embSize" type="primary" @click="handleQuery">查 询</n-button>
-            <n-button :size="embSize" dashed @click="toggleFilter" :disabled="searchFields.length <= 3">
+            <n-button :size="embSize" dashed @click="toggleFilter" :disabled="searchFields.length <= ((dualMode || dualTableViewActive) ? 1 : 3)">
               <template #icon>
                 <n-icon><iconify-icon :icon="filterExpanded ? 'material-symbols:keyboard-arrow-up' : 'material-symbols:keyboard-arrow-down'"></iconify-icon></n-icon>
               </template>
