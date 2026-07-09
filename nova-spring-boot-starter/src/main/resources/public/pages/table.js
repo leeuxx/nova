@@ -282,7 +282,8 @@ const NovaTable = {
     // 固定列像素：checkbox 50 + 操作列 140
     colPixels() {
       const fixedPx = 50 + 140
-      const available = (this.tableWrapperWidth || 1200) - fixedPx
+      const width = this.dualTableViewActive ? Math.max(this.tableWrapperWidth || 1200, 1200) : (this.tableWrapperWidth || 1200)
+      const available = width - fixedPx
       // 各列宽度（百分比转像素 or 固定像素）
       return this.tableColumns.map(col => {
         const w = parseWidthPct(col.width)
@@ -294,6 +295,7 @@ const NovaTable = {
       if (!this.tableColumns.length) return undefined
       const fixedPx = 50 + 140
       const total = fixedPx + this.colPixels.reduce((s, w) => s + w, 0)
+      if (this.dualTableViewActive) return total
       const container = this.tableWrapperWidth || 0
       return total > container ? total : undefined
     },
@@ -1472,7 +1474,7 @@ const NovaTable = {
         </div>
       </n-modal>
     </div>
-    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : 'padding:16px')">
+    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : dualTableViewActive ? 'padding:16px 8px 16px 16px' : 'padding:16px')">
 
       <!-- 筛选卡片 -->
       <component v-if="!linkMode" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">

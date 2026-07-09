@@ -75,7 +75,7 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   border-left: 1px solid var(--n-border-color);
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: 16px 16px 16px 8px;
 }
 
 
