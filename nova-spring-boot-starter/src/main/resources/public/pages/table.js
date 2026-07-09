@@ -266,14 +266,14 @@ const NovaTable = {
       for (const field in appendageMap) {
         const info = appendageMap[field]
         if (info && info.dualTable) {
-          list.push({ label: info.referenceName, novaName: info.referenceName, type: 'appendage', field, fieldInfo: info })
+          list.push({ label: info.dualTableTitle || info.referenceName, novaName: info.referenceName, type: 'appendage', field, fieldInfo: info })
         }
       }
       const linkMap = this.linkMap || {}
       for (const field in linkMap) {
         const info = linkMap[field]
         if (info && info.dualTable) {
-          list.push({ label: info.referenceName, novaName: info.referenceName, type: 'link', field, fieldInfo: info })
+          list.push({ label: info.dualTableTitle || info.referenceName, novaName: info.referenceName, type: 'link', field, fieldInfo: info })
         }
       }
       return list

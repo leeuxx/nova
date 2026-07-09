@@ -523,7 +523,8 @@ public class NovaFieldUtils {
                         .setReferenceField(appendageType.referenceField())
                         .setStorageField(appendageType.storageField())
                         .setDisplayField(appendageType.displayField())
-                        .setDualTable(appendageType.dualTable());
+                        .setDualTable(appendageType.dualTable())
+                        .setDualTableTitle(edit.title());
                 appendageTypeInfos.put(field, appendageTypeInfo);
             }
         });
@@ -552,7 +553,8 @@ public class NovaFieldUtils {
                 LinkInfo linkInfo = new LinkInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
                         .setReferenceTransmitField(Arrays.asList(linkType.referenceTransmitField()))
-                        .setDualTable(linkType.dualTable());
+                        .setDualTable(linkType.dualTable())
+                        .setDualTableTitle(edit.title());
                 linkInfos.put(field, linkInfo);
                 // 获取中间类中的LINK_TARGET声明属性
                 Class<?> fieldClass = novaFieldInfo.getFieldClass();
@@ -880,6 +882,9 @@ public class NovaFieldUtils {
         @Comment("是否支持双表视图")
         private Boolean dualTable;
 
+        @Comment("双表视图标题")
+        private String dualTableTitle;
+
     }
 
     @Data
@@ -900,6 +905,9 @@ public class NovaFieldUtils {
 
         @Comment("是否支持双表视图")
         private Boolean dualTable;
+
+        @Comment("双表视图标题")
+        private String dualTableTitle;
 
         @Data
         @Accessors(chain = true)

@@ -349,6 +349,9 @@ public class NovaTableBuild {
             @Comment("是否支持双表视图")
             private Boolean dualTable;
 
+            @Comment("双表视图标题")
+            private String dualTableTitle;
+
         }
 
         @Data
@@ -369,6 +372,9 @@ public class NovaTableBuild {
 
             @Comment("是否支持双表视图")
             private Boolean dualTable;
+
+            @Comment("双表视图标题")
+            private String dualTableTitle;
 
             @Data
             @Accessors(chain = true)
