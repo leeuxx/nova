@@ -211,13 +211,21 @@ public class NovaTableServiceImpl implements NovaTableService {
         Map<String, NovaTableBuild.Vo.Link> linkMap = new LinkedHashMap<>();
         Map<String, NovaFieldUtils.LinkInfo> links = NovaFieldUtils.getLink(novaTableBuild.getNovaName());
         links.forEach((field, linkInfo) -> {
-            NovaFieldUtils.LinkInfo.SelectInfo selectInfo = linkInfo.getSelectInfo();
+            NovaFieldUtils.LinkInfo.Info selectInfo = linkInfo.getSelectInfo();
+            NovaFieldUtils.LinkInfo.Info operateInfo = linkInfo.getOperateInfo();
             NovaTableBuild.Vo.Link link = new NovaTableBuild.Vo.Link()
                     .setReferenceName(linkInfo.getReferenceClass().getSimpleName())
                     .setReferenceTransmitField(linkInfo.getReferenceTransmitField())
                     .setDualTable(linkInfo.getDualTable())
-                    .setSelectInfo(new NovaTableBuild.Vo.Link.SelectInfo()
+                    .setOperateInfo(new NovaTableBuild.Vo.Link.Info()
+                            .setReferenceName(operateInfo.getReferenceClass().getSimpleName())
+                            .setReferenceField(operateInfo.getReferenceField())
+                            .setStorageField(operateInfo.getStorageField())
+                            .setDisplayField(operateInfo.getDisplayField())
+                    )
+                    .setSelectInfo(new NovaTableBuild.Vo.Link.Info()
                             .setReferenceName(selectInfo.getReferenceClass().getSimpleName())
+                            .setReferenceField(selectInfo.getReferenceField())
                             .setStorageField(selectInfo.getStorageField())
                             .setDisplayField(selectInfo.getDisplayField())
                     );

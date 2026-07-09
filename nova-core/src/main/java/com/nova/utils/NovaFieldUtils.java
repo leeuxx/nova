@@ -558,7 +558,7 @@ public class NovaFieldUtils {
                         .setReferenceTransmitField(Arrays.asList(linkType.referenceTransmitField()))
                         .setDualTable(linkType.dualTable());
                 linkInfos.put(field, linkInfo);
-                // 获取中间类中的选取类声明属性
+                // 获取中间类中的LINK_TARGET声明属性
                 Class<?> fieldClass = novaFieldInfo.getFieldClass();
                 Field[] fields = fieldClass.getDeclaredFields();
                 for (Field field2 : fields) {
@@ -566,16 +566,26 @@ public class NovaFieldUtils {
                         continue;
                     }
                     NovaField novaField2 = field2.getDeclaredAnnotation(NovaField.class);
-                    LinkTargetType linkTargetType = novaField2.edit().linkTargetType();
-                    if (linkTargetType.type() != LinkTargetType.Type.SELECT) {
+                    if (novaField2.edit().type() != Edit.Type.LINK_TARGET) {
                         continue;
                     }
-                    linkInfo.setSelectInfo(new LinkInfo.SelectInfo()
-                            .setReferenceClass(field2.getType())
-                            .setStorageField(linkTargetType.storageField())
-                            .setDisplayField(linkTargetType.displayField())
-                    );
-                    break;
+                    LinkTargetType linkTargetType = novaField2.edit().linkTargetType();
+                    if (linkTargetType.type() == LinkTargetType.Type.OPERATE) {
+                        linkInfo.setOperateInfo(new LinkInfo.Info()
+                                .setReferenceClass(field2.getType())
+                                .setReferenceField(linkTargetType.referenceField())
+                                .setStorageField(linkTargetType.storageField())
+                                .setDisplayField(linkTargetType.displayField())
+                        );
+                    }
+                    if (linkTargetType.type() == LinkTargetType.Type.SELECT) {
+                        linkInfo.setSelectInfo(new LinkInfo.Info()
+                                .setReferenceClass(field2.getType())
+                                .setReferenceField(linkTargetType.referenceField())
+                                .setStorageField(linkTargetType.storageField())
+                                .setDisplayField(linkTargetType.displayField())
+                        );
+                    }
                 }
             }
         });
@@ -889,23 +899,29 @@ public class NovaFieldUtils {
         @Comment("中间类获取目标引用类数据时（弹窗选取），额外透传向引用类 DataProxy.fetch 传递的当前类表单上下文信息")
         private List<String> referenceTransmitField;
 
+        @Comment("中间类操作引用类信息")
+        private Info operateInfo;
+
         @Comment("中间类选取引用类信息")
-        private SelectInfo selectInfo;
+        private Info selectInfo;
 
         @Comment("是否支持双表视图")
         private Boolean dualTable;
 
         @Data
         @Accessors(chain = true)
-        public static class SelectInfo {
+        public static class Info {
 
             @Comment("关联类")
             private Class<?> referenceClass;
 
-            @Comment("中间类存储选取引用类值属性名，既对应引用类的哪个属性")
+            @Comment("中间类存储引用类关联属性名")
+            private String referenceField;
+
+            @Comment("引用类值属性名，既对应引用类的哪个属性")
             private String storageField;
 
-            @Comment("中间类存储选取引用类值显示属性名，替代 storageField 展示")
+            @Comment("引用类值显示属性名，替代 storageField 展示")
             private String displayField;
         }
     }

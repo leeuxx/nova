@@ -1,6 +1,7 @@
 package com.nova.dto;
 
 import com.nova.annotation.config.Comment;
+import com.nova.utils.NovaFieldUtils;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -360,23 +361,29 @@ public class NovaTableBuild {
             @Comment("中间类获取目标引用类数据时（弹窗选取），额外透传向引用类 DataProxy.fetch 传递的当前类表单上下文信息")
             private List<String> referenceTransmitField;
 
+            @Comment("中间类操作引用类信息")
+            private Info operateInfo;
+
             @Comment("中间类选取引用类信息")
-            private SelectInfo selectInfo;
+            private Info selectInfo;
 
             @Comment("是否支持双表视图")
             private Boolean dualTable;
 
             @Data
             @Accessors(chain = true)
-            public static class SelectInfo {
+            public static class Info {
 
                 @Comment("关联类")
                 private String referenceName;
 
-                @Comment("中间类存储选取引用类值属性名，既对应引用类的哪个属性")
+                @Comment("中间类存储引用类关联属性名")
+                private String referenceField;
+
+                @Comment("引用类值属性名，既对应引用类的哪个属性")
                 private String storageField;
 
-                @Comment("中间类存储选取引用类值显示属性名，替代 storageField 展示")
+                @Comment("引用类值显示属性名，替代 storageField 展示")
                 private String displayField;
             }
 

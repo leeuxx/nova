@@ -1192,15 +1192,13 @@ const NovaTable = {
       if (!sub) { this.dualTableSourceFields = {}; return }
 
       if (sub.type === 'link') {
-        // LINK 类型：取 linkTabBuild 中的 thisReferenceField，值为当前行 PK
-        const build = this.linkTabBuild[sub.novaName]
-        if (!build) { this.dualTableSourceFields = {}; return }
-        const lt = build.linkTarget || {}
-        const refField = lt.thisReferenceField
-        if (!refField) { this.dualTableSourceFields = {}; return }
-        const pkVal = row[this.novaIdFieldName || 'id']
-        if (pkVal == null) { this.dualTableSourceFields = {}; return }
-        this.dualTableSourceFields = { [refField]: String(pkVal) }
+        // LINK 类型：取 operateInfo.storageField 读取左表行，值为右表 FK 条件值
+        const linkInfo = sub.fieldInfo || {}
+        const op = linkInfo.operateInfo || {}
+        const storageField = op.storageField || 'id'
+        const val = row[storageField]
+        if (val == null) { this.dualTableSourceFields = {}; return }
+        this.dualTableSourceFields = { [storageField]: String(val) }
       } else {
         // APPENDAGES 类型：取 fieldInfo.storageField，值为当前行对应字段值
         const appInfo = sub.fieldInfo || {}
@@ -1251,6 +1249,28 @@ const NovaTable = {
           console.log('[Dual] target from vmMap:', !!target)
           if (target) {
             self._applyDualSourceFields(target)
+            // LINK 类型：直接从 fieldInfo 注入 conditions 条件
+            var curSub = self.dualTableSubTables.find(function(s) { return s.novaName === self.dualTableCurrentNova })
+            console.log('[Dual] curSub:', curSub && curSub.type, curSub && curSub.field && JSON.stringify(curSub && curSub.fieldInfo))
+            if (curSub && curSub.type === 'link') {
+              var fi = curSub.fieldInfo || {}
+              var op = fi.operateInfo || {}
+              console.log('[Dual] LINK fieldInfo:', JSON.stringify(fi))
+              var storageField = op.storageField
+              var refField = op.referenceField
+              console.log('[Dual] LINK storageField:', storageField, 'refField:', refField, 'row[storageField]:', row[storageField])
+              if (storageField && refField) {
+                var linkVal = row[storageField]
+                if (linkVal != null && linkVal !== '') {
+                  console.log('[Dual] LINK injecting condition - refField:', refField, 'value:', String(linkVal))
+                  var exists = (target._sourceRefFields || []).some(function(s) { return s.referenceField === refField })
+                  if (!exists) {
+                    if (!target._sourceRefFields) target._sourceRefFields = []
+                    target._sourceRefFields.push({ field: storageField, type: 'REFERENCE', referenceField: refField, value: String(linkVal) })
+                  }
+                }
+              }
+            }
             window.NovaTableJQ.loadData(dualVm._vmKey)
           }
         }
