@@ -625,11 +625,12 @@ const NovaTable = {
       handler(newVal) {
         if (this._dualReloading) return
         if (!this._vmKey) return
-        // LINK 操作期间跳过 sourceFields 触发的 loadData（避免重复刷新）
-        if (window._novaLinkSkipLoad && window._novaLinkSkipLoad[this._vmKey]) {
-          delete window._novaLinkSkipLoad[this._vmKey]
-          return
-        }
+        // 内容比较：如果 sourceFields 内容没变化（只是引用变了），跳过 loadData
+        // 防止组件重渲染时 buildLinkSourceFields 返回新对象导致的无效刷新
+        var newJson = JSON.stringify(newVal || {})
+        if (this._lastSourceFieldsJson === newJson) return
+        this._lastSourceFieldsJson = newJson
+
         var target = window.vmMap && window.vmMap[this._vmKey]
         if (!target) return
         var embSourceFields = newVal || {}
@@ -1221,23 +1222,13 @@ const NovaTable = {
       if (!targetField) { console.error('[Nova] 缺少 targetField', build); if (window.$message) window.$message.error('关联参数不完整: 缺少目标字段名'); return }
       if (sourceValue == null) { console.error('[Nova] 缺少 sourceValue', this.currentRow, this.novaIdFieldName); if (window.$message) window.$message.error('关联参数不完整: 缺少源记录ID'); return }
 
+      // 获取目标表格 vmKey，传给 handleLinkAdd 用于刷新
       var targetVmKey = null
       if (this.dualTableViewActive) {
-        // 双表视图：获取右表 vmKey
         var dualVm = this.$refs.dualTableRef
-        if (dualVm && dualVm._vmKey) {
-          targetVmKey = dualVm._vmKey
-          window._novaLinkSkipLoad = window._novaLinkSkipLoad || {}
-          window._novaLinkSkipLoad[targetVmKey] = true
-        }
+        if (dualVm && dualVm._vmKey) targetVmKey = dualVm._vmKey
       } else {
-        // 编辑弹窗嵌入模式：查找 __emb_ 格式的 vmKey
-        var embVmKey = this._findEmbVmKey(linkNovaName)
-        if (embVmKey) {
-          targetVmKey = embVmKey
-          window._novaLinkSkipLoad = window._novaLinkSkipLoad || {}
-          window._novaLinkSkipLoad[targetVmKey] = true
-        }
+        targetVmKey = this._findEmbVmKey(linkNovaName)
       }
 
       window.NovaTableJQ.handleLinkAdd(
