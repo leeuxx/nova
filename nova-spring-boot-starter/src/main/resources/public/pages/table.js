@@ -282,6 +282,11 @@ const NovaTable = {
     dualTableEnabled() {
       return this.dualTableSubTables.length > 0 && !this.pickerMode && !this.embeddedMode
     },
+    isDualTableLink() {
+      if (!this.dualTableViewActive) return false
+      const sub = this.dualTableSubTables.find(s => s.novaName === this.dualTableCurrentNova)
+      return sub && sub.type === 'link'
+    },
     // 固定列像素：checkbox 50 + 操作列 140
     colPixels() {
       const fixedPx = 50 + 140
@@ -1182,7 +1187,8 @@ const NovaTable = {
       if (!build) return
       var sourceField = build.sourceFieldName
       var targetField = build.targetFieldName
-      var sourceValue = this.currentRow && this.currentRow[this.novaIdFieldName]
+      var sourceRow = this.dualTableViewActive ? this._dualSelectedRow : this.currentRow
+      var sourceValue = sourceRow && sourceRow[this.novaIdFieldName]
       if (!sourceField) { console.error('[Nova] 缺少 sourceField', build); if (window.$message) window.$message.error('关联参数不完整: 缺少源字段名'); return }
       if (!targetField) { console.error('[Nova] 缺少 targetField', build); if (window.$message) window.$message.error('关联参数不完整: 缺少目标字段名'); return }
       if (sourceValue == null) { console.error('[Nova] 缺少 sourceValue', this.currentRow, this.novaIdFieldName); if (window.$message) window.$message.error('关联参数不完整: 缺少源记录ID'); return }
@@ -1206,6 +1212,22 @@ const NovaTable = {
         this.openDualTableView(this.dualTableSubTables[0].novaName)
       }
     },
+    handleDualLinkAdd() {
+      var dualVm = this.$refs.dualTableRef
+      if (!dualVm) return
+      var lt = dualVm.linkTargetInfo || {}
+      var targetNova = lt.linkReferenceName
+      if (!targetNova) {
+        if (window.$message) window.$message.warning('未找到目标表')
+        return
+      }
+      this.linkPickerTargetNova = targetNova
+      this.linkPickerCurrentTab = this.dualTableCurrentNova
+      this.linkPickerSelectedKeys = []
+      this.linkPickerSourceFields = {}
+      this.linkPickerTitle = '选择 ' + (this.dualTableCurrentLabel || '关联数据')
+      this.linkPickerShow = true
+    },
     openDualTableView(novaName) {
       const item = this.dualTableSubTables.find(s => s.novaName === novaName)
       if (!item) return
@@ -1228,13 +1250,15 @@ const NovaTable = {
       if (!sub) { this.dualTableSourceFields = {}; return }
 
       if (sub.type === 'link') {
-        // LINK 类型：取 operateInfo.storageField 读取左表行，值为右表 FK 条件值
+        // LINK 类型：key 用 operateInfo.referenceField（join表FK），value 用 row[storageField]
         const linkInfo = sub.fieldInfo || {}
         const op = linkInfo.operateInfo || {}
+        const refField = op.referenceField
         const storageField = op.storageField || 'id'
+        if (!refField) { this.dualTableSourceFields = {}; return }
         const val = row[storageField]
         if (val == null) { this.dualTableSourceFields = {}; return }
-        this.dualTableSourceFields = { [storageField]: String(val) }
+        this.dualTableSourceFields = { [refField]: String(val) }
       } else {
         // APPENDAGES 类型：取 fieldInfo.storageField，值为当前行对应字段值
         const appInfo = sub.fieldInfo || {}
@@ -1286,42 +1310,15 @@ const NovaTable = {
     },
     onDualTableRowClick(row) {
       if (!this.dualTableViewActive) return
-      console.log('[Dual] onDualTableRowClick called, row:', row)
       this._dualSelectedRow = row
       this.buildDualTableSourceFields()
-      console.log('[Dual] dualTableSourceFields after build:', JSON.stringify(this.dualTableSourceFields))
-      // 直接通过 $refs 更新双表 VM 的 source fields 并触发 loadData
       var self = this
-      this.$nextTick(function() {
+      this.$nextTick(function () {
         var dualVm = self.$refs.dualTableRef
-        console.log('[Dual] dualVm from $refs:', !!dualVm, dualVm && dualVm._vmKey)
         if (dualVm && dualVm._vmKey) {
           var target = window.vmMap && window.vmMap[dualVm._vmKey]
-          console.log('[Dual] target from vmMap:', !!target)
           if (target) {
             self._applyDualSourceFields(target)
-            // LINK 类型：直接从 fieldInfo 注入 conditions 条件
-            var curSub = self.dualTableSubTables.find(function(s) { return s.novaName === self.dualTableCurrentNova })
-            console.log('[Dual] curSub:', curSub && curSub.type, curSub && curSub.field && JSON.stringify(curSub && curSub.fieldInfo))
-            if (curSub && curSub.type === 'link') {
-              var fi = curSub.fieldInfo || {}
-              var op = fi.operateInfo || {}
-              console.log('[Dual] LINK fieldInfo:', JSON.stringify(fi))
-              var storageField = op.storageField
-              var refField = op.referenceField
-              console.log('[Dual] LINK storageField:', storageField, 'refField:', refField, 'row[storageField]:', row[storageField])
-              if (storageField && refField) {
-                var linkVal = row[storageField]
-                if (linkVal != null && linkVal !== '') {
-                  console.log('[Dual] LINK injecting condition - refField:', refField, 'value:', String(linkVal))
-                  var exists = (target._sourceRefFields || []).some(function(s) { return s.referenceField === refField })
-                  if (!exists) {
-                    if (!target._sourceRefFields) target._sourceRefFields = []
-                    target._sourceRefFields.push({ field: storageField, type: 'REFERENCE', referenceField: refField, value: String(linkVal) })
-                  }
-                }
-              }
-            }
             window.NovaTableJQ.loadData(dualVm._vmKey)
           }
         }
@@ -2429,7 +2426,7 @@ const NovaTable = {
 
       <!-- 双表视图右面板：Teleport 到 .page-content 作为 flex 兄弟元素 -->
       <Teleport to=".page-content" v-if="(dualTableViewActive || dualTableClosing) && dualTableEnabled && dualTableCurrentNova">
-        <nova-table ref="dualTableRef" :key="dualTableCurrentKey" :dual-mode="true" :nova-name-prop="dualTableCurrentNova" :source-nova-name-prop="novaName" :source-fields-prop="dualTableSourceFields" class="dual-right-panel" :class="{ 'is-closing': dualTableClosing }" />
+        <nova-table ref="dualTableRef" :key="dualTableCurrentKey" :dual-mode="true" :link-mode="isDualTableLink" :nova-name-prop="dualTableCurrentNova" :source-nova-name-prop="novaName" :source-fields-prop="dualTableSourceFields" class="dual-right-panel" :class="{ 'is-closing': dualTableClosing }" @link-add="handleDualLinkAdd" />
       </Teleport>
     </div>
   `
