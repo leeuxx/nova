@@ -1,7 +1,7 @@
 // pages/table.js — 通用表格页 Vue 组件，所有表格菜单共用此模板
 ;(function () {
 const { h } = Vue
-const { NPopconfirm, NSpace, NTooltip, NTag, NRadio } = naive
+const { NPopconfirm, NSpace, NTooltip, NTag, NRadio, NDropdown } = naive
 
 // 解析列宽：百分比返回浮点数（0~100），像素返回负数表示固定像素
 function parseWidthPct(w) {
@@ -217,6 +217,13 @@ const NovaTable = {
       dualTableSourceFields:      {},
       _dualSelectedRow:           null,
       _dualTableVersion:         0,
+      // ── 自定义按钮（mock 数据，用于前端预览效果）────────────────────
+      customButtons: [
+        { title: '审核通过', mode: 'SINGLE',     icon: 'material-symbols:check-circle',    fold: false, tip: '审核通过该记录' },
+        { title: '批量导出', mode: 'MULTI',       icon: 'material-symbols:file-export',    fold: true,  tip: '导出选中的数据' },
+        { title: '批量推送', mode: 'MULTI_ONLY',  icon: 'material-symbols:send',           fold: false, tip: '推送选中的记录' },
+        { title: '导入数据', mode: 'BUTTON',      icon: 'material-symbols:upload',         fold: false, tip: '从文件导入数据' }
+      ],
       formErrors:     {},
       striped:        true,
       tableSize:      'medium',
@@ -283,6 +290,39 @@ const NovaTable = {
     dualTableEnabled() {
       return this.dualTableSubTables.length > 0 && !this.pickerMode && !this.embeddedMode
     },
+    // 自定义按钮分类
+    rowCustomButtons() {
+      return (this.customButtons || []).filter(b => b.mode === 'SINGLE' || b.mode === 'MULTI')
+    },
+    rowActionColWidth() {
+      var btns = (this.customButtons || []).filter(function(b) { return b.mode === 'SINGLE' || b.mode === 'MULTI' })
+      var unfolded = btns.filter(function(b) { return !b.fold }).length
+      var hasFolded = btns.some(function(b) { return b.fold })
+      var w = this.linkMode ? 45 : 85     // 编辑+删除(85) / 仅删除(45)
+      w += unfolded * 60                  // 每个非折叠按钮
+      if (hasFolded) w += 38              // 更多图标
+      return w
+    },
+    toolbarCustomButtons() {
+      return (this.customButtons || []).filter(b => b.mode === 'MULTI' || b.mode === 'MULTI_ONLY' || b.mode === 'BUTTON')
+    },
+    toolbarUnfoldedButtons() {
+      return this.toolbarCustomButtons.filter(b => !b.fold)
+    },
+    toolbarFoldedButtons() {
+      return this.toolbarCustomButtons.filter(b => b.fold)
+    },
+    toolbarFoldedOptions() {
+      var self = this
+      return this.toolbarFoldedButtons.map(function(btn) {
+        return {
+          label: btn.title,
+          key: btn.title,
+          icon: function() { return h('iconify-icon', { icon: btn.icon || 'material-symbols:circle-outline' }) },
+          disabled: (btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && self.checkedRowKeys.length === 0
+        }
+      })
+    },
     isDualTableLink() {
       if (!this.dualTableViewActive) return false
       const sub = this.dualTableSubTables.find(s => s.novaName === this.dualTableCurrentNova)
@@ -290,7 +330,7 @@ const NovaTable = {
     },
     // 固定列像素：checkbox 50 + 操作列 140
     colPixels() {
-      const fixedPx = 50 + 140
+      const fixedPx = 50 + this.rowActionColWidth
       const width = this.dualTableViewActive ? Math.max(this.tableWrapperWidth || 1200, 1200) : (this.tableWrapperWidth || 1200)
       const available = width - fixedPx
       // 各列宽度（百分比转像素 or 固定像素）
@@ -302,7 +342,7 @@ const NovaTable = {
 
     scrollX() {
       if (!this.tableColumns.length) return undefined
-      const fixedPx = 50 + 140
+      const fixedPx = 50 + this.rowActionColWidth
       const total = fixedPx + this.colPixels.reduce((s, w) => s + w, 0)
       if (this.dualTableViewActive) return total
       const container = this.tableWrapperWidth || 0
@@ -521,7 +561,7 @@ const NovaTable = {
 
       if (!vm.pickerMode) {
         cols.push({
-          title: '操作', key: 'actions', width: vm.linkMode ? 80 : 140, fixed: 'right',
+          title: '操作', key: 'actions', width: vm.rowActionColWidth, fixed: 'right',
           render(row) {
             var buttons = []
             if (!vm.linkMode) {
@@ -534,6 +574,35 @@ const NovaTable = {
                 trigger:  () => h('span', { class: 'row-action-btn', style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除')
               }
             ))
+            // ── 自定义按钮：SINGLE / MULTI（行操作区）────────────────
+            var rowBtns = vm.rowCustomButtons || []
+            var rowUnfolded = rowBtns.filter(function(b) { return !b.fold })
+            var rowFolded   = rowBtns.filter(function(b) { return b.fold })
+            rowUnfolded.forEach(function(btn) {
+              buttons.push(h('span', {
+                class: 'row-action-btn',
+                style: { color: '#7c3aed', cursor: 'pointer', fontSize: '13px' },
+                title: btn.tip || btn.title,
+                onClick: function() { console.log('[CustomBtn] row:', btn.title, 'row:', row) }
+              }, btn.title))
+            })
+            if (rowFolded.length > 0) {
+              var foldedOpts = rowFolded.map(function(btn) {
+                return { label: btn.title, key: btn.title, icon: btn.icon ? function() { return h('iconify-icon', { icon: btn.icon }) } : undefined }
+              })
+              buttons.push(h(NDropdown, {
+                options: foldedOpts,
+                trigger: 'hover',
+                onSelect: function(key) {
+                  var btn = rowFolded.find(function(b) { return b.title === key })
+                  if (btn) console.log('[CustomBtn] row folded:', btn.title, 'row:', row)
+                }
+              }, {
+                default: function() {
+                  return h('iconify-icon', { icon: 'material-symbols:more-horiz', style: { color: '#888', cursor: 'pointer', fontSize: '18px' } })
+                }
+              }))
+            }
             return h(NSpace, { size: 8 }, { default: () => buttons })
           }
         })
@@ -1964,6 +2033,22 @@ const NovaTable = {
             </n-tabs>
             <span v-else style="font-size:16px;font-weight:500">数据列表</span>
             <div style="display:flex;gap:8px">
+            <!-- ── 自定义按钮：MULTI / MULTI_ONLY / BUTTON（工具栏）─── -->
+            <n-button v-for="btn in toolbarUnfoldedButtons" :key="btn.title" :size="embSize" type="default"
+              :disabled="(btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && checkedRowKeys.length === 0"
+              :title="btn.tip || btn.title"
+              @click="console.log('[CustomBtn] toolbar:', btn.title)">
+              <template #icon><n-icon size="15"><iconify-icon :icon="btn.icon" style="font-size:15px"></iconify-icon></n-icon></template>
+              {{ btn.title }}
+            </n-button>
+            <n-dropdown v-if="toolbarFoldedButtons.length > 0"
+              trigger="hover"
+              :options="toolbarFoldedOptions"
+              @select="(key) => { var btn = toolbarFoldedButtons.find(function(b) { return b.title === key }); if (btn) console.log('[CustomBtn] toolbar folded:', btn.title) }">
+              <n-button :size="embSize" circle style="background:transparent" title="更多操作">
+                <template #icon><n-icon size="16"><iconify-icon icon="material-symbols:more-horiz"></iconify-icon></n-icon></template>
+              </n-button>
+            </n-dropdown>
             <n-button v-if="checkedRowKeys.length > 0 && !readonly" :size="embSize" type="error" @click="handleBatchDelete">
               <template #icon><n-icon><iconify-icon icon="material-symbols:delete-outline"></iconify-icon></n-icon></template>
               删 除
