@@ -213,7 +213,9 @@ window.NovaTableJQ = (function ($) {
           }
         }
         // 非 linkForm 的 embedded 模式仍走原来的 loadData
-        if (!deferDataLoad && !(sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField)) {
+        // 注意：LINK 专属路径 (line 202) 仅在 parentVm.currentRow 存在时生效（编辑弹窗）；
+        // 双表视图下 currentRow 为 null，需走此 fallback
+        if (!deferDataLoad && !(sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField && parentVm && parentVm.currentRow)) {
           loadData(key)
         }
       },
