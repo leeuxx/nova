@@ -106,17 +106,19 @@ const themeOverrides = {
   }
 }
 
-// ─── 挂载入口：先拉菜单，再创建 Vue 应用 ────────────────────────
-$.ajax({
-  url:         '/nova/user/getMenu',
-  method:      'POST',
-  contentType: 'application/json',
-  data:        '{}',
-  success:  function (resp) { mountApp((resp.code === 200 && resp.data) ? resp.data : []) },
-  error:    function ()      { mountApp([]) }
+// ─── 挂载入口：先加载配置 → 拉菜单 → 创建 Vue 应用 ──────────────
+window.loadJSON('json/index.json', function (config) {
+  $.ajax({
+    url: "/nova/user/getMenu",
+    method: 'POST',
+    contentType: 'application/json',
+    data: '{}',
+    success: function (resp) { mountApp((resp.code === 200 && resp.data) ? resp.data : [], config) },
+    error: function () { mountApp([], config) }
+  })
 })
 
-function mountApp(menuList) {
+function mountApp(menuList, config) {
   var processed   = processMenus(menuList)
   var menuTree    = processed.menuTree
   var routeMeta   = processed.routeMeta
@@ -131,7 +133,8 @@ function mountApp(menuList) {
       const route  = useRoute()
 
       const collapsed  = ref(false)
-      const isDark     = ref(false)
+      const isDark     = ref(config.theme.default === 'night')
+      const togglePos = config.menu.toggle.default
       const openedTabs = ref([])
       const activeTab  = ref('')
       const tabsKey    = ref(0)
@@ -139,7 +142,7 @@ function mountApp(menuList) {
 
       const theme = computed(() => isDark.value ? darkTheme : null)
 
-      watch(isDark, (val) => { document.body.classList.toggle('dark', val) })
+      watch(isDark, (val) => { document.body.classList.toggle('dark', val) }, { immediate: true })
 
       // 暴露黑夜模式状态给子组件
       window.__appDarkMode = isDark
@@ -223,7 +226,7 @@ function mountApp(menuList) {
       watch(tabBarRef, (el) => { if (el) updateBar(false) }, { once: true })
 
       return {
-        collapsed, isDark, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
+        collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
         menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey,
         handleMenuSelect, handleTabClose, handleTabClick, userDropdown,
         barStyle, barReady, tabBarRef
@@ -238,7 +241,7 @@ function mountApp(menuList) {
               <n-layout has-sider style="height:100vh">
 
                 <!-- 侧边栏 -->
-                <n-layout-sider bordered :collapsed="collapsed" collapse-mode="width" :collapsed-width="64" :width="220">
+                <n-layout-sider bordered :collapsed="collapsed" collapse-mode="width" :collapsed-width="64" :width="220" :show-trigger="togglePos === 'down' ? 'bar' : false" @update:collapsed="collapsed = $event">
                   <div style="height:50px;display:flex;align-items:center;justify-content:center">
                     <div style="display:flex;align-items:center;gap:8px">
                       <div style="width:28px;height:28px;background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -265,7 +268,7 @@ function mountApp(menuList) {
                   <!-- 顶部 Header -->
                   <n-layout-header bordered style="height:50px;padding:0 16px;display:flex;align-items:center;justify-content:space-between">
                     <div style="display:flex;align-items:center;gap:12px">
-                      <n-icon size="20" style="cursor:pointer" @click="collapsed=!collapsed">
+                      <n-icon v-if="togglePos !== 'down'" size="20" style="cursor:pointer" @click="collapsed=!collapsed">
                         <iconify-icon icon="material-symbols:menu"></iconify-icon>
                       </n-icon>
                       <n-breadcrumb separator="»">

@@ -1,0 +1,12 @@
+{
+  "menu": {
+    "toggle": {
+      "list": ["top", "down"],
+      "default": "top"
+    }
+  },
+  "theme": {
+    "list": ["daytime", "night"],
+    "default": "daytime"
+  }
+}
