@@ -543,7 +543,13 @@ const NovaTable = {
     }
   },
 
-  beforeRouteUpdate() {},
+  beforeRouteUpdate() {
+      if (this.dualTableViewActive) {
+        this.dualTableViewActive = false
+        this.dualTableClosing = false
+        this._syncDualTableClass()
+      }
+    },
 
   watch: {
     dualTableViewActive(val) {
@@ -1213,16 +1219,11 @@ const NovaTable = {
     toggleDualTableView() {
       if (this.dualTableViewActive) {
         this.dualTableClosing = true
-        var panelEl = document.querySelector('.dual-right-panel')
-        if (panelEl) {
-          panelEl.classList.remove('is-open')
-          panelEl.classList.add('is-closing')
-        }
         setTimeout(() => {
           this.dualTableViewActive = false
           this.dualTableClosing = false
           this._syncDualTableClass()
-        }, 350)
+        }, 300)
       } else {
         this.openDualTableView(this.dualTableSubTables[0].novaName)
       }
@@ -1256,15 +1257,6 @@ const NovaTable = {
       this.dualTableCurrentKey = '__dual_' + item.novaName + '_v' + this._dualTableVersion
       this.buildDualTableSourceFields()
       this._syncDualTableClass()
-      var self = this
-      requestAnimationFrame(function () {
-        requestAnimationFrame(function () {
-          var panelEl = document.querySelector('.dual-right-panel')
-          if (panelEl) {
-            panelEl.classList.add('is-open')
-          }
-        })
-      })
     },
     buildDualTableSourceFields() {
       const row = this._dualSelectedRow
@@ -2468,7 +2460,7 @@ const NovaTable = {
 
       <!-- 双表视图右面板：Teleport 到 .page-content 作为 flex 兄弟元素 -->
       <Teleport to=".page-content" v-if="(dualTableViewActive || dualTableClosing) && dualTableEnabled && dualTableCurrentNova">
-        <nova-table ref="dualTableRef" :key="dualTableCurrentKey" :dual-mode="true" :link-mode="isDualTableLink" :nova-name-prop="dualTableCurrentNova" :source-nova-name-prop="novaName" :source-fields-prop="dualTableSourceFields" class="dual-right-panel" :class="{ 'is-closing': dualTableClosing }" @link-add="handleDualLinkAdd" />
+        <nova-table ref="dualTableRef" :key="dualTableCurrentKey" :dual-mode="true" :link-mode="isDualTableLink" :nova-name-prop="dualTableCurrentNova" :source-nova-name-prop="novaName" :source-fields-prop="dualTableSourceFields" class="dual-right-panel" :class="{ 'is-open': dualTableViewActive && !dualTableClosing, 'is-closing': dualTableClosing }" @link-add="handleDualLinkAdd" />
       </Teleport>
     </div>
   `
