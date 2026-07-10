@@ -105,6 +105,31 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   transform: translateY(12px);
   animation: none;
 }
+.dual-selected-row td:first-child {
+  position: relative;
+}
+.dual-selected-row td:first-child::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #2563eb;
+  animation: borderSlideIn 0.15s ease-out;
+}
+@keyframes borderSlideIn {
+  from {
+    height: 0;
+    top: 50%;
+    opacity: 0;
+  }
+  to {
+    height: 100%;
+    top: 0;
+    opacity: 1;
+  }
+}
 .dual-content-fade {
   animation: dualContentFadeIn 0.3s ease;
 }
