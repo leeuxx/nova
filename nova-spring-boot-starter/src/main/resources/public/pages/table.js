@@ -210,6 +210,7 @@ const NovaTable = {
       linkPickerTitle:            '',
       dualTableViewActive:        false,
       dualTableClosing:           false,
+      _dualReloading:             false,
       dualTableCurrentKey:        '',
       dualTableCurrentNova:       '',
       dualTableCurrentLabel:      '',
@@ -603,6 +604,7 @@ const NovaTable = {
 
     'sourceFieldsProp': {
       handler(newVal) {
+        if (this._dualReloading) return
         if (!this._vmKey) return
         var target = window.vmMap && window.vmMap[this._vmKey]
         if (!target) return
@@ -1194,7 +1196,6 @@ const NovaTable = {
     },
     toggleDualTableView() {
       if (this.dualTableViewActive) {
-        // 收起：先标记关闭状态触发动画，动画完再真正卸载
         this.dualTableClosing = true
         this._syncDualTableClass()
         setTimeout(() => {
@@ -1202,18 +1203,22 @@ const NovaTable = {
           this.dualTableClosing = false
         }, 350)
       } else {
-        // 展开：直接挂载，CSS自动播放进入动画
-        this.dualTableViewActive = true
-        if (this.dualTableSubTables.length > 0) {
-          const first = this.dualTableSubTables[0]
-          this._dualTableVersion++
-          this.dualTableCurrentNova = first.novaName
-          this.dualTableCurrentLabel = first.label
-          this.dualTableCurrentKey = '__dual_' + first.novaName + '_v' + this._dualTableVersion
-          this.buildDualTableSourceFields()
-        }
-        this._syncDualTableClass()
+        this.openDualTableView(this.dualTableSubTables[0].novaName)
       }
+    },
+    openDualTableView(novaName) {
+      const item = this.dualTableSubTables.find(s => s.novaName === novaName)
+      if (!item) return
+      if (!this._dualSelectedRow && this.filteredData && this.filteredData.length > 0) {
+        this._dualSelectedRow = this.filteredData[0]
+      }
+      this.dualTableViewActive = true
+      this._dualTableVersion++
+      this.dualTableCurrentNova = item.novaName
+      this.dualTableCurrentLabel = item.label
+      this.dualTableCurrentKey = '__dual_' + item.novaName + '_v' + this._dualTableVersion
+      this.buildDualTableSourceFields()
+      this._syncDualTableClass()
     },
     buildDualTableSourceFields() {
       const row = this._dualSelectedRow
@@ -1264,6 +1269,21 @@ const NovaTable = {
       }
       target._sourceRefFields = sourceRefFields
     },
+    reloadDual(novaName, sourceFields) {
+      if (this._vmKey && window.vmMap) delete window.vmMap[this._vmKey]
+      this.novaName = novaName
+      this._vmKey = '__dual_' + novaName + '_' + Date.now()
+      window.vmMap[this._vmKey] = this
+      if (window.NovaTableJQ) {
+        window.NovaTableJQ.onEmbeddedMounted(novaName, this._vmKey, this.sourceNovaNameProp || novaName, sourceFields || {}, true)
+      }
+      var self = this
+      this.$nextTick(function () {
+        if (self._vmKey && window.NovaTableJQ) {
+          window.NovaTableJQ.loadData(self._vmKey)
+        }
+      })
+    },
     onDualTableRowClick(row) {
       if (!this.dualTableViewActive) return
       console.log('[Dual] onDualTableRowClick called, row:', row)
@@ -1310,11 +1330,19 @@ const NovaTable = {
     onDualTableSubChange(novaName) {
       const item = this.dualTableSubTables.find(s => s.novaName === novaName)
       if (!item) return
-      this._dualTableVersion++
+      var dualVm = this.$refs.dualTableRef
+      if (dualVm) dualVm._dualReloading = true
       this.dualTableCurrentNova = item.novaName
       this.dualTableCurrentLabel = item.label
-      this.dualTableCurrentKey = '__dual_' + item.novaName + '_v' + this._dualTableVersion
       this.buildDualTableSourceFields()
+      var self = this
+      this.$nextTick(function () {
+        var vm = self.$refs.dualTableRef
+        if (vm) {
+          vm._dualReloading = false
+          vm.reloadDual(item.novaName, self.dualTableSourceFields)
+        }
+      })
     },
     _syncDualTableClass() {
       const el = document.querySelector('.page-content')
@@ -1904,26 +1932,23 @@ const NovaTable = {
             <n-button :size="embSize" circle class="btn-circle" style="background:transparent" @click="handleQuery">
               <template #icon><n-icon size="15"><iconify-icon icon="lucide:refresh-cw" style="font-size:15px"></iconify-icon></n-icon></template>
             </n-button>
-            <n-popover v-if="dualTableEnabled && !dualMode && dualTableViewActive && dualTableSubTables.length > 1" trigger="hover" placement="bottom" :show-arrow="false">
+            <n-popover v-if="dualTableEnabled && !dualMode" trigger="hover" placement="bottom" :show-arrow="false">
               <template #trigger>
-                <n-button :size="embSize" circle class="btn-circle" type="default" :style="{ color: '#2563eb', background: 'transparent' }" @click="toggleDualTableView" title="关闭双表视图">
+                <n-button :size="embSize" circle class="btn-circle" type="default" :style="dualTableViewActive ? { color: '#2563eb', background: 'transparent' } : { background: 'transparent' }" @click="toggleDualTableView" :title="dualTableViewActive ? '关闭双表视图' : '开启双表视图'">
                   <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
                 </n-button>
               </template>
               <div style="display:flex;flex-direction:column;gap:2px;font-size:13px;min-width:120px;padding:4px 0">
                 <div v-for="s in dualTableSubTables" :key="s.novaName"
-                  style="padding:6px 10px;cursor:pointer;border-radius:4px;transition:background .15s"
-                  :style="{ color: s.novaName === dualTableCurrentNova ? '#2563eb' : '' }"
-                  @click="onDualTableSubChange(s.novaName)"
+                  style="padding:6px 10px;cursor:pointer;border-radius:4px;transition:background .15s;text-align:center"
+                  :style="{ color: (dualTableViewActive && s.novaName === dualTableCurrentNova) ? '#2563eb' : '' }"
+                  @click.stop="dualTableViewActive ? onDualTableSubChange(s.novaName) : openDualTableView(s.novaName)"
                   @mouseenter="e => e.target.style.background='rgba(37,99,235,0.06)'"
                   @mouseleave="e => e.target.style.background=''">
                   {{ s.label }}
                 </div>
               </div>
             </n-popover>
-            <n-button v-else-if="dualTableEnabled && !dualMode" :size="embSize" circle class="btn-circle" type="default" :style="dualTableViewActive ? { color: '#2563eb', background: 'transparent' } : { background: 'transparent' }" @click="toggleDualTableView" :title="dualTableViewActive ? '关闭双表视图' : '开启双表视图'">
-              <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
-            </n-button>
             <n-popover trigger="click" placement="bottom-end">
               <template #trigger>
                 <n-button :size="embSize" circle class="btn-circle" style="background:transparent">
