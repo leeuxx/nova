@@ -7,6 +7,7 @@ import com.nova.annotation.config.NovaId;
 import com.nova.annotation.config.NovaScan;
 import com.nova.annotation.fun.DataProxy;
 import com.nova.annotation.sub.nova.field.Edit;
+import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.constant.NovaConst;
 import lombok.Data;
 import lombok.Getter;
@@ -79,14 +80,16 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
                 }
             }
             Nova nova = clz.getDeclaredAnnotation(Nova.class);
+            List<RowOperation> rowOperations = new ArrayList<>(Arrays.asList(nova.rowOperation()));
             ScanNova scanNova = new ScanNova()
                     .setClz(clz)
                     .setNovaIdFieldName(novaIdFieldName)
                     .setNova(nova)
                     .setNovaFields(novaFields)
-                    .setDataProxyClass(nova.dataProxy());
+                    .setDataProxyClass(nova.dataProxy())
+                    .setRowOperations(rowOperations);
             if (check(scanNova)) {
-                log.info("注册 @Nova 注解类: {}", clz.getName());
+                log.info("@Nova classes: {}", clz.getName());
                 scanNovas.put(clz.getSimpleName(), scanNova);
             }
         }
@@ -110,6 +113,9 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
 
         @Comment("数据代理类")
         private Class<? extends DataProxy<?>> dataProxyClass;
+
+        @Comment("自定义功能按钮")
+        private List<RowOperation> rowOperations;
 
         @Data
         @Accessors(chain = true)

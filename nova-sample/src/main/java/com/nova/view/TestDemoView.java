@@ -7,7 +7,9 @@ import com.nova.annotation.sub.nova.Layout;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
+import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.service.TestDemoService;
+import com.nova.view.row.TestRow;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -23,7 +25,17 @@ import java.time.LocalDateTime;
         layout = @Layout(
                 editLayout = Layout.EditLayout.DEFAULT
         ),
-        dataProxy = TestDemoService.class
+        dataProxy = TestDemoService.class,
+        rowOperation = {
+                @RowOperation(
+                        title = "测试按钮",
+                        icon = "iconfont icon-test",
+                        mode = RowOperation.Mode.SINGLE,
+                        novaClass = TestRow.class,
+                        operationHandler = TestDemoService.class,
+                        operationParam = "1"
+                )
+        }
 )
 public class TestDemoView {
 
