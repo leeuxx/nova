@@ -1213,10 +1213,15 @@ const NovaTable = {
     toggleDualTableView() {
       if (this.dualTableViewActive) {
         this.dualTableClosing = true
-        this._syncDualTableClass()
+        var panelEl = document.querySelector('.dual-right-panel')
+        if (panelEl) {
+          panelEl.classList.remove('is-open')
+          panelEl.classList.add('is-closing')
+        }
         setTimeout(() => {
           this.dualTableViewActive = false
           this.dualTableClosing = false
+          this._syncDualTableClass()
         }, 350)
       } else {
         this.openDualTableView(this.dualTableSubTables[0].novaName)
@@ -1251,6 +1256,15 @@ const NovaTable = {
       this.dualTableCurrentKey = '__dual_' + item.novaName + '_v' + this._dualTableVersion
       this.buildDualTableSourceFields()
       this._syncDualTableClass()
+      var self = this
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          var panelEl = document.querySelector('.dual-right-panel')
+          if (panelEl) {
+            panelEl.classList.add('is-open')
+          }
+        })
+      })
     },
     buildDualTableSourceFields() {
       const row = this._dualSelectedRow
@@ -1352,13 +1366,27 @@ const NovaTable = {
           vm._dualReloading = false
           vm.reloadDual(item.novaName, self.dualTableSourceFields)
         }
+        self.$nextTick(function () {
+          var panelEl = document.querySelector('.dual-right-panel')
+          if (panelEl) {
+            var contentEl = panelEl.querySelector('.page-card, .embedded-table')
+            if (contentEl) {
+              contentEl.classList.remove('dual-content-fade')
+              void contentEl.offsetWidth
+              contentEl.classList.add('dual-content-fade')
+            }
+          }
+        })
       })
     },
     _syncDualTableClass() {
       const el = document.querySelector('.page-content')
       if (el) {
-        if (this.dualTableViewActive) el.classList.add('dual-mode')
-        else el.classList.remove('dual-mode')
+        if (this.dualTableViewActive || this.dualTableClosing) {
+          el.classList.add('dual-mode')
+        } else {
+          el.classList.remove('dual-mode')
+        }
       }
     },
     _doRefSelectRequest(field, refField, query, page, append, onDone) {

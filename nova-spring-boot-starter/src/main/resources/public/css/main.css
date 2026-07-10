@@ -69,32 +69,55 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   overflow: hidden;
 }
 .dual-right-panel {
-  flex: 1;
-  min-width: 0;
+  flex: 0 0 0;
+  max-width: 0;
   overflow: hidden;
   border-left: 1px solid var(--n-border-color);
   display: flex;
   flex-direction: column;
   padding: 16px 16px 16px 8px;
+  opacity: 0;
+  transition: flex-basis 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease;
+  position: relative;
+}
+.dual-right-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(0px);
+  transition: backdrop-filter 0.35s ease;
+  pointer-events: none;
+}
+.dual-right-panel.is-open {
+  flex: 0 0 50vw;
   max-width: 50vw;
   opacity: 1;
-  transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.25s ease;
-  animation: dualSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
-@keyframes dualSlideIn {
-  from {
-    max-width: 0;
-    opacity: 0;
-  }
-  to {
-    max-width: 50vw;
-    opacity: 1;
-  }
+.dual-right-panel.is-open::before {
+  backdrop-filter: blur(8px);
 }
 .dual-right-panel.is-closing {
+  flex: 0 0 0;
   max-width: 0;
   opacity: 0;
+}
+.dual-right-panel.is-closing::before {
+  backdrop-filter: blur(0px);
+}
+.dual-content-fade {
+  animation: dualContentFadeIn 0.3s ease;
+}
+@keyframes dualContentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 
