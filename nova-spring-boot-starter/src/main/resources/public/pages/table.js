@@ -239,6 +239,7 @@ const NovaTable = {
         page:            1,
         itemCount:       0,
         pageSize:        10,
+        pageSlot:        9,
         showSizePicker:  true,
         pageSizes:       [10, 20, 50, 100].map(n => ({ label: n + ' 条/页', value: n })),
         showQuickJumper: true
@@ -545,6 +546,13 @@ const NovaTable = {
   beforeRouteUpdate() {},
 
   watch: {
+    dualTableViewActive(val) {
+      if (!this.dualMode) {
+        this.paginationConfig.pageSlot = val ? 5 : 9
+        this.paginationConfig.showQuickJumper = !val
+      }
+      this._syncDualTableClass()
+    },
     showForm(val) {
       if (!val) {
         // 弹窗关闭：清空所有 tab 相关缓存，确保下次打开完全等同于第一次
@@ -663,6 +671,8 @@ const NovaTable = {
       this.novaName = this.novaNameProp || ''
       this._vmKey = '__dual_' + this.novaName + '_' + Date.now()
       window.vmMap[this._vmKey] = this
+      this.paginationConfig.pageSlot = 5
+      this.paginationConfig.showQuickJumper = false
       this.paginationConfig.onUpdatePage     = this.handlePageChange
       this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
       this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
@@ -1540,13 +1550,6 @@ const NovaTable = {
     handlePageSizeChange(pageSize) {
       const key = (this.pickerMode || this.embeddedMode || this.dualMode) ? this._vmKey : this.novaName
       window.NovaTableJQ.onPageSizeChange(key, pageSize)
-    }
-  },
-
-  watch: {
-    dualTableViewActive: {
-      handler(val) { this._syncDualTableClass() },
-      immediate: false
     }
   },
 
