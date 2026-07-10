@@ -1935,7 +1935,8 @@ const NovaTable = {
             <n-button :size="embSize" circle class="btn-circle" style="background:transparent" @click="handleQuery">
               <template #icon><n-icon size="15"><iconify-icon icon="lucide:refresh-cw" style="font-size:15px"></iconify-icon></n-icon></template>
             </n-button>
-            <n-popover v-if="dualTableEnabled && !dualMode" trigger="hover" placement="bottom" :show-arrow="false">
+            <!-- 多子表：带悬浮下拉 -->
+            <n-popover v-if="dualTableEnabled && !dualMode && dualTableSubTables.length > 1" trigger="hover" placement="bottom" :show-arrow="false">
               <template #trigger>
                 <n-button :size="embSize" circle class="btn-circle" type="default"
                 :style="dualTableViewActive ? { color: '#2563eb', background: 'transparent' } : { background: 'transparent' }"
@@ -1955,6 +1956,13 @@ const NovaTable = {
                   </div>
                 </div>
             </n-popover>
+            <!-- 单子表：仅按钮，无下拉 -->
+            <n-button v-if="dualTableEnabled && !dualMode && dualTableSubTables.length === 1" :size="embSize" circle class="btn-circle" type="default"
+              :style="dualTableViewActive ? { color: '#2563eb', background: 'transparent' } : { background: 'transparent' }"
+              @click="toggleDualTableView"
+              :title="dualTableViewActive ? '关闭双表视图' : '开启双表视图'">
+              <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
+            </n-button>
             <n-popover trigger="click" placement="bottom-end">
               <template #trigger>
                 <n-button :size="embSize" circle class="btn-circle" style="background:transparent">
