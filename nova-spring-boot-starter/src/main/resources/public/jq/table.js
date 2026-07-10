@@ -940,7 +940,7 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── LINK 新增关联（中间表新增，目标ID数组由后端循环处理）─────
-  function handleLinkAdd(novaName, linkNovaName, sourceField, sourceValue, targetField, targetIds, vmKey) {
+  function handleLinkAdd(novaName, linkNovaName, sourceField, sourceValue, targetField, targetIds, vmKey, refreshVmKey) {
     var key = vmKey || novaName
     var formInfo = [
       { field: sourceField, value: String(sourceValue), type: 'LINK_TARGET' },
@@ -956,8 +956,8 @@ window.NovaTableJQ = (function ($) {
         if (!t) return
         if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '新增失败'); return }
         if (window.$message) window.$message.success('新增成功')
-        // 刷新嵌入的 link 表格
-        var embVmKey = findEmbVmKey(linkNovaName)
+        // 刷新目标表格：优先使用传入的 refreshVmKey，否则查找嵌入式 vmKey
+        var embVmKey = refreshVmKey || findEmbVmKey(linkNovaName)
         if (embVmKey) loadData(embVmKey)
       },
       error: function () {

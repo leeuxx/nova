@@ -625,6 +625,11 @@ const NovaTable = {
       handler(newVal) {
         if (this._dualReloading) return
         if (!this._vmKey) return
+        // LINK 操作期间跳过 sourceFields 触发的 loadData（避免重复刷新）
+        if (window._novaLinkSkipLoad && window._novaLinkSkipLoad[this._vmKey]) {
+          delete window._novaLinkSkipLoad[this._vmKey]
+          return
+        }
         var target = window.vmMap && window.vmMap[this._vmKey]
         if (!target) return
         var embSourceFields = newVal || {}
@@ -1193,6 +1198,13 @@ const NovaTable = {
     onLinkPickerPick(selectedKeys) {
       this.linkPickerSelectedKeys = selectedKeys || []
     },
+    _findEmbVmKey(linkNovaName) {
+      var keys = Object.keys(window.vmMap || {})
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i].indexOf('__emb_' + linkNovaName) === 0) return keys[i]
+      }
+      return null
+    },
     confirmLinkPickerSelect() {
       if (!this.linkPickerSelectedKeys.length) {
         if (window.$message) window.$message.warning('请至少选择一行')
@@ -1208,11 +1220,32 @@ const NovaTable = {
       if (!sourceField) { console.error('[Nova] 缺少 sourceField', build); if (window.$message) window.$message.error('关联参数不完整: 缺少源字段名'); return }
       if (!targetField) { console.error('[Nova] 缺少 targetField', build); if (window.$message) window.$message.error('关联参数不完整: 缺少目标字段名'); return }
       if (sourceValue == null) { console.error('[Nova] 缺少 sourceValue', this.currentRow, this.novaIdFieldName); if (window.$message) window.$message.error('关联参数不完整: 缺少源记录ID'); return }
+
+      var targetVmKey = null
+      if (this.dualTableViewActive) {
+        // 双表视图：获取右表 vmKey
+        var dualVm = this.$refs.dualTableRef
+        if (dualVm && dualVm._vmKey) {
+          targetVmKey = dualVm._vmKey
+          window._novaLinkSkipLoad = window._novaLinkSkipLoad || {}
+          window._novaLinkSkipLoad[targetVmKey] = true
+        }
+      } else {
+        // 编辑弹窗嵌入模式：查找 __emb_ 格式的 vmKey
+        var embVmKey = this._findEmbVmKey(linkNovaName)
+        if (embVmKey) {
+          targetVmKey = embVmKey
+          window._novaLinkSkipLoad = window._novaLinkSkipLoad || {}
+          window._novaLinkSkipLoad[targetVmKey] = true
+        }
+      }
+
       window.NovaTableJQ.handleLinkAdd(
         this.novaName, linkNovaName,
         sourceField, sourceValue,
         targetField, this.linkPickerSelectedKeys,
-        this._vmKey || this.novaName
+        this._vmKey || this.novaName,
+        targetVmKey
       )
       this.closeLinkPicker()
     },
