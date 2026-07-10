@@ -1934,20 +1934,23 @@ const NovaTable = {
             </n-button>
             <n-popover v-if="dualTableEnabled && !dualMode" trigger="hover" placement="bottom" :show-arrow="false">
               <template #trigger>
-                <n-button :size="embSize" circle class="btn-circle" type="default" :style="dualTableViewActive ? { color: '#2563eb', background: 'transparent' } : { background: 'transparent' }" @click="toggleDualTableView" :title="dualTableViewActive ? '关闭双表视图' : '开启双表视图'">
-                  <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
-                </n-button>
+                <n-button :size="embSize" circle class="btn-circle" type="default"
+                :style="dualTableViewActive ? { color: '#2563eb', background: 'transparent' } : { background: 'transparent' }"
+                @click="toggleDualTableView"
+                :title="dualTableViewActive ? '关闭双表视图' : '开启双表视图'">
+                <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
+              </n-button>
               </template>
               <div style="display:flex;flex-direction:column;gap:2px;font-size:13px;min-width:120px;padding:4px 0">
-                <div v-for="s in dualTableSubTables" :key="s.novaName"
-                  style="padding:6px 10px;cursor:pointer;border-radius:4px;transition:background .15s;text-align:center"
-                  :style="{ color: (dualTableViewActive && s.novaName === dualTableCurrentNova) ? '#2563eb' : '' }"
-                  @click.stop="dualTableViewActive ? onDualTableSubChange(s.novaName) : openDualTableView(s.novaName)"
-                  @mouseenter="e => e.target.style.background='rgba(37,99,235,0.06)'"
-                  @mouseleave="e => e.target.style.background=''">
-                  {{ s.label }}
+                  <div v-for="s in dualTableSubTables" :key="s.novaName"
+                    style="padding:6px 10px;cursor:pointer;border-radius:4px;transition:background .15s;text-align:center"
+                    :style="{ color: (dualTableViewActive && s.novaName === dualTableCurrentNova) ? '#2563eb' : '' }"
+                    @click.stop="dualTableViewActive ? onDualTableSubChange(s.novaName) : openDualTableView(s.novaName)"
+                    @mouseenter="e => e.target.style.background='rgba(37,99,235,0.06)'"
+                    @mouseleave="e => e.target.style.background=''">
+                    {{ s.label }}
+                  </div>
                 </div>
-              </div>
             </n-popover>
             <n-popover trigger="click" placement="bottom-end">
               <template #trigger>
