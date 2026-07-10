@@ -684,7 +684,7 @@ const NovaTable = {
       this.paginationConfig.onUpdatePage     = this.handlePageChange
       this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
       this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
-      if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onEmbeddedMounted(this.novaName, this._vmKey, this.sourceNovaNameProp || this.novaName, this.sourceFieldsProp || {})
+      if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onEmbeddedMounted(this.novaName, this._vmKey, this.sourceNovaNameProp || this.novaName, this.sourceFieldsProp || {}, this.linkMode)
     } else {
       this.novaName = this.$route.params.novaName || ''
       window.vmMap[this.novaName] = this

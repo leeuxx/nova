@@ -39,7 +39,6 @@ window.NovaTableJQ = (function ($) {
   // vmKey: 可选，embedded 模式下为 '__emb_xxx'；embSourceFields: embedded 模式下预注入的外键条件；sourceNovaName: 父表 novaName
   function buildTable(novaName, vmKey, embSourceFields, sourceNovaName, deferDataLoad) {
     if (!novaName) return
-    console.log('[Dual] buildTable called, novaName:', novaName, 'vmKey:', vmKey)
     var key = vmKey || novaName
     $.ajax({
       url:         '/nova/table/build',
@@ -200,19 +199,15 @@ window.NovaTableJQ = (function ($) {
             }
             parentVm.linkTabBuild = newBuild
             // linkForm：同步完成后设置 sourceFields，然后 loadData
-            console.log('[Nova-link] buildTable success, lt:', lt, 'parentVm:', parentVm, 'currentRow:', parentVm && parentVm.currentRow, 'deferDataLoad:', deferDataLoad)
             if (!deferDataLoad && lt.thisReferenceField && parentVm && parentVm.currentRow) {
-              // 取值用 thisStorageField（实际存储关联值的字段），key 用 thisReferenceField（关联字段名）
               var storageField = lt.thisStorageField || lt.thisReferenceField
               var refVal = parentVm.currentRow[storageField]
-              console.log('[Nova-link] refVal:', refVal, 'storageField:', storageField, 'thisReferenceField:', lt.thisReferenceField)
               target._sourceFields = refVal != null ? { [lt.thisReferenceField]: String(refVal) } : {}
               var srf = []
               if (refVal != null) {
                 srf.push({ field: lt.thisReferenceField, type: 'LINK_TARGET', referenceField: lt.thisReferenceField, value: String(refVal) })
               }
               target._sourceRefFields = srf
-              console.log('[Nova-link] _sourceFields:', target._sourceFields, '_sourceRefFields:', target._sourceRefFields)
               loadData(key)
             }
           }
@@ -469,7 +464,7 @@ window.NovaTableJQ = (function ($) {
               if (linkRefLower && fl.indexOf(linkRefLower) !== -1) targetFieldName = f.field
             })
           }
-          console.log('[Nova] buildLinkTabs sourceField:', sourceFieldName, 'targetField:', targetFieldName, 'linkTarget:', lt, 'editFields:', editFields)
+          // buildLinkTabs: 构建 linkTab 元数据
           var newBuild = Object.assign({}, t2.linkTabBuild)
           newBuild[linkNovaName] = {
             editFields: editFields,
@@ -569,7 +564,6 @@ window.NovaTableJQ = (function ($) {
         conditions[rf.referenceField] = { value: String(rf.value), type: 'TEXT', ext: '', vague: false }
       }
     })
-    console.log('[Dual] loadData request:', JSON.stringify({ novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, linkConditions: linkConditions, pageBean: pageBean, conditions: conditions }))
     $.ajax({
       url:         '/nova/table/data',
       method:      'POST',
@@ -1030,7 +1024,6 @@ window.NovaTableJQ = (function ($) {
       if (appTab.tapShow === false || (appTab.tapShowByExpr && window.evalShowExpr && !window.evalShowExpr(appTab.tapShowByExpr, formData))) return
       var build = (target.appendageTabBuild || {})[n] || {}
       var fd = (target.appendageFormData || {})[n] || {}
-      console.log('[Nova-submit] appendageFormInfo for', n, 'build.editFields:', (build.editFields || []).length, 'fd:', fd)
       var refMap = build.referenceMap || {}
       appendageFormInfo[n] = (build.editFields || []).filter(function(f) { return f.type !== 'DIVIDE' && f.type !== 'EMPTY' }).map(function(f) {
         var val = fd[f.field]
@@ -1043,8 +1036,6 @@ window.NovaTableJQ = (function ($) {
         return item
       })
     })
-    console.log('[Nova-submit] final appendageFormInfo:', JSON.stringify(appendageFormInfo))
-
     if (target.currentRow) {
       // 编辑
       var novaName = target.novaName
