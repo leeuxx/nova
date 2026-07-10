@@ -1321,11 +1321,14 @@ const NovaTable = {
     onDualTableRowClick(row) {
       if (!this.dualTableViewActive) return
       this._dualSelectedRow = row
+      var dualVm = this.$refs.dualTableRef
+      if (dualVm) dualVm._dualReloading = true
       this.buildDualTableSourceFields()
       var self = this
       this.$nextTick(function () {
         var dualVm = self.$refs.dualTableRef
         if (dualVm && dualVm._vmKey) {
+          dualVm._dualReloading = false
           var target = window.vmMap && window.vmMap[dualVm._vmKey]
           if (target) {
             self._applyDualSourceFields(target)
