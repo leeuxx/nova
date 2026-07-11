@@ -191,7 +191,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     }
 
     @Override
-    public String exec(List<Long> data, Object o, String param) {
+    public String exec(List<Long> novaIds, Object o, String param) {
         return null;
     }
 }

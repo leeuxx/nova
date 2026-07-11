@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
                 @RowOperation(
                         title = "测试按钮",
                         tip = "测试功能是否正常",
+                        callHint = "确认执行操作？",
                         mode = RowOperation.Mode.SINGLE,
                         ifExpr = "sex == '男'",
                         novaClass = TestRow.class,
