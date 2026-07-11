@@ -267,6 +267,7 @@ const NovaTable = {
                         ? localStorage.getItem('nova-table-striped') === 'true'
                         : true,
       tableSize:      localStorage.getItem('nova-table-size') || 'medium',
+      cellOverflow:   localStorage.getItem('nova-table-cell-overflow') || 'ellipsis',
       pageSize:       10,
       pageSizes:      [10, 20, 50, 100],
       loading:          false,
@@ -476,7 +477,7 @@ const NovaTable = {
           width:     vm.colPixels[index],
           title:     col.title,
           resizable: true,
-          ellipsis:  { tooltip: true }
+          ellipsis:  vm.cellOverflow === 'ellipsis' ? { tooltip: true } : false
         }
 
         if (col.desc || col.sortable) {
@@ -709,6 +710,13 @@ const NovaTable = {
     },
     tableSize(val) {
       localStorage.setItem('nova-table-size', val)
+    },
+    cellOverflow: {
+      immediate: true,
+      handler(val) {
+        localStorage.setItem('nova-table-cell-overflow', val)
+        document.body.classList.toggle('table-wrap-cell', val === 'wrap')
+      }
     },
     dualTableViewActive(val) {
       if (!this.dualMode) {
@@ -2739,6 +2747,13 @@ const NovaTable = {
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
                   <span>斑马纹</span>
                   <n-switch v-model:value="striped" />
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+                  <span>文字溢出</span>
+                  <n-radio-group v-model:value="cellOverflow" size="small">
+                    <n-radio-button value="ellipsis">省略</n-radio-button>
+                    <n-radio-button value="wrap">换行</n-radio-button>
+                  </n-radio-group>
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
                   <span>表格大小</span>

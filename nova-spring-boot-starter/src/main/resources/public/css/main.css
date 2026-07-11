@@ -270,6 +270,13 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 .n-data-table-td--fixed-right {
   overflow: visible;
 }
+/* 换行模式：文字溢出改为自动换行 */
+body.table-wrap-cell .n-data-table-td {
+  white-space: normal;
+  word-break: break-all;
+  text-overflow: clip;
+  max-width: none;
+}
 .n-data-table-th { white-space: nowrap; }
 
 /* ─── 暗色模式 ─────────────────────────────────────────── */
