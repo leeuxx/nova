@@ -54,6 +54,7 @@ import java.time.LocalDateTime;
                         callHint = "关闭操作不可逆！",
                         icon = "material-symbols:amend-rounded",
                         mode = RowOperation.Mode.SINGLE,
+                        novaClass = TestDemoView.TestRow.class,
                         operationHandler = TestDemoService.class,
                         operationParam = "3"
                 ),
@@ -74,6 +75,7 @@ import java.time.LocalDateTime;
                 ),
                 @RowOperation(
                         title = "批量导出",
+                        callHint = "确定导出吗？",
                         icon = "material-symbols:archive-rounded",
                         mode = RowOperation.Mode.MULTI_ONLY,
                         operationHandler = TestDemoService.class,

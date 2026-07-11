@@ -1201,14 +1201,14 @@ const NovaTable = {
         error: function() { if (window.$message) window.$message.error('请求失败') }
       })
     },
-    handleCustomBtnClick(btn) {
+    handleCustomBtnClick(btn, skipConfirm) {
       if (btn.type === 'NOVA' && btn.novaClassName) {
         this.openOpForm(btn, null)
         return
       }
       var self = this
       var action = function() { self.submitCustomBtn(btn, null) }
-      if (btn.callHint) { window.msg.confirm('warning', '确认操作', btn.callHint, action) }
+      if (btn.callHint && !skipConfirm) { window.msg.confirm('warning', '确认操作', btn.callHint, action) }
       else { action() }
     },
     openOpForm(btn, row) {
@@ -2683,7 +2683,7 @@ const NovaTable = {
               </n-button>
             </n-dropdown>
             <template v-for="btn in toolbarUnfoldedButtons" :key="btn.title">
-              <n-popconfirm v-if="btn.callHint" positive-text="确定" negative-text="取消" @positive-click="handleCustomBtnClick(btn)">
+              <n-popconfirm v-if="btn.callHint" positive-text="确定" negative-text="取消" @positive-click="handleCustomBtnClick(btn, true)">
                 <template #trigger>
                   <n-button :size="embSize" type="default"
                     :disabled="(btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && checkedRowKeys.length === 0"
