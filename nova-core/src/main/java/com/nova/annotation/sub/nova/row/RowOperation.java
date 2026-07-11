@@ -25,7 +25,7 @@ public @interface RowOperation {
     @Comment("功能类型")
     Type type() default Type.NOVA;
 
-    @Comment("控制按钮显示与隐藏")
+    @Comment("单行按钮控制按钮显示与隐藏（前端）")
     String ifExpr() default "";
 
     @Comment("按钮提交时，需要填写的表单信息")

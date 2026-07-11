@@ -218,12 +218,7 @@ const NovaTable = {
       _dualSelectedRow:           null,
       _dualTableVersion:         0,
       // ── 自定义按钮（mock 数据，用于前端预览效果）────────────────────
-      customButtons: [
-        { title: '审核通过', mode: 'SINGLE',     icon: 'material-symbols:check-circle',    fold: false, tip: '审核通过该记录' },
-        { title: '批量导出', mode: 'MULTI',       icon: 'material-symbols:file-export',    fold: true,  tip: '导出选中的数据' },
-        { title: '批量推送', mode: 'MULTI_ONLY',  icon: 'material-symbols:send',           fold: false, tip: '推送选中的记录' },
-        { title: '导入数据', mode: 'BUTTON',      icon: 'material-symbols:upload',         fold: false, tip: '从文件导入数据' }
-      ],
+      rowOperations:  [],
       formErrors:     {},
       striped:        true,
       tableSize:      'medium',
@@ -292,10 +287,10 @@ const NovaTable = {
     },
     // 自定义按钮分类
     rowCustomButtons() {
-      return (this.customButtons || []).filter(b => b.mode === 'SINGLE' || b.mode === 'MULTI')
+      return (this.rowOperations || []).filter(b => b.mode === 'SINGLE' || b.mode === 'MULTI')
     },
     rowActionColWidth() {
-      var btns = (this.customButtons || []).filter(function(b) { return b.mode === 'SINGLE' || b.mode === 'MULTI' })
+      var btns = (this.rowOperations || []).filter(function(b) { return b.mode === 'SINGLE' || b.mode === 'MULTI' })
       var unfolded = btns.length > 0 ? 1 : 0
       var hasFolded = btns.length > 1
       var w = this.linkMode ? 45 : 85     // 编辑+删除(85) / 仅删除(45)
@@ -304,7 +299,7 @@ const NovaTable = {
       return w
     },
     toolbarCustomButtons() {
-      return (this.customButtons || []).filter(b => b.mode === 'MULTI' || b.mode === 'MULTI_ONLY' || b.mode === 'BUTTON')
+      return (this.rowOperations || []).filter(b => b.mode === 'MULTI' || b.mode === 'MULTI_ONLY' || b.mode === 'BUTTON')
     },
     toolbarUnfoldedButtons() {
       return this.toolbarCustomButtons.slice(0, 1)
@@ -318,8 +313,9 @@ const NovaTable = {
         return {
           label: btn.title,
           key: btn.title,
-          icon: function() { return h('iconify-icon', { icon: btn.icon || 'material-symbols:circle-outline' }) },
-          disabled: (btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && self.checkedRowKeys.length === 0
+          icon: btn.icon ? function() { return h('iconify-icon', { icon: btn.icon }) } : undefined,
+          disabled: (btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && self.checkedRowKeys.length === 0,
+          props: btn.tip ? { title: btn.tip } : undefined
         }
       })
     },
@@ -581,14 +577,14 @@ const NovaTable = {
             rowUnfolded.forEach(function(btn) {
               buttons.push(h('span', {
                 class: 'row-action-btn',
-                style: { color: '#7c3aed', cursor: 'pointer', fontSize: '13px' },
+                style: { color: btn.color || '#7c3aed', cursor: 'pointer', fontSize: '13px' },
                 title: btn.tip || btn.title,
                 onClick: function() { console.log('[CustomBtn] row:', btn.title, 'row:', row) }
               }, btn.title))
             })
             if (rowFolded.length > 0) {
               var foldedOpts = rowFolded.map(function(btn) {
-                return { label: btn.title, key: btn.title, icon: btn.icon ? function() { return h('iconify-icon', { icon: btn.icon }) } : undefined }
+                return { label: btn.title, key: btn.title, icon: btn.icon ? function() { return h('iconify-icon', { icon: btn.icon }) } : undefined, props: btn.tip ? { title: btn.tip } : undefined }
               })
               buttons.push(h(NDropdown, {
                 options: foldedOpts,
@@ -2046,7 +2042,7 @@ const NovaTable = {
               :disabled="(btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && checkedRowKeys.length === 0"
               :title="btn.tip || btn.title"
               @click="console.log('[CustomBtn] toolbar:', btn.title)">
-              <template #icon><n-icon size="15"><iconify-icon :icon="btn.icon" style="font-size:15px"></iconify-icon></n-icon></template>
+              <template v-if="btn.icon" #icon><n-icon size="15"><iconify-icon :icon="btn.icon" style="font-size:15px"></iconify-icon></n-icon></template>
               {{ btn.title }}
             </n-button>
             <n-button v-if="checkedRowKeys.length > 0 && !readonly" :size="embSize" type="error" @click="handleBatchDelete">

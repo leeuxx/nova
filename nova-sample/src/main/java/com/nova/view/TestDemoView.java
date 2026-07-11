@@ -29,11 +29,47 @@ import java.time.LocalDateTime;
         rowOperation = {
                 @RowOperation(
                         title = "测试按钮",
-                        icon = "iconfont icon-test",
+                        tip = "测试功能是否正常",
+                        color = "rgb(124, 58, 237)",
                         mode = RowOperation.Mode.SINGLE,
                         novaClass = TestRow.class,
                         operationHandler = TestDemoService.class,
                         operationParam = "1"
+                ),
+                @RowOperation(
+                        title = "完结订单",
+                        icon = "material-symbols:amp-stories-rounded",
+                        mode = RowOperation.Mode.SINGLE,
+                        operationHandler = TestDemoService.class,
+                        operationParam = "2"
+                ),
+                @RowOperation(
+                        title = "关闭支付分",
+                        icon = "material-symbols:amend-rounded",
+                        mode = RowOperation.Mode.SINGLE,
+                        operationHandler = TestDemoService.class,
+                        operationParam = "3"
+                ),
+                @RowOperation(
+                        title = "下载报表",
+                        icon = "material-symbols:arrow-circle-down-outline",
+                        mode = RowOperation.Mode.BUTTON,
+                        operationHandler = TestDemoService.class,
+                        operationParam = "4"
+                ),
+                @RowOperation(
+                        title = "修改价格",
+                        icon = "material-symbols:apk-install-outline-sharp",
+                        mode = RowOperation.Mode.MULTI,
+                        operationHandler = TestDemoService.class,
+                        operationParam = "5"
+                ),
+                @RowOperation(
+                        title = "批量导出",
+                        icon = "material-symbols:archive-rounded",
+                        mode = RowOperation.Mode.MULTI_ONLY,
+                        operationHandler = TestDemoService.class,
+                        operationParam = "6"
                 )
         }
 )

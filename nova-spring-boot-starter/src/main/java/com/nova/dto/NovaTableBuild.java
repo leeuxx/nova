@@ -66,6 +66,9 @@ public class NovaTableBuild {
         @Comment("集合引用目标组件信息")
         private LinkTarget linkTarget;
 
+        @Comment("自定义按钮信息")
+        private List<RowOperationInfo> rowOperations;
+
         @Data
         @Accessors(chain = true)
         public static class Search {
@@ -419,5 +422,43 @@ public class NovaTableBuild {
 
         }
 
+        @Data
+        @Accessors(chain = true)
+        public static class RowOperationInfo {
+
+            @Comment("标题")
+            private String title;
+
+            @Comment("功能提示")
+            private String tip;
+
+            @Comment("调用提示,空则不提示")
+            private String callHint;
+
+            @Comment("标题颜色,单行且不折叠时有效")
+            private String color;
+
+            @Comment("图标")
+            private String icon;
+
+            @Comment("功能模式")
+            private String mode;
+
+            @Comment("功能类型")
+            private String type;
+
+            @Comment("单行按钮控制按钮显示与隐藏（前端）")
+            private String ifExpr;
+
+            @Comment("按钮提交时，需要填写的表单信息")
+            private String novaClassName;
+
+            @Comment("钩子透传参数")
+            private List<String> operationParam;
+
+            @Comment("操作按钮点击后的后端钩子完全类名")
+            private String operationHandler;
+
+        }
     }
 }

@@ -59,6 +59,7 @@ window.NovaTableJQ = (function ($) {
         target.appendageMap   = resp.data.appendage   || {}
         target.linkMap        = resp.data.link        || {}
         target.linkTargetInfo = resp.data.linkTarget  || {}
+        target.rowOperations  = resp.data.rowOperations || []
         var fields = resp.data.search || []
         // 提取 tapSearch 字段，从 searchFields 中移除
         var tapSearchField = null

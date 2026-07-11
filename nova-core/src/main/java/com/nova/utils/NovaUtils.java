@@ -1,12 +1,14 @@
 package com.nova.utils;
 
-import com.nova.annotation.config.Comment;
 import com.nova.annotation.Nova;
+import com.nova.annotation.config.Comment;
 import com.nova.annotation.sub.nova.Layout;
+import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.config.NovaApplication;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +49,21 @@ public class NovaUtils {
             return null;
         }
         return scanNova.getNova().orderBy();
+    }
+
+    /**
+     * 获取自定义按钮信息
+     *
+     * @param className 类名
+     * @return 自定义按钮信息
+     */
+    public static List<RowOperation> getRowOperation(String className) {
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return new ArrayList<>();
+        }
+        return scanNova.getRowOperations();
     }
 
     @Data

@@ -1,5 +1,6 @@
 // 离线图标数据 — 通过 IconifyPreload 在 iconify-icon 初始化时注入
 // 必须在 iconify-icon.min.js 之前加载
+// 图标网址：https://icon-sets.iconify.design/material-symbols
 window.IconifyPreload = [
   {
     prefix: 'material-symbols',

@@ -5,6 +5,7 @@ import com.nova.annotation.fun.Details;
 import com.nova.annotation.fun.Fetch;
 import com.nova.annotation.fun.PromptSearch;
 import com.nova.annotation.sub.nova.field.Edit;
+import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 import com.nova.service.NovaTableService;
@@ -16,10 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -244,6 +242,25 @@ public class NovaTableServiceImpl implements NovaTableService {
                 .setLinkReferenceField(linkTargetInfo.getLinkReferenceField())
                 .setLinkStorageField(linkTargetInfo.getLinkStorageField());
         vo.setLinkTarget(linkTarget);
+        // 获取自定义按钮信息
+        List<RowOperation> rowOperations = NovaUtils.getRowOperation(novaTableBuild.getNovaName());
+        List<NovaTableBuild.Vo.RowOperationInfo> rowOperationInfos = new ArrayList<>();
+        for (RowOperation rowOperation : rowOperations) {
+            NovaTableBuild.Vo.RowOperationInfo rowOperationInfo = new NovaTableBuild.Vo.RowOperationInfo()
+                    .setTitle(rowOperation.title())
+                    .setTip("".equals(rowOperation.tip()) ? rowOperation.title() : rowOperation.tip())
+                    .setCallHint(rowOperation.callHint())
+                    .setColor(rowOperation.color())
+                    .setIcon(rowOperation.icon())
+                    .setMode(rowOperation.mode().name())
+                    .setType(rowOperation.type().name())
+                    .setIfExpr(rowOperation.ifExpr())
+                    .setNovaClassName(rowOperation.novaClass().getSimpleName())
+                    .setOperationParam(Arrays.asList(rowOperation.operationParam()))
+                    .setOperationHandler(rowOperation.operationHandler().getName());
+            rowOperationInfos.add(rowOperationInfo);
+        }
+        vo.setRowOperations(rowOperationInfos);
         return vo;
     }
 
