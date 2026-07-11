@@ -134,6 +134,23 @@ function evalShowExpr(expr, formData) {
 window.evalShowExpr = evalShowExpr
 // ────────────────────────────────────────────────────────────────
 
+  // 工具函数：将表单字段 + 数据转为 List<FormInfo>
+  function _buildFormInfoList(fields, data, refMap) {
+    var fm = refMap || {}
+    return (fields || []).filter(function(f) { return f.type !== 'DIVIDE' && f.type !== 'EMPTY' }).map(function(f) {
+      var val = data[f.field]
+      var strVal = (val === null || val === undefined || val === '') ? '' : (Array.isArray(val) ? val.join(',') : String(val))
+      var item = { field: f.field, value: strVal, type: f.type }
+      if (f.type === 'REFERENCE') {
+        var refInfo = fm[f.field] || {}
+        if (refInfo.referenceField) item.reference = { field: refInfo.referenceField }
+      }
+      return item
+    })
+  }
+
+  // ────────────────────────────────────────────────────────────────
+
 const NovaTable = {
   name: 'NovaTable',
 
@@ -622,7 +639,7 @@ const NovaTable = {
               var triggerEl = h('span', { class: 'row-action-btn', style: btnStyle, title: btnTitle }, btn.title)
               var handler = function() {
                 if (btn.type === 'NOVA' && btn.novaClassName) { vm.openOpForm(btn, row); return }
-                console.log('[CustomBtn] row:', btn.title, 'row:', row)
+                vm.submitCustomBtn(btn, row)
               }
               if (enabled && btn.callHint) {
                 buttons.push(h(NPopconfirm, {
@@ -647,7 +664,7 @@ const NovaTable = {
                   if (!btn) return
                   var action = function() {
                     if (btn.type === 'NOVA' && btn.novaClassName) { vm.openOpForm(btn, row); return }
-                    console.log('[CustomBtn] row folded:', btn.title, 'row:', row)
+                    vm.submitCustomBtn(btn, row)
                   }
                   if (btn.callHint) { window.msg.confirm('warning', '确认操作', btn.callHint, action) }
                   else { action() }
@@ -1114,12 +1131,49 @@ const NovaTable = {
     handleEdit(row)     { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleEdit(row, this._vmKey); else window.NovaTableJQ.handleEdit(row) },
     handleDelete(row)   { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleDelete(row, this._vmKey); else window.NovaTableJQ.handleDelete(row) },
     handleBatchDelete() { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleBatchDelete(this._vmKey); else window.NovaTableJQ.handleBatchDelete() },
+    submitCustomBtn(btn, row) {
+      var self = this
+      var novaIds = []
+      if (row) {
+        // 行按钮：取当前行主键，与 mode 无关
+        var pk = row[this.novaIdFieldName]
+        if (pk != null) novaIds.push(String(pk))
+      } else if (btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') {
+        // 工具栏按钮：取勾选行
+        novaIds = this.checkedRowKeys.map(function(k) { return String(k) })
+      }
+      $.ajax({
+        url: '/nova/table/rowOperationSubmit',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          novaName: this.novaName,
+          type: btn.type,
+          novaIds: novaIds,
+          operationHandler: btn.operationHandler,
+          operationParam: btn.operationParam || '',
+          novaFromName: btn.novaClassName || null,
+          formInfo: [],
+          appendageFormInfo: {}
+        }),
+        success: function(resp) {
+          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '操作失败'); return }
+          if (window.$message) window.$message.success('操作成功')
+          if (resp.data && resp.data.jsExpression) {
+            try { new Function(resp.data.jsExpression)() } catch(e) { console.error('[CustomBtn] jsExpression error:', e) }
+          }
+          if (typeof loadData === 'function') loadData(self.vmKey || self.novaName)
+        },
+        error: function() { if (window.$message) window.$message.error('请求失败') }
+      })
+    },
     handleCustomBtnClick(btn) {
       if (btn.type === 'NOVA' && btn.novaClassName) {
         this.openOpForm(btn, null)
         return
       }
-      var action = function() { console.log('[CustomBtn] toolbar:', btn.title) }
+      var self = this
+      var action = function() { self.submitCustomBtn(btn, null) }
       if (btn.callHint) { window.msg.confirm('warning', '确认操作', btn.callHint, action) }
       else { action() }
     },
@@ -1224,9 +1278,16 @@ const NovaTable = {
     },
     opFormTabRequiredCount(tabName) {
       var self = this
+      var isEmpty = function(f, val) {
+        if (f.type === 'REFERENCE') return !val || val === ''
+        if (val === null || val === undefined || val === '') return true
+        if (Array.isArray(val)) return val.length === 0
+        return false
+      }
       if (tabName === 'form') {
         return (self.visibleOpFormFields || []).filter(function(item) {
-          return item.visible && item.field.notNull
+          if (!item.visible || !item.field.notNull) return false
+          return isEmpty(item.field, self.opFormData[item.field.field])
         }).length
       }
       if (tabName.startsWith('app_')) {
@@ -1242,8 +1303,9 @@ const NovaTable = {
         }
         return fields.filter(function(f) {
           if (!f.notNull) return false
+          if (f.type === 'REFERENCE' && refMap[f.field] && refMap[f.field].referenceName === self.opFormNovaName) return false
           if (f.showByExpr && !evalShowExpr(f.showByExpr, evalFd)) return false
-          return true
+          return isEmpty(f, fd[f.field])
         }).length
       }
       return 0
@@ -1339,9 +1401,49 @@ const NovaTable = {
       this.opFormAppFormErrors = newAppErrors
       if (firstErrAppTab) { this.opFormTab = 'app_' + firstErrAppTab; return }
 
-      // TODO: 等 operation 端点就绪后对接
-      console.log('[OpForm] submit:', this.opFormBtn && this.opFormBtn.novaClassName, this.opFormData, this.opFormAppFormData)
-      this.closeOpForm()
+      // 组装选中行 ID 列表
+      var novaIds = []
+      if (this.opFormBtn && this.opFormBtn.mode === 'SINGLE' && this.opFormRow) {
+        var pk = this.opFormRow[this.novaIdFieldName]
+        if (pk != null) novaIds.push(String(pk))
+      } else if (this.opFormBtn && (this.opFormBtn.mode === 'MULTI' || this.opFormBtn.mode === 'MULTI_ONLY')) {
+        novaIds = this.checkedRowKeys.map(function(k) { return String(k) })
+      }
+      // 组装主表单数据
+      var formInfo = _buildFormInfoList(this.opFormFields, this.opFormData, this.opFormRefMap)
+      // 组装附属表单数据
+      var appendageFormInfo = {}
+      ;(this.opFormExtraTabs || []).forEach(function(tab) {
+        var n = tab.tapNovaName
+        var build = self.opFormAppTabBuild[n] || {}
+        var fd = self.opFormAppFormData[n] || {}
+        appendageFormInfo[n] = _buildFormInfoList(build.editFields || [], fd, build.referenceMap || {})
+      })
+      $.ajax({
+        url: '/nova/table/rowOperationSubmit',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          novaName: this.novaName,
+          type: this.opFormBtn.type,
+          novaIds: novaIds,
+          operationHandler: this.opFormBtn.operationHandler,
+          operationParam: this.opFormBtn.operationParam || '',
+          novaFromName: this.opFormBtn.novaClassName,
+          formInfo: formInfo,
+          appendageFormInfo: appendageFormInfo
+        }),
+        success: function(resp) {
+          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '提交失败'); return }
+          self.closeOpForm()
+          if (window.$message) window.$message.success('操作成功')
+          if (resp.data && resp.data.jsExpression) {
+            try { new Function(resp.data.jsExpression)() } catch(e) { console.error('[OpForm] jsExpression error:', e) }
+          }
+          if (typeof loadData === 'function') loadData(self.vmKey || self.novaName)
+        },
+        error: function() { if (window.$message) window.$message.error('请求失败') }
+      })
     },
     handleOpAttachmentChange(f, event) {
       var files = Array.from(event.target.files || [])

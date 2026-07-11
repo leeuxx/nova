@@ -5,19 +5,21 @@ import com.nova.annotation.fun.Details;
 import com.nova.annotation.fun.Fetch;
 import com.nova.annotation.fun.PromptSearch;
 import com.nova.annotation.sub.nova.field.Edit;
+import com.nova.annotation.sub.nova.row.OperationHandler;
 import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 import com.nova.service.NovaTableService;
-import com.nova.utils.DataProxyUtils;
-import com.nova.utils.MixUtils;
-import com.nova.utils.NovaFieldUtils;
-import com.nova.utils.NovaUtils;
+import com.nova.utils.*;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -256,7 +258,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                     .setType(rowOperation.type().name())
                     .setIfExpr(rowOperation.ifExpr())
                     .setNovaClassName(rowOperation.novaClass().getSimpleName().equals("void") ? null : rowOperation.novaClass().getSimpleName())
-                    .setOperationParam(Arrays.asList(rowOperation.operationParam()))
+                    .setOperationParam(rowOperation.operationParam())
                     .setOperationHandler(rowOperation.operationHandler().getName());
             rowOperationInfos.add(rowOperationInfo);
         }
@@ -478,6 +480,64 @@ public class NovaTableServiceImpl implements NovaTableService {
         //noinspection unchecked,rawtypes
         ((DataProxy) DataProxyUtils.getDataProxy(novaName)).delete(models);
         return new NovaTableDelete.Vo();
+    }
+
+    @Override
+    @SneakyThrows
+    public NovaTableRowOperationSubmit.Vo rowOperationSubmit(NovaTableRowOperationSubmit req) {
+        String type = req.getType();
+        if (type.equals(RowOperation.Type.NOVA.name())) {
+            // 从表单数据构建 NovaForm 对象
+            Object novaForm = null;
+            String novaFormName = req.getNovaFromName();
+            if (novaFormName != null && !novaFormName.isEmpty() && req.getFormInfo() != null) {
+                List<String> formCols = new ArrayList<>();
+                List<String> formVals = new ArrayList<>();
+                for (NovaTableRowOperationSubmit.FormInfo fi : req.getFormInfo()) {
+                    if (Edit.Type.REFERENCE.name().equals(fi.getType())) {
+                        continue;
+                    }
+                    formCols.add(MixUtils.camelToSnake(fi.getField()));
+                    formVals.add((fi.getValue() == null || fi.getValue().isEmpty()) ? null : fi.getValue());
+                }
+                novaForm = DataProxyUtils.buildModel(novaFormName, formCols, formVals);
+                for (NovaTableRowOperationSubmit.FormInfo fi : req.getFormInfo()) {
+                    if (Edit.Type.REFERENCE.name().equals(fi.getType())) {
+                        DataProxyUtils.setReferenceField(novaFormName, novaForm, fi.getField(), fi.getValue());
+                    }
+                }
+                // 处理附属表单
+                Map<String, List<NovaTableRowOperationSubmit.FormInfo>> appendageFormInfo = req.getAppendageFormInfo();
+                if (appendageFormInfo != null) {
+                    for (Map.Entry<String, List<NovaTableRowOperationSubmit.FormInfo>> entry : appendageFormInfo.entrySet()) {
+                        String appNovaName = entry.getKey();
+                        List<String> appCols = new ArrayList<>();
+                        List<String> appVals = new ArrayList<>();
+                        for (NovaTableRowOperationSubmit.FormInfo fi : entry.getValue()) {
+                            if (Edit.Type.REFERENCE.name().equals(fi.getType())) {
+                                continue;
+                            }
+                            appCols.add(MixUtils.camelToSnake(fi.getField()));
+                            appVals.add((fi.getValue() == null || fi.getValue().isEmpty()) ? null : fi.getValue());
+                        }
+                        Object appModel = DataProxyUtils.buildModel(appNovaName, appCols, appVals);
+                        for (NovaTableRowOperationSubmit.FormInfo fi : entry.getValue()) {
+                            if (Edit.Type.REFERENCE.name().equals(fi.getType())) {
+                                DataProxyUtils.setReferenceField(appNovaName, appModel, fi.getField(), fi.getValue());
+                            }
+                        }
+                        DataProxyUtils.setAppendageField(novaFormName, novaForm, appNovaName, appModel);
+                    }
+                }
+            }
+            // 调用 OperationHandler
+            List<String> novaIds = req.getNovaIds();
+            Class<?> operationHandlerClass = Class.forName(req.getOperationHandler());
+            OperationHandler operationHandler = (OperationHandler) SpringBeanUtils.getBean(operationHandlerClass);
+            String jsExpression = operationHandler.exec(novaIds, novaForm, req.getOperationParam());
+            return new NovaTableRowOperationSubmit.Vo().setJsExpression(jsExpression);
+        }
+        return new NovaTableRowOperationSubmit.Vo();
     }
 
 }

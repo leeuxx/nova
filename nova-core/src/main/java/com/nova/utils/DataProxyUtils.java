@@ -47,7 +47,7 @@ public class DataProxyUtils {
                 Field f = clz.getDeclaredField(MixUtils.snakeToCamel(columns.get(i)));
                 f.setAccessible(true);
                 f.set(model, convertValue(value, f.getType()));
-            } catch (NoSuchFieldException ignored) {
+            } catch (NoSuchFieldException | IllegalArgumentException ignored) {
             }
         }
         return model;

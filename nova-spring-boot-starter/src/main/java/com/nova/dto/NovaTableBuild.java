@@ -1,7 +1,6 @@
 package com.nova.dto;
 
 import com.nova.annotation.config.Comment;
-import com.nova.utils.NovaFieldUtils;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -454,7 +453,7 @@ public class NovaTableBuild {
             private String novaClassName;
 
             @Comment("钩子透传参数")
-            private List<String> operationParam;
+            private String operationParam;
 
             @Comment("操作按钮点击后的后端钩子完全类名")
             private String operationHandler;

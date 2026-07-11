@@ -32,4 +32,7 @@ public interface NovaTableService {
     @Comment("删除表格数据")
     NovaTableDelete.Vo delete(NovaTableDelete novaTableDelete);
 
+    @Comment("自定义按钮提交")
+    NovaTableRowOperationSubmit.Vo rowOperationSubmit(NovaTableRowOperationSubmit novaTableRowOperationSubmit);
+
 }

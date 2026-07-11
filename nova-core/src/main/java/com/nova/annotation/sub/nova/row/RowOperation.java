@@ -32,7 +32,7 @@ public @interface RowOperation {
     Class<?> novaClass() default void.class;
 
     @Comment("该配置可在operationHandler中获取")
-    String[] operationParam() default {};
+    String operationParam() default "";
 
     @Comment("type为NOVA时可用，操作按钮点击后，后台处理逻辑")
     Class<? extends OperationHandler> operationHandler() default OperationHandler.class;

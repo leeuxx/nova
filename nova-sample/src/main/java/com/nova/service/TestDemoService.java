@@ -30,7 +30,7 @@ import java.util.Objects;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Lazy)
-public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemoView>, OperationHandler<TestDemoView, Object> {
+public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemoView>, OperationHandler<Long, Object> {
 
     private TestDemo2Service testDemo2Service;
 
@@ -167,7 +167,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     }
 
     @Override
-    public String exec(List<TestDemoView> data, Object o, String[] param) {
+    public String exec(List<Long> data, Object o, String param) {
         return null;
     }
 }

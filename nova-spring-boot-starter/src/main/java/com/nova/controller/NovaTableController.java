@@ -74,4 +74,11 @@ public class NovaTableController {
         return R.ok(delete);
     }
 
+    @Comment("行操作提交")
+    @PostMapping("rowOperationSubmit")
+    public R<NovaTableRowOperationSubmit.Vo> rowOperationSubmit(@RequestBody @Validated NovaTableRowOperationSubmit req) {
+        NovaTableRowOperationSubmit.Vo vo = novaTableService.rowOperationSubmit(req);
+        return R.ok(vo);
+    }
+
 }
