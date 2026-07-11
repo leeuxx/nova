@@ -2768,19 +2768,19 @@ const NovaTable = {
                   </n-radio-group>
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
-                  <span>表格大小</span>
-                  <n-radio-group v-model:value="tableSize" size="small">
-                    <n-radio-button value="small">紧凑</n-radio-button>
-                    <n-radio-button value="medium">默认</n-radio-button>
-                    <n-radio-button value="large">宽松</n-radio-button>
-                  </n-radio-group>
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
                   <span>加载动画</span>
                   <n-radio-group v-model:value="loadingStyle" size="small">
                     <n-radio-button value="wave">波浪</n-radio-button>
                     <n-radio-button value="spinner">默认</n-radio-button>
                     <n-radio-button value="dots">跳点</n-radio-button>
+                  </n-radio-group>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+                  <span>表格大小</span>
+                  <n-radio-group v-model:value="tableSize" size="small">
+                    <n-radio-button value="small">紧凑</n-radio-button>
+                    <n-radio-button value="medium">默认</n-radio-button>
+                    <n-radio-button value="large">宽松</n-radio-button>
                   </n-radio-group>
                 </div>
               </div>
