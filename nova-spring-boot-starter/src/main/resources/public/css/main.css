@@ -396,6 +396,15 @@ body.dark { background: #151515 !important; }
 .dark .n-pagination-item { background: #252525; }
 
 /* ─── 页面切换动画 ──────────────────────────────────────── */
+
+/* 左侧菜单项 hover 时图标放大 */
+.n-menu-item-content .n-icon {
+  transition: transform 0.2s ease;
+}
+.n-menu-item-content:hover .n-icon {
+  transform: scale(1.20);
+}
+
 .page-fade-enter-active {
   animation: pageFadeIn 0.22s ease;
 }

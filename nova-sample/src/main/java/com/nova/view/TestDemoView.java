@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
         dataProxy = TestDemoService.class,
         rowOperation = {
                 @RowOperation(
-                        title = "测试按钮",
+                        title = "下发指令",
                         tip = "测试功能是否正常",
                         callHint = "确认执行操作？",
                         mode = RowOperation.Mode.SINGLE,
