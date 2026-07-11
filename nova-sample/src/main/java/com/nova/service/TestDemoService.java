@@ -41,7 +41,9 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         return Arrays.asList(
                 new VLModel().setValue("1").setLabel("篮球"),
                 new VLModel().setValue("2").setLabel("羽毛球").setColor("#fe6767"),
-                new VLModel().setValue("3").setLabel("LOL")
+                new VLModel().setValue("3").setLabel("LOL"),
+                new VLModel().setValue("4").setLabel("大象"),
+                new VLModel().setValue("5").setLabel("编程")
         );
     }
 

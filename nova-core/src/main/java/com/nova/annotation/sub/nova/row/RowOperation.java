@@ -13,8 +13,8 @@ public @interface RowOperation {
     @Comment("调用提示,空则不提示")
     String callHint() default "";
 
-    @Comment("按钮是否折叠显示")
-    boolean fold() default true;
+    @Comment("标题颜色,单行且不折叠时有效")
+    String color() default "";
 
     @Comment("图标")
     String icon() default "";

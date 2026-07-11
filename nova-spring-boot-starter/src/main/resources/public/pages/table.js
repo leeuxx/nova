@@ -296,8 +296,8 @@ const NovaTable = {
     },
     rowActionColWidth() {
       var btns = (this.customButtons || []).filter(function(b) { return b.mode === 'SINGLE' || b.mode === 'MULTI' })
-      var unfolded = btns.filter(function(b) { return !b.fold }).length
-      var hasFolded = btns.some(function(b) { return b.fold })
+      var unfolded = btns.length > 0 ? 1 : 0
+      var hasFolded = btns.length > 1
       var w = this.linkMode ? 45 : 85     // 编辑+删除(85) / 仅删除(45)
       w += unfolded * 60                  // 每个非折叠按钮
       if (hasFolded) w += 38              // 更多图标
@@ -307,10 +307,10 @@ const NovaTable = {
       return (this.customButtons || []).filter(b => b.mode === 'MULTI' || b.mode === 'MULTI_ONLY' || b.mode === 'BUTTON')
     },
     toolbarUnfoldedButtons() {
-      return this.toolbarCustomButtons.filter(b => !b.fold)
+      return this.toolbarCustomButtons.slice(0, 1)
     },
     toolbarFoldedButtons() {
-      return this.toolbarCustomButtons.filter(b => b.fold)
+      return this.toolbarCustomButtons.slice(1)
     },
     toolbarFoldedOptions() {
       var self = this
@@ -576,8 +576,8 @@ const NovaTable = {
             ))
             // ── 自定义按钮：SINGLE / MULTI（行操作区）────────────────
             var rowBtns = vm.rowCustomButtons || []
-            var rowUnfolded = rowBtns.filter(function(b) { return !b.fold })
-            var rowFolded   = rowBtns.filter(function(b) { return b.fold })
+            var rowUnfolded = rowBtns.slice(0, 1)
+            var rowFolded   = rowBtns.slice(1)
             rowUnfolded.forEach(function(btn) {
               buttons.push(h('span', {
                 class: 'row-action-btn',
@@ -2034,13 +2034,6 @@ const NovaTable = {
             <span v-else style="font-size:16px;font-weight:500">数据列表</span>
             <div style="display:flex;gap:8px">
             <!-- ── 自定义按钮：MULTI / MULTI_ONLY / BUTTON（工具栏）─── -->
-            <n-button v-for="btn in toolbarUnfoldedButtons" :key="btn.title" :size="embSize" type="default"
-              :disabled="(btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && checkedRowKeys.length === 0"
-              :title="btn.tip || btn.title"
-              @click="console.log('[CustomBtn] toolbar:', btn.title)">
-              <template #icon><n-icon size="15"><iconify-icon :icon="btn.icon" style="font-size:15px"></iconify-icon></n-icon></template>
-              {{ btn.title }}
-            </n-button>
             <n-dropdown v-if="toolbarFoldedButtons.length > 0"
               trigger="hover"
               :options="toolbarFoldedOptions"
@@ -2049,6 +2042,13 @@ const NovaTable = {
                 <template #icon><n-icon size="16"><iconify-icon icon="material-symbols:more-horiz"></iconify-icon></n-icon></template>
               </n-button>
             </n-dropdown>
+            <n-button v-for="btn in toolbarUnfoldedButtons" :key="btn.title" :size="embSize" type="default"
+              :disabled="(btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && checkedRowKeys.length === 0"
+              :title="btn.tip || btn.title"
+              @click="console.log('[CustomBtn] toolbar:', btn.title)">
+              <template #icon><n-icon size="15"><iconify-icon :icon="btn.icon" style="font-size:15px"></iconify-icon></n-icon></template>
+              {{ btn.title }}
+            </n-button>
             <n-button v-if="checkedRowKeys.length > 0 && !readonly" :size="embSize" type="error" @click="handleBatchDelete">
               <template #icon><n-icon><iconify-icon icon="material-symbols:delete-outline"></iconify-icon></n-icon></template>
               删 除
