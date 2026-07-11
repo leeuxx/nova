@@ -7,7 +7,6 @@ import com.nova.annotation.fun.PromptSearch;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.row.OperationHandler;
 import com.nova.annotation.sub.nova.row.RowOperation;
-import com.nova.config.NovaApplication;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 import com.nova.service.NovaTableService;

@@ -9,6 +9,7 @@ import com.nova.annotation.fun.DataProxy;
 import com.nova.annotation.fun.Details;
 import com.nova.annotation.fun.Fetch;
 import com.nova.annotation.sub.nova.field.edit.ChoiceFetchHandler;
+import com.nova.annotation.sub.nova.row.ExprBool;
 import com.nova.annotation.sub.nova.row.OperationHandler;
 import com.nova.entity.TestDemo;
 import com.nova.entity.TestDemo2;
@@ -31,7 +32,7 @@ import java.util.Objects;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Lazy)
-public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemoView>, OperationHandler<Long, Object> {
+public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemoView>, OperationHandler<Long, Object>, ExprBool.ExprHandler {
 
     private TestDemo2Service testDemo2Service;
 
@@ -196,5 +197,13 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
             System.out.println(testRow);
         }
         return null;
+    }
+
+    @Override
+    public boolean handler(String params) {
+        if (params.equals("1")) {
+            return true;
+        }
+        return false;
     }
 }

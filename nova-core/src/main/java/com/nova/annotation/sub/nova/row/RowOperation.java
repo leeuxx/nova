@@ -25,8 +25,11 @@ public @interface RowOperation {
     @Comment("功能类型")
     Type type() default Type.NOVA;
 
-    @Comment("单行按钮控制按钮可用与禁用（前端）")
+    @Comment("行级按钮控制可用与禁用（前端,每行数据一次）")
     String ifExpr() default "";
+
+    @Comment("所有按钮控制显示与隐藏（后端,仅该按钮一次）")
+    ExprBool show() default @ExprBool;
 
     @Comment("按钮提交时，需要填写的表单信息")
     Class<?> novaClass() default void.class;

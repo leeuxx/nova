@@ -7,6 +7,7 @@ import com.nova.annotation.sub.nova.Layout;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
+import com.nova.annotation.sub.nova.row.ExprBool;
 import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.service.TestDemoService;
 import com.nova.utils.VoidDataProxy;
@@ -35,7 +36,11 @@ import java.time.LocalDateTime;
                         ifExpr = "sex == '男'",
                         novaClass = TestDemoView.TestRow.class,
                         operationHandler = TestDemoService.class,
-                        operationParam = "1"
+                        operationParam = "1",
+                        show = @ExprBool(
+                                exprHandler = TestDemoService.class,
+                                params = "1"
+                        )
                 ),
                 @RowOperation(
                         title = "完结订单",

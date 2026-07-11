@@ -3,15 +3,13 @@ package com.nova.utils;
 import com.nova.annotation.Nova;
 import com.nova.annotation.config.Comment;
 import com.nova.annotation.sub.nova.Layout;
+import com.nova.annotation.sub.nova.row.ExprBool;
 import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.config.NovaApplication;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class NovaUtils {
@@ -58,12 +56,31 @@ public class NovaUtils {
      * @return 自定义按钮信息
      */
     public static List<RowOperation> getRowOperation(String className) {
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        NovaApplication.ScanNova scanNova = NovaApplication.getScanNovas().get(className);
         if (scanNova == null) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
-        return scanNova.getRowOperations();
+        List<RowOperation> result = new ArrayList<>();
+        for (RowOperation operation : scanNova.getRowOperations()) {
+            ExprBool exprBool = operation.show();
+            if (!exprBool.value()) {
+                continue;
+            }
+            Class<? extends ExprBool.ExprHandler>[] handlers = exprBool.exprHandler();
+            if (handlers.length == 0) {
+                result.add(operation);
+                continue;
+            }
+            String params = exprBool.params();
+            for (Class<? extends ExprBool.ExprHandler> handlerClass : handlers) {
+                ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlerClass);
+                if (handler.handler(params)) {
+                    result.add(operation);
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     @Data
