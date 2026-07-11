@@ -1170,8 +1170,9 @@ const NovaTable = {
           if (window.$message) window.$message.success('操作成功')
           if (resp.data && resp.data.jsExpression) {
             try { new Function(resp.data.jsExpression)() } catch(e) { console.error('[CustomBtn] jsExpression error:', e) }
+          } else {
+            if (window.NovaTableJQ) window.NovaTableJQ.loadData(self.vmKey || self.novaName)
           }
-          if (typeof loadData === 'function') loadData(self.vmKey || self.novaName)
         },
         error: function() { if (window.$message) window.$message.error('请求失败') }
       })
@@ -1533,8 +1534,9 @@ const NovaTable = {
           if (window.$message) window.$message.success('操作成功')
           if (resp.data && resp.data.jsExpression) {
             try { new Function(resp.data.jsExpression)() } catch(e) { console.error('[OpForm] jsExpression error:', e) }
+          } else {
+            if (window.NovaTableJQ) window.NovaTableJQ.loadData(self.vmKey || self.novaName)
           }
-          if (typeof loadData === 'function') loadData(self.vmKey || self.novaName)
         },
         error: function() { if (window.$message) window.$message.error('请求失败') }
       })
