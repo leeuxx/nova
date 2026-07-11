@@ -144,7 +144,9 @@ function mountApp(menuList, config) {
       const route  = useRoute()
 
       const collapsed  = ref(false)
-      const isDark     = ref(config.theme.default === 'night')
+      // 优先读取前端缓存的主题，未缓存时回退到配置默认值
+      const savedTheme = localStorage.getItem('nova-theme')
+      const isDark     = ref(savedTheme !== null ? savedTheme === 'night' : config.theme.default === 'night')
       const togglePos = config.menu.toggle.default
       const openedTabs = ref([])
       const activeTab  = ref('')
@@ -153,7 +155,10 @@ function mountApp(menuList, config) {
 
       const theme = computed(() => isDark.value ? darkTheme : null)
 
-      watch(isDark, (val) => { document.body.classList.toggle('dark', val) }, { immediate: true })
+      watch(isDark, (val) => {
+        document.body.classList.toggle('dark', val)
+        localStorage.setItem('nova-theme', val ? 'night' : 'daytime')
+      }, { immediate: true })
 
       // 暴露黑夜模式状态给子组件
       window.__appDarkMode = isDark

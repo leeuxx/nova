@@ -263,8 +263,10 @@ const NovaTable = {
       opFormAppFormData:  {},      // 附属表单数据
       opFormAppFormErrors:{},      // 附属表单校验错误
       formErrors:     {},
-      striped:        true,
-      tableSize:      'medium',
+      striped:        localStorage.getItem('nova-table-striped') !== null
+                        ? localStorage.getItem('nova-table-striped') === 'true'
+                        : true,
+      tableSize:      localStorage.getItem('nova-table-size') || 'medium',
       pageSize:       10,
       pageSizes:      [10, 20, 50, 100],
       loading:          false,
@@ -702,6 +704,12 @@ const NovaTable = {
     },
 
   watch: {
+    striped(val) {
+      localStorage.setItem('nova-table-striped', val ? 'true' : 'false')
+    },
+    tableSize(val) {
+      localStorage.setItem('nova-table-size', val)
+    },
     dualTableViewActive(val) {
       if (!this.dualMode) {
         this.paginationConfig.pageSlot = val ? 5 : 9
