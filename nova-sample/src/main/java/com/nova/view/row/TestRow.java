@@ -6,9 +6,7 @@ import com.nova.annotation.config.NovaId;
 import com.nova.annotation.sub.nova.Layout;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
-import com.nova.annotation.sub.nova.field.edit.DateType;
-import com.nova.annotation.sub.nova.field.edit.ReferenceType;
-import com.nova.annotation.sub.nova.field.edit.Search;
+import com.nova.annotation.sub.nova.field.edit.*;
 import com.nova.service.TestDemoService;
 import com.nova.view.TestDemo2View;
 import lombok.Data;
@@ -58,13 +56,29 @@ public class TestRow {
 
     @NovaField(
             edit = @Edit(
-                    title = "创建时间",
-                    type = Edit.Type.DATE,
-                    dateType = @DateType,
-                    notNull = true
+                    title = "爱好",
+                    notNull = true,
+                    type = Edit.Type.CHOICE,
+                    choiceType = @ChoiceType(
+                            selectType = ChoiceType.SelectType.MULTI,
+                            fetchHandler = TestDemoService.class
+                    )
             )
     )
-    private LocalDateTime createTime;
+    private String hobby;
+
+    @NovaField(
+            edit = @Edit(
+                    title = "文件",
+                    type = Edit.Type.ATTACHMENT,
+                    attachmentType = @AttachmentType(
+                            type = AttachmentType.Type.IMAGE,
+                            showType = AttachmentType.ShowType.TOP,
+                            maxLimit = 7
+                    )
+            )
+    )
+    private String file;
 
     @NovaField(
             edit = @Edit(
@@ -72,5 +86,14 @@ public class TestRow {
             )
     )
     private String msg;
+
+    @NovaField(
+            edit = @Edit(
+                    title = "创建时间",
+                    type = Edit.Type.DATE,
+                    dateType = @DateType
+            )
+    )
+    private LocalDateTime createTime;
 
 }
