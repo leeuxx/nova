@@ -24,6 +24,7 @@ const {
   NMenu, NIcon, NDropdown, NSpace, NTabs, NTab, NSpin, NSwitch,
   NBreadcrumb, NBreadcrumbItem, NBadge,
   NMessageProvider, NDialogProvider, NNotificationProvider,
+  useDialog, useMessage,
   darkTheme, zhCN, dateZhCN
 } = naive
 
@@ -126,8 +127,18 @@ function mountApp(menuList, config) {
   var defaultPath = processed.defaultPath
   var parentKeyMap = processed.parentKeyMap
 
+  // ── 桥接组件：从 provider 内部获取 dialog/message，天然继承主题 ──
+  const DialogBridge = {
+    setup() {
+      window.$dialog  = useDialog()
+      window.$message = useMessage()
+    },
+    template: '<div style="display:none"></div>'
+  }
+
   // ── 布局组件 ──────────────────────────────────────────────────
   const App = {
+    components: { DialogBridge },
     setup() {
       const router = useRouter()
       const route  = useRoute()
@@ -237,6 +248,7 @@ function mountApp(menuList, config) {
       <n-config-provider :theme="theme" :theme-overrides="themeOverrides" :locale="zhCN" :date-locale="dateZhCN">
         <n-message-provider>
           <n-dialog-provider>
+            <dialog-bridge />
             <n-notification-provider>
               <n-layout has-sider style="height:100vh">
 
@@ -351,13 +363,6 @@ function mountApp(menuList, config) {
   })
 
   // ── 挂载 ────────────────────────────────────────────────────────
-  const { message, dialog } = naive.createDiscreteApi(
-    ['message', 'dialog'],
-    { configProviderProps: { themeOverrides: themeOverrides } }
-  )
-  window.$message = message
-  window.$dialog  = dialog
-
   const app = createApp(App)
   app.use(naive)
   app.use(router)
