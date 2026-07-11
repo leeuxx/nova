@@ -15,8 +15,8 @@ import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
-import org.reflections.scanners.TypeAnnotationsScanner;
+import org.reflections.scanners.Scanners;
+import org.reflections.util.ConfigurationBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
@@ -54,13 +54,17 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
         } else {
             Stream.of(novaScan.value()).filter(pack -> !pack.equals(NovaConst.BASE_PACKAGE)).forEach(scanPackage::add);
         }
-        // 创建注解缓存
-        Reflections reflections = new Reflections(scanPackage,
-                new SubTypesScanner(false),    // 扫描子类型
-                new TypeAnnotationsScanner()    // 扫描类型注解
+        // 创建 Reflections 实例
+        Reflections reflections = new Reflections(
+                new ConfigurationBuilder()
+                        .forPackages(scanPackage.toArray(String[]::new))
+                        .setScanners(
+                                Scanners.TypesAnnotated, // 扫描类上的注解
+                                Scanners.SubTypes // 扫描子类型（包含内部类）
+                        )
         );
-        // 获取所有带有 @Nova 注解的类
-        Set<Class<?>> novaClasses = reflections.getTypesAnnotatedWith(Nova.class);
+        // 获取所有带 @Nova 注解的类
+        Set<Class<?>> novaClasses = reflections.get(Scanners.TypesAnnotated.with(Nova.class).asClass());
         for (Class<?> clz : novaClasses) {
             String novaIdFieldName = null;
             Map<String, ScanNova.NovaFieldInfo> novaFields = new LinkedHashMap<>();

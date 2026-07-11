@@ -18,7 +18,6 @@ import com.nova.utils.NovaQueryUtils;
 import com.nova.view.TestDemo2View;
 import com.nova.view.TestDemo3View;
 import com.nova.view.TestDemoView;
-import com.nova.view.row.TestRow;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
@@ -170,7 +169,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
 
     @Override
     public Object novaFormValue(List<Long> novaIds, String param) {
-        return new TestRow()
+        return new TestDemoView.TestRow()
                 .setName("张三")
                 .setTestDemo2View(new TestDemo2View()
                         .setId(1L)
@@ -192,6 +191,10 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
 
     @Override
     public String exec(List<Long> novaIds, Object o, String param) {
+        if (param.equals("1")) {
+            TestDemoView.TestRow testRow = (TestDemoView.TestRow) o;
+            System.out.println(testRow);
+        }
         return null;
     }
 }
