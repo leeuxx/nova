@@ -5,9 +5,9 @@ import com.nova.annotation.NovaField;
 import com.nova.annotation.config.NovaId;
 import com.nova.annotation.sub.nova.Layout;
 import com.nova.annotation.sub.nova.field.Edit;
-import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
 import com.nova.service.TestDemoService;
+import com.nova.utils.VoidDataProxy;
 import com.nova.view.TestDemo2View;
 import com.nova.view.TestDemo3View;
 import lombok.Data;
@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
         layout = @Layout(
                 editLayout = Layout.EditLayout.DEFAULT
         ),
-        dataProxy = TestDemoService.class
+        dataProxy = VoidDataProxy.class
 )
 public class TestRow {
 
