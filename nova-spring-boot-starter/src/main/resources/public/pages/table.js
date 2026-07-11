@@ -2714,18 +2714,27 @@ const NovaTable = {
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
               新 增
             </n-button>
-            <n-button :size="embSize" circle class="btn-circle" style="background:transparent" @click="handleQuery">
-              <template #icon><n-icon size="15"><iconify-icon icon="lucide:refresh-cw" style="font-size:15px"></iconify-icon></n-icon></template>
-            </n-button>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button :size="embSize" circle class="btn-circle" style="background:transparent" @click="handleQuery">
+                  <template #icon><n-icon size="15"><iconify-icon icon="lucide:refresh-cw" style="font-size:15px"></iconify-icon></n-icon></template>
+                </n-button>
+              </template>
+              刷新
+            </n-tooltip>
             <!-- 多子表：带悬浮下拉 -->
             <n-popover v-if="dualTableEnabled && !dualMode && dualTableSubTables.length > 1" trigger="hover" placement="bottom" :show-arrow="false">
               <template #trigger>
-                <n-button :size="embSize" circle class="btn-circle" type="default"
-                :style="dualTableViewActive ? { color: '#2563eb', background: 'transparent' } : { background: 'transparent' }"
-                @click="toggleDualTableView"
-                :title="dualTableViewActive ? '关闭双表视图' : '开启双表视图'">
-                <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
-              </n-button>
+                <n-tooltip trigger="hover">
+                  <template #trigger>
+                    <n-button :size="embSize" circle class="btn-circle" type="default"
+                    :style="dualTableViewActive ? { color: '#2563eb', background: 'transparent' } : { background: 'transparent' }"
+                    @click="toggleDualTableView">
+                    <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
+                  </n-button>
+                  </template>
+                  {{ dualTableViewActive ? '关闭双表视图' : '开启双表视图' }}
+                </n-tooltip>
               </template>
               <div style="display:flex;flex-direction:column;gap:2px;font-size:13px;min-width:120px;padding:4px 0">
                   <div v-for="s in dualTableSubTables" :key="s.novaName"
@@ -2739,17 +2748,26 @@ const NovaTable = {
                 </div>
             </n-popover>
             <!-- 单子表：仅按钮，无下拉 -->
-            <n-button v-if="dualTableEnabled && !dualMode && dualTableSubTables.length === 1" :size="embSize" circle class="btn-circle" type="default"
-              :style="dualTableViewActive ? { color: '#2563eb', background: 'transparent' } : { background: 'transparent' }"
-              @click="toggleDualTableView"
-              :title="dualTableViewActive ? '关闭双表视图' : '开启双表视图'">
-              <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
-            </n-button>
+            <n-tooltip v-if="dualTableEnabled && !dualMode && dualTableSubTables.length === 1" trigger="hover">
+              <template #trigger>
+                <n-button :size="embSize" circle class="btn-circle" type="default"
+                  :style="dualTableViewActive ? { color: '#2563eb', background: 'transparent' } : { background: 'transparent' }"
+                  @click="toggleDualTableView">
+                  <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
+                </n-button>
+              </template>
+              {{ dualTableViewActive ? '关闭双表视图' : '开启双表视图' }}
+            </n-tooltip>
             <n-popover trigger="click" placement="bottom-end">
               <template #trigger>
-                <n-button :size="embSize" circle class="btn-circle" style="background:transparent">
-                  <template #icon><n-icon size="15"><iconify-icon icon="lucide:settings" style="font-size:15px"></iconify-icon></n-icon></template>
-                </n-button>
+                <n-tooltip trigger="hover">
+                  <template #trigger>
+                    <n-button :size="embSize" circle class="btn-circle" style="background:transparent">
+                      <template #icon><n-icon size="15"><iconify-icon icon="lucide:settings" style="font-size:15px"></iconify-icon></n-icon></template>
+                    </n-button>
+                  </template>
+                  设置
+                </n-tooltip>
               </template>
               <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;min-width:160px">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
