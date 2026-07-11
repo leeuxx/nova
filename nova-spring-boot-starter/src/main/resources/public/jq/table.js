@@ -900,22 +900,8 @@ window.NovaTableJQ = (function ($) {
     if (!target) return
     var novaIdField = target.novaIdFieldName
     var keys = target.checkedRowKeys.map(function (k) { return String(k) })
-    if (!window.$dialog) {
+    window.msg.confirm('warning', '确认删除', '确定删除选中的 ' + keys.length + ' 条数据吗？', function () {
       doDelete(target.novaName, novaIdField, keys, vmKey)
-      return
-    }
-    window.$dialog.create({
-      type:                'warning',
-      title:               '确认删除',
-      content:             '确定删除选中的 ' + keys.length + ' 条数据吗？',
-      positiveText:        '确定',
-      negativeText:        '取消',
-      style:               'margin-top:80px',
-      positiveButtonProps: { type: 'primary', size: 'medium' },
-      negativeButtonProps: { size: 'medium' },
-      onPositiveClick: function () {
-        doDelete(target.novaName, novaIdField, keys, vmKey)
-      }
     })
   }
 

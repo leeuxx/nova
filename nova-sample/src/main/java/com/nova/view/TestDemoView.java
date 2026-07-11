@@ -30,8 +30,9 @@ import java.time.LocalDateTime;
                 @RowOperation(
                         title = "测试按钮",
                         tip = "测试功能是否正常",
-                        color = "rgb(124, 58, 237)",
+                        callHint = "是否要执行该操作？",
                         mode = RowOperation.Mode.SINGLE,
+                        ifExpr = "sex == '男'",
                         novaClass = TestRow.class,
                         operationHandler = TestDemoService.class,
                         operationParam = "1"
@@ -45,6 +46,7 @@ import java.time.LocalDateTime;
                 ),
                 @RowOperation(
                         title = "关闭支付分",
+                        callHint = "关闭操作不可逆！",
                         icon = "material-symbols:amend-rounded",
                         mode = RowOperation.Mode.SINGLE,
                         operationHandler = TestDemoService.class,
@@ -52,6 +54,7 @@ import java.time.LocalDateTime;
                 ),
                 @RowOperation(
                         title = "下载报表",
+                        callHint = "这是异步操作！",
                         icon = "material-symbols:arrow-circle-down-outline",
                         mode = RowOperation.Mode.BUTTON,
                         operationHandler = TestDemoService.class,

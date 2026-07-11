@@ -447,7 +447,7 @@ public class NovaTableBuild {
             @Comment("功能类型")
             private String type;
 
-            @Comment("单行按钮控制按钮显示与隐藏（前端）")
+            @Comment("单行按钮控制按钮可用与禁用（前端）")
             private String ifExpr;
 
             @Comment("按钮提交时，需要填写的表单信息")

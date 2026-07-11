@@ -575,23 +575,35 @@ const NovaTable = {
             var rowUnfolded = rowBtns.slice(0, 1)
             var rowFolded   = rowBtns.slice(1)
             rowUnfolded.forEach(function(btn) {
-              buttons.push(h('span', {
-                class: 'row-action-btn',
-                style: { color: btn.color || '#7c3aed', cursor: 'pointer', fontSize: '13px' },
-                title: btn.tip || btn.title,
-                onClick: function() { console.log('[CustomBtn] row:', btn.title, 'row:', row) }
-              }, btn.title))
+              var enabled = !btn.ifExpr || window.evalShowExpr(btn.ifExpr, row)
+              var btnStyle = { color: enabled ? (btn.color || '#7c3aed') : '#ccc', cursor: enabled ? 'pointer' : 'not-allowed', fontSize: '13px' }
+              var btnTitle = enabled ? (btn.tip || btn.title) : (btn.tip || btn.title) + ' (不可用)'
+              var triggerEl = h('span', { class: 'row-action-btn', style: btnStyle, title: btnTitle }, btn.title)
+              var handler = function() { console.log('[CustomBtn] row:', btn.title, 'row:', row) }
+              if (enabled && btn.callHint) {
+                buttons.push(h(NPopconfirm, {
+                  onPositiveClick: handler, positiveText: '确定', negativeText: '取消'
+                }, { default: function() { return btn.callHint }, trigger: function() { return triggerEl } }))
+              } else if (enabled) {
+                buttons.push(h('span', { class: 'row-action-btn', style: btnStyle, title: btnTitle, onClick: handler }, btn.title))
+              } else {
+                buttons.push(triggerEl)
+              }
             })
             if (rowFolded.length > 0) {
               var foldedOpts = rowFolded.map(function(btn) {
-                return { label: btn.title, key: btn.title, icon: btn.icon ? function() { return h('iconify-icon', { icon: btn.icon }) } : undefined, props: btn.tip ? { title: btn.tip } : undefined }
+                var enabled = !btn.ifExpr || window.evalShowExpr(btn.ifExpr, row)
+                return { label: btn.title, key: btn.title, disabled: !enabled, icon: btn.icon ? function() { return h('iconify-icon', { icon: btn.icon }) } : undefined, props: btn.tip ? { title: btn.tip } : undefined }
               })
               buttons.push(h(NDropdown, {
                 options: foldedOpts,
                 trigger: 'hover',
                 onSelect: function(key) {
                   var btn = rowFolded.find(function(b) { return b.title === key })
-                  if (btn) console.log('[CustomBtn] row folded:', btn.title, 'row:', row)
+                  if (!btn) return
+                  var action = function() { console.log('[CustomBtn] row folded:', btn.title, 'row:', row) }
+                  if (btn.callHint) { window.msg.confirm('warning', '确认操作', btn.callHint, action) }
+                  else { action() }
                 }
               }, {
                 default: function() {
@@ -973,6 +985,11 @@ const NovaTable = {
     handleEdit(row)     { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleEdit(row, this._vmKey); else window.NovaTableJQ.handleEdit(row) },
     handleDelete(row)   { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleDelete(row, this._vmKey); else window.NovaTableJQ.handleDelete(row) },
     handleBatchDelete() { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleBatchDelete(this._vmKey); else window.NovaTableJQ.handleBatchDelete() },
+    handleCustomBtnClick(btn) {
+      var action = function() { console.log('[CustomBtn] toolbar:', btn.title) }
+      if (btn.callHint) { window.msg.confirm('warning', '确认操作', btn.callHint, action) }
+      else { action() }
+    },
     handleFormSubmit()  { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleFormSubmit(this._vmKey); else window.NovaTableJQ.handleFormSubmit() },
     handleAttachmentChange(f, event, appNovaName) {
       const files = Array.from(event.target.files || [])
@@ -2033,18 +2050,31 @@ const NovaTable = {
             <n-dropdown v-if="toolbarFoldedButtons.length > 0"
               trigger="hover"
               :options="toolbarFoldedOptions"
-              @select="(key) => { var btn = toolbarFoldedButtons.find(function(b) { return b.title === key }); if (btn) console.log('[CustomBtn] toolbar folded:', btn.title) }">
+              @select="(key) => { var btn = toolbarFoldedButtons.find(function(b) { return b.title === key }); if (btn) handleCustomBtnClick(btn) }">
               <n-button :size="embSize" circle style="background:transparent" title="更多操作">
                 <template #icon><n-icon size="16"><iconify-icon icon="material-symbols:more-horiz"></iconify-icon></n-icon></template>
               </n-button>
             </n-dropdown>
-            <n-button v-for="btn in toolbarUnfoldedButtons" :key="btn.title" :size="embSize" type="default"
-              :disabled="(btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && checkedRowKeys.length === 0"
-              :title="btn.tip || btn.title"
-              @click="console.log('[CustomBtn] toolbar:', btn.title)">
-              <template v-if="btn.icon" #icon><n-icon size="15"><iconify-icon :icon="btn.icon" style="font-size:15px"></iconify-icon></n-icon></template>
-              {{ btn.title }}
-            </n-button>
+            <template v-for="btn in toolbarUnfoldedButtons" :key="btn.title">
+              <n-popconfirm v-if="btn.callHint" positive-text="确定" negative-text="取消" @positive-click="() => console.log('[CustomBtn] toolbar:', btn.title)">
+                <template #trigger>
+                  <n-button :size="embSize" type="default"
+                    :disabled="(btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && checkedRowKeys.length === 0"
+                    :title="btn.tip || btn.title">
+                    <template v-if="btn.icon" #icon><n-icon size="15"><iconify-icon :icon="btn.icon" style="font-size:15px"></iconify-icon></n-icon></template>
+                    {{ btn.title }}
+                  </n-button>
+                </template>
+                {{ btn.callHint }}
+              </n-popconfirm>
+              <n-button v-else :size="embSize" type="default"
+                :disabled="(btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && checkedRowKeys.length === 0"
+                :title="btn.tip || btn.title"
+                @click="handleCustomBtnClick(btn)">
+                <template v-if="btn.icon" #icon><n-icon size="15"><iconify-icon :icon="btn.icon" style="font-size:15px"></iconify-icon></n-icon></template>
+                {{ btn.title }}
+              </n-button>
+            </template>
             <n-button v-if="checkedRowKeys.length > 0 && !readonly" :size="embSize" type="error" @click="handleBatchDelete">
               <template #icon><n-icon><iconify-icon icon="material-symbols:delete-outline"></iconify-icon></n-icon></template>
               删 除
