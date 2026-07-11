@@ -239,6 +239,12 @@ const NovaTable = {
       opFormLayoutObj:      {},
       opFormBtn:      null,
       opFormRow:      null,
+      // opForm tab 相关
+      opFormTab:          'form',
+      opFormExtraTabs:    [],      // APPENDAGE 表单 tab
+      opFormAppTabBuild:  {},      // 附属表单 build 数据
+      opFormAppFormData:  {},      // 附属表单数据
+      opFormAppFormErrors:{},      // 附属表单校验错误
       formErrors:     {},
       striped:        true,
       tableSize:      'medium',
@@ -408,7 +414,7 @@ const NovaTable = {
       })
     },
     opFormLayout() {
-      return (this.opFormLayoutObj && this.opFormLayoutObj.thisFormLayout) || 'DEFAULT'
+      return (this.opFormLayoutObj && this.opFormLayoutObj.editLayout) || 'DEFAULT'
     },
     columns() {
       const vm   = this
@@ -905,6 +911,62 @@ const NovaTable = {
         if (picker) picker.visible = true
       })
     },
+    openOpAppReferenceModal(novaName, f) {
+      var refMap = (this.opFormAppTabBuild[novaName] || {}).referenceMap || {}
+      var refInfo = refMap[f.field]
+      if (!refInfo || !refInfo.referenceName) return
+      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, target: 'opFormApp', appNovaName: novaName, visible: false })
+      var self = this
+      this.$nextTick(function() {
+        var picker = self.refPickerStack[self.refPickerStack.length - 1]
+        if (picker) picker.visible = true
+      })
+    },
+    handleOpAppAttachmentChange(appNovaName, f, event) {
+      var files = Array.from(event.target.files || [])
+      event.target.value = ''
+      if (!files.length) return
+      var build = this.opFormAppTabBuild[appNovaName] || {}
+      var cfg = (build.attachmentMap || {})[f.field] || {}
+      var currentList = (this.opFormAppFormData[appNovaName] || {})[f.field] || []
+      var maxLimit = cfg.maxLimit || 1
+      var allowed = maxLimit - currentList.length
+      if (allowed <= 0) return
+      if (files.length > allowed) {
+        if (window.$message) window.$message.error('最多还能上传 ' + allowed + ' 个文件')
+        return
+      }
+      var toUpload = files.slice(0, allowed)
+      for (var i = 0; i < toUpload.length; i++) {
+        var file = toUpload[i]
+        if (cfg.fileTypes && cfg.fileTypes.length) {
+          var ext = '.' + file.name.split('.').pop().toLowerCase()
+          if (!cfg.fileTypes.some(function(t) { return t.toLowerCase() === ext })) {
+            if (window.$message) window.$message.error('不支持的文件类型：' + ext)
+            return
+          }
+        }
+        var kb = file.size / 1024
+        if (cfg.minSize > 0 && kb < cfg.minSize) { if (window.$message) window.$message.error('文件不能小于 ' + cfg.minSize + ' KB'); return }
+        if (cfg.maxSize > 0 && kb > cfg.maxSize) { if (window.$message) window.$message.error('文件不能超过 ' + cfg.maxSize + ' KB'); return }
+      }
+      var formData = new FormData()
+      formData.append('novaName', this.opFormNovaName)
+      toUpload.forEach(function(file) { formData.append('files', file) })
+      var self = this
+      var field = f.field
+      $.ajax({
+        url: '/nova/attachment/upload', method: 'POST', data: formData, processData: false, contentType: false,
+        success: function(resp) {
+          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '上传失败'); return }
+          if (!self.opFormAppFormData[appNovaName]) self.opFormAppFormData[appNovaName] = {}
+          if (!self.opFormAppFormData[appNovaName][field]) self.opFormAppFormData[appNovaName][field] = []
+          ;(resp.data || []).forEach(function(url) { self.opFormAppFormData[appNovaName][field].push(url) })
+          if (window.$message) window.$message.success('上传成功')
+        },
+        error: function() { if (window.$message) window.$message.error('上传请求失败') }
+      })
+    },
     // ── appendageForm helpers ───────────────────────────────────
     appBuild(n)        { return this.appendageTabBuild[n] || {} },
     appFd(n)           { return this.appendageFormData[n]  || {} },
@@ -1087,10 +1149,21 @@ const NovaTable = {
           self.opFormAttachmentMap = d.attachment || {}
           self.opFormLayoutObj   = d.layout || {}
           var allEdit = d.edit || []
+          // 基本信息 tab 字段
           self.opFormFields = allEdit.filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
-          // 过滤 opForm 不支持的字段类型
           self.opFormFields = self.opFormFields.filter(function(f) {
             return f.type !== 'APPENDAGE' && f.type !== 'APPENDAGES' && f.type !== 'LINK' && f.type !== 'PASSWORD'
+          })
+          // APPENDAGE 表单 tab（排除表格和链接 tab）
+          self.opFormExtraTabs = allEdit.filter(function(e) {
+            return e.tapType === 'appendageForm'
+          })
+          self.opFormAppTabBuild = {}
+          self.opFormAppFormData = {}
+          self.opFormAppFormErrors = {}
+          // 预加载所有 APPENDAGE tab 的 build 数据（和普通新增/编辑一致）
+          self.opFormExtraTabs.forEach(function(tab) {
+            self.loadOpAppendageBuild(tab.tapNovaName)
           })
           var fd = {}
           self.opFormFields.forEach(function(f) {
@@ -1118,6 +1191,111 @@ const NovaTable = {
       this.opFormData = {}
       this.opFormChoiceMap = {}
       this.opFormRefMap = {}
+      this.opFormExtraTabs = []
+      this.opFormAppTabBuild = {}
+      this.opFormAppFormData = {}
+      this.opFormAppFormErrors = {}
+      this.opFormTab = 'form'
+    },
+    // ── opForm tab 辅助 ───────────────────────────────────────
+    opFormAppBuild(n)       { return this.opFormAppTabBuild[n] || {} },
+    opFormAppData(n)        { return this.opFormAppFormData[n] || {} },
+    opFormAppErrors(n)      { return this.opFormAppFormErrors[n] || {} },
+    opFormAppSetFd(n, f, v) {
+      if (this.opFormAppFormData[n]) this.opFormAppFormData[n][f] = v
+      if (this.opFormAppFormErrors[n]) delete this.opFormAppFormErrors[n][f]
+    },
+    opFormAppChoice(n, f)   { return ((this.opFormAppTabBuild[n] || {}).choiceMap || {})[f] || null },
+    opFormAppFieldOpts(n, f) {
+      var c = this.opFormAppChoice(n, f)
+      if (!c || !c.values) return []
+      return c.values.map(function(v) { return { label: v.label, value: v.value } })
+    },
+    opFormAppNumInfo(n, f)  { return ((this.opFormAppTabBuild[n] || {}).numberMap || {})[f] || {} },
+    opFormAppDateType(n, f) {
+      var info = ((this.opFormAppTabBuild[n] || {}).dateMap || {})[f]
+      var map = { DATE: 'date', TIME: 'time', DATE_TIME: 'datetime', MONTH: 'month', YEAR: 'year' }
+      return (info && map[info.type]) || 'date'
+    },
+    opFormAppTagOpts(n, f) {
+      var tag = ((this.opFormAppTabBuild[n] || {}).tagMap || {})[f]
+      if (!tag || !tag.tags) return []
+      return tag.tags.map(function(t) { return { label: t, value: t } })
+    },
+    opFormTabRequiredCount(tabName) {
+      var self = this
+      if (tabName === 'form') {
+        return (self.visibleOpFormFields || []).filter(function(item) {
+          return item.visible && item.field.notNull
+        }).length
+      }
+      if (tabName.startsWith('app_')) {
+        var n = tabName.slice(4)
+        var build = self.opFormAppTabBuild[n] || {}
+        var fields = build.editFields || []
+        var fd = self.opFormAppFormData[n] || {}
+        var refMap = build.referenceMap || {}
+        var evalFd = Object.assign({}, fd)
+        for (var k in refMap) {
+          var rf = refMap[k] && refMap[k].referenceField
+          if (rf) evalFd[k] = fd[rf] !== undefined ? fd[rf] : null
+        }
+        return fields.filter(function(f) {
+          if (!f.notNull) return false
+          if (f.showByExpr && !evalShowExpr(f.showByExpr, evalFd)) return false
+          return true
+        }).length
+      }
+      return 0
+    },
+    onOpFormTabChange(tab) {
+      this.opFormTab = tab
+      if (tab.startsWith('app_')) {
+        var appNovaName = tab.slice(4)
+        if (this.opFormAppTabBuild[appNovaName]) return
+        this.loadOpAppendageBuild(appNovaName)
+      }
+    },
+    loadOpAppendageBuild(appNovaName) {
+      var self = this
+      $.ajax({
+        url: '/nova/table/build',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ novaName: appNovaName }),
+        success: function(resp) {
+          if (resp.code !== 200) return
+          var d = resp.data
+          var tab = (self.opFormExtraTabs || []).find(function(t) { return t.tapNovaName === appNovaName })
+          if (!tab) return
+          var relField = tab.tapRelationField || ''
+          var sourceKeys = self.opFormData && self.opFormData[relField] ? [self.opFormData[relField]] : []
+          // 使用 jq 层的 sourceField 处理逻辑
+          var cm = d.choice || {}
+          var editFields = (d.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
+          self.opFormAppTabBuild[appNovaName] = {
+            editFields: editFields,
+            choiceMap: cm,
+            numberMap: d.number || {},
+            dateMap: d.date || {},
+            booleanMap: d.booleanInfo || {},
+            referenceMap: d.reference || {},
+            tagMap: d.tag || {},
+            attachmentMap: d.attachment || {},
+            layout: d.layout || {}
+          }
+          // 初始化表单数据
+          var fd = {}
+          editFields.forEach(function(f) {
+            var ci = cm[f.field]
+            var isMulti = f.type === 'CHOICE' && ci && ci.selectType === 'MULTI'
+            fd[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (f.type === 'CHOICE' && ci && ci.selectType === 'SINGLE' ? null : f.type === 'DATE' || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
+            if (f.type === 'REFERENCE') fd[f.field + '_display'] = ''
+          })
+          self.opFormAppFormData[appNovaName] = fd
+          self.opFormAppFormErrors[appNovaName] = {}
+        }
+      })
     },
     submitOpForm() {
       var formData = this.opFormData
@@ -1132,10 +1310,37 @@ const NovaTable = {
         if (empty) errors[f.field] = f.title + '不能为空'
       })
       this.opFormErrors = errors
-      if (Object.keys(errors).length > 0) return
+      if (Object.keys(errors).length > 0) { this.opFormTab = 'form'; return }
+
+      // 校验附属表单
+      var appErrors = {}
+      var firstErrAppTab = null
+      var self = this
+      ;(this.opFormExtraTabs || []).forEach(function(appTab) {
+        var n = appTab.tapNovaName
+        var build = self.opFormAppTabBuild[n] || {}
+        var fd = self.opFormAppFormData[n] || {}
+        var refMap = build.referenceMap || {}
+        var evalFd = Object.assign({}, fd)
+        for (var k in refMap) { var rf = refMap[k] && refMap[k].referenceField; if (rf) evalFd[k] = fd[rf] !== undefined ? fd[rf] : null }
+        var errs = {}
+        ;(build.editFields || []).forEach(function(f) {
+          if (!f.notNull) return
+          if (f.type === 'REFERENCE' && refMap[f.field] && refMap[f.field].referenceName === self.opFormNovaName) return
+          if (f.showByExpr && !evalShowExpr(f.showByExpr, evalFd)) return
+          var val = fd[f.field]
+          var empty = val === null || val === undefined || val === '' || (Array.isArray(val) && val.length === 0)
+          if (empty) errs[f.field] = f.title + '不能为空'
+        })
+        appErrors[n] = errs
+        if (!firstErrAppTab && Object.keys(errs).length > 0) firstErrAppTab = n
+      })
+      var newAppErrors = Object.assign({}, this.opFormAppFormErrors, appErrors)
+      this.opFormAppFormErrors = newAppErrors
+      if (firstErrAppTab) { this.opFormTab = 'app_' + firstErrAppTab; return }
 
       // TODO: 等 operation 端点就绪后对接
-      console.log('[OpForm] submit:', this.opFormBtn && this.opFormBtn.novaClassName, this.opFormData)
+      console.log('[OpForm] submit:', this.opFormBtn && this.opFormBtn.novaClassName, this.opFormData, this.opFormAppFormData)
       this.closeOpForm()
     },
     handleOpAttachmentChange(f, event) {
@@ -1381,11 +1586,13 @@ const NovaTable = {
         return
       }
 
-      const refInfo = picker.target === 'opForm'
-        ? this.opFormRefMap[picker.field.field]
-        : picker.appNovaName
-          ? (this.appBuild(picker.appNovaName).referenceMap || {})[picker.field.field]
-          : this.referenceMap[picker.field.field]
+      const refInfo = picker.target === 'opFormApp'
+        ? ((this.opFormAppTabBuild[picker.appNovaName] || {}).referenceMap || {})[picker.field.field]
+        : picker.target === 'opForm'
+          ? this.opFormRefMap[picker.field.field]
+          : picker.appNovaName
+            ? (this.appBuild(picker.appNovaName).referenceMap || {})[picker.field.field]
+            : this.referenceMap[picker.field.field]
       const appInfo = (picker.target !== 'opForm' && !picker.appNovaName && picker.isForFilter && picker.field.type !== 'LINK') ? (this.appendageMap && this.appendageMap[picker.field.field]) : null
       const linkInfo = (picker.target !== 'opForm' && !picker.appNovaName && picker.isForFilter && picker.field.type === 'LINK') ? (this.linkMap && this.linkMap[picker.field.field]) : null
       const linkSelectInfo = linkInfo && linkInfo.selectInfo
@@ -1394,7 +1601,7 @@ const NovaTable = {
       const displayField = linkSelectInfo ? (linkSelectInfo.displayField || storageField) : (appInfo ? (appInfo.displayField || storageField) : ((refInfo && refInfo.displayField) || storageField))
       const row = picker.selectedRow
 
-      if (picker.appNovaName) {
+      if (picker.appNovaName && picker.target !== 'opFormApp') {
         const appFd = this.appendageFormData[picker.appNovaName]
         if (appFd) {
           const storedVal = row[storageField] !== undefined ? row[storageField] : ''
@@ -1406,7 +1613,8 @@ const NovaTable = {
         return
       }
 
-      const targetData = picker.target === 'opForm' ? this.opFormData
+      const targetData = picker.target === 'opFormApp' ? (this.opFormAppFormData[picker.appNovaName] || {})
+                       : picker.target === 'opForm' ? this.opFormData
                        : picker.isForFilter ? this.filterForm
                        : this.formData
       const storedVal = row[storageField] !== undefined ? row[storageField] : ''
@@ -1416,7 +1624,7 @@ const NovaTable = {
         targetData[refInfo.referenceField] = storedVal
       }
 
-      if (picker.target !== 'opForm' && !picker.isForFilter) {
+      if (picker.target !== 'opForm' && picker.target !== 'opFormApp' && !picker.isForFilter) {
         delete this.formErrors[picker.field.field]
       }
 
@@ -2795,133 +3003,257 @@ const NovaTable = {
         style="width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column"
         :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}"
         :header-style="{paddingBottom:'8px'}">
-        <div style="padding:16px 20px 20px 20px">
-          <div :style="'display:grid;gap:16px 24px;' + (opFormLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
-          <template v-for="{field: f, visible: _vis} in visibleOpFormFields" :key="f.field">
-            <n-divider v-if="f.type === 'DIVIDE' && opFormLayout !== 'FULL_LINE'" v-show="_vis" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
-            <div v-else-if="f.type === 'EMPTY' && opFormLayout !== 'FULL_LINE'" v-show="_vis"></div>
-            <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY'" v-show="_vis"
-              :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
-              <span class="edit-form-label">
-                <span v-if="f.notNull" class="form-label-required">*</span>{{ f.title }}
-                <n-tooltip v-if="f.desc" trigger="hover" placement="top">
-                  <template #trigger><span class="form-label-help"><iconify-icon icon="material-symbols:help-outline" style="font-size:15px"></iconify-icon></span></template>
-                  {{ f.desc }}
-                </n-tooltip>
-              </span>
-              <n-checkbox-group
-                v-if="f.type === 'CHOICE' && opFormChoiceMap[f.field] && opFormChoiceMap[f.field].showType === 'RADIO' && opFormChoiceMap[f.field].selectType === 'MULTI'"
-                v-model:value="opFormData[f.field]">
-                <n-space><n-checkbox v-for="o in opFieldOpts(f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
-              </n-checkbox-group>
-              <n-radio-group
-                v-else-if="f.type === 'CHOICE' && opFormChoiceMap[f.field] && opFormChoiceMap[f.field].showType === 'RADIO'"
-                v-model:value="opFormData[f.field]">
-                <n-space><n-radio v-for="o in opFieldOpts(f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
-              </n-radio-group>
-              <n-select
-                v-else-if="f.type === 'CHOICE' && opFormChoiceMap[f.field] && opFormChoiceMap[f.field].selectType === 'MULTI'"
-                v-model:value="opFormData[f.field]"
-                :options="opFieldOpts(f)"
-                :placeholder="'请选择' + f.title"
-                multiple clearable />
-              <n-select
-                v-else-if="f.type === 'CHOICE'"
-                v-model:value="opFormData[f.field]"
-                :options="opFieldOpts(f)"
-                :placeholder="'请选择' + f.title"
-                clearable />
-              <n-select
-                v-else-if="f.type === 'BOOLEAN'"
-                v-model:value="opFormData[f.field]"
-                :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"
-                :placeholder="'请选择' + f.title"
-                clearable />
-              <n-input-number
-                v-else-if="f.type === 'NUMBER'"
-                v-model:value="opFormData[f.field]"
-                :placeholder="'请输入' + f.title"
-                :min="opFormNumberMap[f.field] && opFormNumberMap[f.field].min"
-                :max="opFormNumberMap[f.field] && opFormNumberMap[f.field].max"
-                :precision="opFormNumberMap[f.field] && opFormNumberMap[f.field].type === 'DECIMAL' ? (opFormNumberMap[f.field].decimal || 2) : 0"
-                :show-button="false"
-                clearable style="width:100%" />
-              <n-date-picker
-                v-else-if="f.type === 'DATE'"
-                v-model:value="opFormData[f.field]"
-                :type="opDateType(f.field)"
-                :placeholder="'请选择' + f.title"
-                clearable style="width:100%" />
-              <n-select
-                v-else-if="f.type === 'TAG'"
-                v-model:value="opFormData[f.field]"
-                :options="opTagOpts(f.field)"
-                :placeholder="'请输入或选择' + f.title"
-                :max-tag-count="opFormTagMap[f.field] && opFormTagMap[f.field].maxTagCount"
-                :tag="opFormTagMap[f.field] && opFormTagMap[f.field].allowExtension"
-                filterable multiple clearable />
-              <n-input
-                v-else-if="f.type === 'TEXTAREA'"
-                v-model:value="opFormData[f.field]"
-                type="textarea"
-                :autosize="{ minRows: 3 }"
-                :placeholder="'请输入' + f.title" />
-              <div v-else-if="f.type === 'REFERENCE' && opFormRefMap[f.field]"
-                @click="openOpReferenceModal(f)"
-                style="cursor:pointer">
+        <n-tabs v-model:value="opFormTab" type="line"
+          style="padding:0 20px;margin-top:-4px"
+          @update:value="onOpFormTabChange">
+          <!-- Tab 1: 基本信息 -->
+          <n-tab-pane name="form" style="padding:16px 0 20px 0">
+            <template #tab>
+              <iconify-icon icon="mdi:pencil-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>基本信息
+              <span v-if="opFormTabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ opFormTabRequiredCount('form') }}</span>
+            </template>
+            <div :style="'display:grid;gap:16px 24px;' + (opFormLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
+            <template v-for="{field: f, visible: _vis} in visibleOpFormFields" :key="f.field">
+              <n-divider v-if="f.type === 'DIVIDE' && opFormLayout !== 'FULL_LINE'" v-show="_vis" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
+              <div v-else-if="f.type === 'EMPTY' && opFormLayout !== 'FULL_LINE'" v-show="_vis"></div>
+              <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY'" v-show="_vis"
+                :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+                <span class="edit-form-label">
+                  <span v-if="f.notNull" class="form-label-required">*</span>{{ f.title }}
+                  <n-tooltip v-if="f.desc" trigger="hover" placement="top">
+                    <template #trigger><span class="form-label-help"><iconify-icon icon="material-symbols:help-outline" style="font-size:15px"></iconify-icon></span></template>
+                    {{ f.desc }}
+                  </n-tooltip>
+                </span>
+                <!-- 字段渲染复用相同模式，读取 opForm* 状态 -->
+                <n-checkbox-group
+                  v-if="f.type === 'CHOICE' && opFormChoiceMap[f.field] && opFormChoiceMap[f.field].showType === 'RADIO' && opFormChoiceMap[f.field].selectType === 'MULTI'"
+                  v-model:value="opFormData[f.field]">
+                  <n-space><n-checkbox v-for="o in opFieldOpts(f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
+                </n-checkbox-group>
+                <n-radio-group
+                  v-else-if="f.type === 'CHOICE' && opFormChoiceMap[f.field] && opFormChoiceMap[f.field].showType === 'RADIO'"
+                  v-model:value="opFormData[f.field]">
+                  <n-space><n-radio v-for="o in opFieldOpts(f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
+                </n-radio-group>
+                <n-select
+                  v-else-if="f.type === 'CHOICE' && opFormChoiceMap[f.field] && opFormChoiceMap[f.field].selectType === 'MULTI'"
+                  v-model:value="opFormData[f.field]" :options="opFieldOpts(f)"
+                  :placeholder="'请选择' + f.title" multiple clearable />
+                <n-select
+                  v-else-if="f.type === 'CHOICE'"
+                  v-model:value="opFormData[f.field]" :options="opFieldOpts(f)"
+                  :placeholder="'请选择' + f.title" clearable />
+                <n-select
+                  v-else-if="f.type === 'BOOLEAN'"
+                  v-model:value="opFormData[f.field]"
+                  :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"
+                  :placeholder="'请选择' + f.title" clearable />
+                <n-input-number
+                  v-else-if="f.type === 'NUMBER'"
+                  v-model:value="opFormData[f.field]" :placeholder="'请输入' + f.title"
+                  :min="opFormNumberMap[f.field] && opFormNumberMap[f.field].min"
+                  :max="opFormNumberMap[f.field] && opFormNumberMap[f.field].max"
+                  :precision="opFormNumberMap[f.field] && opFormNumberMap[f.field].type === 'DECIMAL' ? (opFormNumberMap[f.field].decimal || 2) : 0"
+                  :show-button="false" clearable style="width:100%" />
+                <n-date-picker
+                  v-else-if="f.type === 'DATE'"
+                  v-model:value="opFormData[f.field]"
+                  :type="opDateType(f.field)" :placeholder="'请选择' + f.title"
+                  clearable style="width:100%" />
+                <n-select
+                  v-else-if="f.type === 'TAG'"
+                  v-model:value="opFormData[f.field]" :options="opTagOpts(f.field)"
+                  :placeholder="'请输入或选择' + f.title"
+                  :max-tag-count="opFormTagMap[f.field] && opFormTagMap[f.field].maxTagCount"
+                  :tag="opFormTagMap[f.field] && opFormTagMap[f.field].allowExtension"
+                  filterable multiple clearable />
                 <n-input
-                  :value="opFormData[f.field + '_display'] || opFormData[f.field]"
-                  :placeholder="'请选择' + f.title"
-                  readonly clearable
-                  @clear.stop="opFormData[f.field] = null; opFormData[f.field + '_display'] = ''">
-                  <template #suffix>
-                    <iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon>
-                  </template>
-                </n-input>
-              </div>
-              <div v-else-if="f.type === 'ATTACHMENT'" class="attachment-field"
-                @mouseenter="attachmentDropdownKey = 'op_' + f.field" @mouseleave="attachmentDropdownKey = null">
-                <div class="attachment-btn">
-                  <iconify-icon icon="mdi:paperclip" style="font-size:13px"></iconify-icon>
-                  附件管理
-                  <iconify-icon icon="mdi:chevron-down" :style="'font-size:12px;transition:transform .2s ease;transform:' + (attachmentDropdownKey === 'op_' + f.field ? 'rotate(180deg)' : 'rotate(0deg)')"></iconify-icon>
+                  v-else-if="f.type === 'TEXTAREA'"
+                  v-model:value="opFormData[f.field]" type="textarea"
+                  :autosize="{ minRows: 3 }" :placeholder="'请输入' + f.title" />
+                <div v-else-if="f.type === 'REFERENCE' && opFormRefMap[f.field]"
+                  @click="openOpReferenceModal(f)" style="cursor:pointer">
+                  <n-input
+                    :value="opFormData[f.field + '_display'] || opFormData[f.field]"
+                    :placeholder="'请选择' + f.title" readonly clearable
+                    @clear.stop="opFormData[f.field] = null; opFormData[f.field + '_display'] = ''">
+                    <template #suffix><iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon></template>
+                  </n-input>
                 </div>
-                <transition name="dropdown-fade">
-                  <div v-if="attachmentDropdownKey === 'op_' + f.field" :class="'attachment-dropdown' + (opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].showType === 'DOWN' ? ' down' : '')">
-                    <div class="attachment-dropdown-inner">
-                      <label v-if="!opFormAttachmentMap[f.field] || !opFormAttachmentMap[f.field].maxLimit || (opFormData[f.field] || []).length < opFormAttachmentMap[f.field].maxLimit"
-                        class="attachment-dropdown-item"
-                        :for="'upload-op-' + f.field">
-                        <iconify-icon icon="mdi:upload" style="font-size:13px"></iconify-icon>
-                        上传文件{{ opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit ? '（共' + (opFormAttachmentMap[f.field].maxLimit - (opFormData[f.field] || []).length) + '个）' : '' }}
-                        <input :id="'upload-op-' + f.field" type="file" style="display:none"
-                          :multiple="opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit > 1"
-                          @change="handleOpAttachmentChange(f, $event)" />
-                      </label>
-                      <div v-if="(opFormData[f.field] || []).length > 0"
-                        class="attachment-dropdown-item"
-                        @click="openPreview(f)">
-                        <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>
-                        查看文件（共{{ (opFormData[f.field] || []).length }}个）
-                      </div>
-                      <div v-else class="attachment-dropdown-item attachment-disabled">
-                        <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>
-                        查看文件（共0个）
+                <div v-else-if="f.type === 'ATTACHMENT'" class="attachment-field"
+                  @mouseenter="attachmentDropdownKey = 'op_' + f.field" @mouseleave="attachmentDropdownKey = null">
+                  <div class="attachment-btn">
+                    <iconify-icon icon="mdi:paperclip" style="font-size:13px"></iconify-icon>附件管理
+                    <iconify-icon icon="mdi:chevron-down" :style="'font-size:12px;transition:transform .2s ease;transform:' + (attachmentDropdownKey === 'op_' + f.field ? 'rotate(180deg)' : 'rotate(0deg)')"></iconify-icon>
+                  </div>
+                  <transition name="dropdown-fade">
+                    <div v-if="attachmentDropdownKey === 'op_' + f.field" :class="'attachment-dropdown' + (opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].showType === 'DOWN' ? ' down' : '')">
+                      <div class="attachment-dropdown-inner">
+                        <label v-if="!opFormAttachmentMap[f.field] || !opFormAttachmentMap[f.field].maxLimit || (opFormData[f.field] || []).length < opFormAttachmentMap[f.field].maxLimit"
+                          class="attachment-dropdown-item" :for="'upload-op-' + f.field">
+                          <iconify-icon icon="mdi:upload" style="font-size:13px"></iconify-icon>
+                          上传文件{{ opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit ? '（共' + (opFormAttachmentMap[f.field].maxLimit - (opFormData[f.field] || []).length) + '个）' : '' }}
+                          <input :id="'upload-op-' + f.field" type="file" style="display:none"
+                            :multiple="opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit > 1"
+                            @change="handleOpAttachmentChange(f, $event)" />
+                        </label>
+                        <div v-if="(opFormData[f.field] || []).length > 0" class="attachment-dropdown-item" @click="openPreview(f)">
+                          <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>
+                          查看文件（共{{ (opFormData[f.field] || []).length }}个）
+                        </div>
+                        <div v-else class="attachment-dropdown-item attachment-disabled">
+                          <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>查看文件（共0个）
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </transition>
+                  </transition>
+                </div>
+                <n-input v-else v-model:value="opFormData[f.field]" :placeholder="'请输入' + f.title" clearable />
+                <span v-if="opFormErrors[f.field]" class="form-error-tip">{{ opFormErrors[f.field] }}</span>
               </div>
-              <n-input
-                v-else
-                v-model:value="opFormData[f.field]"
-                :placeholder="'请输入' + f.title"
-                clearable />
-              <span v-if="opFormErrors[f.field]" class="form-error-tip">{{ opFormErrors[f.field] }}</span>
+            </template>
+          </div>
+          </n-tab-pane>
+          <!-- APPENDAGE 表单 Tab -->
+          <n-tab-pane v-for="tab in opFormExtraTabs" :key="tab.tapNovaName"
+            :name="'app_' + tab.tapNovaName" style="padding:16px 0 20px 0">
+            <template #tab>
+              <iconify-icon icon="mdi:note-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>{{ tab.tapTitle || tab.tapNovaName }}
+              <span v-if="opFormTabRequiredCount('app_' + tab.tapNovaName) > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ opFormTabRequiredCount('app_' + tab.tapNovaName) }}</span>
+            </template>
+            <div v-if="!(opFormAppBuild(tab.tapNovaName).editFields || []).length" style="text-align:center;padding:40px;color:#aaa;font-size:13px">加载中…</div>
+            <div v-else :style="'display:grid;gap:16px 24px;' + ((opFormAppBuild(tab.tapNovaName).layout || {}).editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
+              <template v-for="f in (opFormAppBuild(tab.tapNovaName).editFields || [])" :key="f.field">
+                <n-divider v-if="f.type === 'DIVIDE' && (opFormAppBuild(tab.tapNovaName).layout || {}).editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
+                <div v-else-if="f.type === 'DIVIDE'" style="grid-column:1/-1;margin:0"><n-divider>{{ f.title }}</n-divider></div>
+                <div v-else-if="f.type === 'EMPTY' && (opFormAppBuild(tab.tapNovaName).layout || {}).editLayout !== 'FULL_LINE'"></div>
+                <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY'"
+                  :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+                  <span class="edit-form-label">
+                    <span v-if="f.notNull" class="form-label-required">*</span>{{ f.title }}
+                    <n-tooltip v-if="f.desc" trigger="hover" placement="top">
+                      <template #trigger><span class="form-label-help"><iconify-icon icon="material-symbols:help-outline" style="font-size:15px"></iconify-icon></span></template>
+                      {{ f.desc }}
+                    </n-tooltip>
+                  </span>
+                  <n-checkbox-group
+                    v-if="f.type === 'CHOICE' && opFormAppChoice(tab.tapNovaName, f.field) && opFormAppChoice(tab.tapNovaName, f.field).showType === 'RADIO' && opFormAppChoice(tab.tapNovaName, f.field).selectType === 'MULTI'"
+                    :value="opFormAppData(tab.tapNovaName)[f.field]"
+                    @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)">
+                    <n-space><n-checkbox v-for="o in opFormAppFieldOpts(tab.tapNovaName, f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
+                  </n-checkbox-group>
+                  <n-radio-group
+                    v-else-if="f.type === 'CHOICE' && opFormAppChoice(tab.tapNovaName, f.field) && opFormAppChoice(tab.tapNovaName, f.field).showType === 'RADIO'"
+                    :value="opFormAppData(tab.tapNovaName)[f.field]"
+                    @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)">
+                    <n-space><n-radio v-for="o in opFormAppFieldOpts(tab.tapNovaName, f)" :key="o.value" :value="o.value" :label="o.label" /></n-radio-group>
+                  <n-select
+                    v-else-if="f.type === 'CHOICE' && opFormAppChoice(tab.tapNovaName, f.field) && opFormAppChoice(tab.tapNovaName, f.field).selectType === 'MULTI'"
+                    :value="opFormAppData(tab.tapNovaName)[f.field]" :options="opFormAppFieldOpts(tab.tapNovaName, f)"
+                    :placeholder="'请选择' + f.title"
+                    :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
+                    multiple clearable @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
+                  <n-select
+                    v-else-if="f.type === 'CHOICE'"
+                    :value="opFormAppData(tab.tapNovaName)[f.field]" :options="opFormAppFieldOpts(tab.tapNovaName, f)"
+                    :placeholder="'请选择' + f.title"
+                    :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
+                    clearable @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
+                  <n-select
+                    v-else-if="f.type === 'BOOLEAN'"
+                    :value="opFormAppData(tab.tapNovaName)[f.field]" :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"
+                    :placeholder="'请选择' + f.title"
+                    :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
+                    clearable @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
+                  <n-input-number
+                    v-else-if="f.type === 'NUMBER'"
+                    :value="opFormAppData(tab.tapNovaName)[f.field]"
+                    :placeholder="'请输入' + f.title" :show-button="false" style="width:100%"
+                    :min="opFormAppNumInfo(tab.tapNovaName, f.field).min"
+                    :max="opFormAppNumInfo(tab.tapNovaName, f.field).max"
+                    :precision="opFormAppNumInfo(tab.tapNovaName, f.field).type === 'DECIMAL' ? (opFormAppNumInfo(tab.tapNovaName, f.field).decimal || 2) : 0"
+                    :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
+                    clearable @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
+                  <n-date-picker
+                    v-else-if="f.type === 'DATE'"
+                    :value="opFormAppData(tab.tapNovaName)[f.field]"
+                    :type="opFormAppDateType(tab.tapNovaName, f.field)"
+                    :placeholder="'请选择' + f.title"
+                    :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
+                    clearable style="width:100%"
+                    @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
+                  <n-select
+                    v-else-if="f.type === 'TAG'"
+                    :value="opFormAppData(tab.tapNovaName)[f.field]"
+                    :options="opFormAppTagOpts(tab.tapNovaName, f.field)"
+                    :placeholder="'请输入或选择' + f.title"
+                    :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
+                    filterable multiple clearable
+                    @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
+                  <n-input
+                    v-else-if="f.type === 'TEXTAREA'"
+                    :value="opFormAppData(tab.tapNovaName)[f.field]"
+                    type="textarea" :autosize="{minRows:3}"
+                    :placeholder="'请输入' + f.title"
+                    :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
+                    @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
+                  <div v-else-if="f.type === 'REFERENCE' && opFormAppChoice(tab.tapNovaName, f.field) === null"
+                    style="cursor:pointer"
+                    @click="openOpAppReferenceModal(tab.tapNovaName, f)">
+                    <n-input
+                      :value="opFormAppData(tab.tapNovaName)[f.field + '_display'] || opFormAppData(tab.tapNovaName)[f.field]"
+                      :placeholder="'请选择' + f.title" readonly clearable
+                      @clear.stop="opFormAppSetFd(tab.tapNovaName, f.field, null); opFormAppSetFd(tab.tapNovaName, f.field + '_display', '')">
+                      <template #suffix><iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon></template>
+                    </n-input>
+                  </div>
+                  <div v-else-if="f.type === 'ATTACHMENT'" class="attachment-field"
+                    :style="'grid-column:1/-1'"
+                    @mouseenter="attachmentDropdownKey = 'opApp_' + tab.tapNovaName + '_' + f.field"
+                    @mouseleave="attachmentDropdownKey = null">
+                    <div class="attachment-btn">
+                      <iconify-icon icon="mdi:paperclip" style="font-size:13px"></iconify-icon>附件管理
+                      <iconify-icon icon="mdi:chevron-down" :style="'font-size:12px;transition:transform .2s ease;transform:' + (attachmentDropdownKey === 'opApp_' + tab.tapNovaName + '_' + f.field ? 'rotate(180deg)' : 'rotate(0deg)')"></iconify-icon>
+                    </div>
+                    <transition name="dropdown-fade">
+                      <div v-if="attachmentDropdownKey === 'opApp_' + tab.tapNovaName + '_' + f.field"
+                        :class="'attachment-dropdown' + ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field] && (opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field].showType === 'DOWN' ? ' down' : '')">
+                        <div class="attachment-dropdown-inner">
+                          <label v-if="!((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) || !((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit || (opFormAppData(tab.tapNovaName)[f.field] || []).length < ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit"
+                            class="attachment-dropdown-item"
+                            :for="'upload-opApp-' + tab.tapNovaName + '-' + f.field">
+                            <iconify-icon icon="mdi:upload" style="font-size:13px"></iconify-icon>
+                            上传文件{{ ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit ? '（共' + (((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit - (opFormAppData(tab.tapNovaName)[f.field] || []).length) + '个）' : '' }}
+                            <input :id="'upload-opApp-' + tab.tapNovaName + '-' + f.field" type="file" style="display:none"
+                              :multiple="((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit > 1"
+                              @change="handleOpAppAttachmentChange(tab.tapNovaName, f, $event)" />
+                          </label>
+                          <div v-if="(opFormAppData(tab.tapNovaName)[f.field] || []).length > 0"
+                            class="attachment-dropdown-item"
+                            @click="openPreview(f, tab.tapNovaName)">
+                            <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>
+                            查看文件（共{{ (opFormAppData(tab.tapNovaName)[f.field] || []).length }}个）
+                          </div>
+                          <div v-else class="attachment-dropdown-item attachment-disabled">
+                            <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>查看文件（共0个）
+                          </div>
+                        </div>
+                      </div>
+                    </transition>
+                  </div>
+                  <n-input
+                    v-else
+                    :value="opFormAppData(tab.tapNovaName)[f.field]"
+                    :placeholder="'请输入' + f.title"
+                    :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
+                    clearable @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
+                  <span v-if="opFormAppErrors(tab.tapNovaName)[f.field]" class="form-error-tip">{{ opFormAppErrors(tab.tapNovaName)[f.field] }}</span>
+                </div>
+              </template>
             </div>
-          </template>
-        </div>
-        </div>
+          </n-tab-pane>
+        </n-tabs>
         <template #footer>
           <n-space justify="end">
             <n-button @click="closeOpForm">取 消</n-button>

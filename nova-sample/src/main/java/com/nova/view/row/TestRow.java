@@ -9,6 +9,7 @@ import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
 import com.nova.service.TestDemoService;
 import com.nova.view.TestDemo2View;
+import com.nova.view.TestDemo3View;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -47,12 +48,23 @@ public class TestRow {
                     title = "部门信息",
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(
-                            referenceField = "demo2Id"
+                            referenceField = ""
                     ),
                     notNull = true
             )
     )
     private TestDemo2View testDemo2View;
+
+    @NovaField(
+            edit = @Edit(
+                    title = "岗位信息",
+                    type = Edit.Type.APPENDAGE,
+                    appendageType = @AppendageType(
+                            referenceField = ""
+                    )
+            )
+    )
+    private TestDemo3View testDemo3View;
 
     @NovaField(
             edit = @Edit(
