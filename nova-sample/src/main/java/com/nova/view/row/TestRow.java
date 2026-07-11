@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Nova(
         name = "测试行",
         layout = @Layout(
-                editLayout = Layout.EditLayout.DEFAULT
+                editLayout = Layout.EditLayout.FULL_LINE
         ),
         dataProxy = VoidDataProxy.class
 )
