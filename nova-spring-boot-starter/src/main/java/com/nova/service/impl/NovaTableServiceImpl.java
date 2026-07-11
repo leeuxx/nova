@@ -7,6 +7,7 @@ import com.nova.annotation.fun.PromptSearch;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.row.OperationHandler;
 import com.nova.annotation.sub.nova.row.RowOperation;
+import com.nova.config.NovaApplication;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 import com.nova.service.NovaTableService;
@@ -484,6 +485,33 @@ public class NovaTableServiceImpl implements NovaTableService {
 
     @Override
     @SneakyThrows
+    public Map<String, Map<String, Object>> rowOperationLoad(NovaTableRowOperationLoad req) {
+        String novaName = req.getNovaName();
+        Class<?> handlerClass = Class.forName(req.getOperationHandler());
+        OperationHandler handler = (OperationHandler<?, ?>) SpringBeanUtils.getBean(handlerClass);
+        List<String> novaIds = req.getNovaIds() != null ? req.getNovaIds() : List.of();
+        Object formValue = handler.novaFormValue(novaIds, req.getOperationParam());
+        if (formValue == null) {
+            return Map.of();
+        }
+        // 将 POJO 转为 Map，REFERENCE 和 APPENDAGE 嵌套对象保留为子对象
+        Map<String, Object> mainMap = DataProxyUtils.toMapWithTimestamp(formValue);
+        // 拆分 APPENDAGE 字段到对应子表
+        Map<String, NovaFieldUtils.AppendageTypeInfo> appendages = NovaFieldUtils.getAppendage(novaName);
+        Map<String, Map<String, Object>> result = new LinkedHashMap<>();
+        for (Map.Entry<String, NovaFieldUtils.AppendageTypeInfo> entry : appendages.entrySet()) {
+            Object nestedObj = mainMap.remove(entry.getKey());
+            if (nestedObj != null) {
+                String appNovaName = entry.getValue().getReferenceClass().getSimpleName();
+                result.put(appNovaName, DataProxyUtils.toMapWithTimestamp(nestedObj));
+            }
+        }
+        result.put(novaName, mainMap);
+        return result;
+    }
+
+    @Override
+    @SneakyThrows
     public NovaTableRowOperationSubmit.Vo rowOperationSubmit(NovaTableRowOperationSubmit req) {
         String type = req.getType();
         if (type.equals(RowOperation.Type.NOVA.name())) {
@@ -533,7 +561,7 @@ public class NovaTableServiceImpl implements NovaTableService {
             // 调用 OperationHandler
             List<String> novaIds = req.getNovaIds();
             Class<?> operationHandlerClass = Class.forName(req.getOperationHandler());
-            OperationHandler operationHandler = (OperationHandler) SpringBeanUtils.getBean(operationHandlerClass);
+            OperationHandler operationHandler = (OperationHandler<?, ?>) SpringBeanUtils.getBean(operationHandlerClass);
             String jsExpression = operationHandler.exec(novaIds, novaForm, req.getOperationParam());
             return new NovaTableRowOperationSubmit.Vo().setJsExpression(jsExpression);
         }

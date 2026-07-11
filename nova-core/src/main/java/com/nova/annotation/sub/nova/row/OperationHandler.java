@@ -10,7 +10,7 @@ public interface OperationHandler<@Comment("行数据类型") NovaIdClass, @Comm
     String exec(List<NovaIdClass> novaIds, NovaForm novaForm, String param);
 
     @Comment("初始化 nova 表单的值")
-    default NovaForm novaFormValue(List<NovaIdClass> novaIds, NovaForm novaForm, String param) {
-        return novaForm;
+    default NovaForm novaFormValue(List<NovaIdClass> novaIds, String param) {
+        return null;
     }
 }

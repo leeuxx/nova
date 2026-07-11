@@ -74,11 +74,18 @@ public class NovaTableController {
         return R.ok(delete);
     }
 
-    @Comment("行操作提交")
+    @Comment("自定义按钮提交")
     @PostMapping("rowOperationSubmit")
     public R<NovaTableRowOperationSubmit.Vo> rowOperationSubmit(@RequestBody @Validated NovaTableRowOperationSubmit req) {
         NovaTableRowOperationSubmit.Vo vo = novaTableService.rowOperationSubmit(req);
         return R.ok(vo);
+    }
+
+    @Comment("自定义按钮表单初始值加载")
+    @PostMapping("rowOperationLoad")
+    public R<Map<String, Map<String, Object>>> rowOperationLoad(@RequestBody @Validated NovaTableRowOperationLoad req) {
+        Map<String, Map<String, Object>> data = novaTableService.rowOperationLoad(req);
+        return R.ok(data);
     }
 
 }

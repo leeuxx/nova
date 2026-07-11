@@ -18,11 +18,13 @@ import com.nova.utils.NovaQueryUtils;
 import com.nova.view.TestDemo2View;
 import com.nova.view.TestDemo3View;
 import com.nova.view.TestDemoView;
+import com.nova.view.row.TestRow;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -164,6 +166,28 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
             }
             testDemo3Service.saveOrUpdate(testDemo3);
         }
+    }
+
+    @Override
+    public Object novaFormValue(List<Long> novaIds, String param) {
+        return new TestRow()
+                .setName("张三")
+                .setTestDemo2View(new TestDemo2View()
+                        .setId(1L)
+                        .setName("财务部")
+                )
+                .setTestDemo3View(new TestDemo3View()
+                        .setTestDemoView(new TestDemoView()
+                                .setId(1001L)
+                                .setName("张三")
+                        )
+                        .setName("随机名称" + YitIdHelper.nextId())
+                        .setMsg("测试内容")
+                        .setFile("https://cdn.ossfile.mxrvending.com/tyGoods/6902890238345.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890235156.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890234562.png")
+                )
+                .setHobby("2")
+                .setFile("https://pic.rmb.bdstatic.com/bjh/bc1178073846/250713/6c653fba298a0dbb91dc600e620e1813.jpeg,https://cdn.ossfile.mxrvending.com/tyGoods/6902890249603.png")
+                .setCreateTime(LocalDateTime.now());
     }
 
     @Override

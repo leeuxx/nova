@@ -272,6 +272,7 @@ const NovaTable = {
       previewField:     null,
       previewAppNovaName: null,
       previewIndex:     0,
+      previewIsOpForm:  false,
       slideDirection:  'right',
       attachmentDropdownKey: null,
       refSelectOptions:  {},   // { [field]: [{label, value}] }
@@ -394,11 +395,19 @@ const NovaTable = {
 
     previewFileList() {
       if (!this.previewField) return []
+      if (this.previewIsOpForm) {
+        if (this.previewAppNovaName) return (this.opFormAppFormData[this.previewAppNovaName] || {})[this.previewField.field] || []
+        return this.opFormData[this.previewField.field] || []
+      }
       if (this.previewAppNovaName) return (this.appendageFormData[this.previewAppNovaName] || {})[this.previewField.field] || []
       return this.formData[this.previewField.field] || []
     },
     previewAttachCfg() {
       if (!this.previewField) return {}
+      if (this.previewIsOpForm) {
+        if (this.previewAppNovaName) return (this.opFormAppBuild(this.previewAppNovaName).attachmentMap || {})[this.previewField.field] || {}
+        return this.opFormAttachmentMap[this.previewField.field] || {}
+      }
       if (this.previewAppNovaName) return (this.appBuild(this.previewAppNovaName).attachmentMap || {})[this.previewField.field] || {}
       return this.attachmentMap[this.previewField.field] || {}
     },
@@ -1230,6 +1239,8 @@ const NovaTable = {
           self.opFormData = fd
           self.opFormErrors = {}
           self.opFormShow = true
+          // 加载表单初始值（handler.novaFormValue 返回的数据）
+          self.loadOpFormInitialValues()
         },
         error: function() {
           self.opFormLoading = false
@@ -1250,6 +1261,7 @@ const NovaTable = {
       this.opFormAppFormData = {}
       this.opFormAppFormErrors = {}
       this.opFormTab = 'form'
+      this._opLoadPending = null
     },
     // ── opForm tab 辅助 ───────────────────────────────────────
     opFormAppBuild(n)       { return this.opFormAppTabBuild[n] || {} },
@@ -1356,6 +1368,88 @@ const NovaTable = {
           })
           self.opFormAppFormData[appNovaName] = fd
           self.opFormAppFormErrors[appNovaName] = {}
+          // 应用待处理的 rowOperationLoad 返回的附属表单初始值
+          var pendingLoad = self._opLoadPending && self._opLoadPending[appNovaName]
+          if (pendingLoad) {
+            self._applyOpLoadData(pendingLoad, fd, editFields, d.reference || {}, cm)
+            delete self._opLoadPending[appNovaName]
+          }
+        }
+      })
+    },
+    _applyOpLoadData(source, targetData, fields, refMap, choiceMap) {
+      var rm = refMap || {}
+      var cm = choiceMap || {}
+      var self = this
+      fields.forEach(function(f) {
+        if (f.type === 'DIVIDE' || f.type === 'EMPTY') return
+        var val = source[f.field]
+        if (val === undefined) return
+        if (f.type === 'CHOICE') {
+          var ci = cm[f.field]
+          targetData[f.field] = (ci && ci.selectType === 'MULTI' && val != null && String(val).length > 0) ? String(val).split(',') : (val === null || val === undefined ? null : val)
+        } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
+          targetData[f.field] = (val != null && String(val).length > 0) ? String(val).split(',') : []
+        } else if (f.type === 'DATE') {
+          var ts = val !== null && val !== undefined ? Number(val) : null
+          targetData[f.field] = (ts && !isNaN(ts)) ? ts : null
+        } else if (f.type === 'BOOLEAN') {
+          targetData[f.field] = (val === null || val === undefined) ? null : String(val)
+        } else if (f.type === 'NUMBER') {
+          targetData[f.field] = (val === null || val === undefined || val === '') ? null : Number(val)
+        } else if (f.type === 'REFERENCE') {
+          var refInfo = rm[f.field] || {}
+          var sf = refInfo.storageField || 'id'
+          targetData[f.field] = (val && typeof val === 'object')
+            ? (val[sf] !== undefined && val[sf] !== null ? String(val[sf]) : null)
+            : (val !== null && val !== undefined && val !== '' ? String(val) : null)
+          targetData[f.field + '_display'] = (val && typeof val === 'object' && refInfo.displayField)
+            ? (val[refInfo.displayField] != null ? String(val[refInfo.displayField]) : '') : ''
+        } else {
+          targetData[f.field] = (val === null || val === undefined) ? '' : val
+        }
+      })
+    },
+    loadOpFormInitialValues() {
+      var self = this
+      var novaIds = []
+      if (this.opFormRow) {
+        var pk = this.opFormRow[this.novaIdFieldName]
+        if (pk != null) novaIds.push(String(pk))
+      } else {
+        novaIds = this.checkedRowKeys.map(function(k) { return String(k) })
+      }
+      $.ajax({
+        url: '/nova/table/rowOperationLoad',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          novaName: this.opFormNovaName,
+          novaIds: novaIds,
+          operationHandler: this.opFormBtn.operationHandler,
+          operationParam: this.opFormBtn.operationParam || ''
+        }),
+        success: function(resp) {
+          if (resp.code !== 200 || !resp.data) return
+          var data = resp.data
+          // 基本表单数据
+          var mainData = data[self.opFormNovaName]
+          if (mainData) {
+            self._applyOpLoadData(mainData, self.opFormData, self.opFormFields, self.opFormRefMap, self.opFormChoiceMap)
+          }
+          // APPENDAGE 数据：已加载的立即应用，未加载的缓存
+          self._opLoadPending = self._opLoadPending || {}
+          Object.keys(data).forEach(function(key) {
+            if (key === self.opFormNovaName) return
+            var appData = data[key]
+            if (!appData) return
+            var build = self.opFormAppTabBuild[key]
+            if (build && build.editFields) {
+              self._applyOpLoadData(appData, self.opFormAppFormData[key], build.editFields, build.referenceMap || {}, build.choiceMap || {})
+            } else {
+              self._opLoadPending[key] = appData
+            }
+          })
         }
       })
     },
@@ -1538,9 +1632,10 @@ const NovaTable = {
         error() { if (window.$message) window.$message.error('上传请求失败') }
       })
     },
-    openPreview(f, appNovaName) {
+    openPreview(f, appNovaName, isOpForm) {
       this.previewField = f
       this.previewAppNovaName = appNovaName || null
+      this.previewIsOpForm = !!isOpForm
       this.previewIndex = 0
       this.previewModalShow = true
     },
@@ -1571,6 +1666,7 @@ const NovaTable = {
       this.previewModalShow = false
       this.previewField = null
       this.previewAppNovaName = null
+      this.previewIsOpForm = false
       this.previewIndex = 0
     },
     deleteFromPreview(idx) {
@@ -3200,7 +3296,7 @@ const NovaTable = {
                             :multiple="opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit > 1"
                             @change="handleOpAttachmentChange(f, $event)" />
                         </label>
-                        <div v-if="(opFormData[f.field] || []).length > 0" class="attachment-dropdown-item" @click="openPreview(f)">
+                        <div v-if="(opFormData[f.field] || []).length > 0" class="attachment-dropdown-item" @click="openPreview(f, null, true)">
                           <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>
                           查看文件（共{{ (opFormData[f.field] || []).length }}个）
                         </div>
@@ -3333,7 +3429,7 @@ const NovaTable = {
                           </label>
                           <div v-if="(opFormAppData(tab.tapNovaName)[f.field] || []).length > 0"
                             class="attachment-dropdown-item"
-                            @click="openPreview(f, tab.tapNovaName)">
+                            @click="openPreview(f, tab.tapNovaName, true)">
                             <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>
                             查看文件（共{{ (opFormAppData(tab.tapNovaName)[f.field] || []).length }}个）
                           </div>

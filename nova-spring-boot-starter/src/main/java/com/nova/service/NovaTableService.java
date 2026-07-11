@@ -32,6 +32,9 @@ public interface NovaTableService {
     @Comment("删除表格数据")
     NovaTableDelete.Vo delete(NovaTableDelete novaTableDelete);
 
+    @Comment("自定义按钮初始化条件nova表单的值")
+    Map<String, Map<String, Object>> rowOperationLoad(NovaTableRowOperationLoad novaTableRowOperationLoad);
+
     @Comment("自定义按钮提交")
     NovaTableRowOperationSubmit.Vo rowOperationSubmit(NovaTableRowOperationSubmit novaTableRowOperationSubmit);
 
