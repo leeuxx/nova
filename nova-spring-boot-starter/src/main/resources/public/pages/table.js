@@ -265,10 +265,11 @@ const NovaTable = {
       formErrors:     {},
       striped:        localStorage.getItem('nova-table-striped') !== null
                         ? localStorage.getItem('nova-table-striped') === 'true'
-                        : true,
+                        : false,
       tableSize:      localStorage.getItem('nova-table-size') || 'medium',
       cellOverflow:   localStorage.getItem('nova-table-cell-overflow') || 'ellipsis',
       rowDblclickEdit:localStorage.getItem('nova-table-row-dblclick-edit') === 'true',
+      loadingStyle:   localStorage.getItem('nova-table-loading-style') || 'spinner',
       pageSize:       10,
       pageSizes:      [10, 20, 50, 100],
       loading:          false,
@@ -721,6 +722,9 @@ const NovaTable = {
     },
     rowDblclickEdit(val) {
       localStorage.setItem('nova-table-row-dblclick-edit', val ? 'true' : 'false')
+    },
+    loadingStyle(val) {
+      localStorage.setItem('nova-table-loading-style', val)
     },
     dualTableViewActive(val) {
       if (!this.dualMode) {
@@ -2771,6 +2775,14 @@ const NovaTable = {
                     <n-radio-button value="large">宽松</n-radio-button>
                   </n-radio-group>
                 </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+                  <span>加载动画</span>
+                  <n-radio-group v-model:value="loadingStyle" size="small">
+                    <n-radio-button value="wave">波浪</n-radio-button>
+                    <n-radio-button value="spinner">默认</n-radio-button>
+                    <n-radio-button value="dots">跳点</n-radio-button>
+                  </n-radio-group>
+                </div>
               </div>
             </n-popover>
           </div>
@@ -2792,7 +2804,24 @@ const NovaTable = {
             :scroll-x="scrollX"
             :flex-height="true"
             style="width:100%;height:100%"
-          />
+          >
+            <template #loading v-if="loadingStyle !== 'spinner'">
+              <div :class="['custom-loading', 'loading-' + loadingStyle]">
+                <span v-if="loadingStyle === 'wave'" class="wave-bars">
+                  <span class="bar b1"></span>
+                  <span class="bar b2"></span>
+                  <span class="bar b3"></span>
+                  <span class="bar b4"></span>
+                  <span class="bar b5"></span>
+                </span>
+                <span v-if="loadingStyle === 'dots'" class="dots-wrap">
+                  <span class="dot d1"></span>
+                  <span class="dot d2"></span>
+                  <span class="dot d3"></span>
+                </span>
+              </div>
+            </template>
+          </n-data-table>
         </div>
       </component>
 

@@ -279,6 +279,68 @@ body.table-wrap-cell .n-data-table-td {
 }
 .n-data-table-th { white-space: nowrap; }
 
+/* ─── 加载动画样式（三种） ──────────────────────────────── */
+
+.custom-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+/* 波浪条：5根竖条依次伸缩 */
+.custom-loading.loading-wave .wave-bars {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+}
+.custom-loading.loading-wave .bar {
+  display: inline-block;
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: #2563eb;
+  animation: waveBar 1.2s ease-in-out infinite;
+}
+.custom-loading.loading-wave .b1 { animation-delay: 0s; }
+.custom-loading.loading-wave .b2 { animation-delay: 0.1s; }
+.custom-loading.loading-wave .b3 { animation-delay: 0.2s; }
+.custom-loading.loading-wave .b4 { animation-delay: 0.3s; }
+.custom-loading.loading-wave .b5 { animation-delay: 0.4s; }
+@keyframes waveBar {
+  0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+  50%      { transform: scaleY(1.6); opacity: 1; }
+}
+.dark .custom-loading.loading-wave .bar {
+  background: #60a5fa;
+}
+
+/* 跳点：三个圆点依次上下跳动 */
+.custom-loading.loading-dots .dots-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.custom-loading.loading-dots .dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2563eb;
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+.custom-loading.loading-dots .d1 { animation-delay: 0s; }
+.custom-loading.loading-dots .d2 { animation-delay: 0.15s; }
+.custom-loading.loading-dots .d3 { animation-delay: 0.3s; }
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40%           { transform: translateY(-8px); opacity: 1; }
+}
+.dark .custom-loading.loading-dots .dot {
+  background: #60a5fa;
+}
+
 /* ─── 暗色模式 ─────────────────────────────────────────── */
 .dark { background: #151515; }
 body.dark { background: #151515 !important; }
