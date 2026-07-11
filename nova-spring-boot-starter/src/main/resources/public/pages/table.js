@@ -268,6 +268,7 @@ const NovaTable = {
                         : true,
       tableSize:      localStorage.getItem('nova-table-size') || 'medium',
       cellOverflow:   localStorage.getItem('nova-table-cell-overflow') || 'ellipsis',
+      rowDblclickEdit:localStorage.getItem('nova-table-row-dblclick-edit') === 'true',
       pageSize:       10,
       pageSizes:      [10, 20, 50, 100],
       loading:          false,
@@ -717,6 +718,9 @@ const NovaTable = {
         localStorage.setItem('nova-table-cell-overflow', val)
         document.body.classList.toggle('table-wrap-cell', val === 'wrap')
       }
+    },
+    rowDblclickEdit(val) {
+      localStorage.setItem('nova-table-row-dblclick-edit', val ? 'true' : 'false')
     },
     dualTableViewActive(val) {
       if (!this.dualMode) {
@@ -2749,6 +2753,10 @@ const NovaTable = {
                   <n-switch v-model:value="striped" />
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+                  <span>双击编辑</span>
+                  <n-switch v-model:value="rowDblclickEdit" />
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
                   <span>文字溢出</span>
                   <n-radio-group v-model:value="cellOverflow" size="small">
                     <n-radio-button value="ellipsis">省略</n-radio-button>
@@ -2774,7 +2782,7 @@ const NovaTable = {
             :row-key="row => row[novaIdFieldName]"
             :checked-row-keys="checkedRowKeys"
             @update:checked-row-keys="handleCheck"
-            :row-props="(pickerMode || pickerMulti) ? (row) => ({ style: 'cursor:pointer', onClick: () => pickerMulti ? toggleCheckedRow(row) : selectRow(row) }) : (dualTableViewActive ? (row) => ({ style: 'cursor:pointer', onClick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; onDualTableRowClick(row) } }) : undefined)"
+            :row-props="(pickerMode || pickerMulti) ? (row) => ({ style: 'cursor:pointer', onClick: () => pickerMulti ? toggleCheckedRow(row) : selectRow(row) }) : (dualTableViewActive ? (row) => ({ style: 'cursor:pointer', onClick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; onDualTableRowClick(row) } }) : (rowDblclickEdit ? (row) => ({ style: 'cursor:default', onDblclick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; handleEdit(row) } }) : undefined))"
             :row-class-name="dualTableViewActive ? (row) => (row[novaIdFieldName] === (this._dualSelectedRow && this._dualSelectedRow[this.novaIdFieldName])) ? 'dual-selected-row' : '' : undefined"
             :loading="loading"
             :remote="true"
