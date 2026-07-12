@@ -577,6 +577,8 @@ window.NovaTableJQ = (function ($) {
         if (!t) return
         t.loading = false
         if (resp.code !== 200) return
+        t.expandedRowKeys = []
+        t.treeLoadingKeys = []
         var records = resp.data.records || []
         t.tableData                    = records
         t.rawTableData                 = resp.data.records    || []
@@ -648,94 +650,105 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── 翻译 CHOICE 类型列 ────────────────────────────────────────
+  // 翻译 CHOICE + REFERENCE + APPENDAGE，返回新数组，不修改原对象
+  function translateRecords(records, tableColumns, choiceMap, referenceMap, appendageMap) {
+    if (!records || records.length === 0) return records
+    var result = records
+    choiceMap = choiceMap || {}
+    referenceMap = referenceMap || {}
+    appendageMap = appendageMap || {}
+
+    // CHOICE 翻译
+    var choiceCols = (tableColumns || []).filter(function (c) { return c.type === 'CHOICE' })
+    if (choiceCols.length > 0) {
+      // 构建 value→color 查找表
+      var colorLookups = {}
+      for (var fk in choiceMap) {
+        if (choiceMap.hasOwnProperty(fk)) {
+          var cl = {}
+          ;(choiceMap[fk].values || []).forEach(function (v) { if (v.color) cl[v.value] = v.color })
+          if (Object.keys(cl).length > 0) colorLookups[fk] = cl
+        }
+      }
+      var localLookups = {}
+      for (var fkk in choiceMap) {
+        if (choiceMap.hasOwnProperty(fkk)) {
+          var lookup = {}
+          ;(choiceMap[fkk].values || []).forEach(function (v) { lookup[v.value] = v.label })
+          localLookups[fkk] = lookup
+        }
+      }
+      result = result.map(function (row) {
+        var updated = $.extend({}, row)
+        var colors = {}
+        choiceCols.forEach(function (col) {
+          var lk = localLookups[col.field]
+          if (!lk) return
+          var isMulti = choiceMap[col.field] && choiceMap[col.field].selectType === 'MULTI'
+          var raw = (row[col.field] === null || row[col.field] === undefined) ? '' : String(row[col.field])
+          if (!raw) return
+          updated[col.field] = isMulti
+            ? raw.split(',').map(function (v) { return lk[v.trim()] || v.trim() }).join(',')
+            : (lk[raw] || raw)
+          // 计算颜色（取第一个有颜色的值）
+          var clk = colorLookups[col.field]
+          if (clk) {
+            colors[col.field] = isMulti
+              ? (raw ? raw.split(',').map(function (v) { return clk[v.trim()] || null }) : [])
+              : (clk[raw] || null)
+          }
+        })
+        if (Object.keys(colors).length > 0) updated._colors = colors
+        return updated
+      })
+    }
+
+    // REFERENCE + APPENDAGE 翻译
+    var refCols = (tableColumns || []).filter(function (col) {
+      return col.type === 'REFERENCE' || col.type === 'APPENDAGE'
+    })
+    if (refCols.length > 0) {
+      result = result.map(function (row) {
+        var updated = $.extend({}, row)
+        refCols.forEach(function (col) {
+          var dotIdx = col.field.indexOf('.')
+          var refKey = dotIdx > -1 ? col.field.slice(0, dotIdx) : col.field
+          var nestedObj = row[refKey]
+          if (!nestedObj || typeof nestedObj !== 'object') {
+            updated[col.field + '_display'] = ''
+            return
+          }
+          var propKey
+          if (dotIdx > -1) {
+            propKey = col.field.slice(dotIdx + 1)
+          } else if (col.type === 'REFERENCE') {
+            propKey = (referenceMap[refKey] && referenceMap[refKey].displayField) || 'name'
+          } else {
+            var ai = appendageMap[refKey]
+            propKey = (ai && ai.displayField) || 'name'
+          }
+          var val = nestedObj[propKey]
+          updated[col.field + '_display'] = (val !== null && val !== undefined) ? val : ''
+        })
+        return updated
+      })
+    }
+    return result
+  }
+
   function translateData(vmKey) {
     var target = window.vmMap && window.vmMap[vmKey]
     if (!target) return
     var records = target.tableData
     if (!records || records.length === 0) return
-    var choiceCols = (target.tableColumns || []).filter(function (c) { return c.type === 'CHOICE' })
-    // CHOICE 翻译（原逻辑不变）
-    if (choiceCols.length > 0) {
-      var choiceMap = target.choiceMap || {}
-      var rowColors = []
-      records.forEach(function (row, idx) {
-        var colors = {}
-        choiceCols.forEach(function (col) {
-          var choiceEntry = choiceMap[col.field]
-          if (!choiceEntry || !choiceEntry.values) return
-          var colorLookup = {}
-          choiceEntry.values.forEach(function (v) { if (v.color) colorLookup[v.value] = v.color })
-          if (Object.keys(colorLookup).length === 0) return
-          var raw = (row[col.field] === null || row[col.field] === undefined) ? '' : String(row[col.field])
-          var isMulti = choiceEntry.selectType === 'MULTI'
-          colors[col.field] = isMulti
-            ? (raw ? raw.split(',').map(function (v) { return colorLookup[v.trim()] || null }) : [])
-            : (colorLookup[raw] || null)
-        })
-        rowColors[idx] = colors
-      })
-      target.tableRowColors = rowColors
-      var localLookups = {}
-      for (var fk in choiceMap) {
-        if (choiceMap.hasOwnProperty(fk)) {
-          var lookup = {}
-          ;(choiceMap[fk].values || []).forEach(function (v) { lookup[v.value] = v.label })
-          localLookups[fk] = lookup
-        }
-      }
-      var localTranslate = {}
-      choiceCols.forEach(function (col) {
-        var isMulti = choiceMap[col.field] && choiceMap[col.field].selectType === 'MULTI'
-        if (localLookups[col.field]) localTranslate[col.field] = { lookup: localLookups[col.field], isMulti: isMulti }
-      })
-      if (Object.keys(localTranslate).length > 0) {
-        target.tableData = target.tableData.map(function (row) {
-          var updated = $.extend({}, row)
-          for (var field in localTranslate) {
-            if (!localTranslate.hasOwnProperty(field)) continue
-            var lk = localTranslate[field].lookup
-            var isMulti = localTranslate[field].isMulti
-            var raw = (row[field] === null || row[field] === undefined) ? '' : String(row[field])
-            if (!raw) continue
-            updated[field] = isMulti
-              ? raw.split(',').map(function (v) { return lk[v.trim()] || v.trim() }).join(',')
-              : (lk[raw] || raw)
-          }
-          return updated
-        })
-      }
-    }
-    // REFERENCE + APPENDAGE 翻译（VIEW 模式：行数据中已含嵌套对象，直接读取）
-    var referenceMap = target.referenceMap || {}
-    var appendageMap = target.appendageMap || {}
-    var refCols = (target.tableColumns || []).filter(function(col) {
-      return col.type === 'REFERENCE' || col.type === 'APPENDAGE'
-    })
-    if (refCols.length === 0) return
-    target.tableData = target.tableData.map(function(row) {
-      var updated = $.extend({}, row)
-      refCols.forEach(function(col) {
-        var dotIdx = col.field.indexOf('.')
-        var refKey = dotIdx > -1 ? col.field.slice(0, dotIdx) : col.field
-        var nestedObj = row[refKey]
-        if (!nestedObj || typeof nestedObj !== 'object') {
-          updated[col.field + '_display'] = ''
-          return
-        }
-        var propKey
-        if (dotIdx > -1) {
-          propKey = col.field.slice(dotIdx + 1)
-        } else if (col.type === 'REFERENCE') {
-          propKey = (referenceMap[refKey] && referenceMap[refKey].displayField) || 'name'
-        } else {
-          var ai = appendageMap[refKey]
-          propKey = (ai && ai.displayField) || 'name'
-        }
-        var val = nestedObj[propKey]
-        updated[col.field + '_display'] = (val !== null && val !== undefined) ? val : ''
-      })
-      return updated
-    })
+
+    target.tableData = translateRecords(
+      target.tableData,
+      target.tableColumns,
+      target.choiceMap,
+      target.referenceMap,
+      target.appendageMap
+    )
   }
 
   // ── 重置筛选条件 ──────────────────────────────────────────────
@@ -1233,20 +1246,19 @@ window.NovaTableJQ = (function ($) {
     var novaName = target.novaName
     var novaIdField = target.novaIdFieldName
     var pkValue = String(row[novaIdField])
-    // TODO: 接口就绪后替换此处
-    // $.ajax({
-    //   url: '/nova/table/tree-children',
-    //   method: 'POST',
-    //   contentType: 'application/json',
-    //   data: JSON.stringify({ novaName: novaName, novaIdFieldName: novaIdField, parentId: pkValue }),
-    //   success: function(resp) {
-    //     if (resp.code !== 200) { callback([]); return }
-    //     callback(resp.data.records || [])
-    //   },
-    //   error: function() { callback([]) }
-    // })
-    // 临时：接口未就绪，返回空数据
-    callback([])
+    $.ajax({
+      url: '/nova/table/tree',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({ novaName: novaName, storageFieldValue: pkValue }),
+      success: function(resp) {
+        if (resp.code !== 200) { callback && callback([]); return }
+        var children = resp.data || []
+        children = translateRecords(children, target.tableColumns, target.choiceMap, target.referenceMap, target.appendageMap)
+        callback && callback(children)
+      },
+      error: function() { callback && callback([]) }
+    })
   }
 
   return {

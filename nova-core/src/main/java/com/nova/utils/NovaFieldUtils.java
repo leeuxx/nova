@@ -492,7 +492,8 @@ public class NovaFieldUtils {
                         .setReferenceField(referenceType.referenceField())
                         .setStorageField(referenceType.storageField())
                         .setDisplayField(referenceType.displayField())
-                        .setReferenceTransmitField(Arrays.asList(referenceType.referenceTransmitField()));
+                        .setReferenceTransmitField(Arrays.asList(referenceType.referenceTransmitField()))
+                        .setIsThisObj(novaFieldInfo.getFieldClass().getSimpleName().equals(className));
                 referenceTypeInfos.put(field, referenceTypeInfo);
             }
         });
@@ -860,6 +861,9 @@ public class NovaFieldUtils {
 
         @Comment("当前类获取引用类数据时，额外向引用类 DataProxy.fetch 传递的当前类表单上下文信息")
         private List<String> referenceTransmitField;
+
+        @Comment("是否为当前nova本身对象（树渲染有用）")
+        private Boolean isThisObj;
 
     }
 

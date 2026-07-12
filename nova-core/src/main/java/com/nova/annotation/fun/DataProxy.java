@@ -28,6 +28,11 @@ public interface DataProxy<MODEL> {
         return null;
     }
 
+    @Comment("树查询（查询子节点数据）")
+    default List<MODEL> tree(String storageFieldValue) {
+        return null;
+    }
+
     @Comment("关键词搜索（供引用nova用做下拉查询条件搜索）")
     default PromptSearch.Vo promptSearch(PromptSearch promptSearch) {
         return null;

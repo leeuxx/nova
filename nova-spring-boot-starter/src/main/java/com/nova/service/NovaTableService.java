@@ -4,6 +4,7 @@ import com.nova.annotation.config.Comment;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
 
+import java.util.List;
 import java.util.Map;
 
 public interface NovaTableService {
@@ -38,4 +39,6 @@ public interface NovaTableService {
     @Comment("自定义按钮提交")
     NovaTableRowOperationSubmit.Vo rowOperationSubmit(NovaTableRowOperationSubmit novaTableRowOperationSubmit);
 
+    @Comment("获取树形结构数据")
+    List<Map<String, Object>> tree(NovaTableTree novaTableTree);
 }

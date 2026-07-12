@@ -190,7 +190,8 @@ public class NovaTableServiceImpl implements NovaTableService {
                     .setReferenceField(referenceInfo.getReferenceField())
                     .setStorageField(referenceInfo.getStorageField())
                     .setDisplayField(referenceInfo.getDisplayField())
-                    .setReferenceTransmitField(referenceInfo.getReferenceTransmitField());
+                    .setReferenceTransmitField(referenceInfo.getReferenceTransmitField())
+                    .setIsThisObj(referenceInfo.getIsThisObj());
             referenceMap.put(field, reference);
         });
         vo.setReference(referenceMap);
@@ -569,6 +570,17 @@ public class NovaTableServiceImpl implements NovaTableService {
             return new NovaTableRowOperationSubmit.Vo().setJsExpression(jsExpression);
         }
         return new NovaTableRowOperationSubmit.Vo();
+    }
+
+    @Override
+    public List<Map<String, Object>> tree(NovaTableTree novaTableTree) {
+        String novaName = novaTableTree.getNovaName();
+        String storageFieldValue = novaTableTree.getStorageFieldValue();
+        List<?> trees = ((DataProxy) DataProxyUtils.getDataProxy(novaName)).tree(storageFieldValue);
+        // 转换Map
+        List<Map<String, Object>> maps = new ArrayList<>();
+        trees.forEach(record -> maps.add(DataProxyUtils.toMapWithTimestamp(record)));
+        return maps;
     }
 
 }

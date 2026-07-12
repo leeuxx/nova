@@ -187,7 +187,6 @@ const NovaTable = {
       refPickerStack: [],      tableWrapperWidth: 0,
       novaName:       '',
       novaIdFieldName:    null,
-      tableRowColors: [],
       tableData:      [],
       rawTableData:   [],
       tableColumns:   [],
@@ -517,10 +516,16 @@ const NovaTable = {
             const toggleExpand = () => {
               if (isLoading || noChildren) return
               if (isExpanded) {
-                // 收起：保留已加载数据，只移除展开状态
-                const keys = [...vm.expandedRowKeys]
-                const idx = keys.indexOf(rowKey)
+                // 收起：移除自身及所有子孙节点的展开状态
+                var keys = [...vm.expandedRowKeys]
+                var idx = keys.indexOf(rowKey)
                 if (idx >= 0) keys.splice(idx, 1)
+                // 收集所有已展开的子孙节点并一并移除
+                var descKeys = vm.collectDescendantKeys(vm.tableData, rowKey, vm.novaIdFieldName)
+                descKeys.forEach(function(dk) {
+                  var di = keys.indexOf(dk)
+                  if (di >= 0) keys.splice(di, 1)
+                })
                 vm.expandedRowKeys = keys
               } else {
                 // 展开
@@ -667,7 +672,7 @@ const NovaTable = {
           colDef.render = (row, rowIndex) => {
             const text = row[col.field]
             if (text === null || text === undefined || text === '') return text
-            const colorData = vm.tableRowColors[rowIndex] && vm.tableRowColors[rowIndex][col.field]
+            const colorData = row._colors && row._colors[col.field]
             const choice = vm.choiceMap && vm.choiceMap[col.field]
             const isMulti = choice && choice.selectType === 'MULTI'
             const makeTag = (label, color) => {
@@ -1012,6 +1017,7 @@ const NovaTable = {
       if (this.dualTableViewActive && row[this.novaIdFieldName] === (this._dualSelectedRow && this._dualSelectedRow[this.novaIdFieldName])) {
         cls.push('dual-selected-row')
       }
+      if (row._newChild) cls.push('tree-child-new')
       return cls.join(' ') || undefined
     },
     loadTreeChildren(row, level) {
@@ -1030,6 +1036,12 @@ const NovaTable = {
         this.setRowChildren(this.tableData, rowKey, children)
         // 展开该行
         this.expandedRowKeys = [...this.expandedRowKeys, rowKey]
+        // 动画结束后清除标记
+        var self = this
+        setTimeout(function() {
+          children.forEach(function(c) { c._newChild = false })
+          self.tableData = [...self.tableData]
+        }, 350)
       } else {
         // 空数据，标记为无子节点，不展开
         var targetRow = null
@@ -1043,6 +1055,7 @@ const NovaTable = {
       var pk = this.novaIdFieldName
       for (var i = 0; i < list.length; i++) {
         if (String(list[i][pk]) === String(rowKey)) {
+          children.forEach(function(c) { c._newChild = true })
           list[i].children = children
           this.tableData = [...this.tableData]
           return true
@@ -1052,6 +1065,30 @@ const NovaTable = {
         }
       }
       return false
+    },
+    collectDescendantKeys(list, rowKey, pk) {
+      var keys = []
+      for (var i = 0; i < list.length; i++) {
+        if (String(list[i][pk]) === String(rowKey)) {
+          if (list[i].children && list[i].children.length > 0) {
+            this._collectAllKeys(list[i].children, pk, keys)
+          }
+          return keys
+        }
+        if (list[i].children && list[i].children.length > 0) {
+          var found = this.collectDescendantKeys(list[i].children, rowKey, pk)
+          if (found.length > 0) return found
+        }
+      }
+      return keys
+    },
+    _collectAllKeys(list, pk, out) {
+      for (var i = 0; i < list.length; i++) {
+        out.push(list[i][pk])
+        if (list[i].children && list[i].children.length > 0) {
+          this._collectAllKeys(list[i].children, pk, out)
+        }
+      }
     },
     findRow(list, rowKey, callback) {
       var pk = this.novaIdFieldName
@@ -2495,6 +2532,8 @@ const NovaTable = {
       return String(val)
     },
     handlePageChange(current) {
+      this.expandedRowKeys = []
+      this.treeLoadingKeys = []
       const key = (this.pickerMode || this.embeddedMode || this.dualMode) ? this._vmKey : this.novaName
       window.NovaTableJQ.onPageChange(key, current)
     },

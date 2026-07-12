@@ -107,6 +107,25 @@ public class TestDemoView {
     private Long id;
 
     @NovaField(
+            views = @View(title = "用户名", width = "10%"),
+            edit = @Edit(
+                    title = "用户名",
+                    notNull = true,
+                    search = @Search
+            )
+    )
+    private String name;
+
+    @NovaField(
+            views = @View(title = "用户昵称", width = "10%"),
+            edit = @Edit(
+                    title = "用户昵称",
+                    search = @Search(vague = true)
+            )
+    )
+    private String nick;
+
+    @NovaField(
             views = {
                     @View(title = "部门名称", column = "name", width = "10%"),
                     @View(title = "部门说明", column = "msg", width = "10%")
@@ -168,9 +187,6 @@ public class TestDemoView {
     private TestDemoRefView testDemoRefView;
 
     @NovaField(
-            views = {
-                    @View(title = "上级名称", column = "name", width = "10%")
-            },
             edit = @Edit(
                     title = "上级信息",
                     type = Edit.Type.REFERENCE,
@@ -182,25 +198,6 @@ public class TestDemoView {
             )
     )
     private TestDemoView testDemoView;
-
-    @NovaField(
-            views = @View(title = "用户名", width = "10%"),
-            edit = @Edit(
-                    title = "用户名",
-                    notNull = true,
-                    search = @Search
-            )
-    )
-    private String name;
-
-    @NovaField(
-            views = @View(title = "用户昵称", width = "10%"),
-            edit = @Edit(
-                    title = "用户昵称",
-                    search = @Search(vague = true)
-            )
-    )
-    private String nick;
 
     @NovaField(
             views = @View(title = "性别", width = "10%", sortable = true),

@@ -4,13 +4,15 @@ import com.nova.annotation.config.Comment;
 import com.nova.annotation.config.RestMappingController;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
-import java.util.Map;
 import com.nova.service.NovaTableService;
 import com.nova.utils.R;
 import lombok.AllArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 @RestMappingController("nova/table")
@@ -85,6 +87,13 @@ public class NovaTableController {
     @PostMapping("rowOperationLoad")
     public R<Map<String, Map<String, Object>>> rowOperationLoad(@RequestBody @Validated NovaTableRowOperationLoad req) {
         Map<String, Map<String, Object>> data = novaTableService.rowOperationLoad(req);
+        return R.ok(data);
+    }
+
+    @Comment("获取树形结构数据")
+    @PostMapping("tree")
+    public R<List<Map<String, Object>>> tree(@RequestBody @Validated NovaTableTree req) {
+        List<Map<String, Object>> data = novaTableService.tree(req);
         return R.ok(data);
     }
 
