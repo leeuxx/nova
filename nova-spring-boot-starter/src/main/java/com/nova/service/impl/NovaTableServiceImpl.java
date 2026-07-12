@@ -29,6 +29,9 @@ public class NovaTableServiceImpl implements NovaTableService {
     @Override
     public NovaTableBuild.Vo build(NovaTableBuild novaTableBuild) {
         NovaTableBuild.Vo vo = new NovaTableBuild.Vo();
+        // 获取树形
+        Boolean tree = NovaUtils.tree(novaTableBuild.getNovaName());
+        vo.setTree(tree);
         // 获取novaId属性名称
         String novaIdFieldName = NovaFieldUtils.getNovaIdFieldName(novaTableBuild.getNovaName());
         vo.setNovaIdFieldName(novaIdFieldName);

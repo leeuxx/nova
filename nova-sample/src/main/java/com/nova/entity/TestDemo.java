@@ -43,4 +43,6 @@ public class TestDemo {
 
     private String file2;
 
+    private Long parentId;
+
 }

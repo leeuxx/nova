@@ -56,6 +56,14 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         LambdaQueryWrapper<TestDemo> wrapper = testDemoResult.getWrapper();
         IPage<TestDemo> iPage = page(page, wrapper);
         List<TestDemo> records = iPage.getRecords();
+        List<Long> parentIdList = records.stream()
+                .map(TestDemo::getParentId)
+                .filter(Objects::nonNull)
+                .toList();
+        List<TestDemo> testDemos = new ArrayList<>();
+        if (!parentIdList.isEmpty()) {
+            testDemos = listByIds(parentIdList);
+        }
         List<Long> demo2IdList = records.stream()
                 .map(TestDemo::getDemo2Id)
                 .filter(Objects::nonNull)
@@ -78,6 +86,13 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         for (TestDemo record : records) {
             TestDemoView testDemoView = new TestDemoView();
             BeanUtils.copyProperties(record, testDemoView); // 源，目标
+            for (TestDemo testDemo : testDemos) {
+                if (testDemo.getId().equals(record.getParentId())) {
+                    TestDemoView topTestDemoView = new TestDemoView();
+                    BeanUtils.copyProperties(testDemo, topTestDemoView); // 源，目标
+                    testDemoView.setTestDemoView(topTestDemoView);
+                }
+            }
             for (TestDemo2 testDemo2 : testDemo2s) {
                 if (testDemo2.getId().equals(record.getDemo2Id())) {
                     TestDemo2View testDemo2View = new TestDemo2View();
@@ -102,9 +117,15 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     @Override
     public TestDemoView details(Details details) {
         TestDemo testDemo = getById(details.getStorageFieldValue());
-        TestDemo2 testDemo2 = testDemo2Service.getById(testDemo.getDemo2Id());
         TestDemoView testDemoView = new TestDemoView();
         BeanUtils.copyProperties(testDemo, testDemoView); // 源，目标
+        if (testDemo.getParentId() != null) {
+            TestDemo topTestDemo = getById(testDemo.getParentId());
+            TestDemoView topTestDemoView = new TestDemoView();
+            BeanUtils.copyProperties(topTestDemo, topTestDemoView); // 源，目标
+            testDemoView.setTestDemoView(topTestDemoView);
+        }
+        TestDemo2 testDemo2 = testDemo2Service.getById(testDemo.getDemo2Id());
         if (testDemo2 != null) {
             TestDemo2View testDemo2View = new TestDemo2View();
             BeanUtils.copyProperties(testDemo2, testDemo2View); // 源，目标

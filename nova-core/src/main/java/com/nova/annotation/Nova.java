@@ -30,4 +30,7 @@ public @interface Nova {
     @Comment("自定义功能按钮")
     RowOperation[] rowOperation() default {};
 
+    @Comment("是否树结构")
+    boolean tree() default false;
+
 }

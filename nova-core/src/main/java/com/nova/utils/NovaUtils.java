@@ -15,6 +15,21 @@ import java.util.stream.Collectors;
 public class NovaUtils {
 
     /**
+     * 获取是否树形结构
+     *
+     * @param className 类名
+     * @return 是否树结构
+     */
+    public static Boolean tree(String className) {
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return false;
+        }
+        return scanNova.getTree();
+    }
+
+    /**
      * 获取布局信息
      *
      * @param className 类名

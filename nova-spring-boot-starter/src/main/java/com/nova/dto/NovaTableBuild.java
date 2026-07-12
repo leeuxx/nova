@@ -20,6 +20,9 @@ public class NovaTableBuild {
     @Accessors(chain = true)
     public static class Vo {
 
+        @Comment("是否树形")
+        private Boolean tree;
+
         @Comment("novaId属性名")
         private String novaIdFieldName;
 

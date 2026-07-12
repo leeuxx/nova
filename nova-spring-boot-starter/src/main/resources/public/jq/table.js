@@ -116,7 +116,7 @@ window.NovaTableJQ = (function ($) {
           })
         })
         if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
-        // embedded 模式：始终记录 source 信息，sourceFields 非空时过滤编辑/搜索字段
+        target.isTree = resp.data.tree === true
         target._sourceFields = embSourceFields || {}
         target._sourceNovaName = sourceNovaName || novaName
         if (embSourceFields && Object.keys(embSourceFields).length > 0) {
@@ -578,19 +578,6 @@ window.NovaTableJQ = (function ($) {
         t.loading = false
         if (resp.code !== 200) return
         var records = resp.data.records || []
-        if (records.length > 0 && !records[0].children) {
-          var pk = resp.data.novaIdFieldName
-          var parentVal = records[0][pk]
-          var firstColField = Object.keys(records[0])[0]
-          var rand = Math.random().toString(36).substr(2, 8)
-          records[0].children = [
-            { ...records[0], [firstColField]: records[0][firstColField] + ' [子1]', [pk]: rand + '_c1' },
-            { ...records[0], [firstColField]: records[0][firstColField] + ' [子2]', [pk]: rand + '_c2', children: [
-              { ...records[0], [firstColField]: records[0][firstColField] + ' [孙1]', [pk]: rand + '_c2_s1' },
-              { ...records[0], [firstColField]: records[0][firstColField] + ' [孙2]', [pk]: rand + '_c2_s2' }
-            ]}
-          ]
-        }
         t.tableData                    = records
         t.rawTableData                 = resp.data.records    || []
         t.paginationConfig.itemCount   = resp.data.total      || 0
@@ -1185,6 +1172,7 @@ window.NovaTableJQ = (function ($) {
           target.paginationConfig.pageSizes = layout.pageSizes.map(function (n) { return { label: n + ' 条/页', value: n } })
         }
         if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
+        target.isTree = resp.data.tree === true
         loadData(vmKey)
       },
       error: function () {
@@ -1238,6 +1226,29 @@ window.NovaTableJQ = (function ($) {
     buildTable(novaName, vmKey, sourceFields || {}, sourceNovaName, deferDataLoad)
   }
 
+  // ── 树形表格：异步加载子节点 ─────────────────────────────────
+  function loadTreeChildren(vmKey, row, level, callback) {
+    var target = window.vmMap && window.vmMap[vmKey]
+    if (!target) { callback && callback([]); return }
+    var novaName = target.novaName
+    var novaIdField = target.novaIdFieldName
+    var pkValue = String(row[novaIdField])
+    // TODO: 接口就绪后替换此处
+    // $.ajax({
+    //   url: '/nova/table/tree-children',
+    //   method: 'POST',
+    //   contentType: 'application/json',
+    //   data: JSON.stringify({ novaName: novaName, novaIdFieldName: novaIdField, parentId: pkValue }),
+    //   success: function(resp) {
+    //     if (resp.code !== 200) { callback([]); return }
+    //     callback(resp.data.records || [])
+    //   },
+    //   error: function() { callback([]) }
+    // })
+    // 临时：接口未就绪，返回空数据
+    callback([])
+  }
+
   return {
     onMounted, onRouteChange, buildTable, updateTableHeight,
     handleReset, handleAdd, handleEdit, handleDelete,
@@ -1245,7 +1256,7 @@ window.NovaTableJQ = (function ($) {
     loadData, onPageChange, onPageSizeChange, onSortChange,
     onPickerMounted, onViewMounted, onEmbeddedMounted,
     loadReferenceDetails, loadAppendageDetails,
-    buildLinkTabs, handleLinkAdd
+    buildLinkTabs, handleLinkAdd, loadTreeChildren
   }
 
 })(jQuery)

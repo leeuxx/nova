@@ -195,6 +195,8 @@ const NovaTable = {
       filterExpanded: false,
       checkedRowKeys: [],
       expandedRowKeys: [],
+      isTree: false,
+      treeLoadingKeys: [],
       selectedRowKey: null,
       searchFields:   [],
       filterForm:     {},
@@ -401,9 +403,6 @@ const NovaTable = {
       var flatten = function(list, level) {
         list.forEach(function(item) {
           var cloned = { ...item, _treeLevel: level }
-          if (item.children && item.children.length > 0) {
-            cloned._hasChildren = true
-          }
           delete cloned.children
           result.push(cloned)
           if (item.children && item.children.length > 0 && expanded.has(item[pk])) {
@@ -411,7 +410,11 @@ const NovaTable = {
           }
         })
       }
-      flatten(this.tableData, 0)
+      if (this.isTree) {
+        flatten(this.tableData, 0)
+      } else {
+        this.tableData.forEach(function(item) { result.push(item) })
+      }
       return result
     },
 
@@ -491,7 +494,7 @@ const NovaTable = {
       }
 
       this.tableColumns.forEach((col, index) => {
-        const isTreeTable = vm.tableData.length > 0 && vm.tableData[0].children
+        const isTreeTable = vm.isTree
         const colDef = {
           key:       col.field,
           width:     vm.colPixels[index],
@@ -503,26 +506,60 @@ const NovaTable = {
         if (index === 0 && isTreeTable) {
           colDef.render = (row) => {
             const level = row._treeLevel || 0
-            const hasChildren = row._hasChildren
-            const isExpanded = vm.expandedRowKeys.includes(row[vm.novaIdFieldName])
+            const rowKey = row[vm.novaIdFieldName]
+            const isExpanded = vm.expandedRowKeys.includes(rowKey)
+            const isLoading = vm.treeLoadingKeys.includes(rowKey)
+            const hasLoadedChildren = row.children !== undefined
+            const noChildren = row._noChildren === true
+            const showArrow = true
             const indent = level * 20
             const toggleExpand = () => {
-              const keys = [...vm.expandedRowKeys]
-              const idx = keys.indexOf(row[vm.novaIdFieldName])
-              if (idx >= 0) keys.splice(idx, 1)
-              else keys.push(row[vm.novaIdFieldName])
-              vm.expandedRowKeys = keys
+              if (isLoading || noChildren) return
+              if (isExpanded) {
+                // 收起：保留已加载数据，只移除展开状态
+                const keys = [...vm.expandedRowKeys]
+                const idx = keys.indexOf(rowKey)
+                if (idx >= 0) keys.splice(idx, 1)
+                vm.expandedRowKeys = keys
+              } else {
+                // 展开
+                if (!hasLoadedChildren) {
+                  // 首次展开，异步加载子节点
+                  vm.loadTreeChildren(row, level)
+                } else {
+                  const keys = [...vm.expandedRowKeys]
+                  keys.push(rowKey)
+                  vm.expandedRowKeys = keys
+                }
+              }
             }
             const children = []
             if (indent > 0) {
               children.push(h('span', { style: `display:inline-block;width:${indent}px;flex-shrink:0` }))
             }
-            if (hasChildren) {
-              children.push(h('iconify-icon', {
-                icon: isExpanded ? 'material-symbols:expand-more' : 'material-symbols:chevron-right',
-                style: 'font-size:16px;color:#888;cursor:pointer;flex-shrink:0;margin-right:4px',
-                onClick: toggleExpand
-              }))
+            if (showArrow) {
+              if (isLoading) {
+                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:20px;flex-shrink:0' }, [
+                  h('iconify-icon', {
+                    icon: 'line-md:loading-loop',
+                    style: 'font-size:18px;color:#888'
+                  })
+                ]))
+              } else if (noChildren) {
+                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:20px;flex-shrink:0' }, [
+                  h('span', {
+                    style: 'display:inline-block;width:6px;height:6px;border-radius:50%;background:#bbb'
+                  })
+                ]))
+              } else {
+                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:20px;flex-shrink:0' }, [
+                  h('iconify-icon', {
+                    icon: isExpanded ? 'material-symbols:expand-more' : 'material-symbols:chevron-right',
+                    style: 'font-size:19px;color:#888;cursor:pointer',
+                    onClick: toggleExpand
+                  })
+                ]))
+              }
             } else {
               children.push(h('span', { style: 'display:inline-block;width:20px;flex-shrink:0' }))
             }
@@ -969,6 +1006,65 @@ const NovaTable = {
   },
 
   methods: {
+    tableRowClassName(row) {
+      var cls = []
+      if (this.dualTableViewActive && row[this.novaIdFieldName] === (this._dualSelectedRow && this._dualSelectedRow[this.novaIdFieldName])) {
+        cls.push('dual-selected-row')
+      }
+      return cls.join(' ') || undefined
+    },
+    loadTreeChildren(row, level) {
+      const rowKey = row[this.novaIdFieldName]
+      // 标记加载中
+      this.treeLoadingKeys = [...this.treeLoadingKeys, rowKey]
+      // TODO: 接口就绪后替换此处，参数为 novaName + 当前行的 PK 值
+      // 返回格式与 data 接口一致：{ records: [], total: N }
+      window.NovaTableJQ.loadTreeChildren(this._vmKey || this.novaName, row, level, (children) => {
+        // 移除加载中状态
+        var idx = this.treeLoadingKeys.indexOf(rowKey)
+        if (idx >= 0) {
+          this.treeLoadingKeys = this.treeLoadingKeys.filter(k => k !== rowKey)
+        }
+        if (children && children.length > 0) {
+        this.setRowChildren(this.tableData, rowKey, children)
+        // 展开该行
+        this.expandedRowKeys = [...this.expandedRowKeys, rowKey]
+      } else {
+        // 空数据，标记为无子节点，不展开
+        var targetRow = null
+        this.findRow(this.tableData, rowKey, function(r) { targetRow = r })
+        if (targetRow) targetRow._noChildren = true
+        this.tableData = [...this.tableData]
+      }
+      })
+    },
+    setRowChildren(list, rowKey, children) {
+      var pk = this.novaIdFieldName
+      for (var i = 0; i < list.length; i++) {
+        if (String(list[i][pk]) === String(rowKey)) {
+          list[i].children = children
+          this.tableData = [...this.tableData]
+          return true
+        }
+        if (list[i].children && list[i].children.length > 0) {
+          if (this.setRowChildren(list[i].children, rowKey, children)) return true
+        }
+      }
+      return false
+    },
+    findRow(list, rowKey, callback) {
+      var pk = this.novaIdFieldName
+      for (var i = 0; i < list.length; i++) {
+        if (String(list[i][pk]) === String(rowKey)) {
+          callback && callback(list[i])
+          return true
+        }
+        if (list[i].children && list[i].children.length > 0) {
+          if (this.findRow(list[i].children, rowKey, callback)) return true
+        }
+      }
+      return false
+    },
     isReadonly(f) {
       if (!f.readonly) return false
       return this.formMode === 'add' ? !!f.readonly.add : !!f.readonly.edit
@@ -2911,7 +3007,7 @@ const NovaTable = {
             :checked-row-keys="checkedRowKeys"
             @update:checked-row-keys="handleCheck"
             :row-props="(pickerMode || pickerMulti) ? (row) => ({ style: 'cursor:pointer', onClick: () => pickerMulti ? toggleCheckedRow(row) : selectRow(row) }) : (dualTableViewActive ? (row) => ({ style: 'cursor:pointer', onClick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; onDualTableRowClick(row) } }) : (rowDblclickEdit ? (row) => ({ style: 'cursor:default', onDblclick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; handleEdit(row) } }) : undefined))"
-            :row-class-name="dualTableViewActive ? (row) => (row[novaIdFieldName] === (this._dualSelectedRow && this._dualSelectedRow[this.novaIdFieldName])) ? 'dual-selected-row' : '' : undefined"
+            :row-class-name="tableRowClassName"
             :loading="loading"
             :remote="true"
             :pagination="paginationConfig"

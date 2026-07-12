@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
                 editLayout = Layout.EditLayout.DEFAULT
         ),
         dataProxy = TestDemoService.class,
+        tree = true,
         rowOperation = {
                 @RowOperation(
                         title = "下发指令",
@@ -165,6 +166,22 @@ public class TestDemoView {
             )
     )
     private TestDemoRefView testDemoRefView;
+
+    @NovaField(
+            views = {
+                    @View(title = "上级名称", column = "name", width = "10%")
+            },
+            edit = @Edit(
+                    title = "上级信息",
+                    type = Edit.Type.REFERENCE,
+                    referenceType = @ReferenceType(
+                            referenceField = "parentId"
+                    ),
+                    search = @Search,
+                    notNull = true
+            )
+    )
+    private TestDemoView testDemoView;
 
     @NovaField(
             views = @View(title = "用户名", width = "10%"),
