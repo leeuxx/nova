@@ -551,13 +551,7 @@ const NovaTable = {
                     style: 'font-size:20px;color:#888'
                   })
                 ]))
-              } else if (noChildren) {
-                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:22px;flex-shrink:0' }, [
-                  h('span', {
-                    style: 'display:inline-block;width:7px;height:7px;border-radius:50%;background:#bbb'
-                  })
-                ]))
-              } else {
+              } else if (!noChildren) {
                 children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:22px;flex-shrink:0' }, [
                   h('iconify-icon', {
                     icon: isExpanded ? 'material-symbols:expand-more' : 'material-symbols:chevron-right',
@@ -565,6 +559,8 @@ const NovaTable = {
                     onClick: toggleExpand
                   })
                 ]))
+              } else {
+                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:22px;flex-shrink:0' }))
               }
             } else {
               children.push(h('span', { style: 'display:inline-block;width:20px;flex-shrink:0' }))
