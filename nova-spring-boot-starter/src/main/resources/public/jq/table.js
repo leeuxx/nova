@@ -577,7 +577,21 @@ window.NovaTableJQ = (function ($) {
         if (!t) return
         t.loading = false
         if (resp.code !== 200) return
-        t.tableData                    = resp.data.records    || []
+        var records = resp.data.records || []
+        if (records.length > 0 && !records[0].children) {
+          var pk = resp.data.novaIdFieldName
+          var parentVal = records[0][pk]
+          var firstColField = Object.keys(records[0])[0]
+          var rand = Math.random().toString(36).substr(2, 8)
+          records[0].children = [
+            { ...records[0], [firstColField]: records[0][firstColField] + ' [子1]', [pk]: rand + '_c1' },
+            { ...records[0], [firstColField]: records[0][firstColField] + ' [子2]', [pk]: rand + '_c2', children: [
+              { ...records[0], [firstColField]: records[0][firstColField] + ' [孙1]', [pk]: rand + '_c2_s1' },
+              { ...records[0], [firstColField]: records[0][firstColField] + ' [孙2]', [pk]: rand + '_c2_s2' }
+            ]}
+          ]
+        }
+        t.tableData                    = records
         t.rawTableData                 = resp.data.records    || []
         t.paginationConfig.itemCount   = resp.data.total      || 0
         t.paginationConfig.page        = resp.data.current    || pageBean.current

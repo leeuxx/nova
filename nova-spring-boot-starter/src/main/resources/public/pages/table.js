@@ -194,6 +194,7 @@ const NovaTable = {
       sortStates:     {},
       filterExpanded: false,
       checkedRowKeys: [],
+      expandedRowKeys: [],
       selectedRowKey: null,
       searchFields:   [],
       filterForm:     {},
@@ -392,6 +393,28 @@ const NovaTable = {
       return this.tableData
     },
 
+    flattenedTreeData() {
+      var self = this
+      var pk = this.novaIdFieldName
+      var expanded = new Set(this.expandedRowKeys || [])
+      var result = []
+      var flatten = function(list, level) {
+        list.forEach(function(item) {
+          var cloned = { ...item, _treeLevel: level }
+          if (item.children && item.children.length > 0) {
+            cloned._hasChildren = true
+          }
+          delete cloned.children
+          result.push(cloned)
+          if (item.children && item.children.length > 0 && expanded.has(item[pk])) {
+            flatten(item.children, level + 1)
+          }
+        })
+      }
+      flatten(this.tableData, 0)
+      return result
+    },
+
     previewFileList() {
       if (!this.previewField) return []
       if (this.previewIsOpForm) {
@@ -468,12 +491,57 @@ const NovaTable = {
       }
 
       this.tableColumns.forEach((col, index) => {
+        const isTreeTable = vm.tableData.length > 0 && vm.tableData[0].children
         const colDef = {
           key:       col.field,
           width:     vm.colPixels[index],
           title:     col.title,
           resizable: true,
           ellipsis:  vm.cellOverflow === 'ellipsis' ? { tooltip: true } : false
+        }
+
+        if (index === 0 && isTreeTable) {
+          colDef.render = (row) => {
+            const level = row._treeLevel || 0
+            const hasChildren = row._hasChildren
+            const isExpanded = vm.expandedRowKeys.includes(row[vm.novaIdFieldName])
+            const indent = level * 20
+            const toggleExpand = () => {
+              const keys = [...vm.expandedRowKeys]
+              const idx = keys.indexOf(row[vm.novaIdFieldName])
+              if (idx >= 0) keys.splice(idx, 1)
+              else keys.push(row[vm.novaIdFieldName])
+              vm.expandedRowKeys = keys
+            }
+            const children = []
+            if (indent > 0) {
+              children.push(h('span', { style: `display:inline-block;width:${indent}px;flex-shrink:0` }))
+            }
+            if (hasChildren) {
+              children.push(h('iconify-icon', {
+                icon: isExpanded ? 'material-symbols:expand-more' : 'material-symbols:chevron-right',
+                style: 'font-size:16px;color:#888;cursor:pointer;flex-shrink:0;margin-right:4px',
+                onClick: toggleExpand
+              }))
+            } else {
+              children.push(h('span', { style: 'display:inline-block;width:20px;flex-shrink:0' }))
+            }
+            const cellValue = row[col.field]
+            const displayText = cellValue !== null && cellValue !== undefined ? String(cellValue) : ''
+            if (vm.cellOverflow === 'ellipsis') {
+              children.push(h(NTooltip, { trigger: 'hover', placement: 'top' }, {
+                default: () => displayText,
+                trigger: () => h('span', {
+                  style: 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'
+                }, displayText)
+              }))
+            } else {
+              children.push(h('span', {
+                style: 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'
+              }, displayText))
+            }
+            return h('span', { style: 'display:flex;align-items:center;width:100%' }, children)
+          }
         }
 
         if (col.desc || col.sortable) {
@@ -1147,6 +1215,9 @@ const NovaTable = {
       return undefined
     },
     handleCheck(keys)   { this.checkedRowKeys = keys; if (this.pickerMulti) this.$emit('check', keys) },
+    handleExpand(keys) {
+      this.expandedRowKeys = keys
+    },
     toggleCheckedRow(row) {
       const key = row[this.novaIdFieldName]
       const idx = this.checkedRowKeys.indexOf(key)
@@ -2834,7 +2905,7 @@ const NovaTable = {
         </div>
         <div id="table-wrapper" :style="(pickerMode || embeddedMode || dualMode) ? 'flex:1;min-height:0;overflow:hidden' : ''">
           <n-data-table
-            :data="filteredData"
+            :data="flattenedTreeData"
             :columns="columns"
             :row-key="row => row[novaIdFieldName]"
             :checked-row-keys="checkedRowKeys"
