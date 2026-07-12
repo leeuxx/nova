@@ -193,8 +193,7 @@ public class TestDemoView {
                     referenceType = @ReferenceType(
                             referenceField = "parentId"
                     ),
-                    search = @Search,
-                    notNull = true
+                    search = @Search
             )
     )
     private TestDemoView testDemoView;

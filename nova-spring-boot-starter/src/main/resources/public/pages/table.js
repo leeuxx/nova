@@ -545,23 +545,23 @@ const NovaTable = {
             }
             if (showArrow) {
               if (isLoading) {
-                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:20px;flex-shrink:0' }, [
+                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:22px;flex-shrink:0' }, [
                   h('iconify-icon', {
                     icon: 'line-md:loading-loop',
-                    style: 'font-size:18px;color:#888'
+                    style: 'font-size:20px;color:#888'
                   })
                 ]))
               } else if (noChildren) {
-                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:20px;flex-shrink:0' }, [
+                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:22px;flex-shrink:0' }, [
                   h('span', {
-                    style: 'display:inline-block;width:6px;height:6px;border-radius:50%;background:#bbb'
+                    style: 'display:inline-block;width:7px;height:7px;border-radius:50%;background:#bbb'
                   })
                 ]))
               } else {
-                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:20px;flex-shrink:0' }, [
+                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:22px;flex-shrink:0' }, [
                   h('iconify-icon', {
                     icon: isExpanded ? 'material-symbols:expand-more' : 'material-symbols:chevron-right',
-                    style: 'font-size:19px;color:#888;cursor:pointer',
+                    style: 'font-size:22px;color:#888;cursor:pointer',
                     onClick: toggleExpand
                   })
                 ]))
