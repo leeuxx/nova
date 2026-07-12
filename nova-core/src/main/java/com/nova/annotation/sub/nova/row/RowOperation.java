@@ -13,7 +13,7 @@ public @interface RowOperation {
     @Comment("调用提示,空则不提示")
     String callHint() default "";
 
-    @Comment("标题颜色,单行且不折叠时有效")
+    @Comment("标题颜色,单行且不折叠时按钮文字的颜色")
     String color() default "";
 
     @Comment("图标")
@@ -24,6 +24,9 @@ public @interface RowOperation {
 
     @Comment("功能类型")
     Type type() default Type.NOVA;
+
+    @Comment("分组名,折叠时把同分组按钮进行二级菜单归类")
+    String group() default "";
 
     @Comment("行级按钮控制可用与禁用（前端,每行数据一次）")
     String ifExpr() default "";

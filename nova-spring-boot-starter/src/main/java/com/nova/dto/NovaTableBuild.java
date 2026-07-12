@@ -446,6 +446,9 @@ public class NovaTableBuild {
             @Comment("功能类型")
             private String type;
 
+            @Comment("分组,折叠时分类")
+            private String group;
+
             @Comment("单行按钮控制按钮可用与禁用（前端）")
             private String ifExpr;
 

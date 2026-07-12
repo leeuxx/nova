@@ -611,3 +611,5 @@ body.dark { background: #151515 !important; }
 /* ─── 操作列不换行 ──────────────────────────────── */
 .n-data-table .col-actions { white-space: nowrap !important; }
 
+/* ─── 下拉菜单分组样式 ───────────────────────────── */
+

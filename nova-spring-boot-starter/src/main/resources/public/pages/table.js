@@ -358,14 +358,8 @@ const NovaTable = {
     },
     toolbarFoldedOptions() {
       var self = this
-      return this.toolbarFoldedButtons.map(function(btn) {
-        return {
-          label: btn.title,
-          key: btn.title,
-          icon: btn.icon ? function() { return h('iconify-icon', { icon: btn.icon }) } : undefined,
-          disabled: (btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && self.checkedRowKeys.length === 0,
-          props: btn.tip ? { title: btn.tip } : undefined
-        }
+      return this.buildFoldedOptions(this.toolbarFoldedButtons, function(btn) {
+        return (btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && self.checkedRowKeys.length === 0
       })
     },
     isDualTableLink() {
@@ -666,9 +660,8 @@ const NovaTable = {
               }
             })
             if (rowFolded.length > 0) {
-              var foldedOpts = rowFolded.map(function(btn) {
-                var enabled = !btn.ifExpr || window.evalShowExpr(btn.ifExpr, row)
-                return { label: btn.title, key: btn.title, disabled: !enabled, icon: btn.icon ? function() { return h('iconify-icon', { icon: btn.icon }) } : undefined, props: btn.tip ? { title: btn.tip } : undefined }
+              var foldedOpts = vm.buildFoldedOptions(rowFolded, function(btn) {
+                return !(!btn.ifExpr || window.evalShowExpr(btn.ifExpr, row))
               })
               buttons.push(h(NDropdown, {
                 options: foldedOpts,
@@ -934,6 +927,40 @@ const NovaTable = {
       const choice = this.choiceMap[f.field]
       if (!choice || !choice.values) return []
       return choice.values.map(v => ({ label: v.label, value: v.value }))
+    },
+    buildFoldedOptions(buttons, disabledFn) {
+      var self = this
+      var ungrouped = []
+      var groupedMap = {}
+      var groupOrder = []
+      buttons.forEach(function(btn) {
+        var item = {
+          label: btn.title,
+          key: btn.title,
+          icon: btn.icon ? function() { return h('iconify-icon', { icon: btn.icon }) } : undefined,
+          disabled: disabledFn ? disabledFn(btn) : false,
+          props: btn.tip ? { title: btn.tip } : undefined
+        }
+        if (!btn.group) {
+          ungrouped.push(item)
+        } else {
+          if (!groupedMap[btn.group]) {
+            groupedMap[btn.group] = []
+            groupOrder.push(btn.group)
+          }
+          groupedMap[btn.group].push(item)
+        }
+      })
+      var result = ungrouped
+      groupOrder.forEach(function(groupName) {
+        result.push({
+          label: groupName,
+          key: '__group_' + groupName,
+          icon: function() { return h('iconify-icon', { icon: 'material-symbols:folder-outline' }) },
+          children: groupedMap[groupName]
+        })
+      })
+      return result
     },
     // ── 操作表单 helpers ────────────────────────────────────────
     opFieldOpts(f) {

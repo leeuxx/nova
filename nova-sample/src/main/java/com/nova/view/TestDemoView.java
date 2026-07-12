@@ -46,8 +46,7 @@ import java.time.LocalDateTime;
                         title = "完结订单",
                         icon = "material-symbols:amp-stories-rounded",
                         mode = RowOperation.Mode.SINGLE,
-                        operationHandler = TestDemoService.class,
-                        operationParam = "2"
+                        operationHandler = TestDemoService.class
                 ),
                 @RowOperation(
                         title = "关闭支付分",
@@ -56,30 +55,41 @@ import java.time.LocalDateTime;
                         mode = RowOperation.Mode.SINGLE,
                         novaClass = TestDemoView.TestRow.class,
                         operationHandler = TestDemoService.class,
-                        operationParam = "3"
+                        group = "订单管理"
                 ),
                 @RowOperation(
                         title = "下载报表",
                         callHint = "这是异步操作！",
                         icon = "material-symbols:arrow-circle-down-outline",
                         mode = RowOperation.Mode.BUTTON,
-                        operationHandler = TestDemoService.class,
-                        operationParam = "4"
+                        operationHandler = TestDemoService.class
                 ),
                 @RowOperation(
                         title = "修改价格",
                         icon = "material-symbols:apk-install-outline-sharp",
                         mode = RowOperation.Mode.MULTI,
                         operationHandler = TestDemoService.class,
-                        operationParam = "5"
+                        group = "订单管理"
+                ),
+                @RowOperation(
+                        title = "工具按钮",
+                        icon = "material-symbols:arrow-circle-down-outline",
+                        mode = RowOperation.Mode.BUTTON,
+                        operationHandler = TestDemoService.class,
+                        group = "支付分管理"
                 ),
                 @RowOperation(
                         title = "批量导出",
                         callHint = "确定导出吗？",
                         icon = "material-symbols:archive-rounded",
                         mode = RowOperation.Mode.MULTI_ONLY,
-                        operationHandler = TestDemoService.class,
-                        operationParam = "6"
+                        operationHandler = TestDemoService.class
+                ),
+                @RowOperation(
+                        title = "测试按钮",
+                        icon = "material-symbols:amp-stories-rounded",
+                        mode = RowOperation.Mode.SINGLE,
+                        operationHandler = TestDemoService.class
                 )
         }
 )

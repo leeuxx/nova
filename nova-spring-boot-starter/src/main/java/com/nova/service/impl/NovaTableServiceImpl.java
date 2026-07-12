@@ -257,6 +257,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                     .setMode(rowOperation.mode().name())
                     .setType(rowOperation.type().name())
                     .setIfExpr(rowOperation.ifExpr())
+                    .setGroup(rowOperation.group())
                     .setNovaClassName(rowOperation.novaClass().getSimpleName().equals("void") ? null : rowOperation.novaClass().getSimpleName())
                     .setOperationParam(rowOperation.operationParam())
                     .setOperationHandler(rowOperation.operationHandler().getName());
