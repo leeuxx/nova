@@ -504,6 +504,7 @@ const NovaTable = {
         }
 
         if (index === 0 && isTreeTable) {
+          colDef.cellProps = () => ({ style: { paddingLeft: 0 } })
           colDef.render = (row) => {
             const level = row._treeLevel || 0
             const rowKey = row[vm.novaIdFieldName]
