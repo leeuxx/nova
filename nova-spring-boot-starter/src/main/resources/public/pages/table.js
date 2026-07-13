@@ -499,6 +499,9 @@ const NovaTable = {
         if (index === 0 && isTreeTable) {
           colDef.ellipsis = false
           colDef.cellProps = () => ({ style: { paddingLeft: 0 } })
+          if (vm.pickerMode) {
+            colDef.tree = true
+          }
         }
 
         if (col.desc || col.sortable) {
