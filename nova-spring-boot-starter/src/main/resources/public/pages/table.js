@@ -1200,15 +1200,28 @@ const NovaTable = {
       if (dateInfo.pickerMode === 'HISTORY') return (ts) => ts > todayTs
       return undefined
     },
-    handleCheck(keys)   { this.checkedRowKeys = keys; if (this.pickerMulti) this.$emit('check', keys) },
+    handleCheck(keys)   {
+      // 去重：防止 n-data-table 在某些情况下传重复值
+      var uniqueKeys = []
+      var seen = new Set()
+      keys.forEach(function(k) {
+        var sk = String(k)
+        if (!seen.has(sk)) { seen.add(sk); uniqueKeys.push(sk) }
+      })
+      this.checkedRowKeys = uniqueKeys
+      if (this.pickerMulti) this.$emit('check', uniqueKeys)
+    },
     handleExpand(keys) {
       this.expandedRowKeys = keys
     },
     toggleCheckedRow(row) {
-      const key = row[this.novaIdFieldName]
+      const key = String(row[this.novaIdFieldName])
       const idx = this.checkedRowKeys.indexOf(key)
-      if (idx >= 0) this.checkedRowKeys.splice(idx, 1)
-      else this.checkedRowKeys.push(key)
+      if (idx >= 0) {
+        this.checkedRowKeys.splice(idx, 1)
+      } else {
+        this.checkedRowKeys.push(key)
+      }
       this.$emit('check', this.checkedRowKeys.slice())
     },
     handleReset() {
