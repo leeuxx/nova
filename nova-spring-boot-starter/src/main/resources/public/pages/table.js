@@ -388,6 +388,12 @@ const NovaTable = {
       })
     },
 
+    treeSearchFieldTitle() {
+      if (!this.treeSearchField || !this.tableColumns.length) return '搜索'
+      var col = this.tableColumns.find(function(c) { return c.field === this.treeSearchField }, this)
+      return col ? col.title : '搜索'
+    },
+
     scrollX() {
       if (!this.tableColumns.length) return undefined
       const fixedPx = 50 + this.rowActionColWidth
@@ -487,6 +493,7 @@ const NovaTable = {
         }
 
         if (index === 0 && isTreeTable) {
+          colDef.ellipsis = false
           colDef.cellProps = () => ({ style: { paddingLeft: 0 } })
         }
 
@@ -1319,6 +1326,10 @@ const NovaTable = {
 
       this.tableData = treeData
       this.expandedRowKeys = Array.from(ancestorKeys)
+    },
+    handleTreeSearchReset() {
+      this.treeSearchKeyword = ''
+      this.handleQuery()
     },
     handleAdd()         { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleAdd(this._vmKey); else window.NovaTableJQ.handleAdd() },
     handleEdit(row)     { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleEdit(row, this._vmKey); else window.NovaTableJQ.handleEdit(row) },
@@ -2574,18 +2585,28 @@ const NovaTable = {
       <!-- 树形表格搜索 -->
       <component v-if="isTree && !linkMode" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
         <div style="display:flex;align-items:center;gap:12px;padding:8px 0">
+          <span class="form-label">{{ treeSearchFieldTitle }}</span>
           <n-input
             v-model:value="treeSearchKeyword"
-            placeholder="搜索"
-            :size="embSize"
+            :placeholder="'请输入' + treeSearchFieldTitle"
             clearable
+            :size="embSize"
             style="flex:1;max-width:300px"
-            @keyup.enter="handleQuery"
           >
             <template #prefix>
               <iconify-icon icon="material-symbols:search" style="font-size:16px;color:#aaa"></iconify-icon>
             </template>
           </n-input>
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:1">
+            <n-button :size="embSize" @click="handleTreeSearchReset">重 置</n-button>
+            <n-button :size="embSize" type="primary" @click="handleQuery">查 询</n-button>
+            <n-button :size="embSize" dashed @click="toggleFilter" :disabled="true">
+              <template #icon>
+                <n-icon><iconify-icon :icon="filterExpanded ? 'material-symbols:keyboard-arrow-up' : 'material-symbols:keyboard-arrow-down'"></iconify-icon></n-icon>
+              </template>
+              {{ filterExpanded ? '收 起' : '展 开' }}
+            </n-button>
+          </div>
         </div>
       </component>
       <!-- 普通表格筛选卡片 -->
