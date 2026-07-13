@@ -145,6 +145,8 @@ window.NovaTableJQ = (function ($) {
           target.paginationConfig.showNext = true
           target.paginationConfig.showPageSize = true
         }
+        // 从主表 currentRow 直接构建 conditions（兜底：_sourceRefFields 为空时使用）
+        // 注意：这里只是先准备 _sourceFields 和 _sourceNovaName，_embConditions 在 sourceRefFields 构建完后才计算
         target._sourceFields = embSourceFields || {}
         target._sourceNovaName = sourceNovaName || novaName
         if (embSourceFields && Object.keys(embSourceFields).length > 0) {
@@ -188,6 +190,30 @@ window.NovaTableJQ = (function ($) {
             }
           })
           target._sourceRefFields = existingRefFields
+        }
+        // 从主表 currentRow 直接构建 _embConditions（兜底：_sourceRefFields 为空时使用）
+        if (sourceNovaName && embSourceFields && Object.keys(embSourceFields).length > 0) {
+          var parentVm2 = window.vmMap && window.vmMap[sourceNovaName]
+          if (parentVm2 && parentVm2.currentRow) {
+            var embConditions = {}
+            var finalRefFields = target._sourceRefFields || []
+            // 用 _sourceRefFields 映射好的 referenceField 构建 conditions
+            finalRefFields.forEach(function(rf) {
+              if (rf.referenceField && rf.value != null && rf.value !== '') {
+                embConditions[rf.referenceField] = { value: String(rf.value), type: 'TEXT', ext: '', vague: false }
+              }
+            })
+            // 如果 _sourceRefFields 为空，兜底用 sourceField key 直接当条件
+            if (Object.keys(embConditions).length === 0) {
+              Object.keys(embSourceFields).forEach(function(sfKey) {
+                var sfVal = embSourceFields[sfKey]
+                if (sfVal != null && sfVal !== '') {
+                  embConditions[sfKey] = { value: String(sfVal), type: 'TEXT', ext: '', vague: false }
+                }
+              })
+            }
+            target._embConditions = embConditions
+          }
         }
         // LINK embedded 模式：子组件 build 完成后，把 linkTarget 等元数据同步到父组件 linkTabBuild
         if (sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField) {
@@ -599,6 +625,10 @@ window.NovaTableJQ = (function ($) {
         conditions[rf.referenceField] = { value: String(rf.value), type: 'TEXT', ext: '', vague: false }
       }
     })
+    // embedded 模式兜底：从主表 currentRow 直接拿字段值当 conditions
+    if (Object.keys(conditions).length === 0 && target._embConditions && Object.keys(target._embConditions).length > 0) {
+      Object.assign(conditions, target._embConditions)
+    }
     $.ajax({
       url:         '/nova/table/data',
       method:      'POST',
