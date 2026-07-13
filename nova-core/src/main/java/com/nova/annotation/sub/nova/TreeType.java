@@ -10,4 +10,7 @@ public @interface TreeType {
     @Comment("搜索条件字段")
     String searchField() default "";
 
+    @Comment("默认展开层级")
+    int level() default 0;
+
 }

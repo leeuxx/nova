@@ -31,7 +31,8 @@ public class NovaTableServiceImpl implements NovaTableService {
         TreeType treeType = NovaUtils.tree(novaTableBuild.getNovaName());
         NovaTableBuild.Vo.TreeInfo treeInfo = new NovaTableBuild.Vo.TreeInfo()
                 .setValue(Objects.requireNonNull(treeType).value())
-                .setSearchField(treeType.searchField());
+                .setSearchField(treeType.searchField())
+                .setLevel(treeType.level());
         vo.setTree(treeInfo);
         // 获取搜索条件
         List<NovaTableBuild.Vo.Search> searchList = new ArrayList<>();

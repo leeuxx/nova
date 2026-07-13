@@ -200,6 +200,7 @@ const NovaTable = {
       treeNodeMap: {},
       treeParentMap: {},
       treeSearchKeyword: '',
+      treeSearchHitKeys: new Set(),
       treeParentField: '',
       treeStorageField: '',
       treeSearchField: '',
@@ -717,6 +718,26 @@ const NovaTable = {
             return h('span', { style: 'display:inline-flex;align-items:center;gap:8px' }, buttons)
           }
         })
+      }
+
+      // 树形搜索：命中行的搜索字段值标红
+      if (vm.isTree && vm.treeSearchField && vm.treeSearchHitKeys && vm.treeSearchHitKeys.size > 0) {
+        for (var hi = 0; hi < cols.length; hi++) {
+          var hitCol = cols[hi]
+          if (hitCol.key === vm.treeSearchField) {
+            var origRender = hitCol.render
+            var pkField = vm.novaIdFieldName
+            hitCol.render = function(row, rowIndex) {
+              var isHit = vm.treeSearchHitKeys.has(String(row[pkField]))
+              var content = origRender ? origRender(row, rowIndex) : (row[vm.treeSearchField] != null ? String(row[vm.treeSearchField]) : '')
+              if (isHit) {
+                return h('span', { style: { color: '#d03050', fontWeight: '500' } }, [content])
+              }
+              return content
+            }
+            break
+          }
+        }
       }
 
       console.timeEnd('[perf] columns')
@@ -1281,6 +1302,7 @@ const NovaTable = {
       }
 
       if (!keyword) {
+        this.treeSearchHitKeys = new Set()
         window.NovaTableJQ.loadTreeData(this._vmKey || this.novaName)
         return
       }
@@ -1353,9 +1375,11 @@ const NovaTable = {
 
       this.tableData = treeData
       this.expandedRowKeys = Array.from(ancestorKeys)
+      this.treeSearchHitKeys = hitKeys
     },
     handleTreeSearchReset() {
       this.treeSearchKeyword = ''
+      this.treeSearchHitKeys = new Set()
       this.handleQuery()
     },
     handleAdd()         { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleAdd(this._vmKey); else window.NovaTableJQ.handleAdd() },
@@ -2610,7 +2634,7 @@ const NovaTable = {
     <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:16px 16px 0' : (dualTableViewActive ? 'padding:16px 8px 16px 16px' : 'padding:16px'))">
 
       <!-- 树形表格搜索 -->
-      <component v-if="isTree && !linkMode" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
+      <component v-if="isTree && !linkMode && treeSearchField" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
         <div style="display:flex;align-items:center;gap:12px;padding:8px 0">
           <span class="form-label">{{ treeSearchFieldTitle }}</span>
           <n-input

@@ -130,6 +130,7 @@ window.NovaTableJQ = (function ($) {
         var treeInfo = resp.data.tree || {}
         target.isTree = treeInfo.value === true
         target.treeSearchField = treeInfo.searchField || ''
+        target.treeLevel = treeInfo.level != null ? treeInfo.level : 0
         for (var rfKey in refMap) {
           var rf = refMap[rfKey] || {}
           if (rf.isThisObj === true) {
@@ -1267,6 +1268,7 @@ window.NovaTableJQ = (function ($) {
         var treeInfo = resp.data.tree || {}
         target.isTree = treeInfo.value === true
         target.treeSearchField = treeInfo.searchField || ''
+        target.treeLevel = treeInfo.level != null ? treeInfo.level : 0
         var refMap2 = resp.data.reference || {}
         for (var rfKey in refMap2) {
           var rf = refMap2[rfKey] || {}
@@ -1347,6 +1349,7 @@ window.NovaTableJQ = (function ($) {
         if (!t) return
         t.loading = false
         if (resp.code !== 200) return
+        t.treeSearchHitKeys = new Set()
         console.time('[perf] loadTreeData total')
         var data = resp.data || {}
         var rootList = data.rootList || []
@@ -1361,7 +1364,7 @@ window.NovaTableJQ = (function ($) {
         buildTreeData(t, records)
         console.timeEnd('[perf] buildTreeData')
         t.treeSearchKeyword = ''
-        t.expandedRowKeys = []
+        t.expandedRowKeys = computeExpandKeysByLevel(t.tableData, t.treeLevel || 0, t.novaIdFieldName)
         t.treeLoadingKeys = []
         console.timeEnd('[perf] loadTreeData total')
         console.time('[perf] Vue nextTick (tree)')
@@ -1375,6 +1378,23 @@ window.NovaTableJQ = (function ($) {
         if (t) t.loading = false
       }
     })
+  }
+
+  // ── 根据 treeLevel 计算初始展开的节点 key ──────────────────
+  function computeExpandKeysByLevel(treeData, level, pkField) {
+    if (!level || level <= 0 || !treeData || !treeData.length) return []
+    var keys = []
+    function walk(nodes, depth) {
+      if (depth >= level) return
+      nodes.forEach(function(node) {
+        if (node.children && node.children.length > 0) {
+          keys.push(String(node[pkField]))
+          walk(node.children, depth + 1)
+        }
+      })
+    }
+    walk(treeData, 0)
+    return keys
   }
 
   // ── 构建树结构数据 ──────────────────────────────────────────────
