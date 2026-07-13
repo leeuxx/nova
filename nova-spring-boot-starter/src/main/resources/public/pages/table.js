@@ -1234,7 +1234,30 @@ const NovaTable = {
         if (!seen.has(sk)) { seen.add(sk); uniqueKeys.push(sk) }
       })
       this.checkedRowKeys = uniqueKeys
-      if (this.pickerMulti) this.$emit('check', uniqueKeys)
+      if (this.pickerMulti) {
+        var emitKeys = uniqueKeys
+        // 树形 + cascade=true：将选中节点的祖先也注入 emit，部分勾选子节点时也能带上父节点
+        if (this.isTree && this.treeCascade && uniqueKeys.length > 0) {
+          emitKeys = uniqueKeys.slice()
+          var nodeMap = this.treeNodeMap || {}
+          var parentField = this.treeParentField
+          var storageField = this.treeStorageField
+          var keySet = new Set(emitKeys)
+          uniqueKeys.forEach(function(key) {
+            var cur = key
+            while (cur) {
+              var node = nodeMap[cur]
+              if (!node) break
+              var parent = node[parentField]
+              if (parent == null || parent === '') break
+              var pk = typeof parent === 'object' ? String(parent[storageField]) : String(parent)
+              if (!keySet.has(pk)) { keySet.add(pk); emitKeys.push(pk) }
+              cur = pk
+            }
+          })
+        }
+        this.$emit('check', emitKeys)
+      }
     },
     handleExpand(keys) {
       this.expandedRowKeys = keys
@@ -3073,7 +3096,7 @@ const NovaTable = {
             @update:checked-row-keys="handleCheck"
             :expanded-row-keys="expandedRowKeys"
             @update:expanded-row-keys="handleExpandedRowKeysUpdate"
-            :row-props="(pickerMode || pickerMulti) ? (row) => ({ style: 'cursor:pointer', onClick: () => pickerMulti ? toggleCheckedRow(row) : selectRow(row) }) : (dualTableViewActive ? (row) => ({ style: 'cursor:pointer', onClick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; onDualTableRowClick(row) } }) : (rowDblclickEdit ? (row) => ({ style: 'cursor:default', onDblclick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; handleEdit(row) } }) : undefined))"
+            :row-props="(pickerMode || pickerMulti) ? (row) => ({ style: 'cursor:pointer', onClick: (e) => { if (e.target.closest('.n-checkbox') || e.target.closest('.n-data-table-tree-row-expand-icon')) return; pickerMulti ? toggleCheckedRow(row) : selectRow(row) } }) : (dualTableViewActive ? (row) => ({ style: 'cursor:pointer', onClick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; onDualTableRowClick(row) } }) : (rowDblclickEdit ? (row) => ({ style: 'cursor:default', onDblclick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; handleEdit(row) } }) : undefined))"
             :row-class-name="tableRowClassName"
             :loading="loading"
             :remote="!isTree"
