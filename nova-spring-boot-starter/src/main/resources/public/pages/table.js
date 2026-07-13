@@ -300,9 +300,12 @@ const NovaTable = {
         itemCount:       0,
         pageSize:        10,
         pageSlot:        9,
-        showSizePicker:  true,
+        showSizePicker:  false,
         pageSizes:       [10, 20, 50, 100].map(n => ({ label: n + ' 条/页', value: n })),
-        showQuickJumper: true
+        showQuickJumper: false,
+        showPageSize:    false,
+        showPrev:        false,
+        showNext:        false
       }
     }
   },
@@ -749,7 +752,9 @@ const NovaTable = {
     dualTableViewActive(val) {
       if (!this.dualMode) {
         this.paginationConfig.pageSlot = val ? 5 : 9
-        this.paginationConfig.showQuickJumper = !val
+        if (!this.isTree) {
+          this.paginationConfig.showQuickJumper = !val
+        }
       }
       this._syncDualTableClass()
     },
