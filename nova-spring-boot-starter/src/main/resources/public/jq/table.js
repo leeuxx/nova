@@ -131,6 +131,7 @@ window.NovaTableJQ = (function ($) {
         target.isTree = treeInfo.value === true
         target.treeSearchField = treeInfo.searchField || ''
         target.treeLevel = treeInfo.level != null ? treeInfo.level : 0
+        target.treeCascade = treeInfo.cascade === true
         for (var rfKey in refMap) {
           var rf = refMap[rfKey] || {}
           if (rf.isThisObj === true) {
@@ -1269,6 +1270,7 @@ window.NovaTableJQ = (function ($) {
         target.isTree = treeInfo.value === true
         target.treeSearchField = treeInfo.searchField || ''
         target.treeLevel = treeInfo.level != null ? treeInfo.level : 0
+        target.treeCascade = treeInfo.cascade === true
         var refMap2 = resp.data.reference || {}
         for (var rfKey in refMap2) {
           var rf = refMap2[rfKey] || {}

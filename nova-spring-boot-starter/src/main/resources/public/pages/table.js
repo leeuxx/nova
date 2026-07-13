@@ -201,6 +201,7 @@ const NovaTable = {
       treeParentMap: {},
       treeSearchKeyword: '',
       treeSearchHitKeys: new Set(),
+      treeCascade:      false,
       treeParentField: '',
       treeStorageField: '',
       treeSearchField: '',
@@ -3067,6 +3068,7 @@ const NovaTable = {
             :columns="columns"
             :row-key="row => String(row[novaIdFieldName])"
             :checked-row-keys="checkedRowKeys"
+            :cascade="treeCascade"
             @update:checked-row-keys="handleCheck"
             :expanded-row-keys="expandedRowKeys"
             @update:expanded-row-keys="handleExpandedRowKeysUpdate"

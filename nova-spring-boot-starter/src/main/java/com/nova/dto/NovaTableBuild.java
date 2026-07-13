@@ -479,6 +479,9 @@ public class NovaTableBuild {
             @Comment("搜索条件字段")
             private String searchField;
 
+            @Comment("父子勾选级联")
+            private Boolean cascade;
+
             @Comment("默认展开层级")
             private Integer level;
 

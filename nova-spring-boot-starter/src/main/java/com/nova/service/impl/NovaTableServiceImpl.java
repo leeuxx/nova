@@ -32,6 +32,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         NovaTableBuild.Vo.TreeInfo treeInfo = new NovaTableBuild.Vo.TreeInfo()
                 .setValue(Objects.requireNonNull(treeType).value())
                 .setSearchField(treeType.searchField())
+                .setCascade(treeType.cascade())
                 .setLevel(treeType.level());
         vo.setTree(treeInfo);
         // 获取搜索条件
