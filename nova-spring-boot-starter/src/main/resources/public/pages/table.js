@@ -457,6 +457,7 @@ const NovaTable = {
       return (this.opFormLayoutObj && this.opFormLayoutObj.editLayout) || 'DEFAULT'
     },
     columns() {
+      console.time('[perf] columns')
       const vm   = this
       const cols = []
 
@@ -650,13 +651,15 @@ const NovaTable = {
             if (!vm.linkMode) {
               buttons.push(h('span', { class: 'row-action-btn', style: { color: '#2080f0', cursor: 'pointer', fontSize: '13px' }, onClick: () => vm.handleEdit(row) }, '编辑'))
             }
-            buttons.push(h(NPopconfirm,
-              { onPositiveClick: () => vm.handleDelete(row), positiveText: '确定', negativeText: '取消' },
-              {
-                default: () => '确定删除吗？',
-                trigger:  () => h('span', { class: 'row-action-btn', style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除')
-              }
-            ))
+            // 删除
+            buttons.push(h(NPopconfirm, {
+              onPositiveClick: function() { vm.handleDelete(row) },
+              onNegativeClick: function() {},
+              positiveText: '确定', negativeText: '取消'
+            }, {
+              default: function() { return '确定删除吗？' },
+              trigger: function() { return h('span', { class: 'row-action-btn', style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除') }
+            }))
             // ── 自定义按钮：SINGLE / MULTI（行操作区）────────────────
             var rowBtns = vm.rowCustomButtons || []
             var rowUnfolded = rowBtns.slice(0, 1)
@@ -672,7 +675,9 @@ const NovaTable = {
               }
               if (enabled && btn.callHint) {
                 buttons.push(h(NPopconfirm, {
-                  onPositiveClick: handler, positiveText: '确定', negativeText: '取消'
+                  onPositiveClick: function() { handler() },
+                  onNegativeClick: function() {},
+                  positiveText: '确定', negativeText: '取消'
                 }, { default: function() { return btn.callHint }, trigger: function() { return triggerEl } }))
               } else if (enabled) {
                 buttons.push(h('span', { class: 'row-action-btn', style: btnStyle, title: btnTitle, onClick: handler }, btn.title))
@@ -686,7 +691,7 @@ const NovaTable = {
               })
               buttons.push(h(NDropdown, {
                 options: foldedOpts,
-                trigger: 'hover',
+                trigger: 'click',
                 onSelect: function(key) {
                   var btn = rowFolded.find(function(b) { return b.title === key })
                   if (!btn) return
@@ -703,11 +708,12 @@ const NovaTable = {
                 }
               }))
             }
-            return h(NSpace, { size: 8 }, { default: () => buttons })
+            return h('span', { style: 'display:inline-flex;align-items:center;gap:8px' }, buttons)
           }
         })
       }
 
+      console.timeEnd('[perf] columns')
       return cols
     }
   },
@@ -2580,7 +2586,7 @@ const NovaTable = {
         </div>
       </n-modal>
     </div>
-    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : dualTableViewActive ? 'padding:16px 8px 16px 16px' : 'padding:16px')">
+    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:16px 16px 0' : (dualTableViewActive ? 'padding:16px 8px 16px 16px' : 'padding:16px'))">
 
       <!-- 树形表格搜索 -->
       <component v-if="isTree && !linkMode" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
@@ -3010,7 +3016,7 @@ const NovaTable = {
             </n-popover>
           </div>
         </div>
-        <div id="table-wrapper" :style="(pickerMode || embeddedMode || dualMode) ? 'flex:1;min-height:0;overflow:hidden' : ''">
+        <div id="table-wrapper" :style="(pickerMode || embeddedMode || dualMode || isTree) ? 'flex:1;min-height:0;overflow:hidden' : ''">
           <n-data-table
             :data="tableData"
             :columns="columns"
@@ -3027,6 +3033,7 @@ const NovaTable = {
             :striped="striped"
             :size="tableSize"
             :scroll-x="scrollX"
+            :virtual-scroll="true"
             :flex-height="true"
             :class="{ 'tree-cell-overflow-ellipsis': isTree && cellOverflow === 'ellipsis' }"
             style="width:100%;height:100%"

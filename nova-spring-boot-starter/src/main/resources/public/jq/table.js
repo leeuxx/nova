@@ -609,16 +609,28 @@ window.NovaTableJQ = (function ($) {
         if (!t) return
         t.loading = false
         if (resp.code !== 200) return
+        console.time('[perf] loadData total')
         t.expandedRowKeys = []
         t.treeLoadingKeys = []
         var records = resp.data.records || []
+        console.log('[perf] rows:', records.length)
+        console.time('[perf] tableData assign')
         t.tableData                    = records
+        console.timeEnd('[perf] tableData assign')
         t.rawTableData                 = resp.data.records    || []
         t.paginationConfig.itemCount   = resp.data.total      || 0
         t.paginationConfig.page        = resp.data.current    || pageBean.current
         t.paginationConfig.pageSize    = resp.data.size       || pageBean.size
         if (resp.data.novaIdFieldName)     t.novaIdFieldName          = resp.data.novaIdFieldName
+        console.time('[perf] translateData')
         translateData(vmKey)
+        console.timeEnd('[perf] translateData')
+        console.timeEnd('[perf] loadData total')
+        console.time('[perf] Vue nextTick')
+        t.$nextTick(function() {
+          console.timeEnd('[perf] Vue nextTick')
+          console.log('[perf] Vue render complete')
+        })
       },
       error: function () {
         var t = window.vmMap && window.vmMap[vmKey]
@@ -1305,16 +1317,28 @@ window.NovaTableJQ = (function ($) {
         if (!t) return
         t.loading = false
         if (resp.code !== 200) return
+        console.time('[perf] loadTreeData total')
         var data = resp.data || {}
         var rootList = data.rootList || []
         var childrenList = data.childrenList || []
+        console.log('[perf] tree rows: rootList=' + rootList.length + ', childrenList=' + childrenList.length)
         var records = rootList.concat(childrenList)
+        console.time('[perf] translateRecords')
         records = translateRecords(records, t.tableColumns, t.choiceMap, t.referenceMap, t.appendageMap)
+        console.timeEnd('[perf] translateRecords')
         t.rawTreeData = records
+        console.time('[perf] buildTreeData')
         buildTreeData(t, records)
+        console.timeEnd('[perf] buildTreeData')
         t.treeSearchKeyword = ''
         t.expandedRowKeys = []
         t.treeLoadingKeys = []
+        console.timeEnd('[perf] loadTreeData total')
+        console.time('[perf] Vue nextTick (tree)')
+        t.$nextTick(function() {
+          console.timeEnd('[perf] Vue nextTick (tree)')
+          console.log('[perf] Vue render complete (tree)')
+        })
       },
       error: function() {
         var t = window.vmMap && window.vmMap[vmKey]
@@ -1376,7 +1400,7 @@ window.NovaTableJQ = (function ($) {
   }
 
   return {
-    onMounted, onRouteChange, buildTable, updateTableHeight,
+    onMounted, onRouteChange, buildTable, updateTableHeight, updateTableWidth,
     handleReset, handleAdd, handleEdit, handleDelete,
     handleBatchDelete, handleFormSubmit,
     loadData, onPageChange, onPageSizeChange, onSortChange,
