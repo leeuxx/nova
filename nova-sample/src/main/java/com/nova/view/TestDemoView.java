@@ -194,7 +194,10 @@ public class TestDemoView {
                     title = "引用用户",
                     type = Edit.Type.LINK,
                     linkType = @LinkType(
-                            dualTable = true
+                            dualTable = true,
+                            referenceTransmitField = {
+                                    "name"
+                            }
                     ),
                     search = @Search(vague = true)
             )
