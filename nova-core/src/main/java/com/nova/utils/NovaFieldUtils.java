@@ -612,10 +612,12 @@ public class NovaFieldUtils {
                 LinkTargetType linkTargetType = edit.linkTargetType();
                 if (linkTargetType.type() == LinkTargetType.Type.SELECT) {
                     linkTargetInfo.setLinkReferenceClass(novaFieldInfo.getFieldClass())
+                            .setLinkFieldName(novaFieldInfo.getFieldName())
                             .setLinkReferenceField(linkTargetType.referenceField())
                             .setLinkStorageField(linkTargetType.storageField());
                 } else {
                     linkTargetInfo.setThisReferenceClass(novaFieldInfo.getFieldClass())
+                            .setThisFieldName(novaFieldInfo.getFieldName())
                             .setThisReferenceField(linkTargetType.referenceField())
                             .setThisStorageField(linkTargetType.storageField());
                 }
@@ -938,6 +940,9 @@ public class NovaFieldUtils {
         @Comment("当前关联类")
         private Class<?> thisReferenceClass;
 
+        @Comment("当前关联类属性名")
+        private String thisFieldName;
+
         @Comment("中间类存储当前引用类的关联属性名，例如 userId")
         private String thisReferenceField;
 
@@ -946,6 +951,9 @@ public class NovaFieldUtils {
 
         @Comment("目标关联类")
         private Class<?> linkReferenceClass;
+
+        @Comment("目标关联类属性名")
+        private String linkFieldName;
 
         @Comment("中间类存储目标引用类的关联属性名，例如 ordersId")
         private String linkReferenceField;

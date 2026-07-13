@@ -191,6 +191,18 @@ public class TestDemoView {
 
     @NovaField(
             edit = @Edit(
+                    title = "引用用户",
+                    type = Edit.Type.LINK,
+                    linkType = @LinkType(
+                            dualTable = true
+                    ),
+                    search = @Search(vague = true)
+            )
+    )
+    private TestDemoRef2View testDemoRef2View;
+
+    @NovaField(
+            edit = @Edit(
                     title = "上级信息",
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(

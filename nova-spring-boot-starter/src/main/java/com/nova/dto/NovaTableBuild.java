@@ -410,6 +410,9 @@ public class NovaTableBuild {
             @Comment("当前关联类名")
             private String thisReferenceName;
 
+            @Comment("当前关联类属性名")
+            private String thisFieldName;
+
             @Comment("中间类存储当前引用类的关联属性名，例如 userId")
             private String thisReferenceField;
 
@@ -418,6 +421,9 @@ public class NovaTableBuild {
 
             @Comment("目标关联类名")
             private String linkReferenceName;
+
+            @Comment("目标关联类属性名")
+            private String linkFieldName;
 
             @Comment("中间类存储目标引用类的关联属性名，例如 ordersId")
             private String linkReferenceField;

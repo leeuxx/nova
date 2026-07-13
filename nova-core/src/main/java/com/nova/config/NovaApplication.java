@@ -77,6 +77,7 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
                             .setNovaField(novaField)
                             .setType(type)
                             .setFieldClass(field.getType())
+                            .setFieldName(field.getName())
                     );
                 }
                 if (field.isAnnotationPresent(NovaId.class)) {
@@ -133,6 +134,9 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
 
             @Comment("属性类型")
             private Class<?> fieldClass;
+
+            @Comment("属性名称")
+            private String fieldName;
 
         }
     }

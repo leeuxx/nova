@@ -244,9 +244,11 @@ public class NovaTableServiceImpl implements NovaTableService {
         NovaTableBuild.Vo.LinkTarget linkTarget = new NovaTableBuild.Vo.LinkTarget();
         NovaFieldUtils.LinkTargetInfo linkTargetInfo = NovaFieldUtils.getLinkTarget(novaTableBuild.getNovaName());
         linkTarget.setThisReferenceName(linkTargetInfo.getThisReferenceClass() != null ? linkTargetInfo.getThisReferenceClass().getSimpleName() : null)
+                .setThisFieldName(linkTargetInfo.getThisFieldName())
                 .setThisReferenceField(linkTargetInfo.getThisReferenceField())
                 .setThisStorageField(linkTargetInfo.getThisStorageField())
                 .setLinkReferenceName(linkTargetInfo.getLinkReferenceClass() != null ? linkTargetInfo.getLinkReferenceClass().getSimpleName() : null)
+                .setLinkFieldName(linkTargetInfo.getLinkFieldName())
                 .setLinkReferenceField(linkTargetInfo.getLinkReferenceField())
                 .setLinkStorageField(linkTargetInfo.getLinkStorageField());
         vo.setLinkTarget(linkTarget);

@@ -226,30 +226,11 @@ window.NovaTableJQ = (function ($) {
           if (parentVm && parentVm.linkTabBuild !== undefined) {
             var lt = resp.data.linkTarget
             var ltEditFields = target.editFields || []
-            var ltSourceField = null, ltTargetField = null
-            // 优先用 referenceField 精确匹配
-            ltEditFields.forEach(function(f) {
-              if (f.type !== 'LINK_TARGET') return
-              var rf = f.referenceField || ''
-              if (rf && rf === lt.thisReferenceField) ltSourceField = f.field
-              if (rf && rf === lt.linkReferenceField) ltTargetField = f.field
-            })
-            // fallback：按类名推断（字段名通常以类名小写开头）
-            if (!ltSourceField || !ltTargetField) {
-              var thisRefLower = (lt.thisReferenceName || '').toLowerCase()
-              var linkRefLower = (lt.linkReferenceName || '').toLowerCase()
-              ltEditFields.forEach(function(f) {
-                if (f.type !== 'LINK_TARGET') return
-                var fl = f.field.toLowerCase()
-                if (thisRefLower && fl.indexOf(thisRefLower) !== -1) ltSourceField = f.field
-                if (linkRefLower && fl.indexOf(linkRefLower) !== -1) ltTargetField = f.field
-              })
-            }
             var newBuild = Object.assign({}, parentVm.linkTabBuild)
             newBuild[novaName] = {
               linkTarget: lt,
-              sourceFieldName: ltSourceField,
-              targetFieldName: ltTargetField,
+              sourceFieldName: lt.thisFieldName || '',
+              targetFieldName: lt.linkFieldName || '',
               editFields: ltEditFields,
               tableColumns: resp.data.tableColumns || [],
               novaIdFieldName: resp.data.novaIdFieldName,
@@ -506,26 +487,6 @@ window.NovaTableJQ = (function ($) {
           var bd = br.data
           var editFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
           var lt = bd.linkTarget || {}
-          var sourceFieldName = null
-          var targetFieldName = null
-          // 优先用 referenceField 精确匹配
-          editFields.forEach(function(f) {
-            if (f.type !== 'LINK_TARGET') return
-            var rf = f.referenceField || ''
-            if (rf && rf === lt.thisReferenceField) sourceFieldName = f.field
-            if (rf && rf === lt.linkReferenceField) targetFieldName = f.field
-          })
-          // fallback：按类名推断（字段名通常以类名小写开头）
-          if (!sourceFieldName || !targetFieldName) {
-            var thisRefLower = (lt.thisReferenceName || '').toLowerCase()
-            var linkRefLower = (lt.linkReferenceName || '').toLowerCase()
-            editFields.forEach(function(f) {
-              if (f.type !== 'LINK_TARGET') return
-              var fl = f.field.toLowerCase()
-              if (thisRefLower && fl.indexOf(thisRefLower) !== -1) sourceFieldName = f.field
-              if (linkRefLower && fl.indexOf(linkRefLower) !== -1) targetFieldName = f.field
-            })
-          }
           // buildLinkTabs: 构建 linkTab 元数据
           var newBuild = Object.assign({}, t2.linkTabBuild)
           newBuild[linkNovaName] = {
@@ -533,8 +494,8 @@ window.NovaTableJQ = (function ($) {
             tableColumns: bd.tableColumns || [],
             novaIdFieldName: bd.novaIdFieldName,
             linkTarget: lt,
-            sourceFieldName: sourceFieldName,
-            targetFieldName: targetFieldName,
+            sourceFieldName: lt.thisFieldName || '',
+            targetFieldName: lt.linkFieldName || '',
             choiceMap: bd.choice || {},
             referenceMap: bd.reference || {},
             linkMap: bd.link || {}

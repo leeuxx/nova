@@ -2644,6 +2644,7 @@ const NovaTable = {
             clearable
             :size="embSize"
             style="flex:1;max-width:300px"
+            @keydown.enter="handleQuery"
           >
             <template #prefix>
               <iconify-icon icon="material-symbols:search" style="font-size:16px;color:#aaa"></iconify-icon>
