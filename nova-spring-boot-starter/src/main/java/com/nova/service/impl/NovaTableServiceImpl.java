@@ -576,9 +576,18 @@ public class NovaTableServiceImpl implements NovaTableService {
 
     @Override
     public NovaTableTree.Vo tree(NovaTableTree novaTableTree) {
+        // 排序
+        List<NovaTableTree.OrderItemBean> orders = novaTableTree.getOrders();
+        List<Tree.OrderItemBean> requestOrders = new ArrayList<>();
+        if (orders != null && !orders.isEmpty()) {
+            orders.forEach(o -> requestOrders.add(
+                    new Tree.OrderItemBean().setColumn(MixUtils.camelToSnake(o.getColumn())).setAsc(o.isAsc())
+            ));
+        }
         Tree.Vo<?> tree = ((DataProxy) DataProxyUtils.getDataProxy(novaTableTree.getNovaName())).tree(new Tree()
                 .setNovaName(novaTableTree.getSourceNovaName())
                 .setSourceFields(novaTableTree.getSourceFields())
+                .setOrders(requestOrders)
         );
         List<?> rootList = tree.getRootList();
         List<?> childrenList = tree.getChildrenList();

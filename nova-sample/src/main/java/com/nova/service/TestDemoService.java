@@ -48,7 +48,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
 
     @Override
     public Fetch.Vo<TestDemoView> fetch(Fetch fetch) {
-        NovaQueryUtils.Result<TestDemo> testDemoResult = NovaQueryUtils.buildWrapper(TestDemoView.class, fetch, TestDemo.class);
+        NovaQueryUtils.Result<TestDemo> testDemoResult = NovaQueryUtils.buildWrapper(TestDemoView.class, fetch);
         Page<TestDemo> page = testDemoResult.getPage();
         LambdaQueryWrapper<TestDemo> wrapper = testDemoResult.getWrapper().isNull(TestDemo::getParentId);
         IPage<TestDemo> iPage = page(page, wrapper);
@@ -111,9 +111,8 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         Tree.Vo<TestDemoView> vo = new Tree.Vo<TestDemoView>()
                 .setRootList(new ArrayList<>())
                 .setChildrenList(new ArrayList<>());
-        JList<TestDemo> testDemos = new JArrayList<>(list(new LambdaQueryWrapper<TestDemo>()
-                .orderByDesc(TestDemo::getId)
-        ));
+        LambdaQueryWrapper<TestDemo> lambdaQueryWrapper = NovaQueryUtils.buildWrapper(TestDemoView.class, tree);
+        JList<TestDemo> testDemos = new JArrayList<>(list(lambdaQueryWrapper));
         JList<TestDemo> rootList = testDemos.filter().isNull(TestDemo::getParentId).list();
         JList<TestDemo> childrenList = testDemos.filter().isNotNull(TestDemo::getParentId).list();
         List<Long> demo2IdList = testDemos.stream().map(TestDemo::getDemo2Id).filter(Objects::nonNull).toList();

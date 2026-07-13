@@ -132,6 +132,9 @@ window.NovaTableJQ = (function ($) {
         target.treeSearchField = treeInfo.searchField || ''
         target.treeLevel = treeInfo.level != null ? treeInfo.level : 0
         target.treeCascade = treeInfo.cascade === true
+        if (treeInfo.sortField && target.sortStates && target.sortStates.hasOwnProperty(treeInfo.sortField)) {
+          target.sortStates[treeInfo.sortField] = treeInfo.sortAsc ? 'asc' : 'desc'
+        }
         for (var rfKey in refMap) {
           var rf = refMap[rfKey] || {}
           if (rf.isThisObj === true) {
@@ -1271,6 +1274,9 @@ window.NovaTableJQ = (function ($) {
         target.treeSearchField = treeInfo.searchField || ''
         target.treeLevel = treeInfo.level != null ? treeInfo.level : 0
         target.treeCascade = treeInfo.cascade === true
+        if (treeInfo.sortField && target.sortStates && target.sortStates.hasOwnProperty(treeInfo.sortField)) {
+          target.sortStates[treeInfo.sortField] = treeInfo.sortAsc ? 'asc' : 'desc'
+        }
         var refMap2 = resp.data.reference || {}
         for (var rfKey in refMap2) {
           var rf = refMap2[rfKey] || {}
@@ -1345,7 +1351,7 @@ window.NovaTableJQ = (function ($) {
       url: '/nova/table/tree',
       method: 'POST',
       contentType: 'application/json',
-      data: JSON.stringify({ novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields }),
+      data: JSON.stringify({ novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, orders: buildOrderItems(target.sortStates) }),
       success: function(resp) {
         var t = window.vmMap && window.vmMap[vmKey]
         if (!t) return

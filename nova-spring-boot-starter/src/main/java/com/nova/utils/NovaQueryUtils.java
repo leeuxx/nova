@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nova.annotation.fun.Fetch;
+import com.nova.annotation.fun.Tree;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.edit.ChoiceType;
 import lombok.Data;
@@ -18,22 +19,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * MyBatis-Plus 查询构造工具，供 DataProxy 实现类在 fetch() 中使用。
- * 将框架传入的 Fetch 请求（条件、排序、分页）转换为 QueryWrapper + Page。
+ * MyBatis-Plus 查询构造工具
  */
 public class NovaQueryUtils {
 
     /**
-     * 根据 Fetch 请求构造 QueryWrapper 和 Page
+     * 根据 Fetch 请求构造 LambdaQueryWrapper 和 Page
      *
-     * @param viewClass   View 类（@Nova 注解所在类，用于读取字段元数据）
-     * @param fetch       框架传入的查询请求
-     * @param entityClass 实体类（用于 Page 泛型）
+     * @param viewClass View 类（@Nova 注解所在类，用于读取字段元数据）
+     * @param fetch     框架传入的查询请求
      */
-    public static <T> Result<T> buildWrapper(Class<?> viewClass, Fetch fetch, Class<T> entityClass) {
+    public static <T> Result<T> buildWrapper(Class<?> viewClass, Fetch fetch) {
         String novaName = viewClass.getSimpleName();
         QueryWrapper<T> wrapper = new QueryWrapper<>();
-
         Map<String, Fetch.Search> conditions = fetch.getConditions();
         if (conditions != null) {
             Map<String, NovaFieldUtils.DateInfo> dateMap = NovaFieldUtils.getDate(novaName);
@@ -45,16 +43,6 @@ public class NovaQueryUtils {
                     dateMap.get(field)
             ));
         }
-
-        // 处理透传字段（referenceTransmitField），作为 eq 条件注入查询
-        /*Map<String, String> sourceFields = fetch.getSourceFields();
-        if (sourceFields != null) {
-            sourceFields.forEach((field, val) -> {
-                if ("ids".equals(field) || val == null || val.isEmpty()) return;
-                wrapper.eq(MixUtils.camelToSnake(field), val);
-            });
-        }*/
-
         List<Fetch.OrderItemBean> orders = fetch.getOrders();
         if (orders != null && !orders.isEmpty()) {
             orders.forEach(o -> {
@@ -67,15 +55,38 @@ public class NovaQueryUtils {
                 wrapper.last("ORDER BY " + defaultOrderBy);
             }
         }
-
         return new Result<T>()
                 .setPage(Page.of(fetch.getCurrent(), fetch.getSize()))
                 .setWrapper(wrapper.lambda());
     }
 
+    /**
+     * 根据 Tree 构造 LambdaQueryWrapper
+     *
+     * @param viewClass View 类（@Nova 注解所在类，用于读取字段元数据）
+     * @param tree      框架传入的查询请求
+     */
+    public static <T> LambdaQueryWrapper<T> buildWrapper(Class<?> viewClass, Tree tree) {
+        String novaName = viewClass.getSimpleName();
+        QueryWrapper<T> wrapper = new QueryWrapper<>();
+        List<Tree.OrderItemBean> orders = tree.getOrders();
+        if (orders != null && !orders.isEmpty()) {
+            orders.forEach(o -> {
+                if (o.isAsc()) wrapper.orderByAsc(o.getColumn());
+                else wrapper.orderByDesc(o.getColumn());
+            });
+        } else {
+            String defaultOrderBy = NovaUtils.getOrderBy(novaName);
+            if (defaultOrderBy != null && !defaultOrderBy.isBlank()) {
+                wrapper.last("ORDER BY " + defaultOrderBy);
+            }
+        }
+        return wrapper.lambda();
+    }
+
     private static <T> void applyCondition(QueryWrapper<T> wrapper, String novaName, String field,
-                                            String column, String value, String type, boolean vague,
-                                            NovaFieldUtils.DateInfo dateInfo) {
+                                           String column, String value, String type, boolean vague,
+                                           NovaFieldUtils.DateInfo dateInfo) {
         if (Edit.Type.DATE.name().equals(type)) {
             String dateType = dateInfo != null ? dateInfo.getType().name() : "DATETIME";
             if (vague && value != null && value.contains(",")) {

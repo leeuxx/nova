@@ -58,7 +58,7 @@ public class TestDemoRefService extends ServiceImpl<TestDemoRefMapper, TestDemoR
 
     @Override
     public Fetch.Vo<TestDemoRefView> fetch(Fetch fetch) {
-        NovaQueryUtils.Result<TestDemoRef> testDemoRefResult = NovaQueryUtils.buildWrapper(TestDemoRefView.class, fetch, TestDemoRef.class);
+        NovaQueryUtils.Result<TestDemoRef> testDemoRefResult = NovaQueryUtils.buildWrapper(TestDemoRefView.class, fetch);
         Page<TestDemoRef> page = testDemoRefResult.getPage();
         LambdaQueryWrapper<TestDemoRef> wrapper = testDemoRefResult.getWrapper();
         IPage<TestDemoRef> iPage = page(page, wrapper);

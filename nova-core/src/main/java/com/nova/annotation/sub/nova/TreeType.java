@@ -7,7 +7,7 @@ public @interface TreeType {
     @Comment("是否树结构")
     boolean value() default true;
 
-    @Comment("搜索条件字段")
+    @Comment("搜索条件字段（前端筛选）")
     String searchField() default "";
 
     @Comment("父子勾选级联")
