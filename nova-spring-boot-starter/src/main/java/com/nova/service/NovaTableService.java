@@ -40,5 +40,5 @@ public interface NovaTableService {
     NovaTableRowOperationSubmit.Vo rowOperationSubmit(NovaTableRowOperationSubmit novaTableRowOperationSubmit);
 
     @Comment("获取树形结构数据")
-    List<Map<String, Object>> tree(NovaTableTree novaTableTree);
+    NovaTableTree.Vo tree(NovaTableTree novaTableTree);
 }

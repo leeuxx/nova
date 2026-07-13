@@ -3,6 +3,7 @@ package com.nova.utils;
 import com.nova.annotation.Nova;
 import com.nova.annotation.config.Comment;
 import com.nova.annotation.sub.nova.Layout;
+import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.row.ExprBool;
 import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.config.NovaApplication;
@@ -15,18 +16,19 @@ import java.util.stream.Collectors;
 public class NovaUtils {
 
     /**
-     * 获取是否树形结构
+     * 获取树形结构信息
      *
      * @param className 类名
-     * @return 是否树结构
+     * @return 树结构信息
      */
-    public static Boolean tree(String className) {
+    public static TreeType tree(String className) {
         Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
         NovaApplication.ScanNova scanNova = scanNovas.get(className);
         if (scanNova == null) {
-            return false;
+            return null;
         }
-        return scanNova.getTree();
+        Nova nova = scanNova.getNova();
+        return nova.tree();
     }
 
     /**

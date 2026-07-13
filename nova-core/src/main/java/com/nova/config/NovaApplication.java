@@ -87,7 +87,6 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
             List<RowOperation> rowOperations = new ArrayList<>(Arrays.asList(nova.rowOperation()));
             ScanNova scanNova = new ScanNova()
                     .setClz(clz)
-                    .setTree(nova.tree())
                     .setNovaIdFieldName(novaIdFieldName)
                     .setNova(nova)
                     .setNovaFields(novaFields)
@@ -106,9 +105,6 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
 
         @Comment("类")
         private Class<?> clz;
-
-        @Comment("是否树形")
-        private Boolean tree;
 
         @Comment("novaId属性名")
         private String novaIdFieldName;

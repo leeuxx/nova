@@ -3,6 +3,7 @@ package com.nova.annotation;
 import com.nova.annotation.config.Comment;
 import com.nova.annotation.fun.DataProxy;
 import com.nova.annotation.sub.nova.Layout;
+import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.row.RowOperation;
 
 import java.lang.annotation.*;
@@ -30,7 +31,7 @@ public @interface Nova {
     @Comment("自定义功能按钮")
     RowOperation[] rowOperation() default {};
 
-    @Comment("是否树结构")
-    boolean tree() default false;
+    @Comment("树结构配置")
+    TreeType tree() default @TreeType(value = false);
 
 }

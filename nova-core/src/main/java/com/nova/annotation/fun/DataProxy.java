@@ -28,8 +28,8 @@ public interface DataProxy<MODEL> {
         return null;
     }
 
-    @Comment("树查询（查询子节点数据）")
-    default List<MODEL> tree(String storageFieldValue) {
+    @Comment("树查询")
+    default Tree.Vo<MODEL> tree(Tree tree) {
         return null;
     }
 

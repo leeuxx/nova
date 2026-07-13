@@ -8,6 +8,7 @@ import com.github.yitter.idgen.YitIdHelper;
 import com.nova.annotation.fun.DataProxy;
 import com.nova.annotation.fun.Details;
 import com.nova.annotation.fun.Fetch;
+import com.nova.annotation.fun.Tree;
 import com.nova.annotation.sub.nova.field.edit.ChoiceFetchHandler;
 import com.nova.annotation.sub.nova.row.ExprBool;
 import com.nova.annotation.sub.nova.row.OperationHandler;
@@ -15,9 +16,9 @@ import com.nova.entity.TestDemo;
 import com.nova.entity.TestDemo2;
 import com.nova.entity.TestDemo3;
 import com.nova.mapper.TestDemoMapper;
-import com.nova.utils.Beans;
 import com.nova.utils.NovaQueryUtils;
 import com.nova.utils.collections.list.JArrayList;
+import com.nova.utils.collections.list.JList;
 import com.nova.view.TestDemo2View;
 import com.nova.view.TestDemo3View;
 import com.nova.view.TestDemoView;
@@ -42,40 +43,25 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
 
     @Override
     public List<VLModel> fetch(String[] params) {
-        return Arrays.asList(
-                new VLModel().setValue("1").setLabel("篮球"),
-                new VLModel().setValue("2").setLabel("羽毛球").setColor("#fe6767"),
-                new VLModel().setValue("3").setLabel("LOL"),
-                new VLModel().setValue("4").setLabel("大象"),
-                new VLModel().setValue("5").setLabel("编程")
-        );
+        return Arrays.asList(new VLModel().setValue("1").setLabel("篮球"), new VLModel().setValue("2").setLabel("羽毛球").setColor("#fe6767"), new VLModel().setValue("3").setLabel("LOL"), new VLModel().setValue("4").setLabel("大象"), new VLModel().setValue("5").setLabel("编程"));
     }
 
     @Override
     public Fetch.Vo<TestDemoView> fetch(Fetch fetch) {
         NovaQueryUtils.Result<TestDemo> testDemoResult = NovaQueryUtils.buildWrapper(TestDemoView.class, fetch, TestDemo.class);
         Page<TestDemo> page = testDemoResult.getPage();
-        LambdaQueryWrapper<TestDemo> wrapper = testDemoResult.getWrapper()
-                .isNull(TestDemo::getParentId);
+        LambdaQueryWrapper<TestDemo> wrapper = testDemoResult.getWrapper().isNull(TestDemo::getParentId);
         IPage<TestDemo> iPage = page(page, wrapper);
         List<TestDemo> records = iPage.getRecords();
-        List<Long> demo2IdList = records.stream()
-                .map(TestDemo::getDemo2Id)
-                .filter(Objects::nonNull)
-                .toList();
+        List<Long> demo2IdList = records.stream().map(TestDemo::getDemo2Id).filter(Objects::nonNull).toList();
         List<TestDemo2> testDemo2s = new ArrayList<>();
         if (!demo2IdList.isEmpty()) {
             testDemo2s = testDemo2Service.listByIds(demo2IdList);
         }
-        List<Long> demoIdList = records.stream()
-                .map(TestDemo::getId)
-                .filter(Objects::nonNull)
-                .toList();
+        List<Long> demoIdList = records.stream().map(TestDemo::getId).filter(Objects::nonNull).toList();
         List<TestDemo3> testDemo3s = new ArrayList<>();
         if (!demoIdList.isEmpty()) {
-            testDemo3s = testDemo3Service.list(new LambdaQueryWrapper<TestDemo3>()
-                    .in(TestDemo3::getDemoId, demoIdList)
-            );
+            testDemo3s = testDemo3Service.list(new LambdaQueryWrapper<TestDemo3>().in(TestDemo3::getDemoId, demoIdList));
         }
         List<TestDemoView> testDemoViews = new ArrayList<>();
         for (TestDemo record : records) {
@@ -97,9 +83,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
             }
             testDemoViews.add(testDemoView);
         }
-        return new Fetch.Vo<TestDemoView>()
-                .setTotal(iPage.getTotal())
-                .setRecords(testDemoViews);
+        return new Fetch.Vo<TestDemoView>().setTotal(iPage.getTotal()).setRecords(testDemoViews);
     }
 
     @Override
@@ -123,30 +107,27 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     }
 
     @Override
-    public List<TestDemoView> tree(String storageFieldValue) {
-        List<TestDemo> testDemos = list(new LambdaQueryWrapper<TestDemo>()
-                .eq(TestDemo::getParentId, storageFieldValue)
-        );
-        List<Long> demo2IdList = testDemos.stream()
-                .map(TestDemo::getDemo2Id)
-                .filter(Objects::nonNull)
-                .toList();
+    public Tree.Vo<TestDemoView> tree(Tree tree) {
+        Tree.Vo<TestDemoView> vo = new Tree.Vo<TestDemoView>()
+                .setRootList(new ArrayList<>())
+                .setChildrenList(new ArrayList<>());
+        JList<TestDemo> testDemos = new JArrayList<>(list(new LambdaQueryWrapper<TestDemo>()
+                .orderByDesc(TestDemo::getId)
+        ));
+        JList<TestDemo> rootList = testDemos.filter().isNull(TestDemo::getParentId).list();
+        JList<TestDemo> childrenList = testDemos.filter().isNotNull(TestDemo::getParentId).list();
+        List<Long> demo2IdList = testDemos.stream().map(TestDemo::getDemo2Id).filter(Objects::nonNull).toList();
         List<TestDemo2> testDemo2s = new ArrayList<>();
         if (!demo2IdList.isEmpty()) {
             testDemo2s = testDemo2Service.listByIds(demo2IdList);
         }
-        List<Long> demoIdList = testDemos.stream()
-                .map(TestDemo::getId)
-                .filter(Objects::nonNull)
-                .toList();
+        List<Long> demoIdList = testDemos.stream().map(TestDemo::getId).filter(Objects::nonNull).toList();
         List<TestDemo3> testDemo3s = new ArrayList<>();
         if (!demoIdList.isEmpty()) {
-            testDemo3s = testDemo3Service.list(new LambdaQueryWrapper<TestDemo3>()
-                    .in(TestDemo3::getDemoId, demoIdList)
-            );
+            testDemo3s = testDemo3Service.list(new LambdaQueryWrapper<TestDemo3>().in(TestDemo3::getDemoId, demoIdList));
         }
-        List<TestDemoView> testDemoViews = new ArrayList<>();
-        for (TestDemo record : testDemos) {
+        // 根节点处理
+        for (TestDemo record : rootList) {
             TestDemoView testDemoView = new TestDemoView();
             BeanUtils.copyProperties(record, testDemoView); // 源，目标
             for (TestDemo2 testDemo2 : testDemo2s) {
@@ -163,9 +144,32 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
                     testDemoView.setTestDemo3View(testDemo3View);
                 }
             }
-            testDemoViews.add(testDemoView);
+            vo.getRootList().add(testDemoView);
         }
-        return testDemoViews;
+        // 子节点处理
+        for (TestDemo record : childrenList) {
+            TestDemoView testDemoView = new TestDemoView();
+            BeanUtils.copyProperties(record, testDemoView); // 源，目标
+            testDemoView.setTestDemoView(new TestDemoView()
+                    .setId(record.getParentId())
+            );
+            for (TestDemo2 testDemo2 : testDemo2s) {
+                if (testDemo2.getId().equals(record.getDemo2Id())) {
+                    TestDemo2View testDemo2View = new TestDemo2View();
+                    BeanUtils.copyProperties(testDemo2, testDemo2View); // 源，目标
+                    testDemoView.setTestDemo2View(testDemo2View);
+                }
+            }
+            for (TestDemo3 testDemo3 : testDemo3s) {
+                if (testDemo3.getDemoId().equals(record.getId())) {
+                    TestDemo3View testDemo3View = new TestDemo3View();
+                    BeanUtils.copyProperties(testDemo3, testDemo3View); // 源，目标
+                    testDemoView.setTestDemo3View(testDemo3View);
+                }
+            }
+            vo.getChildrenList().add(testDemoView);
+        }
+        return vo;
     }
 
     @Override
@@ -179,8 +183,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         if (testDemo3View != null) {
             TestDemo3 testDemo3 = new TestDemo3();
             BeanUtils.copyProperties(testDemo3View, testDemo3);
-            testDemo3.setId(YitIdHelper.nextId())
-                    .setDemoId(testDemo.getId());
+            testDemo3.setId(YitIdHelper.nextId()).setDemoId(testDemo.getId());
             testDemo3Service.save(testDemo3);
         }
     }
@@ -210,18 +213,13 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         updateById(testDemo);
         TestDemo3View testDemo3View = testDemoView.getTestDemo3View();
         if (testDemo3View != null) {
-            TestDemo3 testDemo3 = testDemo3Service.getOne(new LambdaQueryWrapper<TestDemo3>()
-                    .eq(TestDemo3::getDemoId, testDemo.getId())
-            );
+            TestDemo3 testDemo3 = testDemo3Service.getOne(new LambdaQueryWrapper<TestDemo3>().eq(TestDemo3::getDemoId, testDemo.getId()));
             if (testDemo3 == null) {
                 testDemo3 = new TestDemo3();
                 BeanUtils.copyProperties(testDemo3View, testDemo3);
-                testDemo3.setId(YitIdHelper.nextId())
-                        .setDemoId(testDemo.getId());
+                testDemo3.setId(YitIdHelper.nextId()).setDemoId(testDemo.getId());
             } else {
-                testDemo3.setName(testDemo3View.getName())
-                        .setMsg(testDemo3View.getMsg())
-                        .setFile(testDemo3View.getFile());
+                testDemo3.setName(testDemo3View.getName()).setMsg(testDemo3View.getMsg()).setFile(testDemo3View.getFile());
             }
             testDemo3Service.saveOrUpdate(testDemo3);
         }
@@ -229,24 +227,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
 
     @Override
     public Object novaFormValue(List<Long> novaIds, String param) {
-        return new TestDemoView.TestRow()
-                .setName("张三")
-                .setTestDemo2View(new TestDemo2View()
-                        .setId(1L)
-                        .setName("财务部")
-                )
-                .setTestDemo3View(new TestDemo3View()
-                        .setTestDemoView(new TestDemoView()
-                                .setId(1001L)
-                                .setName("张三")
-                        )
-                        .setName("随机名称" + YitIdHelper.nextId())
-                        .setMsg("测试内容")
-                        .setFile("https://cdn.ossfile.mxrvending.com/tyGoods/6902890238345.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890235156.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890234562.png")
-                )
-                .setHobby("2")
-                .setFile("https://pic.rmb.bdstatic.com/bjh/bc1178073846/250713/6c653fba298a0dbb91dc600e620e1813.jpeg,https://cdn.ossfile.mxrvending.com/tyGoods/6902890249603.png")
-                .setCreateTime(LocalDateTime.now());
+        return new TestDemoView.TestRow().setName("张三").setTestDemo2View(new TestDemo2View().setId(1L).setName("财务部")).setTestDemo3View(new TestDemo3View().setTestDemoView(new TestDemoView().setId(1001L).setName("张三")).setName("随机名称" + YitIdHelper.nextId()).setMsg("测试内容").setFile("https://cdn.ossfile.mxrvending.com/tyGoods/6902890238345.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890235156.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890234562.png")).setHobby("2").setFile("https://pic.rmb.bdstatic.com/bjh/bc1178073846/250713/6c653fba298a0dbb91dc600e620e1813.jpeg,https://cdn.ossfile.mxrvending.com/tyGoods/6902890249603.png").setCreateTime(LocalDateTime.now());
     }
 
     @Override

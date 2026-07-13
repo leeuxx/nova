@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.List;
+import java.util.Map;
+
 @Data
 @Accessors(chain = true)
 public class NovaTableTree {
@@ -13,8 +16,22 @@ public class NovaTableTree {
     @NotBlank(message = "novaName不能为空")
     private String novaName;
 
-    @Comment("父级标识值")
-    @NotBlank(message = "storageFieldValue不能为空")
-    private String storageFieldValue;
+    @Comment("来源nova名称")
+    @NotBlank(message = "sourceNovaName不能为空")
+    private String sourceNovaName;
 
+    @Comment("来源上下文属性集合")
+    private Map<String, String> sourceFields;
+
+    @Data
+    @Accessors(chain = true)
+    public static class Vo {
+
+        @Comment("根节点数据")
+        private List<Map<String, Object>> rootList;
+
+        @Comment("子节点数据")
+        private List<Map<String, Object>> childrenList;
+
+    }
 }

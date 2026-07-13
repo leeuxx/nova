@@ -116,7 +116,24 @@ window.NovaTableJQ = (function ($) {
           })
         })
         if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
-        target.isTree = resp.data.tree === true
+        var treeInfo = resp.data.tree || {}
+        target.isTree = treeInfo.value === true
+        target.treeSearchField = treeInfo.searchField || ''
+        for (var rfKey in refMap) {
+          var rf = refMap[rfKey] || {}
+          if (rf.isThisObj === true) {
+            target.treeParentField = rf.referenceField || ''
+            target.treeStorageField = rf.storageField || ''
+            break
+          }
+        }
+        if (!target.isTree && target.paginationConfig) {
+          target.paginationConfig.showSizePicker = true
+          target.paginationConfig.showQuickJumper = true
+          target.paginationConfig.showPrev = true
+          target.paginationConfig.showNext = true
+          target.paginationConfig.showPageSize = true
+        }
         target._sourceFields = embSourceFields || {}
         target._sourceNovaName = sourceNovaName || novaName
         if (embSourceFields && Object.keys(embSourceFields).length > 0) {
@@ -494,6 +511,10 @@ window.NovaTableJQ = (function ($) {
   function loadData(vmKey) {
     var target = window.vmMap && window.vmMap[vmKey]
     if (!target) return
+    if (target.isTree) {
+      loadTreeData(vmKey)
+      return
+    }
     // 实际请求后端用的表名，picker 模式下 vmKey 不等于 novaName
     var queryName = target.novaName || vmKey
     // 过滤空值条件，按后端结构组装
@@ -1185,7 +1206,18 @@ window.NovaTableJQ = (function ($) {
           target.paginationConfig.pageSizes = layout.pageSizes.map(function (n) { return { label: n + ' 条/页', value: n } })
         }
         if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
-        target.isTree = resp.data.tree === true
+        var treeInfo = resp.data.tree || {}
+        target.isTree = treeInfo.value === true
+        target.treeSearchField = treeInfo.searchField || ''
+        var refMap2 = resp.data.reference || {}
+        for (var rfKey in refMap2) {
+          var rf = refMap2[rfKey] || {}
+          if (rf.isThisObj === true) {
+            target.treeParentField = rf.referenceField || ''
+            target.treeStorageField = rf.storageField || ''
+            break
+          }
+        }
         loadData(vmKey)
       },
       error: function () {
@@ -1239,26 +1271,92 @@ window.NovaTableJQ = (function ($) {
     buildTable(novaName, vmKey, sourceFields || {}, sourceNovaName, deferDataLoad)
   }
 
-  // ── 树形表格：异步加载子节点 ─────────────────────────────────
-  function loadTreeChildren(vmKey, row, level, callback) {
+  // ── 树形表格：加载全量树数据 ──────────────────────────────────
+  function loadTreeData(vmKey) {
     var target = window.vmMap && window.vmMap[vmKey]
-    if (!target) { callback && callback([]); return }
-    var novaName = target.novaName
-    var novaIdField = target.novaIdFieldName
-    var pkValue = String(row[novaIdField])
+    if (!target) return
+    var queryName = target.novaName || vmKey
+    var sourceFields = Object.assign({}, target._sourceFields || {})
+    var sourceNovaName = target._sourceNovaName || queryName
+    target.loading = true
     $.ajax({
       url: '/nova/table/tree',
       method: 'POST',
       contentType: 'application/json',
-      data: JSON.stringify({ novaName: novaName, storageFieldValue: pkValue }),
+      data: JSON.stringify({ novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields }),
       success: function(resp) {
-        if (resp.code !== 200) { callback && callback([]); return }
-        var children = resp.data || []
-        children = translateRecords(children, target.tableColumns, target.choiceMap, target.referenceMap, target.appendageMap)
-        callback && callback(children)
+        var t = window.vmMap && window.vmMap[vmKey]
+        if (!t) return
+        t.loading = false
+        if (resp.code !== 200) return
+        var data = resp.data || {}
+        var rootList = data.rootList || []
+        var childrenList = data.childrenList || []
+        var records = rootList.concat(childrenList)
+        records = translateRecords(records, t.tableColumns, t.choiceMap, t.referenceMap, t.appendageMap)
+        t.rawTreeData = records
+        buildTreeData(t, records)
+        t.treeSearchKeyword = ''
+        t.expandedRowKeys = []
+        t.treeLoadingKeys = []
       },
-      error: function() { callback && callback([]) }
+      error: function() {
+        var t = window.vmMap && window.vmMap[vmKey]
+        if (t) t.loading = false
+      }
     })
+  }
+
+  // ── 构建树结构数据 ──────────────────────────────────────────────
+  function buildTreeData(t, records) {
+    var pk = t.novaIdFieldName
+    var parentField = t.treeParentField
+    var storageField = t.treeStorageField
+    var getParentId = function(node) {
+      var parent = node[parentField]
+      if (parent == null || parent === '') return null
+      if (typeof parent === 'object') {
+        return parent[storageField]
+      }
+      return parent
+    }
+    var nodeMap = {}
+    var parentMap = {}
+    records.forEach(function(node) {
+      var nodeKey = String(node[pk])
+      nodeMap[nodeKey] = node
+      node.children = []
+      var parentId = getParentId(node)
+      if (parentId != null && parentId !== '') {
+        var parentKey = String(parentId)
+        if (!parentMap[parentKey]) parentMap[parentKey] = []
+        parentMap[parentKey].push(node)
+      }
+    })
+    records.forEach(function(node) {
+      var nodeKey = String(node[pk])
+      var children = parentMap[nodeKey] || []
+      children.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0) })
+      node.children = children
+    })
+    var treeData = records.filter(function(node) {
+      var parentId = getParentId(node)
+      return parentId === null || parentId === undefined || parentId === ''
+    })
+    treeData.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0) })
+    t.treeNodeMap = nodeMap
+    t.treeParentMap = parentMap
+    t.tableData = treeData
+    if (t.paginationConfig) {
+      t.paginationConfig.itemCount = records.length
+      t.paginationConfig.page = 1
+      t.paginationConfig.pageSize = records.length > 0 ? records.length : 1
+      t.paginationConfig.showSizePicker = false
+      t.paginationConfig.showQuickJumper = false
+      t.paginationConfig.showPrev = false
+      t.paginationConfig.showNext = false
+      t.paginationConfig.showPageSize = false
+    }
   }
 
   return {
@@ -1268,7 +1366,7 @@ window.NovaTableJQ = (function ($) {
     loadData, onPageChange, onPageSizeChange, onSortChange,
     onPickerMounted, onViewMounted, onEmbeddedMounted,
     loadReferenceDetails, loadAppendageDetails,
-    buildLinkTabs, handleLinkAdd, loadTreeChildren
+    buildLinkTabs, handleLinkAdd, loadTreeData
   }
 
 })(jQuery)

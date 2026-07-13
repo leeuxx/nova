@@ -20,9 +20,6 @@ public class NovaTableBuild {
     @Accessors(chain = true)
     public static class Vo {
 
-        @Comment("是否树形")
-        private Boolean tree;
-
         @Comment("novaId属性名")
         private String novaIdFieldName;
 
@@ -70,6 +67,9 @@ public class NovaTableBuild {
 
         @Comment("自定义按钮信息")
         private List<RowOperationInfo> rowOperations;
+
+        @Comment("树结构信息")
+        private TreeInfo tree;
 
         @Data
         @Accessors(chain = true)
@@ -466,6 +466,18 @@ public class NovaTableBuild {
 
             @Comment("操作按钮点击后的后端钩子完全类名")
             private String operationHandler;
+
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class TreeInfo {
+
+            @Comment("是否树结构")
+            private Boolean value;
+
+            @Comment("搜索条件字段")
+            private String searchField;
 
         }
     }

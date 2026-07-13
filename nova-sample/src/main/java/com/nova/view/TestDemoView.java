@@ -4,6 +4,7 @@ import com.nova.annotation.Nova;
 import com.nova.annotation.NovaField;
 import com.nova.annotation.config.NovaId;
 import com.nova.annotation.sub.nova.Layout;
+import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
@@ -27,7 +28,9 @@ import java.time.LocalDateTime;
                 editLayout = Layout.EditLayout.DEFAULT
         ),
         dataProxy = TestDemoService.class,
-        tree = true,
+        tree = @TreeType(
+                searchField = "name"
+        ),
         rowOperation = {
                 @RowOperation(
                         title = "下发指令",
@@ -191,7 +194,7 @@ public class TestDemoView {
                     title = "上级信息",
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(
-                            referenceField = "parentId"
+                            referenceField = "testDemoView"
                     ),
                     search = @Search
             )

@@ -11,7 +11,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.List;
 import java.util.Map;
 
 @AllArgsConstructor
@@ -92,9 +91,9 @@ public class NovaTableController {
 
     @Comment("获取树形结构数据")
     @PostMapping("tree")
-    public R<List<Map<String, Object>>> tree(@RequestBody @Validated NovaTableTree req) {
-        List<Map<String, Object>> data = novaTableService.tree(req);
-        return R.ok(data);
+    public R<NovaTableTree.Vo> tree(@RequestBody @Validated NovaTableTree req) {
+        NovaTableTree.Vo tree = novaTableService.tree(req);
+        return R.ok(tree);
     }
 
 }

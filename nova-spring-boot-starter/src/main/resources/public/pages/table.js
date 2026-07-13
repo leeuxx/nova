@@ -196,6 +196,13 @@ const NovaTable = {
       expandedRowKeys: [],
       isTree: false,
       treeLoadingKeys: [],
+      rawTreeData: [],
+      treeNodeMap: {},
+      treeParentMap: {},
+      treeSearchKeyword: '',
+      treeParentField: '',
+      treeStorageField: '',
+      treeSearchField: '',
       selectedRowKey: null,
       searchFields:   [],
       filterForm:     {},
@@ -394,29 +401,6 @@ const NovaTable = {
       return this.tableData
     },
 
-    flattenedTreeData() {
-      var self = this
-      var pk = this.novaIdFieldName
-      var expanded = new Set(this.expandedRowKeys || [])
-      var result = []
-      var flatten = function(list, level) {
-        list.forEach(function(item) {
-          var cloned = { ...item, _treeLevel: level }
-          delete cloned.children
-          result.push(cloned)
-          if (item.children && item.children.length > 0 && expanded.has(item[pk])) {
-            flatten(item.children, level + 1)
-          }
-        })
-      }
-      if (this.isTree) {
-        flatten(this.tableData, 0)
-      } else {
-        this.tableData.forEach(function(item) { result.push(item) })
-      }
-      return result
-    },
-
     previewFileList() {
       if (!this.previewField) return []
       if (this.previewIsOpForm) {
@@ -504,83 +488,6 @@ const NovaTable = {
 
         if (index === 0 && isTreeTable) {
           colDef.cellProps = () => ({ style: { paddingLeft: 0 } })
-          colDef.render = (row) => {
-            const level = row._treeLevel || 0
-            const rowKey = row[vm.novaIdFieldName]
-            const isExpanded = vm.expandedRowKeys.includes(rowKey)
-            const isLoading = vm.treeLoadingKeys.includes(rowKey)
-            const hasLoadedChildren = row.children !== undefined
-            const noChildren = row._noChildren === true
-            const showArrow = true
-            const indent = level * 20
-            const toggleExpand = () => {
-              if (isLoading || noChildren) return
-              if (isExpanded) {
-                // 收起：移除自身及所有子孙节点的展开状态
-                var keys = [...vm.expandedRowKeys]
-                var idx = keys.indexOf(rowKey)
-                if (idx >= 0) keys.splice(idx, 1)
-                // 收集所有已展开的子孙节点并一并移除
-                var descKeys = vm.collectDescendantKeys(vm.tableData, rowKey, vm.novaIdFieldName)
-                descKeys.forEach(function(dk) {
-                  var di = keys.indexOf(dk)
-                  if (di >= 0) keys.splice(di, 1)
-                })
-                vm.expandedRowKeys = keys
-              } else {
-                // 展开
-                if (!hasLoadedChildren) {
-                  // 首次展开，异步加载子节点
-                  vm.loadTreeChildren(row, level)
-                } else {
-                  const keys = [...vm.expandedRowKeys]
-                  keys.push(rowKey)
-                  vm.expandedRowKeys = keys
-                }
-              }
-            }
-            const children = []
-            if (indent > 0) {
-              children.push(h('span', { style: `display:inline-block;width:${indent}px;flex-shrink:0` }))
-            }
-            if (showArrow) {
-              if (isLoading) {
-                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:22px;flex-shrink:0' }, [
-                  h('iconify-icon', {
-                    icon: 'line-md:loading-loop',
-                    style: 'font-size:20px;color:#888'
-                  })
-                ]))
-              } else if (!noChildren) {
-                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:22px;flex-shrink:0' }, [
-                  h('iconify-icon', {
-                    icon: isExpanded ? 'material-symbols:expand-more' : 'material-symbols:chevron-right',
-                    style: 'font-size:22px;color:#888;cursor:pointer',
-                    onClick: toggleExpand
-                  })
-                ]))
-              } else {
-                children.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:22px;flex-shrink:0' }))
-              }
-            } else {
-              children.push(h('span', { style: 'display:inline-block;width:20px;flex-shrink:0' }))
-            }
-            const cellValue = row[col.field]
-            const displayText = cellValue !== null && cellValue !== undefined ? String(cellValue) : ''
-            if (vm.cellOverflow === 'ellipsis') {
-              children.push(h(NTooltip, { trigger: 'hover', placement: 'top' }, {
-                default: () => displayText,
-                trigger: () => h('span', {
-                  style: 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'
-                }, displayText)
-              }))
-            } else {
-              children.push(h('span', {
-                style: 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'
-              }, displayText))
-            }
-            return h('span', { style: 'display:flex;align-items:center;width:100%' }, children)
-          }
         }
 
         if (col.desc || col.sortable) {
@@ -1016,76 +923,7 @@ const NovaTable = {
       if (row._newChild) cls.push('tree-child-new')
       return cls.join(' ') || undefined
     },
-    loadTreeChildren(row, level) {
-      const rowKey = row[this.novaIdFieldName]
-      // 标记加载中
-      this.treeLoadingKeys = [...this.treeLoadingKeys, rowKey]
-      // TODO: 接口就绪后替换此处，参数为 novaName + 当前行的 PK 值
-      // 返回格式与 data 接口一致：{ records: [], total: N }
-      window.NovaTableJQ.loadTreeChildren(this._vmKey || this.novaName, row, level, (children) => {
-        // 移除加载中状态
-        var idx = this.treeLoadingKeys.indexOf(rowKey)
-        if (idx >= 0) {
-          this.treeLoadingKeys = this.treeLoadingKeys.filter(k => k !== rowKey)
-        }
-        if (children && children.length > 0) {
-        this.setRowChildren(this.tableData, rowKey, children)
-        // 展开该行
-        this.expandedRowKeys = [...this.expandedRowKeys, rowKey]
-        // 动画结束后清除标记
-        var self = this
-        setTimeout(function() {
-          children.forEach(function(c) { c._newChild = false })
-          self.tableData = [...self.tableData]
-        }, 350)
-      } else {
-        // 空数据，标记为无子节点，不展开
-        var targetRow = null
-        this.findRow(this.tableData, rowKey, function(r) { targetRow = r })
-        if (targetRow) targetRow._noChildren = true
-        this.tableData = [...this.tableData]
-      }
-      })
-    },
-    setRowChildren(list, rowKey, children) {
-      var pk = this.novaIdFieldName
-      for (var i = 0; i < list.length; i++) {
-        if (String(list[i][pk]) === String(rowKey)) {
-          children.forEach(function(c) { c._newChild = true })
-          list[i].children = children
-          this.tableData = [...this.tableData]
-          return true
-        }
-        if (list[i].children && list[i].children.length > 0) {
-          if (this.setRowChildren(list[i].children, rowKey, children)) return true
-        }
-      }
-      return false
-    },
-    collectDescendantKeys(list, rowKey, pk) {
-      var keys = []
-      for (var i = 0; i < list.length; i++) {
-        if (String(list[i][pk]) === String(rowKey)) {
-          if (list[i].children && list[i].children.length > 0) {
-            this._collectAllKeys(list[i].children, pk, keys)
-          }
-          return keys
-        }
-        if (list[i].children && list[i].children.length > 0) {
-          var found = this.collectDescendantKeys(list[i].children, rowKey, pk)
-          if (found.length > 0) return found
-        }
-      }
-      return keys
-    },
-    _collectAllKeys(list, pk, out) {
-      for (var i = 0; i < list.length; i++) {
-        out.push(list[i][pk])
-        if (list[i].children && list[i].children.length > 0) {
-          this._collectAllKeys(list[i].children, pk, out)
-        }
-      }
-    },
+    
     findRow(list, rowKey, callback) {
       var pk = this.novaIdFieldName
       for (var i = 0; i < list.length; i++) {
@@ -1380,6 +1218,10 @@ const NovaTable = {
     },
     handleQuery() {
       const t = this
+      if (t.isTree) {
+        t.applyTreeSearch()
+        return
+      }
       const snapshot = JSON.stringify(t.filterForm)
       if (snapshot !== t._lastFilterSnapshot) {
         t.paginationConfig.page = 1
@@ -1388,10 +1230,103 @@ const NovaTable = {
       const key = (t.pickerMode || t.embeddedMode || t.dualMode) ? t._vmKey : t.novaName
       window.NovaTableJQ.loadData(key)
     },
+    applyTreeSearch() {
+      const keyword = this.treeSearchKeyword.trim()
+      const pk = this.novaIdFieldName
+      const searchField = this.treeSearchField
+      const nodeMap = this.treeNodeMap || {}
+      const parentField = this.treeParentField
+      const storageField = this.treeStorageField
+      const getParentId = function(node) {
+        var parent = node[parentField]
+        if (parent == null || parent === '') return null
+        if (typeof parent === 'object') {
+          return parent[storageField]
+        }
+        return parent
+      }
+
+      if (!keyword) {
+        window.NovaTableJQ.loadTreeData(this._vmKey || this.novaName)
+        return
+      }
+
+      const hitKeys = new Set()
+      for (const key in nodeMap) {
+        const node = nodeMap[key]
+        const searchValue = node[searchField]
+        if (searchValue != null && String(searchValue).toLowerCase().indexOf(keyword.toLowerCase()) !== -1) {
+          hitKeys.add(key)
+        }
+      }
+
+      if (hitKeys.size === 0) {
+        this.tableData = []
+        this.expandedRowKeys = []
+        return
+      }
+
+      const ancestorKeys = new Set()
+      hitKeys.forEach(function(hitKey) {
+        var currentKey = hitKey
+        while (currentKey) {
+          var node = nodeMap[currentKey]
+          if (!node) break
+          var parentId = getParentId(node)
+          if (parentId == null || parentId === '') break
+          ancestorKeys.add(String(parentId))
+          currentKey = String(parentId)
+        }
+      })
+
+      const allKeys = new Set([...hitKeys, ...ancestorKeys])
+      const filteredNodes = []
+      allKeys.forEach(function(key) {
+        const node = nodeMap[key]
+        if (node) {
+          filteredNodes.push({ ...node })
+        }
+      })
+
+      const tempMap = {}
+      filteredNodes.forEach(function(node) {
+        tempMap[String(node[pk])] = node
+        node.children = []
+      })
+
+      filteredNodes.forEach(function(node) {
+        var parentId = getParentId(node)
+        if (parentId != null && parentId !== '') {
+          var parentKey = String(parentId)
+          if (tempMap[parentKey]) {
+            if (!tempMap[parentKey].children) tempMap[parentKey].children = []
+            tempMap[parentKey].children.push(node)
+          }
+        }
+      })
+
+      const treeData = filteredNodes.filter(function(node) {
+        var parentId = getParentId(node)
+        return parentId === null || parentId === undefined || parentId === ''
+      })
+
+      treeData.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0) })
+      treeData.forEach(function(node) {
+        if (node.children) {
+          node.children.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0) })
+        }
+      })
+
+      this.tableData = treeData
+      this.expandedRowKeys = Array.from(ancestorKeys)
+    },
     handleAdd()         { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleAdd(this._vmKey); else window.NovaTableJQ.handleAdd() },
     handleEdit(row)     { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleEdit(row, this._vmKey); else window.NovaTableJQ.handleEdit(row) },
     handleDelete(row)   { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleDelete(row, this._vmKey); else window.NovaTableJQ.handleDelete(row) },
     handleBatchDelete() { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleBatchDelete(this._vmKey); else window.NovaTableJQ.handleBatchDelete() },
+    handleExpandedRowKeysUpdate(keys) {
+      this.expandedRowKeys = keys
+    },
     submitCustomBtn(btn, row) {
       var self = this
       var novaIds = []
@@ -2528,12 +2463,14 @@ const NovaTable = {
       return String(val)
     },
     handlePageChange(current) {
+      if (this.isTree) return
       this.expandedRowKeys = []
       this.treeLoadingKeys = []
       const key = (this.pickerMode || this.embeddedMode || this.dualMode) ? this._vmKey : this.novaName
       window.NovaTableJQ.onPageChange(key, current)
     },
     handlePageSizeChange(pageSize) {
+      if (this.isTree) return
       const key = (this.pickerMode || this.embeddedMode || this.dualMode) ? this._vmKey : this.novaName
       window.NovaTableJQ.onPageSizeChange(key, pageSize)
     }
@@ -2634,8 +2571,25 @@ const NovaTable = {
     </div>
     <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : dualTableViewActive ? 'padding:16px 8px 16px 16px' : 'padding:16px')">
 
-      <!-- 筛选卡片 -->
-      <component v-if="!linkMode" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
+      <!-- 树形表格搜索 -->
+      <component v-if="isTree && !linkMode" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 0">
+          <n-input
+            v-model:value="treeSearchKeyword"
+            placeholder="搜索"
+            :size="embSize"
+            clearable
+            style="flex:1;max-width:300px"
+            @keyup.enter="handleQuery"
+          >
+            <template #prefix>
+              <iconify-icon icon="material-symbols:search" style="font-size:16px;color:#aaa"></iconify-icon>
+            </template>
+          </n-input>
+        </div>
+      </component>
+      <!-- 普通表格筛选卡片 -->
+      <component v-else-if="!linkMode" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
         <div :class="['filter-grid', embeddedMode ? 'embedded' : '', (dualMode || dualTableViewActive) ? 'dual' : '']" :style="embeddedMode ? 'padding:8px 0' : ''">
           <template v-for="(field, index) in searchFields" :key="field.field">
             <div v-if="filterExpanded || index < ((dualMode || dualTableViewActive) ? 1 : 3)" style="display:flex;align-items:center;gap:8px;width:100%">
@@ -3037,20 +2991,23 @@ const NovaTable = {
         </div>
         <div id="table-wrapper" :style="(pickerMode || embeddedMode || dualMode) ? 'flex:1;min-height:0;overflow:hidden' : ''">
           <n-data-table
-            :data="flattenedTreeData"
+            :data="tableData"
             :columns="columns"
-            :row-key="row => row[novaIdFieldName]"
+            :row-key="row => String(row[novaIdFieldName])"
             :checked-row-keys="checkedRowKeys"
             @update:checked-row-keys="handleCheck"
+            :expanded-row-keys="expandedRowKeys"
+            @update:expanded-row-keys="handleExpandedRowKeysUpdate"
             :row-props="(pickerMode || pickerMulti) ? (row) => ({ style: 'cursor:pointer', onClick: () => pickerMulti ? toggleCheckedRow(row) : selectRow(row) }) : (dualTableViewActive ? (row) => ({ style: 'cursor:pointer', onClick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; onDualTableRowClick(row) } }) : (rowDblclickEdit ? (row) => ({ style: 'cursor:default', onDblclick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; handleEdit(row) } }) : undefined))"
             :row-class-name="tableRowClassName"
             :loading="loading"
-            :remote="true"
+            :remote="!isTree"
             :pagination="paginationConfig"
             :striped="striped"
             :size="tableSize"
             :scroll-x="scrollX"
             :flex-height="true"
+            :class="{ 'tree-cell-overflow-ellipsis': isTree && cellOverflow === 'ellipsis' }"
             style="width:100%;height:100%"
           >
             <template #loading v-if="loadingStyle !== 'spinner'">

@@ -642,10 +642,12 @@ body.dark { background: #151515 !important; }
 .n-data-table .n-data-table-tree-row-wrapper > div:last-child {
   flex: 1 !important;
   min-width: 0 !important;
+  width: auto !important;
+}
+.n-data-table.tree-cell-overflow-ellipsis .n-data-table-tree-row-wrapper > div:last-child {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
-  width: auto !important;
 }
 .n-data-table .n-data-table-tree-row {
   width: 100% !important;
@@ -653,5 +655,22 @@ body.dark { background: #151515 !important; }
 .n-data-table .n-data-table-tree-row > td:first-child {
   width: auto !important;
   min-width: 0 !important;
+}
+/* 无子节点的树行：展开图标位置显示灰色横线 */
+.n-data-table .n-data-table-tree-row-expand-icon:empty,
+.n-data-table .n-data-table-tree-row-expand-icon .n-data-table-expand-icon--no-children {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+.n-data-table .n-data-table-tree-row-expand-icon .n-data-table-expand-icon--no-children::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 2px;
+  background: #ccc;
+  border-radius: 1px;
 }
 

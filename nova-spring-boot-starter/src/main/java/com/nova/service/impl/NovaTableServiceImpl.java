@@ -1,9 +1,7 @@
 package com.nova.service.impl;
 
-import com.nova.annotation.fun.DataProxy;
-import com.nova.annotation.fun.Details;
-import com.nova.annotation.fun.Fetch;
-import com.nova.annotation.fun.PromptSearch;
+import com.nova.annotation.fun.*;
+import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.row.OperationHandler;
 import com.nova.annotation.sub.nova.row.RowOperation;
@@ -16,10 +14,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -29,29 +24,34 @@ public class NovaTableServiceImpl implements NovaTableService {
     @Override
     public NovaTableBuild.Vo build(NovaTableBuild novaTableBuild) {
         NovaTableBuild.Vo vo = new NovaTableBuild.Vo();
-        // 获取树形
-        Boolean tree = NovaUtils.tree(novaTableBuild.getNovaName());
-        vo.setTree(tree);
         // 获取novaId属性名称
         String novaIdFieldName = NovaFieldUtils.getNovaIdFieldName(novaTableBuild.getNovaName());
         vo.setNovaIdFieldName(novaIdFieldName);
+        // 获取树结构信息
+        TreeType treeType = NovaUtils.tree(novaTableBuild.getNovaName());
+        NovaTableBuild.Vo.TreeInfo treeInfo = new NovaTableBuild.Vo.TreeInfo()
+                .setValue(Objects.requireNonNull(treeType).value())
+                .setSearchField(treeType.searchField());
+        vo.setTree(treeInfo);
         // 获取搜索条件
         List<NovaTableBuild.Vo.Search> searchList = new ArrayList<>();
-        List<NovaFieldUtils.SearchInfo> searchs = NovaFieldUtils.getSearch(novaTableBuild.getNovaName());
-        for (NovaFieldUtils.SearchInfo search : searchs) {
-            NovaTableBuild.Vo.Search searchVo = new NovaTableBuild.Vo.Search()
-                    .setField(search.getField())
-                    .setTitle(search.getTitle())
-                    .setType(search.getType().name())
-                    .setVague(search.getVague());
-            if (search.getTapSearch() != null) {
-                searchVo.setTapSearch(new NovaTableBuild.Vo.Search.TapSearch()
-                        .setShowAll(search.getTapSearch().showAll())
-                );
+        if (!treeInfo.getValue()) {
+            List<NovaFieldUtils.SearchInfo> searchs = NovaFieldUtils.getSearch(novaTableBuild.getNovaName());
+            for (NovaFieldUtils.SearchInfo search : searchs) {
+                NovaTableBuild.Vo.Search searchVo = new NovaTableBuild.Vo.Search()
+                        .setField(search.getField())
+                        .setTitle(search.getTitle())
+                        .setType(search.getType().name())
+                        .setVague(search.getVague());
+                if (search.getTapSearch() != null) {
+                    searchVo.setTapSearch(new NovaTableBuild.Vo.Search.TapSearch()
+                            .setShowAll(search.getTapSearch().showAll())
+                    );
+                }
+                searchList.add(searchVo);
             }
-            searchList.add(searchVo);
+            vo.setSearch(searchList);
         }
-        vo.setSearch(searchList);
         // 获取表头列
         List<NovaTableBuild.Vo.TableColumn> tableColumnList = new ArrayList<>();
         List<NovaFieldUtils.TableColumnInfo> tableColumns = NovaFieldUtils.getTableColumn(novaTableBuild.getNovaName());
@@ -573,14 +573,21 @@ public class NovaTableServiceImpl implements NovaTableService {
     }
 
     @Override
-    public List<Map<String, Object>> tree(NovaTableTree novaTableTree) {
-        String novaName = novaTableTree.getNovaName();
-        String storageFieldValue = novaTableTree.getStorageFieldValue();
-        List<?> trees = ((DataProxy) DataProxyUtils.getDataProxy(novaName)).tree(storageFieldValue);
+    public NovaTableTree.Vo tree(NovaTableTree novaTableTree) {
+        Tree.Vo<?> tree = ((DataProxy) DataProxyUtils.getDataProxy(novaTableTree.getNovaName())).tree(new Tree()
+                .setNovaName(novaTableTree.getSourceNovaName())
+                .setSourceFields(novaTableTree.getSourceFields())
+        );
+        List<?> rootList = tree.getRootList();
+        List<?> childrenList = tree.getChildrenList();
         // 转换Map
-        List<Map<String, Object>> maps = new ArrayList<>();
-        trees.forEach(record -> maps.add(DataProxyUtils.toMapWithTimestamp(record)));
-        return maps;
+        List<Map<String, Object>> rootMaps = new ArrayList<>();
+        rootList.forEach(record -> rootMaps.add(DataProxyUtils.toMapWithTimestamp(record)));
+        List<Map<String, Object>> childrenMaps = new ArrayList<>();
+        childrenList.forEach(record -> childrenMaps.add(DataProxyUtils.toMapWithTimestamp(record)));
+        return new NovaTableTree.Vo()
+                .setRootList(rootMaps)
+                .setChildrenList(childrenMaps);
     }
 
 }
