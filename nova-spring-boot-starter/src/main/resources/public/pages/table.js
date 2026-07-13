@@ -486,7 +486,7 @@ const NovaTable = {
         const isTreeTable = vm.isTree
         const colDef = {
           key:       col.field,
-          width:     vm.colPixels[index],
+          width:     col.width || undefined,
           title:     col.title,
           resizable: true,
           ellipsis:  vm.cellOverflow === 'ellipsis' ? { tooltip: true } : false
@@ -538,7 +538,7 @@ const NovaTable = {
             const tags = String(val).split(',').map(t => t.trim()).filter(Boolean)
             const visible = tags.slice(0, 1)
             const rest = tags.length - 1
-            const nodes = visible.map(t => h(NTag, { size: 'small', style: 'flex-shrink:0', color: { color: 'rgba(37,99,235,0.08)', textColor: '#2563eb', borderColor: 'transparent' } }, { default: () => t }))
+            const nodes = visible.map(t => h('span', { style: 'flex-shrink:0;display:inline-block;padding:1px 6px;border-radius:3px;font-size:12px;background:rgba(37,99,235,0.08);color:#2563eb' }, t))
             if (rest > 0) nodes.push(h(NTooltip, { trigger: 'hover' }, {
               trigger: () => h('span', { style: 'flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px' }, '+' + rest),
               default: () => tags.slice(1).join('，')
@@ -574,7 +574,7 @@ const NovaTable = {
               ])
             }
             const color = isTrue ? '#18a058' : '#d03050'
-            return h(NTag, { size: 'small', color: { color: color + '20', textColor: darkenHex(color, 0.15), borderColor: 'transparent' } }, { default: () => isTrue ? '是' : '否' })
+            return h('span', { style: 'display:inline-block;padding:1px 6px;border-radius:3px;font-size:12px;background:' + color + '20;color:' + darkenHex(color, 0.15) }, isTrue ? '是' : '否')
           }
         }
 
@@ -588,7 +588,7 @@ const NovaTable = {
             const makeTag = (label, color) => {
               const bg = color ? color + '20' : 'rgba(128,128,128,0.1)'
               const tc = color ? darkenHex(color, 0.35) : 'inherit'
-              return h(NTag, { size: 'small', color: { color: bg, textColor: tc, borderColor: 'transparent' } }, { default: () => label })
+              return h('span', { style: 'display:inline-block;padding:1px 6px;border-radius:3px;font-size:12px;background:' + bg + ';color:' + tc }, label)
             }
             if (isMulti) {
               const labels = String(text).split(',').map(s => s.trim()).filter(Boolean)
@@ -903,7 +903,7 @@ const NovaTable = {
       window.vmMap[this.novaName] = this
       window.activeNovaName = this.novaName
     }
-    setTimeout(() => window.NovaTableJQ && window.NovaTableJQ.updateTableHeight(), 80)
+    setTimeout(() => { if (window.NovaTableJQ) { window.NovaTableJQ.updateTableHeight(); window.NovaTableJQ.updateTableWidth() } }, 80)
   },
 
   deactivated() {

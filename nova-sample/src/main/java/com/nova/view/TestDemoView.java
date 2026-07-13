@@ -25,10 +25,12 @@ import java.time.LocalDateTime;
         desc = "测试功能描述",
         orderBy = "id desc",
         layout = @Layout(
-                editLayout = Layout.EditLayout.DEFAULT
+                editLayout = Layout.EditLayout.DEFAULT,
+                pageSize = 100
         ),
         dataProxy = TestDemoService.class,
         tree = @TreeType(
+                value = false,
                 searchField = "name"
         ),
         rowOperation = {

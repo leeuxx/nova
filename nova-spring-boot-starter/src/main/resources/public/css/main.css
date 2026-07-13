@@ -656,6 +656,7 @@ body.dark { background: #151515 !important; }
   width: auto !important;
   min-width: 0 !important;
 }
+
 /* 无子节点的树行：展开图标位置显示灰色横线 */
 .n-data-table .n-data-table-tree-row-expand-icon:empty,
 .n-data-table .n-data-table-tree-row-expand-icon .n-data-table-expand-icon--no-children {

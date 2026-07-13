@@ -16,10 +16,21 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── 页面初始化 ─────────────────────────────────────────────────
+  var _resizeTimer = null
+  function onResizeHandler() {
+    // resize 期间全部延迟，结束后一次性更新高度和宽度
+    clearTimeout(_resizeTimer)
+    _resizeTimer = setTimeout(function() {
+      updateTableHeight()
+      updateTableWidth()
+    }, 200)
+  }
+
   function onMounted(novaName) {
     buildTable(novaName)
     setTimeout(updateTableHeight, 80)
-    $(window).on('resize.novaTable', updateTableHeight)
+    setTimeout(updateTableWidth, 120)
+    $(window).on('resize.novaTable', onResizeHandler)
   }
 
   // ── 路由切换（同一组件实例复用，novaName 变了）────────────────
@@ -666,6 +677,11 @@ window.NovaTableJQ = (function ($) {
     var cardPad    = 68
     var height = winH - headerH - tabBarH - outerPad - filterH - tblHeaderH - cardPad
     $wrapper.height(Math.max(height, 200))
+  }
+
+  function updateTableWidth() {
+    var $wrapper = $('#table-wrapper')
+    if (!$wrapper.length) return
     var activeVm = window.vmMap && window.vmMap[window.activeNovaName]
     if (activeVm) activeVm.tableWrapperWidth = $wrapper[0].clientWidth
   }
