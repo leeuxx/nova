@@ -29,7 +29,9 @@ import java.time.LocalDateTime;
         ),
         dataProxy = TestDemoService.class,
         tree = @TreeType(
-                searchField = "name"
+                searchField = "name",
+                level = 1,
+                cascade = false
         ),
         rowOperation = {
                 @RowOperation(

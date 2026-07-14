@@ -240,7 +240,8 @@ const NovaTable = {
       // ── linkTree 模式 ──────────────────────────────────────────
       linkTreeData:             {},   // { [tapNovaName]: treeNode[] }   全量树数据
       linkTreeFilteredData:     {},   // { [tapNovaName]: treeNode[] }   搜索过滤后的树数据
-      linkTreeExpandedKeys:     {},   // { [tapNovaName]: string[] }     搜索时自动展开的 key
+      linkTreeDefaultExpandedKeys: {}, // { [tapNovaName]: any[] }        默认展开的 key（来自 treeLevel）
+      linkTreeExpandedKeys:     {},   // { [tapNovaName]: any[] }        当前展开的 key
       linkTreeCheckedKeys:      {},   // { [tapNovaName]: Set }          所有勾选的 key
       linkTreeDisplayKeys:      {},   // { [tapNovaName]: string[] }     展示的勾选 key
       linkTreeLoading:          {},   // { [tapNovaName]: boolean }      加载中
@@ -818,6 +819,7 @@ const NovaTable = {
         this.linkTabBuild           = {}
         this.linkTreeData           = {}
         this.linkTreeFilteredData   = {}
+        this.linkTreeDefaultExpandedKeys = {}
         this.linkTreeExpandedKeys   = {}
         this.linkTreeCheckedKeys    = {}
         this.linkTreeDisplayKeys    = {}
@@ -2278,6 +2280,8 @@ const NovaTable = {
             const pkField = buildData.novaIdFieldName
             const treeInfo = buildData.tree || {}
             const treeSearchField = treeInfo.searchField
+            const treeCascade = treeInfo.cascade !== false
+            const treeLevel = treeInfo.level != null ? treeInfo.level : 0
             const refMap = buildData.reference || {}
 
             if (!pkField) {
@@ -2307,6 +2311,8 @@ const NovaTable = {
             newBuild.linkTreeTargetConfig = {
               novaIdFieldName: pkField,
               treeSearchField: treeSearchField,
+              treeCascade: treeCascade,
+              treeLevel: treeLevel,
               treeParentField: treeParentField,
               treeStorageField: treeStorageField,
               tableColumns: buildData.tableColumns || []
@@ -2368,7 +2374,24 @@ const NovaTable = {
 
                 self.linkTreeData[tapNovaName] = sortedRoot
                 self.linkTreeNodeMap[tapNovaName] = nodeMap
-                self.linkTreeExpandedKeys[tapNovaName] = []
+
+                // 根据 treeLevel 计算默认展开的节点（搜索清空时也会恢复到这些节点）
+                var treeLevel = newBuild.linkTreeTargetConfig.treeLevel || 0
+                var defaultExpandKeys = []
+                if (treeLevel > 0) {
+                  var collectByLevel = function(nodes, depth) {
+                    if (depth >= treeLevel) return
+                    nodes.forEach(function(node) {
+                      if (node[pkField] != null) defaultExpandKeys.push(node[pkField])
+                      if (node.children && node.children.length) {
+                        collectByLevel(node.children, depth + 1)
+                      }
+                    })
+                  }
+                  collectByLevel(sortedRoot, 0)
+                }
+                self.linkTreeDefaultExpandedKeys[tapNovaName] = defaultExpandKeys
+                self.linkTreeExpandedKeys[tapNovaName] = defaultExpandKeys
 
                 // Step 3: 查询中间表已有数据，反显勾选
                 const sourceFields = self.buildLinkSourceFields({ tapNovaName: tapNovaName })
@@ -2467,7 +2490,7 @@ const NovaTable = {
       const fullData = this.linkTreeData[tapNovaName]
       if (!keyword) {
         this.linkTreeFilteredData[tapNovaName] = null
-        this.linkTreeExpandedKeys[tapNovaName] = []
+        this.linkTreeExpandedKeys[tapNovaName] = this.linkTreeDefaultExpandedKeys[tapNovaName] || []
         return
       }
       if (!fullData) return
@@ -3907,28 +3930,29 @@ const NovaTable = {
                         style="width:100%" />
                     </div>
                     <div class="link-tree-scroll" style="flex:1;overflow:auto;padding:0 0 12px 0">
-                      <!-- 全量树：无搜索时显示，展开/收起由用户自由操作 -->
-                      <n-tree v-show="!linkTreeFilteredData[tab.tapNovaName]"
+                      <!-- 全量树：无搜索时显示，根据 treeLevel 设置默认展开 -->
+                      <n-tree v-if="!linkTreeFilteredData[tab.tapNovaName] && linkTreeData[tab.tapNovaName]"
+                        :default-expanded-keys="linkTreeDefaultExpandedKeys[tab.tapNovaName] || []"
                         :data="linkTreeData[tab.tapNovaName]"
                         :checked-keys="linkTreeDisplayKeys[tab.tapNovaName]"
+                        :cascade="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
                         :key-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
                         :label-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeSearchField"
                         checkable
-                        cascade
                         block-line
                         @update:checked-keys="(keys) => onLinkTreeCheck(keys, tab.tapNovaName)"
                       />
-                      <!-- 搜索树：有搜索时显示，用 expanded-keys + 动态 key 实现自动展开（key 重建组件，expanded-keys 作为初始展开状态） -->
+                      <!-- 搜索树：有搜索时显示，用 expanded-keys + 动态 key 实现自动展开 -->
                       <n-tree v-if="linkTreeFilteredData[tab.tapNovaName]"
                         :key="'linkTreeSearch_' + tab.tapNovaName + '_' + (linkTreeSearchKeyword[tab.tapNovaName] || '')"
                         :data="linkTreeFilteredData[tab.tapNovaName]"
                         :checked-keys="linkTreeDisplayKeys[tab.tapNovaName]"
                         :expanded-keys="linkTreeExpandedKeys[tab.tapNovaName] || []"
+                        :cascade="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
                         :key-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
                         :label-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeSearchField"
                         :render-label="linkTreeRenderLabel(tab.tapNovaName)"
                         checkable
-                        cascade
                         block-line
                         @update:checked-keys="(keys) => onLinkTreeCheck(keys, tab.tapNovaName)"
                       />

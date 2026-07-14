@@ -938,6 +938,7 @@ window.NovaTableJQ = (function ($) {
         t.linkTabBuild     = {}
         t.linkTreeData     = {}
         t.linkTreeFilteredData = {}
+        t.linkTreeDefaultExpandedKeys = {}
         t.linkTreeExpandedKeys = {}
         t.linkTreeCheckedKeys = {}
         t.linkTreeDisplayKeys = {}
