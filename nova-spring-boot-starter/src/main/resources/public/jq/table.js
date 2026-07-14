@@ -28,8 +28,10 @@ window.NovaTableJQ = (function ($) {
 
   function onMounted(novaName) {
     buildTable(novaName)
-    setTimeout(updateTableHeight, 80)
-    setTimeout(updateTableWidth, 120)
+    // buildTable 完成后会调用 loadData，loadData 在 Vue nextTick 中会调用 safeUpdateTableHeight
+    // 延迟 600ms 作为备用检查（给 loadData 足够时间完成）
+    setTimeout(updateTableHeight, 600)
+    setTimeout(updateTableWidth, 700)
     $(window).on('resize.novaTable', onResizeHandler)
   }
 
@@ -514,6 +516,7 @@ window.NovaTableJQ = (function ($) {
   function loadData(vmKey) {
     var target = window.vmMap && window.vmMap[vmKey]
     if (!target) return
+    target.loading = true
     if (target.isTree) {
       loadTreeData(vmKey)
       return
