@@ -240,6 +240,7 @@ const NovaTable = {
       // ── linkTree 模式 ──────────────────────────────────────────
       linkTreeData:             {},   // { [tapNovaName]: treeNode[] }   全量树数据
       linkTreeFilteredData:     {},   // { [tapNovaName]: treeNode[] }   搜索过滤后的树数据
+      linkTreeExpandedKeys:     {},   // { [tapNovaName]: string[] }     搜索时自动展开的 key
       linkTreeCheckedKeys:      {},   // { [tapNovaName]: Set }          所有勾选的 key
       linkTreeDisplayKeys:      {},   // { [tapNovaName]: string[] }     展示的勾选 key
       linkTreeLoading:          {},   // { [tapNovaName]: boolean }      加载中
@@ -817,6 +818,7 @@ const NovaTable = {
         this.linkTabBuild           = {}
         this.linkTreeData           = {}
         this.linkTreeFilteredData   = {}
+        this.linkTreeExpandedKeys   = {}
         this.linkTreeCheckedKeys    = {}
         this.linkTreeDisplayKeys    = {}
         this.linkTreeLoading        = {}
@@ -2366,6 +2368,7 @@ const NovaTable = {
 
                 self.linkTreeData[tapNovaName] = sortedRoot
                 self.linkTreeNodeMap[tapNovaName] = nodeMap
+                self.linkTreeExpandedKeys[tapNovaName] = []
 
                 // Step 3: 查询中间表已有数据，反显勾选
                 const sourceFields = self.buildLinkSourceFields({ tapNovaName: tapNovaName })
@@ -2464,6 +2467,7 @@ const NovaTable = {
       const fullData = this.linkTreeData[tapNovaName]
       if (!keyword) {
         this.linkTreeFilteredData[tapNovaName] = null
+        this.linkTreeExpandedKeys[tapNovaName] = []
         return
       }
       if (!fullData) return
@@ -2475,11 +2479,11 @@ const NovaTable = {
       const parentField = config.treeParentField
       const storageField = config.treeStorageField
 
-      // 收集所有节点到 map
-      const nodeMap = {}
+      // 收集所有节点到 Map（保留原始 key 类型，和 n-tree 的 key-field 一致）
+      const nodeMap = new Map()
       const collectAll = function(nodes) {
         nodes.forEach(function(node) {
-          nodeMap[String(node[pkField])] = node
+          nodeMap.set(node[pkField], node)
           if (node.children && node.children.length) collectAll(node.children)
         })
       }
@@ -2487,14 +2491,13 @@ const NovaTable = {
 
       // 找到命中节点
       const hitKeys = new Set()
-      for (var key in nodeMap) {
-        var node = nodeMap[key]
+      nodeMap.forEach(function(node, key) {
         var val = node[searchField]
         if (val != null && String(val).toLowerCase().indexOf(keyword) !== -1) {
           hitKeys.add(key)
         }
-      }
-      if (hitKeys.size === 0) { this.linkTreeFilteredData[tapNovaName] = []; return }
+      })
+      if (hitKeys.size === 0) { this.linkTreeFilteredData[tapNovaName] = []; this.linkTreeExpandedKeys[tapNovaName] = []; return }
 
       // 向上走祖先
       var getParentId = function(node) {
@@ -2507,16 +2510,24 @@ const NovaTable = {
       hitKeys.forEach(function(hitKey) {
         var cur = hitKey
         while (cur) {
-          var n = nodeMap[cur]
+          var n = nodeMap.get(cur)
           if (!n) break
           var pid = getParentId(n)
           if (pid == null || pid === '') break
-          var pk = String(pid)
-          if (hitKeys.has(pk)) break
-          ancestorKeys.add(pk)
-          cur = pk
+          if (hitKeys.has(pid)) break
+          ancestorKeys.add(pid)
+          cur = pid
         }
       })
+
+      // 命中节点及其祖先自动展开，保证用户能看到匹配节点
+      hitKeys.forEach(function(hitKey) {
+        var node = nodeMap.get(hitKey)
+        if (node && node.children && node.children.length) {
+          ancestorKeys.add(hitKey)
+        }
+      })
+      var expandKeys = Array.from(ancestorKeys)
 
       // 可见节点 key 集合
       var visibleKeys = new Set([...hitKeys, ...ancestorKeys])
@@ -2525,8 +2536,7 @@ const NovaTable = {
       var filterTree = function(nodes) {
         var result = []
         nodes.forEach(function(node) {
-          var nk = String(node[pkField])
-          if (!visibleKeys.has(nk)) return
+          if (!visibleKeys.has(node[pkField])) return
           var copy = Object.assign({}, node)
           if (node.children && node.children.length) {
             var fc = filterTree(node.children)
@@ -2538,6 +2548,7 @@ const NovaTable = {
       }
 
       this.linkTreeFilteredData[tapNovaName] = filterTree(fullData)
+      this.linkTreeExpandedKeys[tapNovaName] = expandKeys
     },
     linkTreeSearchPlaceholder(tapNovaName) {
       const config = (this.linkTabBuild[tapNovaName] || {}).linkTreeTargetConfig
@@ -2550,6 +2561,29 @@ const NovaTable = {
         }
       }
       return '请输入' + searchField
+    },
+    linkTreeRenderLabel(tapNovaName) {
+      var self = this
+      return function(info) {
+        var node = info.option
+        var config = (self.linkTabBuild[tapNovaName] || {}).linkTreeTargetConfig
+        var label = config ? (node[config.treeSearchField] || '') : ''
+        var keyword = (self.linkTreeSearchKeyword[tapNovaName] || '').trim()
+        if (!keyword || !label) return label
+        var lower = label.toLowerCase()
+        var kw = keyword.toLowerCase()
+        var parts = []
+        var last = 0
+        var idx = lower.indexOf(kw)
+        while (idx !== -1) {
+          if (idx > last) parts.push(h('span', {}, label.slice(last, idx)))
+          parts.push(h('span', { style: { color: '#d03050' } }, label.slice(idx, idx + kw.length)))
+          last = idx + kw.length
+          idx = lower.indexOf(kw, last)
+        }
+        if (last < label.length) parts.push(h('span', {}, label.slice(last)))
+        return parts.length > 0 ? h('span', {}, parts) : label
+      }
     },
     onLinkTreeCheck(checkedKeys, tapNovaName) {
       const oldDisplay = this.linkTreeDisplayKeys[tapNovaName] || []
@@ -3873,11 +3907,26 @@ const NovaTable = {
                         style="width:100%" />
                     </div>
                     <div class="link-tree-scroll" style="flex:1;overflow:auto;padding:0 0 12px 0">
-                      <n-tree
-                        :data="linkTreeFilteredData[tab.tapNovaName] || linkTreeData[tab.tapNovaName]"
+                      <!-- 全量树：无搜索时显示，展开/收起由用户自由操作 -->
+                      <n-tree v-show="!linkTreeFilteredData[tab.tapNovaName]"
+                        :data="linkTreeData[tab.tapNovaName]"
                         :checked-keys="linkTreeDisplayKeys[tab.tapNovaName]"
                         :key-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
                         :label-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeSearchField"
+                        checkable
+                        cascade
+                        block-line
+                        @update:checked-keys="(keys) => onLinkTreeCheck(keys, tab.tapNovaName)"
+                      />
+                      <!-- 搜索树：有搜索时显示，用 expanded-keys + 动态 key 实现自动展开（key 重建组件，expanded-keys 作为初始展开状态） -->
+                      <n-tree v-show="linkTreeFilteredData[tab.tapNovaName]"
+                        :key="'linkTreeSearch_' + tab.tapNovaName + '_' + (linkTreeSearchKeyword[tab.tapNovaName] || '')"
+                        :data="linkTreeFilteredData[tab.tapNovaName]"
+                        :checked-keys="linkTreeDisplayKeys[tab.tapNovaName]"
+                        :expanded-keys="linkTreeExpandedKeys[tab.tapNovaName] || []"
+                        :key-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
+                        :label-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeSearchField"
+                        :render-label="linkTreeRenderLabel(tab.tapNovaName)"
                         checkable
                         cascade
                         block-line
