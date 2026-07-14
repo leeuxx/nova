@@ -431,6 +431,9 @@ public class NovaTableBuild {
             @Comment("中间类存储目标引用类值属性名，默认id，即当前类的 linkReferenceField 对应目标引用类的哪个属性（通常为主键）")
             private String linkStorageField;
 
+            @Comment("目标关联类是否为树结构")
+            private Boolean linkTree;
+
         }
 
         @Data

@@ -1,7 +1,9 @@
 package com.nova.utils;
 
+import com.nova.annotation.Nova;
 import com.nova.annotation.NovaField;
 import com.nova.annotation.config.Comment;
+import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
@@ -615,6 +617,8 @@ public class NovaFieldUtils {
                             .setLinkFieldName(novaFieldInfo.getFieldName())
                             .setLinkReferenceField(linkTargetType.referenceField())
                             .setLinkStorageField(linkTargetType.storageField());
+                    NovaApplication.ScanNova linkTargetScanNova = scanNovas.get(novaFieldInfo.getFieldClass().getSimpleName());
+                    linkTargetInfo.setLinkTree(linkTargetScanNova.getNova().tree().value());
                 } else {
                     linkTargetInfo.setThisReferenceClass(novaFieldInfo.getFieldClass())
                             .setThisFieldName(novaFieldInfo.getFieldName())
@@ -960,6 +964,9 @@ public class NovaFieldUtils {
 
         @Comment("中间类存储目标引用类值属性名，默认id，即当前类的 linkReferenceField 对应目标引用类的哪个属性（通常为主键）")
         private String linkStorageField;
+
+        @Comment("目标关联类是否为树结构")
+        private Boolean linkTree;
 
     }
 

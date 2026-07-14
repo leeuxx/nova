@@ -250,7 +250,8 @@ public class NovaTableServiceImpl implements NovaTableService {
                 .setLinkReferenceName(linkTargetInfo.getLinkReferenceClass() != null ? linkTargetInfo.getLinkReferenceClass().getSimpleName() : null)
                 .setLinkFieldName(linkTargetInfo.getLinkFieldName())
                 .setLinkReferenceField(linkTargetInfo.getLinkReferenceField())
-                .setLinkStorageField(linkTargetInfo.getLinkStorageField());
+                .setLinkStorageField(linkTargetInfo.getLinkStorageField())
+                .setLinkTree(linkTargetInfo.getLinkTree());
         vo.setLinkTarget(linkTarget);
         // 获取自定义按钮信息
         List<RowOperation> rowOperations = NovaUtils.getRowOperation(novaTableBuild.getNovaName());
