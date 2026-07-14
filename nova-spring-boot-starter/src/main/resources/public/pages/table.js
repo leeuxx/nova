@@ -3919,7 +3919,7 @@ const NovaTable = {
                         @update:checked-keys="(keys) => onLinkTreeCheck(keys, tab.tapNovaName)"
                       />
                       <!-- 搜索树：有搜索时显示，用 expanded-keys + 动态 key 实现自动展开（key 重建组件，expanded-keys 作为初始展开状态） -->
-                      <n-tree v-show="linkTreeFilteredData[tab.tapNovaName]"
+                      <n-tree v-if="linkTreeFilteredData[tab.tapNovaName]"
                         :key="'linkTreeSearch_' + tab.tapNovaName + '_' + (linkTreeSearchKeyword[tab.tapNovaName] || '')"
                         :data="linkTreeFilteredData[tab.tapNovaName]"
                         :checked-keys="linkTreeDisplayKeys[tab.tapNovaName]"
