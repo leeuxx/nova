@@ -934,8 +934,15 @@ window.NovaTableJQ = (function ($) {
         t.formErrors = {}
         t.refTabData = {}
         t._refCoord  = {}
-        t.linkFormData  = {}
-        t.linkTabBuild  = {}
+        t.linkFormData     = {}
+        t.linkTabBuild     = {}
+        t.linkTreeData     = {}
+        t.linkTreeFilteredData = {}
+        t.linkTreeCheckedKeys = {}
+        t.linkTreeDisplayKeys = {}
+        t.linkTreeLoading  = {}
+        t.linkTreeSearchKeyword = {}
+        t.linkTreeNodeMap  = {}
         t.formTab    = 'form'
         // 立即：当前 nova /details + APPENDAGE /build + APPENDAGE /details
         buildAppendageTabs(novaName, detailRow, vmKey)
