@@ -179,10 +179,10 @@ public class TestDemoView {
                     title = "引用薪资",
                     type = Edit.Type.LINK,
                     linkType = @LinkType(
+                            dualTable = true,
                             referenceTransmitField = {
                                     "name"
-                            },
-                            dualTable = true
+                            }
                     ),
                     search = @Search(vague = true)
             )
