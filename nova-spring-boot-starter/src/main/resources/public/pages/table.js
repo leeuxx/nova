@@ -885,6 +885,15 @@ const NovaTable = {
         if (this._lastSourceFieldsJson === newJson) return
         this._lastSourceFieldsJson = newJson
 
+        // link 树模式：跳过 data 加载（树模式由 initLinkTreeTab/loadLinkTreeData 负责）
+        if (this.linkMode && this.sourceNovaNameProp) {
+          var _pvm = window.vmMap && window.vmMap[this.sourceNovaNameProp]
+          if (_pvm) {
+            var _lb = _pvm.linkTabBuild && _pvm.linkTabBuild[this.novaName]
+            if (_lb && _lb.linkTarget && _lb.linkTarget.linkTree) return
+          }
+        }
+
         var target = window.vmMap && window.vmMap[this._vmKey]
         if (!target) return
         var embSourceFields = newVal || {}
@@ -2232,10 +2241,26 @@ const NovaTable = {
     initLinkTreeTab(tapNovaName) {
       if (this.linkTreeData[tapNovaName]) return
       if (this.linkTreeLoading[tapNovaName]) return
-      // 检查是否已确认是 linkTree 模式；未加载 build 则先加载再判断
       var build = this.linkTabBuild[tapNovaName]
-      if (build && build.linkTarget && !build.linkTarget.linkTree) return
-      this.loadLinkTreeData(tapNovaName)
+      if (build && build.linkTarget) {
+        if (build.linkTarget.linkTree) this.loadLinkTreeData(tapNovaName)
+        return
+      }
+      // 内嵌表格已渲染（link-mode 导致 buildTable 不调 loadData），
+      // 轮询等待其 buildTable 成功回调填充 linkTabBuild，然后判断是否树模式
+      var self = this
+      var retries = 0
+      var check = function() {
+        if (self.linkTreeData[tapNovaName]) return
+        var b = self.linkTabBuild[tapNovaName]
+        if (b && b.linkTarget) {
+          if (b.linkTarget.linkTree) self.loadLinkTreeData(tapNovaName)
+          return
+        }
+        retries++
+        if (retries < 30) setTimeout(check, 250)
+      }
+      setTimeout(check, 250)
     },
     loadLinkTreeData(tapNovaName) {
       if (this.linkTreeLoading[tapNovaName]) return
@@ -2243,34 +2268,26 @@ const NovaTable = {
       this.linkTreeSearchKeyword[tapNovaName] = ''
 
       const self = this
+      const build = this.linkTabBuild[tapNovaName]
+      if (!build || !build.linkTarget) {
+        this.linkTreeLoading[tapNovaName] = false
+        return
+      }
+      const lt = build.linkTarget
+      const targetNovaName = lt.linkReferenceName
+      if (!targetNovaName) {
+        this.linkTreeLoading[tapNovaName] = false
+        if (window.$message) window.$message.error('未找到目标表')
+        return
+      }
 
-      // 确保中间表 build 已加载（linkTree 模式下没有嵌入式 nova-table 触发加载）
-      const doLoadTree = function() {
-        const build = self.linkTabBuild[tapNovaName]
-        if (!build || !build.linkTarget) {
-          self.linkTreeLoading[tapNovaName] = false
-          return
-        }
-        const lt = build.linkTarget
-        // 非 linkTree 模式：由嵌入的 nova-table 自行处理，这里直接返回
-        if (!lt.linkTree) {
-          self.linkTreeLoading[tapNovaName] = false
-          return
-        }
-        const targetNovaName = lt.linkReferenceName
-        if (!targetNovaName) {
-          self.linkTreeLoading[tapNovaName] = false
-          if (window.$message) window.$message.error('未找到目标表')
-          return
-        }
-
-        // Step 1: 获取目标 Nova 的 build 配置（treeSearchField, treeParentField 等）
-        $.ajax({
-          url: '/nova/table/build',
-          method: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify({ novaName: targetNovaName }),
-          success: function(buildResp) {
+      // 获取目标 Nova 的 build 配置（treeSearchField, treeParentField 等）
+      $.ajax({
+        url: '/nova/table/build',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ novaName: targetNovaName }),
+        success: function(buildResp) {
             if (buildResp.code !== 200) {
               self.linkTreeLoading[tapNovaName] = false
               if (window.$message) window.$message.error('获取目标表配置失败')
@@ -2408,37 +2425,10 @@ const NovaTable = {
                 self.linkTreeDefaultExpandedKeys[tapNovaName] = defaultExpandKeys
                 self.linkTreeExpandedKeys[tapNovaName] = defaultExpandKeys
 
-                // Step 3: 查询中间表已有数据，反显勾选
-                const sourceFields = self.buildLinkSourceFields({ tapNovaName: tapNovaName })
-                $.ajax({
-                  url: '/nova/table/data',
-                  method: 'POST',
-                  contentType: 'application/json',
-                  data: JSON.stringify({ novaName: tapNovaName, sourceFields: sourceFields }),
-                  success: function(dataResp) {
-                    self.linkTreeLoading[tapNovaName] = false
-                    if (dataResp.code !== 200) return
-
-                    const checkedKeys = new Set()
-                    const records = dataResp.data.records || []
-                    const linkRefField = lt.linkReferenceField
-                    const linkStorageField = lt.linkStorageField || 'id'
-
-                    records.forEach(function(row) {
-                      const refVal = row[linkRefField]
-                      if (refVal != null) {
-                        const targetId = typeof refVal === 'object' ? String(refVal[linkStorageField]) : String(refVal)
-                        if (targetId) checkedKeys.add(targetId)
-                      }
-                    })
-
-                    self.linkTreeCheckedKeys[tapNovaName] = checkedKeys
-                    self.updateLinkTreeDisplayKeys(tapNovaName)
-                  },
-                  error: function() {
-                    self.linkTreeLoading[tapNovaName] = false
-                  }
-                })
+                // 树模式不需要查询中间表数据，直接完成加载
+                self.linkTreeLoading[tapNovaName] = false
+                self.linkTreeCheckedKeys[tapNovaName] = new Set()
+                self.updateLinkTreeDisplayKeys(tapNovaName)
               },
               error: function() {
                 self.linkTreeLoading[tapNovaName] = false
@@ -2450,50 +2440,6 @@ const NovaTable = {
             self.linkTreeLoading[tapNovaName] = false
             if (window.$message) window.$message.error('获取目标表配置失败')
           }
-        })
-      } // end doLoadTree
-
-      // 检查中间表 build 是否已缓存
-      const cachedBuild = this.linkTabBuild[tapNovaName]
-      if (cachedBuild && cachedBuild.linkTarget) {
-        doLoadTree()
-        return
-      }
-
-      // 首次打开：先加载中间表 build（获取 linkTarget 等）
-      $.ajax({
-        url: '/nova/table/build',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ novaName: tapNovaName }),
-        success: function(resp) {
-          if (resp.code !== 200) {
-            self.linkTreeLoading[tapNovaName] = false
-            if (window.$message) window.$message.error('获取中间表配置失败')
-            return
-          }
-          const bd = resp.data || {}
-          const lt = bd.linkTarget || {}
-          const editFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
-          const newBuild = Object.assign({}, self.linkTabBuild)
-          newBuild[tapNovaName] = {
-            linkTarget: lt,
-            sourceFieldName: lt.thisFieldName || '',
-            targetFieldName: lt.linkFieldName || '',
-            editFields: editFields,
-            tableColumns: bd.tableColumns || [],
-            novaIdFieldName: bd.novaIdFieldName,
-            choiceMap: bd.choice || {},
-            referenceMap: bd.reference || {},
-            linkMap: bd.link || {}
-          }
-          self.linkTabBuild = newBuild
-          doLoadTree()
-        },
-        error: function() {
-          self.linkTreeLoading[tapNovaName] = false
-          if (window.$message) window.$message.error('获取中间表配置失败')
-        }
       })
     },
     updateLinkTreeDisplayKeys(tapNovaName) {
@@ -3930,70 +3876,56 @@ const NovaTable = {
           <template v-else-if="tab.tapType === 'linkForm'">
             <div v-if="showForm && visitedEmbTabs.has('link_' + tab.tapNovaName)"
               @vue:mounted="initLinkTreeTab(tab.tapNovaName)"
-              :style="'display:flex;flex-direction:column;overflow:hidden;' + ((linkTabBuild[tab.tapNovaName] || {}).linkTarget && (linkTabBuild[tab.tapNovaName] || {}).linkTarget.linkTree ? '' : 'height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px'))">
-              <!-- linkTree 模式：直接渲染树 -->
-              <template v-if="(linkTabBuild[tab.tapNovaName] || {}).linkTarget && (linkTabBuild[tab.tapNovaName] || {}).linkTarget.linkTree">
-                <div style="display:flex;flex-direction:column;max-height:500px">
-                  <div v-if="linkTreeLoading[tab.tapNovaName]" style="text-align:center;padding:40px;color:#999">加载树数据中...</div>
-                  <template v-else-if="linkTreeData[tab.tapNovaName] && (linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig">
-                    <div v-if="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeSearchField" style="flex-shrink:0;padding:12px 0 8px 0">
-                      <n-input
-                        :value="linkTreeSearchKeyword[tab.tapNovaName]"
-                        :placeholder="linkTreeSearchPlaceholder(tab.tapNovaName)"
-                        clearable
-                        @update:value="(val) => { linkTreeSearchKeyword[tab.tapNovaName] = val; filterLinkTreeData(tab.tapNovaName); }"
-                        style="width:100%" />
-                    </div>
-                    <div class="link-tree-scroll" style="flex:1;overflow:auto;padding:0 0 12px 0">
-                      <!-- 全量树：无搜索时显示，根据 treeLevel 设置默认展开 -->
-                      <n-tree v-if="!linkTreeFilteredData[tab.tapNovaName] && linkTreeData[tab.tapNovaName]"
-                        :default-expanded-keys="linkTreeDefaultExpandedKeys[tab.tapNovaName] || []"
-                        :data="linkTreeData[tab.tapNovaName]"
-                        :checked-keys="linkTreeDisplayKeys[tab.tapNovaName]"
-                        :cascade="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
-                        :key-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
-                        :label-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeSearchField"
-                        checkable
-                        block-line
-                        @update:checked-keys="(keys) => onLinkTreeCheck(keys, tab.tapNovaName)"
-                      />
-                      <!-- 搜索树：有搜索时显示，用 expanded-keys + 动态 key 实现自动展开 -->
-                      <n-tree v-if="linkTreeFilteredData[tab.tapNovaName]"
-                        :key="'linkTreeSearch_' + tab.tapNovaName + '_' + (linkTreeSearchKeyword[tab.tapNovaName] || '')"
-                        :data="linkTreeFilteredData[tab.tapNovaName]"
-                        :checked-keys="linkTreeDisplayKeys[tab.tapNovaName]"
-                        :expanded-keys="linkTreeExpandedKeys[tab.tapNovaName] || []"
-                        :cascade="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
-                        :key-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
-                        :label-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeSearchField"
-                        :render-label="linkTreeRenderLabel(tab.tapNovaName)"
-                        checkable
-                        block-line
-                        @update:checked-keys="(keys) => onLinkTreeCheck(keys, tab.tapNovaName)"
-                      />
-                    </div>
-                    <div style="flex-shrink:0;padding:8px 0;display:flex;justify-content:flex-end;border-top:1px solid #eee">
-                      <n-button type="primary" @click="submitLinkTree(tab)">保 存</n-button>
-                    </div>
-                  </template>
+              :style="'display:flex;flex-direction:column;overflow:hidden;' + (linkTreeData[tab.tapNovaName] ? 'max-height:500px' : 'height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px'))">
+              <!-- 树模式：linkTreeData 加载完成后渲染 -->
+              <div v-if="linkTreeData[tab.tapNovaName] && (linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig"
+                style="display:flex;flex-direction:column;max-height:500px">
+                <div v-if="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeSearchField" style="flex-shrink:0;padding:12px 0 8px 0">
+                  <n-input
+                    :value="linkTreeSearchKeyword[tab.tapNovaName]"
+                    :placeholder="linkTreeSearchPlaceholder(tab.tapNovaName)"
+                    clearable
+                    @update:value="(val) => { linkTreeSearchKeyword[tab.tapNovaName] = val; filterLinkTreeData(tab.tapNovaName); }"
+                    style="width:100%" />
                 </div>
-              </template>
-              <!-- 普通模式：嵌入式表格 -->
-              <template v-else-if="(linkTabBuild[tab.tapNovaName] || {}).linkTarget">
-                <nova-table
-                  :key="'link_' + tab.tapNovaName + '_' + (currentRow && currentRow[novaIdFieldName])"
-                  :embedded-mode="true"
-                  :link-mode="true"
-                  :nova-name-prop="tab.tapNovaName"
-                  :source-nova-name-prop="novaName"
-                  :source-fields-prop="buildLinkSourceFields(tab)"
-                  @link-add="openLinkPicker(tab.tapNovaName, tab.tapTitle)"
-                />
-              </template>
-              <!-- build 加载中 -->
-              <template v-else>
-                <div style="text-align:center;padding:40px;color:#999">加载中...</div>
-              </template>
+                <div class="link-tree-scroll" style="flex:1;overflow:auto;padding:0 0 12px 0">
+                  <n-tree v-if="!linkTreeFilteredData[tab.tapNovaName] && linkTreeData[tab.tapNovaName]"
+                    :default-expanded-keys="linkTreeDefaultExpandedKeys[tab.tapNovaName] || []"
+                    :data="linkTreeData[tab.tapNovaName]"
+                    :checked-keys="linkTreeDisplayKeys[tab.tapNovaName]"
+                    :cascade="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
+                    :key-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
+                    :label-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeSearchField"
+                    checkable block-line
+                    @update:checked-keys="(keys) => onLinkTreeCheck(keys, tab.tapNovaName)"
+                  />
+                  <n-tree v-if="linkTreeFilteredData[tab.tapNovaName]"
+                    :key="'linkTreeSearch_' + tab.tapNovaName + '_' + (linkTreeSearchKeyword[tab.tapNovaName] || '')"
+                    :data="linkTreeFilteredData[tab.tapNovaName]"
+                    :checked-keys="linkTreeDisplayKeys[tab.tapNovaName]"
+                    :expanded-keys="linkTreeExpandedKeys[tab.tapNovaName] || []"
+                    :cascade="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
+                    :key-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
+                    :label-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeSearchField"
+                    :render-label="linkTreeRenderLabel(tab.tapNovaName)"
+                    checkable block-line
+                    @update:checked-keys="(keys) => onLinkTreeCheck(keys, tab.tapNovaName)"
+                  />
+                </div>
+                <div style="flex-shrink:0;padding:8px 0;display:flex;justify-content:flex-end;border-top:1px solid #eee">
+                  <n-button type="primary" @click="submitLinkTree(tab)">保 存</n-button>
+                </div>
+              </div>
+              <!-- 默认渲染内嵌表格（普通模式）；树模式确认后自动切换 -->
+              <nova-table v-if="!linkTreeData[tab.tapNovaName]"
+                :key="'link_' + tab.tapNovaName + '_' + (currentRow && currentRow[novaIdFieldName])"
+                :embedded-mode="true"
+                :link-mode="true"
+                :nova-name-prop="tab.tapNovaName"
+                :source-nova-name-prop="novaName"
+                :source-fields-prop="buildLinkSourceFields(tab)"
+                @link-add="openLinkPicker(tab.tapNovaName, tab.tapTitle)"
+              />
             </div>
           </template>
 
