@@ -3,7 +3,6 @@ package com.nova.view;
 import com.nova.annotation.Nova;
 import com.nova.annotation.NovaField;
 import com.nova.annotation.config.NovaId;
-import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.LinkTargetType;
@@ -17,8 +16,7 @@ import lombok.experimental.Accessors;
         name = "测试关联",
         desc = "测试关联",
         orderBy = "id desc",
-        dataProxy = TestDemoRef2Service.class,
-        tree = @TreeType
+        dataProxy = TestDemoRef2Service.class
 )
 public class TestDemoRef2View {
 
