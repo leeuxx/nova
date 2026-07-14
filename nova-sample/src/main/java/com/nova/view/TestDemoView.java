@@ -196,7 +196,7 @@ public class TestDemoView {
                     linkType = @LinkType(
                             dualTable = true,
                             referenceTransmitField = {
-                                    "name"
+                                    "nick"
                             }
                     ),
                     search = @Search(vague = true)

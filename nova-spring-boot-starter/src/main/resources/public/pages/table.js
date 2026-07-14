@@ -2318,13 +2318,28 @@ const NovaTable = {
               tableColumns: buildData.tableColumns || []
             }
             self.linkTabBuild[tapNovaName] = newBuild
-
             // Step 2: 获取全量树数据
+            // 从 linkMap 获取 referenceTransmitField 作为透传字段
+            const srcFields = {}
+            const linkMap = self.linkMap || {}
+            for (const field in linkMap) {
+              if (linkMap[field] && linkMap[field].selectInfo.referenceName === targetNovaName) {
+                const transmit = linkMap[field].referenceTransmitField
+                if (transmit && transmit.length) {
+                  transmit.forEach(f => {
+                    const v = self.currentRow && self.currentRow[f]
+                    if (v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0))
+                      srcFields[f] = String(v)
+                  })
+                }
+                break
+              }
+            }
             $.ajax({
               url: '/nova/table/tree',
               method: 'POST',
               contentType: 'application/json',
-              data: JSON.stringify({ novaName: targetNovaName, sourceNovaName: targetNovaName }),
+              data: JSON.stringify({ novaName: targetNovaName, sourceNovaName: targetNovaName, sourceFields: srcFields }),
               success: function(treeResp) {
                 if (treeResp.code !== 200) {
                   self.linkTreeLoading[tapNovaName] = false
