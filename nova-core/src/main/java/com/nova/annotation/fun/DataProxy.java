@@ -10,6 +10,10 @@ public interface DataProxy<MODEL> {
     default void add(MODEL model) {
     }
 
+    @Comment("批量增加")
+    default void add(List<MODEL> models) {
+    }
+
     @Comment("删除")
     default void delete(List<MODEL> models) {
     }

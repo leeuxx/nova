@@ -418,6 +418,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         }
         // noinspection rawtypes
         DataProxy dataProxy = DataProxyUtils.getDataProxy(novaName);
+        List<Object> models = new ArrayList<>();
         if (multiValues != null && !multiValues.isEmpty()) {
             for (String targetId : multiValues) {
                 Object model = DataProxyUtils.buildModel(novaName, List.of(), List.of());
@@ -425,9 +426,10 @@ public class NovaTableServiceImpl implements NovaTableService {
                     String v = fi.getField().equals(multiField) ? targetId : fi.getValue();
                     DataProxyUtils.setLinkTargetField(novaName, model, fi.getField(), v);
                 }
-                dataProxy.add(model);
+                models.add(model);
             }
         }
+        dataProxy.add(models);
         return new NovaTableAdd.Vo();
     }
 
