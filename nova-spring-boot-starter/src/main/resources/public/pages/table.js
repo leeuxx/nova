@@ -2468,7 +2468,7 @@ const NovaTable = {
               url: '/nova/table/tree',
               method: 'POST',
               contentType: 'application/json',
-              data: JSON.stringify({ novaName: tapNovaName, sourceNovaName: self.novaName, operateStorageFieldValue: String(self.currentRow[storageField]) }),
+              data: JSON.stringify({ novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String(self.currentRow[storageField]) }),
               success: function(linkResp) {
                 if (linkResp.code === 200) {
                   // 合并 rootList + childrenList 取所有节点

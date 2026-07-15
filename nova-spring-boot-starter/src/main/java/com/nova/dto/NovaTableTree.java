@@ -27,8 +27,8 @@ public class NovaTableTree {
     @Comment("排序")
     private List<OrderItemBean> orders = new ArrayList<>();
 
-    @Comment("操作类存储属性名")
-    private String operateStorageFieldValue;
+    @Comment("操作类存储属性值")
+    private String operateValue;
 
     @Data
     @Accessors(chain = true)

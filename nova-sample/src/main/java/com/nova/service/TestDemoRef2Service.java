@@ -52,7 +52,7 @@ public class TestDemoRef2Service extends ServiceImpl<TestDemoRef2Mapper, TestDem
                 .setChildrenList(new ArrayList<>());
         // 获取数据
         LambdaQueryWrapper<TestDemoRef2> lambdaQueryWrapper = NovaQueryUtils.buildWrapper(TestDemoRef2View.class, tree);
-        lambdaQueryWrapper.eq(TestDemoRef2::getDemoId, tree.getOperateStorageFieldValue());
+        lambdaQueryWrapper.eq(TestDemoRef2::getDemoId, tree.getOperateValue());
         JList<TestDemoRef2> testDemoRef2s = new JArrayList<>(list(lambdaQueryWrapper));
         if (Emptys.check(testDemoRef2s)) {
             // 本身
