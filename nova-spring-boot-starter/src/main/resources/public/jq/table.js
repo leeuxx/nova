@@ -939,15 +939,14 @@ window.NovaTableJQ = (function ($) {
         t._refCoord  = {}
         t.linkFormData     = {}
         t.linkTabBuild     = {}
-        t.linkTreeData     = {}
-        t.linkTreeFilteredData = {}
-        t.linkTreeDefaultExpandedKeys = {}
-        t.linkTreeExpandedKeys = {}
-        t.linkTreeCheckedKeys = {}
-        t.linkTreeDisplayKeys = {}
-        t.linkTreeLoading  = {}
-        t.linkTreeSearchKeyword = {}
-        t.linkTreeNodeMap  = {}
+        // 保留双表面板状态（__dual__）
+        ;['linkTreeData','linkTreeFilteredData','linkTreeDefaultExpandedKeys',
+          'linkTreeExpandedKeys','linkTreeCheckedKeys','linkTreeDisplayKeys',
+          'linkTreeLoading','linkTreeSearchKeyword','linkTreeNodeMap'].forEach(function(p) {
+          var d = t[p]['__dual__']
+          t[p] = {}
+          if (d !== undefined) t[p]['__dual__'] = d
+        })
         t.formTab    = 'form'
         // 立即：当前 nova /details + APPENDAGE /build + APPENDAGE /details
         buildAppendageTabs(novaName, detailRow, vmKey)

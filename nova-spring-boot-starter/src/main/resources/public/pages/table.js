@@ -832,15 +832,14 @@ const NovaTable = {
         this._refCoord           = {}
         this.linkFormData            = {}
         this.linkTabBuild           = {}
-        this.linkTreeData           = {}
-        this.linkTreeFilteredData   = {}
-        this.linkTreeDefaultExpandedKeys = {}
-        this.linkTreeExpandedKeys   = {}
-        this.linkTreeCheckedKeys    = {}
-        this.linkTreeDisplayKeys    = {}
-        this.linkTreeLoading        = {}
-        this.linkTreeSearchKeyword  = {}
-        this.linkTreeNodeMap        = {}
+        // 重置关联树状态，保留双表面板（__dual__）
+        ;['linkTreeData','linkTreeFilteredData','linkTreeDefaultExpandedKeys',
+          'linkTreeExpandedKeys','linkTreeCheckedKeys','linkTreeDisplayKeys',
+          'linkTreeLoading','linkTreeSearchKeyword','linkTreeNodeMap'].forEach(function(p) {
+          var d = this[p]['__dual__']
+          this[p] = {}
+          if (d !== undefined) this[p]['__dual__'] = d
+        }, this)
       } else {
         // 弹窗打开：置标记屏蔽 n-tabs 因 value 同步触发的 onFormTabChange
         this.openingForm = true
@@ -2861,7 +2860,6 @@ const NovaTable = {
       // LINK 类型：尝试加载树模式
       if (item.type === 'link') {
         var self = this
-        this.linkTreeLoading['__dual__'] = true
         this.initDualLinkTreeTab(function(isTreeMode) {
           if (!isTreeMode) {
             // 非树模式：模板会回退到 nova-table
@@ -2980,7 +2978,6 @@ const NovaTable = {
 
       if (item.type === 'link') {
         // LINK 类型：尝试加载树模式
-        this.linkTreeLoading['__dual__'] = true
         this.initDualLinkTreeTab(function(isTreeMode) {
           if (!isTreeMode) {
             // 非树模式：渲染普通表格
@@ -4584,9 +4581,9 @@ const NovaTable = {
               style="flex:1;min-height:0;display:flex;flex-direction:column"
               content-style="display:flex;flex-direction:column;overflow:hidden;flex:1">
               <div class="table-card-header" style="flex-shrink:0;padding:0 16px">
-                <span style="font-size:16px;font-weight:500">选择关联数据</span>
+                <span style="font-size:16px;font-weight:500">数据节点</span>
                 <div style="display:flex;gap:8px">
-                  <n-button type="primary" @click="submitDualLinkTree">确 定</n-button>
+                  <n-button type="primary" @click="submitDualLinkTree">保 存</n-button>
                 </div>
               </div>
               <div class="link-tree-scroll" style="flex:1;overflow:auto;min-height:0;padding:0 12px 8px">
