@@ -191,7 +191,7 @@ public class TestDemoView {
 
     @NovaField(
             edit = @Edit(
-                    title = "引用用户",
+                    title = "用户树节点",
                     type = Edit.Type.LINK,
                     linkType = @LinkType(
                             dualTable = true,
