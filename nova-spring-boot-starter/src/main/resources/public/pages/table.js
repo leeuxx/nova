@@ -369,6 +369,17 @@ const NovaTable = {
     dualTableEnabled() {
       return this.dualTableSubTables.length > 0 && !this.pickerMode && !this.embeddedMode
     },
+    // 双表视图右面板样式：flex 布局属性，不设 height，由 JS 动态同步
+    dualPanelStyle() {
+      return {
+        flex: '0 0 50%',
+        width: '50%',
+        padding: '16px 16px 16px 8px',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
+      }
+    },
     // 自定义按钮分类
     rowCustomButtons() {
       return (this.rowOperations || []).filter(b => b.mode === 'SINGLE' || b.mode === 'MULTI')
@@ -803,6 +814,10 @@ const NovaTable = {
         }
       }
       this._syncDualTableClass()
+      if (val) {
+        var self = this
+        Vue.nextTick(function() { self.syncDualPanelHeight() })
+      }
     },
     showForm(val) {
       if (!val) {
@@ -959,6 +974,11 @@ const NovaTable = {
       this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
       if (window.NovaTableJQ) window.NovaTableJQ.onMounted(this.novaName)
     }
+    // 双表视图高度同步：resize 时重新同步
+    this._onDualResize = function() {
+      this.syncDualPanelHeight()
+    }.bind(this)
+    window.addEventListener('resize', this._onDualResize)
   },
 
   activated() {
@@ -983,6 +1003,10 @@ const NovaTable = {
       if (window.vmMap) delete window.vmMap[this.novaName]
       if (window.activeNovaName === this.novaName) window.activeNovaName = null
       $(window).off('resize.novaTable')
+    }
+    if (this._onDualResize) {
+      window.removeEventListener('resize', this._onDualResize)
+      this._onDualResize = null
     }
   },
 
@@ -2276,21 +2300,132 @@ const NovaTable = {
         }
       })
     },
-    loadLinkTreeData(tapNovaName) {
-      if (this.linkTreeLoading[tapNovaName]) return
-      this.linkTreeLoading[tapNovaName] = true
-      this.linkTreeSearchKeyword[tapNovaName] = ''
+    initDualLinkTreeTab(callback) {
+      const tapNovaName = this.dualTableCurrentNova
+      if (!tapNovaName) { if (callback) callback(false); return }
+
+      // Clear previous dual tree state
+      delete this.linkTreeData['__dual__']
+      this.linkTreeCheckedKeys['__dual__'] = null
+      this.linkTreeDisplayKeys['__dual__'] = null
+      this.linkTreeFilteredData['__dual__'] = null
+
+      var build = this.linkTabBuild[tapNovaName]
+      if (build && build.linkTarget) {
+        if (build.linkTarget.linkTree) {
+          // loadLinkTreeData 内部会设置 loading=true，这里不设避免被 return 拦住
+          this.loadLinkTreeData(tapNovaName, { row: this._dualSelectedRow, stateKey: '__dual__' })
+          if (callback) callback(true)
+        } else {
+          if (callback) callback(false)
+        }
+        return
+      }
+
+      // Need to load build first
+      this.linkTreeLoading['__dual__'] = true
+      var self = this
+      $.ajax({
+        url: '/nova/table/build',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ novaName: tapNovaName }),
+        success: function(resp) {
+          if (resp.code !== 200) {
+            self.linkTreeLoading['__dual__'] = false
+            if (callback) callback(false)
+            return
+          }
+          var bd = resp.data || {}
+          var lt = bd.linkTarget || {}
+          var ltEditFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
+          var newBuild = Object.assign({}, self.linkTabBuild)
+          newBuild[tapNovaName] = {
+            linkTarget: lt,
+            sourceFieldName: lt.thisFieldName || '',
+            targetFieldName: lt.linkFieldName || '',
+            editFields: ltEditFields,
+            tableColumns: bd.tableColumns || [],
+            novaIdFieldName: bd.novaIdFieldName,
+            choiceMap: bd.choice || {},
+            referenceMap: bd.reference || {},
+            linkMap: bd.link || {}
+          }
+          self.linkTabBuild = newBuild
+          self.linkTreeLoading['__dual__'] = false
+          if (lt.linkTree) {
+            // loadLinkTreeData 内部会设置 loading=true
+            self.loadLinkTreeData(tapNovaName, { row: self._dualSelectedRow, stateKey: '__dual__' })
+            if (callback) callback(true)
+          } else {
+            if (callback) callback(false)
+          }
+        },
+        error: function() {
+          self.linkTreeLoading['__dual__'] = false
+          if (callback) callback(false)
+        }
+      })
+    },
+    submitDualLinkTree() {
+      const tapNovaName = this.dualTableCurrentNova
+      const build = this.linkTabBuild[tapNovaName]
+      if (!build || !build.linkTarget) return
+
+      const lt = build.linkTarget
+      const checkedIds = Array.from(this.linkTreeCheckedKeys['__dual__'] || [])
+
+      if (checkedIds.length === 0) {
+        if (window.$message) window.$message.warning('请至少选择一个节点')
+        return
+      }
+
+      const sourceField = build.sourceFieldName
+      const targetField = build.targetFieldName
+      const refField = lt.thisReferenceField
+      const storageField = lt.thisStorageField || refField
+
+      if (!sourceField || !targetField) {
+        if (window.$message) window.$message.error('关联参数不完整: 缺少字段名')
+        return
+      }
+
+      const row = this._dualSelectedRow
+      if (!row) {
+        if (window.$message) window.$message.error('请先选择一行主表数据')
+        return
+      }
+      const sourceValue = row[storageField]
+      if (sourceValue == null) {
+        if (window.$message) window.$message.error('关联参数不完整: 缺少源记录ID')
+        return
+      }
+
+      window.NovaTableJQ.handleLinkAdd(
+        this.novaName, tapNovaName,
+        sourceField, String(sourceValue),
+        targetField, checkedIds,
+        this._vmKey || this.novaName,
+        null
+      )
+    },
+    loadLinkTreeData(tapNovaName, options) {
+      const stateKey = (options && options.stateKey) || tapNovaName
+      const row = options && options.row
+      if (this.linkTreeLoading[stateKey]) return
+      this.linkTreeLoading[stateKey] = true
+      this.linkTreeSearchKeyword[stateKey] = ''
 
       const self = this
       const build = this.linkTabBuild[tapNovaName]
       if (!build || !build.linkTarget) {
-        this.linkTreeLoading[tapNovaName] = false
+        this.linkTreeLoading[stateKey] = false
         return
       }
       const lt = build.linkTarget
       const targetNovaName = lt.linkReferenceName
       if (!targetNovaName) {
-        this.linkTreeLoading[tapNovaName] = false
+        this.linkTreeLoading[stateKey] = false
         if (window.$message) window.$message.error('未找到目标表')
         return
       }
@@ -2303,7 +2438,7 @@ const NovaTable = {
         data: JSON.stringify({ novaName: targetNovaName }),
         success: function(buildResp) {
             if (buildResp.code !== 200) {
-              self.linkTreeLoading[tapNovaName] = false
+              self.linkTreeLoading[stateKey] = false
               if (window.$message) window.$message.error('获取目标表配置失败')
               return
             }
@@ -2316,12 +2451,12 @@ const NovaTable = {
             const refMap = buildData.reference || {}
 
             if (!pkField) {
-              self.linkTreeLoading[tapNovaName] = false
+              self.linkTreeLoading[stateKey] = false
               if (window.$message) window.$message.error('目标表配置缺少主键字段')
               return
             }
             if (!treeSearchField) {
-              self.linkTreeLoading[tapNovaName] = false
+              self.linkTreeLoading[stateKey] = false
               if (window.$message) window.$message.error('目标表配置缺少树搜索字段')
               return
             }
@@ -2358,7 +2493,7 @@ const NovaTable = {
                 const transmit = linkMap[field].referenceTransmitField
                 if (transmit && transmit.length) {
                   transmit.forEach(f => {
-                    const v = self.currentRow && self.currentRow[f]
+                    const v = (row || self.currentRow) && (row || self.currentRow)[f]
                     if (v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0))
                       srcFields[f] = String(v)
                   })
@@ -2379,13 +2514,15 @@ const NovaTable = {
               if (!treeRendered || !checkedReady) return
               // 排序
               sortedRoot.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0) })
-              self.linkTreeData[tapNovaName] = sortedRoot
-              self.linkTreeNodeMap[tapNovaName] = nodeMap
-              self.linkTreeCheckedKeys[tapNovaName] = checkedKeys
-              self.linkTreeDefaultExpandedKeys[tapNovaName] = defaultExpandKeys
-              self.linkTreeExpandedKeys[tapNovaName] = defaultExpandKeys
-              self.linkTreeLoading[tapNovaName] = false
-              self.updateLinkTreeDisplayKeys(tapNovaName)
+              self.linkTreeData[stateKey] = sortedRoot
+              self.linkTreeNodeMap[stateKey] = nodeMap
+              self.linkTreeCheckedKeys[stateKey] = checkedKeys
+              self.linkTreeDefaultExpandedKeys[stateKey] = defaultExpandKeys
+              self.linkTreeExpandedKeys[stateKey] = defaultExpandKeys
+              self.linkTreeLoading[stateKey] = false
+              self.updateLinkTreeDisplayKeys(stateKey)
+              // 树渲染后同步右面板高度
+              Vue.nextTick(function() { self.syncDualPanelHeight() })
             }
 
             // Step 2a: 目标表 tree（全量树结构）
@@ -2396,7 +2533,7 @@ const NovaTable = {
               data: JSON.stringify({ novaName: targetNovaName, sourceNovaName: targetNovaName, sourceFields: srcFields }),
               success: function(treeResp) {
                 if (treeResp.code !== 200) {
-                  self.linkTreeLoading[tapNovaName] = false
+                  self.linkTreeLoading[stateKey] = false
                   if (window.$message) window.$message.error('加载树数据失败')
                   return
                 }
@@ -2457,7 +2594,7 @@ const NovaTable = {
                 renderTree()
               },
               error: function() {
-                self.linkTreeLoading[tapNovaName] = false
+                self.linkTreeLoading[stateKey] = false
                 if (window.$message) window.$message.error('加载树数据失败')
               }
             })
@@ -2468,7 +2605,7 @@ const NovaTable = {
               url: '/nova/table/tree',
               method: 'POST',
               contentType: 'application/json',
-              data: JSON.stringify({ novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String(self.currentRow[storageField]) }),
+              data: JSON.stringify({ novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String((row || self.currentRow)[storageField]) }),
               success: function(linkResp) {
                 if (linkResp.code === 200) {
                   // 合并 rootList + childrenList 取所有节点
@@ -2492,7 +2629,7 @@ const NovaTable = {
             })
           },
           error: function() {
-            self.linkTreeLoading[tapNovaName] = false
+            self.linkTreeLoading[stateKey] = false
             if (window.$message) window.$message.error('获取目标表配置失败')
           }
       })
@@ -2501,7 +2638,8 @@ const NovaTable = {
       const fullSet = this.linkTreeCheckedKeys[tapNovaName] || new Set()
       this.linkTreeDisplayKeys[tapNovaName] = Array.from(fullSet)
     },
-    filterLinkTreeData(tapNovaName) {
+    filterLinkTreeData(tapNovaName, configKey) {
+      configKey = configKey || tapNovaName
       const keyword = (this.linkTreeSearchKeyword[tapNovaName] || '').trim().toLowerCase()
       const fullData = this.linkTreeData[tapNovaName]
       if (!keyword) {
@@ -2511,7 +2649,7 @@ const NovaTable = {
       }
       if (!fullData) return
 
-      const config = (this.linkTabBuild[tapNovaName] || {}).linkTreeTargetConfig
+      const config = (this.linkTabBuild[configKey] || {}).linkTreeTargetConfig
       if (!config) return
       const searchField = config.treeSearchField
       const pkField = config.novaIdFieldName
@@ -2707,6 +2845,11 @@ const NovaTable = {
       if (!this._dualSelectedRow && this.filteredData && this.filteredData.length > 0) {
         this._dualSelectedRow = this.filteredData[0]
       }
+
+      // 清除双表树状态
+      this.linkTreeData['__dual__'] = null
+      this.linkTreeCheckedKeys['__dual__'] = null
+
       this.dualTableViewActive = true
       this._dualTableVersion++
       this.dualTableCurrentNova = item.novaName
@@ -2714,6 +2857,18 @@ const NovaTable = {
       this.dualTableCurrentKey = '__dual_' + item.novaName + '_v' + this._dualTableVersion
       this.buildDualTableSourceFields()
       this._syncDualTableClass()
+
+      // LINK 类型：尝试加载树模式
+      if (item.type === 'link') {
+        var self = this
+        this.linkTreeLoading['__dual__'] = true
+        this.initDualLinkTreeTab(function(isTreeMode) {
+          if (!isTreeMode) {
+            // 非树模式：模板会回退到 nova-table
+            self.linkTreeLoading['__dual__'] = false
+          }
+        })
+      }
     },
     buildDualTableSourceFields() {
       const row = this._dualSelectedRow
@@ -2784,6 +2939,16 @@ const NovaTable = {
     onDualTableRowClick(row) {
       if (!this.dualTableViewActive) return
       this._dualSelectedRow = row
+
+      // 树模式：重新加载树数据（目标树不变，但已勾选需根据新行重新加载）
+      if (this.linkTreeData['__dual__']) {
+        this.linkTreeData['__dual__'] = null
+        this.linkTreeCheckedKeys['__dual__'] = null
+        // loadLinkTreeData 内部会设置 loading=true，这里不设避免被 return 拦住
+        this.loadLinkTreeData(this.dualTableCurrentNova, { row: row, stateKey: '__dual__' })
+        return
+      }
+
       var dualVm = this.$refs.dualTableRef
       if (dualVm) dualVm._dualReloading = true
       this.buildDualTableSourceFields()
@@ -2803,30 +2968,64 @@ const NovaTable = {
     onDualTableSubChange(novaName) {
       const item = this.dualTableSubTables.find(s => s.novaName === novaName)
       if (!item) return
-      var dualVm = this.$refs.dualTableRef
-      if (dualVm) dualVm._dualReloading = true
+
+      // 清除双表树状态
+      this.linkTreeData['__dual__'] = null
+      this.linkTreeCheckedKeys['__dual__'] = null
+
       this.dualTableCurrentNova = item.novaName
       this.dualTableCurrentLabel = item.label
       this.buildDualTableSourceFields()
       var self = this
-      this.$nextTick(function () {
-        var vm = self.$refs.dualTableRef
-        if (vm) {
-          vm._dualReloading = false
-          vm.reloadDual(item.novaName, self.dualTableSourceFields)
-        }
-        self.$nextTick(function () {
-          var panelEl = document.querySelector('.dual-right-panel')
-          if (panelEl) {
-            var contentEl = panelEl.querySelector('.page-card, .embedded-table')
-            if (contentEl) {
-              contentEl.classList.remove('dual-content-fade')
-              void contentEl.offsetWidth
-              contentEl.classList.add('dual-content-fade')
-            }
+
+      if (item.type === 'link') {
+        // LINK 类型：尝试加载树模式
+        this.linkTreeLoading['__dual__'] = true
+        this.initDualLinkTreeTab(function(isTreeMode) {
+          if (!isTreeMode) {
+            // 非树模式：渲染普通表格
+            self.linkTreeLoading['__dual__'] = false
+            self.$nextTick(function() {
+              var vm = self.$refs.dualTableRef
+              if (vm) {
+                vm._dualReloading = false
+                vm.reloadDual(item.novaName, self.dualTableSourceFields)
+              }
+              self.$nextTick(function () {
+                var panelEl = document.querySelector('.dual-right-panel')
+                if (panelEl) {
+                  var contentEl = panelEl.querySelector('.page-card, .embedded-table')
+                  if (contentEl) {
+                    contentEl.classList.remove('dual-content-fade')
+                    void contentEl.offsetWidth
+                    contentEl.classList.add('dual-content-fade')
+                  }
+                }
+              })
+            })
           }
         })
-      })
+      } else {
+        // APPENDAGES 类型：渲染普通表格
+        this.$nextTick(function () {
+          var vm = self.$refs.dualTableRef
+          if (vm) {
+            vm._dualReloading = false
+            vm.reloadDual(item.novaName, self.dualTableSourceFields)
+          }
+          self.$nextTick(function () {
+            var panelEl = document.querySelector('.dual-right-panel')
+            if (panelEl) {
+              var contentEl = panelEl.querySelector('.page-card, .embedded-table')
+              if (contentEl) {
+                contentEl.classList.remove('dual-content-fade')
+                void contentEl.offsetWidth
+                contentEl.classList.add('dual-content-fade')
+              }
+            }
+          })
+        })
+      }
     },
     _syncDualTableClass() {
       const el = document.querySelector('.page-content')
@@ -2836,6 +3035,18 @@ const NovaTable = {
         } else {
           el.classList.remove('dual-mode')
         }
+      }
+    },
+    // 双表视图：仅树模式用 JS 读左表高度赋给右面板，非树模式清除固定高度让 flex 拉伸
+    syncDualPanelHeight() {
+      if (!this.dualTableViewActive) return
+      var rightPanel = document.querySelector('.dual-right-panel')
+      var leftPanel = document.querySelector('.page-content.dual-mode > div:first-child')
+      if (!rightPanel || !leftPanel) return
+      if (this.linkTreeData['__dual__']) {
+        rightPanel.style.height = leftPanel.offsetHeight + 'px'
+      } else {
+        rightPanel.style.height = ''
       }
     },
     _doRefSelectRequest(field, refField, query, page, append, onDone) {
@@ -4351,7 +4562,61 @@ const NovaTable = {
 
       <!-- 双表视图右面板：Teleport 到 .page-content 作为 flex 兄弟元素 -->
       <Teleport to=".page-content" v-if="(dualTableViewActive || dualTableClosing) && dualTableEnabled && dualTableCurrentNova">
-        <nova-table ref="dualTableRef" :key="dualTableCurrentKey" :dual-mode="true" :link-mode="isDualTableLink" :nova-name-prop="dualTableCurrentNova" :source-nova-name-prop="novaName" :source-fields-prop="dualTableSourceFields" class="dual-right-panel" :class="{ 'is-open': dualTableViewActive && !dualTableClosing, 'is-closing': dualTableClosing }" @link-add="handleDualLinkAdd" />
+        <div class="dual-right-panel" :class="{ 'is-open': dualTableViewActive && !dualTableClosing, 'is-closing': dualTableClosing }" :style="dualPanelStyle">
+          <!-- 树模式加载中 -->
+          <div v-if="linkTreeLoading['__dual__']" style="padding:40px;text-align:center;color:#999">加载中...</div>
+          <!-- 树模式已加载：用 n-card 装帧，风格同普通表格 -->
+          <template v-else-if="linkTreeData['__dual__']">
+            <!-- 搜索条件卡 -->
+            <n-card v-if="(linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig && (linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig.treeSearchField"
+              :bordered="false" class="page-card filter-card" style="flex-shrink:0;min-height:0">
+              <div class="filter-grid" style="display:grid;grid-template-columns:1fr;gap:8px">
+                <n-input
+                  :value="linkTreeSearchKeyword['__dual__'] || ''"
+                  :placeholder="linkTreeSearchPlaceholder(dualTableCurrentNova)"
+                  clearable
+                  @update:value="(val) => { linkTreeSearchKeyword['__dual__'] = val; filterLinkTreeData('__dual__', dualTableCurrentNova); }"
+                  style="width:100%" />
+              </div>
+            </n-card>
+            <!-- 树表格卡 -->
+            <n-card :bordered="false" class="page-card table-card"
+              style="flex:1;min-height:0;display:flex;flex-direction:column"
+              content-style="display:flex;flex-direction:column;overflow:hidden;flex:1">
+              <div class="table-card-header" style="flex-shrink:0;padding:0 16px">
+                <span style="font-size:16px;font-weight:500">选择关联数据</span>
+                <div style="display:flex;gap:8px">
+                  <n-button type="primary" @click="submitDualLinkTree">确 定</n-button>
+                </div>
+              </div>
+              <div class="link-tree-scroll" style="flex:1;overflow:auto;min-height:0;padding:0 12px 8px">
+                <n-tree v-if="!linkTreeFilteredData['__dual__'] && linkTreeData['__dual__']"
+                  :default-expanded-keys="linkTreeDefaultExpandedKeys['__dual__'] || []"
+                  :data="linkTreeData['__dual__']"
+                  :checked-keys="linkTreeDisplayKeys['__dual__']"
+                  :cascade="(linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig ? (linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig.treeCascade !== false : true"
+                  :key-field="(linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig ? (linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig.novaIdFieldName : 'id'"
+                  :label-field="(linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig ? (linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig.treeSearchField : 'name'"
+                  checkable block-line
+                  @update:checked-keys="(keys) => onLinkTreeCheck(keys, '__dual__')"
+                />
+                <n-tree v-if="linkTreeFilteredData['__dual__']"
+                  :key="'dualTreeSearch_' + (linkTreeSearchKeyword['__dual__'] || '')"
+                  :data="linkTreeFilteredData['__dual__']"
+                  :checked-keys="linkTreeDisplayKeys['__dual__']"
+                  :expanded-keys="linkTreeExpandedKeys['__dual__'] || []"
+                  :cascade="(linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig ? (linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig.treeCascade !== false : true"
+                  :key-field="(linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig ? (linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig.novaIdFieldName : 'id'"
+                  :label-field="(linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig ? (linkTabBuild[dualTableCurrentNova] || {}).linkTreeTargetConfig.treeSearchField : 'name'"
+                  checkable block-line
+                  @update:checked-keys="(keys) => onLinkTreeCheck(keys, '__dual__')"
+                />
+              </div>
+            </n-card>
+          </template>
+          <!-- 普通表格模式 -->
+          <nova-table v-else ref="dualTableRef" :key="dualTableCurrentKey" :dual-mode="true" :link-mode="isDualTableLink" :nova-name-prop="dualTableCurrentNova" :source-nova-name-prop="novaName" :source-fields-prop="dualTableSourceFields" @link-add="handleDualLinkAdd" />
+        </div>
       </Teleport>
     </div>
   `

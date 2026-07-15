@@ -69,18 +69,17 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   overflow: hidden;
 }
 .dual-right-panel {
-  flex: 0 0 50vw;
-  width: 50vw;
+  flex: 0 0 50%;
+  width: 50%;
   overflow: hidden;
   border-left: 1px solid var(--n-border-color);
-  display: flex;
-  flex-direction: column;
   padding: 16px 16px 16px 8px;
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.25s ease,
               transform 0.25s ease;
   position: relative;
+  box-sizing: border-box;
   animation: dualFadeIn 0.3s ease;
 }
 @keyframes dualFadeIn {
@@ -93,13 +92,7 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     transform: translateY(0);
   }
 }
-.dual-right-panel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  backdrop-filter: blur(8px);
-  pointer-events: none;
-}
+/* ::before 模糊遮罩已移除（不再需要） */
 .dual-right-panel.is-closing {
   opacity: 0;
   transform: translateY(12px);
