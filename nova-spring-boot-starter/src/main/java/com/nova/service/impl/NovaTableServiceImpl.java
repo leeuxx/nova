@@ -593,6 +593,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                 .setNovaName(novaTableTree.getSourceNovaName())
                 .setSourceFields(novaTableTree.getSourceFields())
                 .setOrders(requestOrders)
+                .setOperateStorageFieldValue(novaTableTree.getOperateStorageFieldValue())
         );
         List<?> rootList = tree.getRootList();
         List<?> childrenList = tree.getChildrenList();

@@ -21,6 +21,9 @@ public class Tree {
     @Comment("排序")
     private List<OrderItemBean> orders = new ArrayList<>();
 
+    @Comment("操作类存储属性名")
+    private String operateStorageFieldValue;
+
     @Data
     @Accessors(chain = true)
     public static class OrderItemBean {

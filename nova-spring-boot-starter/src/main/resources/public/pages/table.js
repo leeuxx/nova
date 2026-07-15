@@ -2349,8 +2349,8 @@ const NovaTable = {
               tableColumns: buildData.tableColumns || []
             }
             self.linkTabBuild[tapNovaName] = newBuild
-            // Step 2: 获取全量树数据
-            // 从 linkMap 获取 referenceTransmitField 作为透传字段
+
+            // 从 linkMap 获取 referenceTransmitField 作为目标树透传字段
             const srcFields = {}
             const linkMap = self.linkMap || {}
             for (const field in linkMap) {
@@ -2366,6 +2366,29 @@ const NovaTable = {
                 break
               }
             }
+
+            // 两个并行 tree 请求：目标表全量树 + 中间表已勾选 IDs
+            var treeRendered = false
+            var checkedReady = false
+            var sortedRoot = []
+            var nodeMap = {}
+            var defaultExpandKeys = []
+            var checkedKeys = new Set()
+
+            function renderTree() {
+              if (!treeRendered || !checkedReady) return
+              // 排序
+              sortedRoot.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0) })
+              self.linkTreeData[tapNovaName] = sortedRoot
+              self.linkTreeNodeMap[tapNovaName] = nodeMap
+              self.linkTreeCheckedKeys[tapNovaName] = checkedKeys
+              self.linkTreeDefaultExpandedKeys[tapNovaName] = defaultExpandKeys
+              self.linkTreeExpandedKeys[tapNovaName] = defaultExpandKeys
+              self.linkTreeLoading[tapNovaName] = false
+              self.updateLinkTreeDisplayKeys(tapNovaName)
+            }
+
+            // Step 2a: 目标表 tree（全量树结构）
             $.ajax({
               url: '/nova/table/tree',
               method: 'POST',
@@ -2380,7 +2403,6 @@ const NovaTable = {
                 const rootList = treeResp.data.rootList || []
                 const childrenList = treeResp.data.childrenList || []
 
-                const nodeMap = {}
                 rootList.forEach(function(node) {
                   nodeMap[String(node[pkField])] = node
                 })
@@ -2415,18 +2437,12 @@ const NovaTable = {
                   })
                 }
                 buildTree(rootList)
+                sortedRoot = rootList
 
-                const sortedRoot = rootList.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0) })
-
-                self.linkTreeData[tapNovaName] = sortedRoot
-                self.linkTreeNodeMap[tapNovaName] = nodeMap
-
-                // 根据 treeLevel 计算默认展开的节点（搜索清空时也会恢复到这些节点）
-                var treeLevel = newBuild.linkTreeTargetConfig.treeLevel || 0
-                var defaultExpandKeys = []
-                if (treeLevel > 0) {
+                // 根据 treeLevel 计算默认展开的节点
+                if (newBuild.linkTreeTargetConfig.treeLevel > 0) {
                   var collectByLevel = function(nodes, depth) {
-                    if (depth >= treeLevel) return
+                    if (depth >= newBuild.linkTreeTargetConfig.treeLevel) return
                     nodes.forEach(function(node) {
                       if (node[pkField] != null) defaultExpandKeys.push(node[pkField])
                       if (node.children && node.children.length) {
@@ -2434,19 +2450,44 @@ const NovaTable = {
                       }
                     })
                   }
-                  collectByLevel(sortedRoot, 0)
+                  collectByLevel(rootList, 0)
                 }
-                self.linkTreeDefaultExpandedKeys[tapNovaName] = defaultExpandKeys
-                self.linkTreeExpandedKeys[tapNovaName] = defaultExpandKeys
 
-                // 树模式不需要查询中间表数据，直接完成加载
-                self.linkTreeLoading[tapNovaName] = false
-                self.linkTreeCheckedKeys[tapNovaName] = new Set()
-                self.updateLinkTreeDisplayKeys(tapNovaName)
+                treeRendered = true
+                renderTree()
               },
               error: function() {
                 self.linkTreeLoading[tapNovaName] = false
                 if (window.$message) window.$message.error('加载树数据失败')
+              }
+            })
+
+            // Step 2b: 中间表 tree（获取已勾选的节点 ID，回显勾选）
+            var storageField = lt.thisStorageField
+            $.ajax({
+              url: '/nova/table/tree',
+              method: 'POST',
+              contentType: 'application/json',
+              data: JSON.stringify({ novaName: tapNovaName, sourceNovaName: self.novaName, operateStorageFieldValue: String(self.currentRow[storageField]) }),
+              success: function(linkResp) {
+                if (linkResp.code === 200) {
+                  // 合并 rootList + childrenList 取所有节点
+                  var allRecords = (linkResp.data.rootList || []).concat(linkResp.data.childrenList || [])
+                  // 中间表里目标表关联字段
+                  allRecords.forEach(function(rec) {
+                    var val = rec[storageField]
+                    if (val != null) {
+                        checkedKeys.add(val)
+                    }
+                  })
+                }
+                checkedReady = true
+                renderTree()
+              },
+              error: function() {
+                // 中间表 tree 失败：不回显勾选，树仍可正常显示
+                checkedReady = true
+                renderTree()
               }
             })
           },
