@@ -17,7 +17,7 @@ public @interface ReferenceType {
     String[] referenceTransmitField() default {};
 
     @Comment("tap页显示")
-    boolean tapShow() default true;
+    boolean tapShow() default false;
 
     @Comment("tap页是否显示动态判断,使用此方式必须把show设置为true")
     ShowBy tapShowBy() default @ShowBy("");
