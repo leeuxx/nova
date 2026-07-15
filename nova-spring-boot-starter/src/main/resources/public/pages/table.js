@@ -3130,11 +3130,11 @@ const NovaTable = {
         </div>
       </n-modal>
     </div>
-    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:16px 16px 0' : (dualTableViewActive ? 'padding:16px 8px 16px 16px' : 'padding:16px'))">
+    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:16px 8px 16px 16px' : 'padding:16px 8px 16px 16px')">
 
       <!-- 树形表格搜索 -->
       <component v-if="isTree && !linkMode && treeSearchField" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
-        <div style="display:flex;align-items:center;gap:12px;padding:8px 0">
+        <div style="display:flex;align-items:center;gap:12px">
           <span class="form-label">{{ treeSearchFieldTitle }}</span>
           <n-input
             v-model:value="treeSearchKeyword"
@@ -3148,7 +3148,7 @@ const NovaTable = {
               <iconify-icon icon="material-symbols:search" style="font-size:16px;color:#aaa"></iconify-icon>
             </template>
           </n-input>
-          <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto">
             <n-button :size="embSize" @click="handleTreeSearchReset">重 置</n-button>
             <n-button :size="embSize" type="primary" @click="handleQuery">查 询</n-button>
             <n-button :size="embSize" dashed @click="toggleFilter" :disabled="true">
