@@ -35,6 +35,18 @@ public class NovaAuthorityController {
         return R.ok(vo);
     }
 
+    @Comment("登出")
+    @PostMapping("logout")
+    public R logout() {
+        String token = AuthorityUtils.getToken();
+        boolean checkToken = authorityProxy.checkToken(token);
+        if (!checkToken) {
+            return R.ok();
+        }
+        authorityProxy.logout(token);
+        return R.ok();
+    }
+
     @Comment("获取菜单")
     @PostMapping("getMenu")
     public R<List<Menu>> getMenu() {

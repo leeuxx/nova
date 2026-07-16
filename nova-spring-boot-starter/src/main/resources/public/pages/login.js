@@ -98,10 +98,10 @@ window.LoginPage = {
         if (resp.code === 200 && resp.data) {
           // 完整保存登录态
           localStorage.setItem('nova_token', resp.data.token || '')
-          localStorage.setItem('nova_user', resp.data.name || this.formData.username)
+          localStorage.setItem('nova_user', resp.data.name)
           localStorage.setItem('nova_alias', resp.data.alias || '')
           localStorage.setItem('nova_avatar', resp.data.avatar || '')
-          if (window.$message) window.$message.success('登录成功，欢迎 ' + (resp.data.alias || resp.data.name))
+          if (window.$message) window.$message.success('登录成功，欢迎 ' + resp.data.name)
           // 登录成功后重新加载页面以拉取菜单
           window.location.hash = '#/home'
           window.location.reload()

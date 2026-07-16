@@ -14,6 +14,9 @@ public interface AuthorityProxy {
     @Comment("登录")
     Login.Vo login(Login login);
 
+    @Comment("登出")
+    void logout(String token);
+
     @Comment("获取菜单")
     List<Menu> getMenu(String token);
 

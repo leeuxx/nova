@@ -236,6 +236,34 @@ function mountApp(menuList, config, loginExpired) {
       const handleTabClick = (key) => router.push(key)
       const userDropdown   = [{ label: '个人中心', key: 'profile' }, { label: '退出登录', key: 'logout' }]
 
+      // 用户信息（从 localStorage 读取）
+      const userName   = ref(localStorage.getItem('nova_user') || '未登录')
+      const userAlias  = ref(localStorage.getItem('nova_alias') || '')
+      const userAvatar = ref(localStorage.getItem('nova_avatar') || '')
+
+      // 右上角用户菜单
+      const handleUserMenuSelect = (key) => {
+        if (key === 'logout') {
+          window.msg.confirm('warning', '退出登录', '确定要退出登录吗？', async () => {
+            var token = localStorage.getItem('nova_token')
+            try {
+              await fetch('/nova/authority/logout', {
+                method: 'POST',
+                headers: { 'token': token }
+              })
+            } catch (e) {}
+            // 清空本地登录态
+            localStorage.removeItem('nova_token')
+            localStorage.removeItem('nova_user')
+            localStorage.removeItem('nova_alias')
+            localStorage.removeItem('nova_avatar')
+            // 跳到登录页并刷新
+            window.location.hash = '#/login'
+            window.location.reload()
+          })
+        }
+      }
+
       // 自定义下横线
       const barStyle = ref({ transform: 'translateX(0px)', width: '0px', opacity: 0 })
       const barReady = ref(false)
@@ -267,8 +295,8 @@ function mountApp(menuList, config, loginExpired) {
       return {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
         menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isLoginRoute,
-        handleMenuSelect, handleTabClose, handleTabClick, userDropdown,
-        barStyle, barReady, tabBarRef
+        handleMenuSelect, handleTabClose, handleTabClick, userDropdown, handleUserMenuSelect,
+        barStyle, barReady, tabBarRef, userName, userAlias, userAvatar
       }
     },
 
@@ -339,10 +367,17 @@ function mountApp(menuList, config, loginExpired) {
                           <n-switch v-model:value="isDark" />
                           <n-icon size="18"><iconify-icon icon="material-symbols:light-mode-outline"></iconify-icon></n-icon>
                         </div>
-                        <n-dropdown :options="userDropdown" trigger="hover">
+                        <n-dropdown :options="userDropdown" trigger="hover" @select="handleUserMenuSelect">
                           <div class="header-action user-info">
-                            <iconify-icon icon="material-symbols:account-circle" style="font-size:22px"></iconify-icon>
-                            <span style="font-size:14px">Super</span>
+                            <n-avatar
+                              v-if="userAvatar"
+                              :src="userAvatar"
+                              size="small"
+                              round
+                              style="width:28px;height:28px"
+                            />
+                            <n-icon v-else size="22"><iconify-icon icon="material-symbols:account-circle"></iconify-icon></n-icon>
+                            <span style="font-size:14px">{{ userAlias || userName }}</span>
                           </div>
                         </n-dropdown>
                       </n-space>

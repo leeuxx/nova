@@ -29,8 +29,13 @@ public class AuthorityProxyImpl implements AuthorityProxy {
         return new Login.Vo()
                 .setToken(token)
                 .setName("张三")
-                .setAlias("管理员")
+                .setAlias("财务人员")
                 .setAvatar("https://avatars.githubusercontent.com/u/10251080?s=200&v=4");
+    }
+
+    @Override
+    public void logout(String token) {
+        map.remove(token);
     }
 
     @Override
