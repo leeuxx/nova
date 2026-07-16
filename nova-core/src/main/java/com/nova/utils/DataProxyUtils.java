@@ -1,7 +1,7 @@
 package com.nova.utils;
 
 import com.nova.annotation.NovaField;
-import com.nova.annotation.fun.DataProxy;
+import com.nova.service.data.DataProxy;
 import com.nova.annotation.sub.nova.field.edit.LinkTargetType;
 import com.nova.config.NovaApplication;
 import lombok.SneakyThrows;

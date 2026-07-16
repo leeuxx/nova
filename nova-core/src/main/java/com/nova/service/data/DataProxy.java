@@ -1,6 +1,10 @@
-package com.nova.annotation.fun;
+package com.nova.service.data;
 
 import com.nova.annotation.config.Comment;
+import com.nova.entity.data.Details;
+import com.nova.entity.data.Fetch;
+import com.nova.entity.data.PromptSearch;
+import com.nova.entity.data.Tree;
 
 import java.util.List;
 

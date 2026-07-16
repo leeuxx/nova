@@ -1,6 +1,6 @@
 package com.nova.utils;
 
-import com.nova.annotation.fun.DataProxy;
+import com.nova.service.data.DataProxy;
 import org.springframework.stereotype.Service;
 
 @Service

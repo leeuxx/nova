@@ -1,6 +1,6 @@
 package com.nova.upload;
 
-import com.nova.annotation.fun.AttachmentProxy;
+import com.nova.service.file.AttachmentProxy;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;

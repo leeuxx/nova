@@ -1,34 +1,52 @@
-package com.nova.controller;
+package com.nova.authority;
 
-import com.nova.annotation.config.Comment;
-import com.nova.annotation.config.RestMappingController;
-import com.nova.dto.NovaUserGetMenu;
-import com.nova.utils.R;
-import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
+import com.github.yitter.idgen.YitIdHelper;
+import com.nova.entity.authority.Login;
+import com.nova.entity.authority.Menu;
+import com.nova.service.authority.AuthorityProxy;
+import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-@AllArgsConstructor
-@RestMappingController("nova/user")
-public class NovaUserController {
+@Service
+public class AuthorityProxyImpl implements AuthorityProxy {
 
-    @Comment("获取菜单")
-    @PostMapping("getMenu")
-    public R<List<NovaUserGetMenu.Vo>> getMenu() {
-        List<NovaUserGetMenu.Vo> vos = Arrays.asList(
-                new NovaUserGetMenu.Vo()
+    private static final Map<String, String> map = new LinkedHashMap<>();
+
+    @Override
+    public boolean checkToken(String token) {
+        String username = map.get(token);
+        return username != null;
+    }
+
+    @Override
+    public Login.Vo login(Login login) {
+        String token = String.valueOf(YitIdHelper.nextId());
+        map.put(token, login.getUsername());
+        return new Login.Vo()
+                .setToken(token)
+                .setName("张三")
+                .setAlias("管理员")
+                .setAvatar("https://avatars.githubusercontent.com/u/10251080?s=200&v=4");
+    }
+
+    @Override
+    public List<Menu> getMenu(String token) {
+        return Arrays.asList(
+                new Menu()
                         .setId(1L)
                         .setCode("home")
                         .setName("主页")
                         .setIcon("material-symbols:home-outline"),
-                new NovaUserGetMenu.Vo()
+                new Menu()
                         .setId(2L)
                         .setCode("sys")
                         .setName("系统管理")
                         .setIcon("material-symbols:settings-outline"),
-                new NovaUserGetMenu.Vo()
+                new Menu()
                         .setId(3L)
                         .setCode("user")
                         .setValue("TestDemoView")
@@ -36,7 +54,7 @@ public class NovaUserController {
                         .setName("用户管理")
                         .setIcon("material-symbols:person-outline")
                         .setPid(2L),
-                new NovaUserGetMenu.Vo()
+                new Menu()
                         .setId(4L)
                         .setCode("role")
                         .setValue("TestDemo2View")
@@ -44,7 +62,7 @@ public class NovaUserController {
                         .setName("部门管理")
                         .setIcon("material-symbols:group-outline")
                         .setPid(2L),
-                new NovaUserGetMenu.Vo()
+                new Menu()
                         .setId(5L)
                         .setCode("menu")
                         .setValue("MENU")
@@ -53,7 +71,5 @@ public class NovaUserController {
                         .setIcon("material-symbols:menu")
                         .setPid(2L)
         );
-        return R.ok(vos);
     }
-
 }

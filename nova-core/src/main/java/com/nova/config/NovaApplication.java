@@ -5,7 +5,7 @@ import com.nova.annotation.NovaField;
 import com.nova.annotation.config.Comment;
 import com.nova.annotation.config.NovaId;
 import com.nova.annotation.config.NovaScan;
-import com.nova.annotation.fun.DataProxy;
+import com.nova.service.data.DataProxy;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.constant.NovaConst;

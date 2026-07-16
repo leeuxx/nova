@@ -1,7 +1,7 @@
 package com.nova.annotation;
 
 import com.nova.annotation.config.Comment;
-import com.nova.annotation.fun.DataProxy;
+import com.nova.service.data.DataProxy;
 import com.nova.annotation.sub.nova.Layout;
 import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.row.RowOperation;

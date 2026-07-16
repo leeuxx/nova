@@ -1,0 +1,109 @@
+/* 登录页面样式 */
+
+/* 五彩动态光晕效果 */
+.blur-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.35;
+  animation: orbFloat 10s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.blur-orb.orb-1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(37,99,235,0.5) 0%, rgba(37,99,235,0) 70%);
+  top: -150px;
+  left: -120px;
+  animation-delay: 0s;
+}
+
+.blur-orb.orb-2 {
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(236,72,153,0.45) 0%, rgba(236,72,153,0) 70%);
+  bottom: -100px;
+  left: 10%;
+  animation-delay: -2s;
+}
+
+.blur-orb.orb-3 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(16,185,129,0.4) 0%, rgba(16,185,129,0) 70%);
+  top: 30%;
+  left: 40%;
+  animation-delay: -4s;
+}
+
+.blur-orb.orb-4 {
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(245,158,11,0.4) 0%, rgba(245,158,11,0) 70%);
+  top: 10%;
+  right: 15%;
+  animation-delay: -6s;
+}
+
+.blur-orb.orb-5 {
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, rgba(139,92,246,0.4) 0%, rgba(139,92,246,0) 70%);
+  bottom: 15%;
+  left: 35%;
+  animation-delay: -8s;
+}
+
+@keyframes orbFloat {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(50px, -30px) scale(1.1);
+  }
+  50% {
+    transform: translate(-30px, 40px) scale(0.95);
+  }
+  75% {
+    transform: translate(-50px, -20px) scale(1.05);
+  }
+}
+
+/* 登录卡片动画 */
+.login-card-enter-active,
+.login-card-leave-active {
+  animation: loginCardFadeIn 0.4s ease-out;
+}
+
+@keyframes loginCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 输入框动画 */
+.n-input,
+.n-input__input-el {
+  transition: all 0.3s ease;
+}
+
+.n-input:focus-within,
+.n-input__input-el:focus {
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+}
+
+/* 按钮悬停动画 */
+.n-button--primary:hover {
+  box-shadow: 0 4px 12px rgba(37,99,235,0.35);
+  transform: translateY(-1px);
+}
+
+.n-button--primary:active {
+  transform: translateY(0);
+}

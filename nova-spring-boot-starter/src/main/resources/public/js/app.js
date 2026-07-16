@@ -28,6 +28,9 @@ const {
   darkTheme, zhCN, dateZhCN
 } = naive
 
+// 登录页面组件
+const LoginPage = window.LoginPage
+
 // ─── 图标辅助 ────────────────────────────────────────────────────
 function iconNode(iconName) {
   return () => h(NIcon, { size: 18 }, {
@@ -107,19 +110,37 @@ const themeOverrides = {
   }
 }
 
-// ─── 挂载入口：先加载配置 → 拉菜单 → 创建 Vue 应用 ──────────────
-window.loadJSON('json/index.json', function (config) {
-  $.ajax({
-    url: "/nova/user/getMenu",
-    method: 'POST',
-    contentType: 'application/json',
-    data: '{}',
-    success: function (resp) { mountApp((resp.code === 200 && resp.data) ? resp.data : [], config) },
-    error: function () { mountApp([], config) }
+// ─── 挂载入口：未登录直接挂载（显示登录页），有 token 才拉菜单 ──
+var _startToken = localStorage.getItem('nova_token')
+if (_startToken) {
+  window.loadJSON('json/index.json', function (config) {
+    $.ajax({
+      url: "/nova/authority/getMenu",
+      method: 'POST',
+      contentType: 'application/json',
+      data: '{}',
+      headers: { 'token': _startToken },
+      success: function (resp) {
+        if (resp.code === 520) {
+          // token 过期：清除登录态，先挂载应用，再跳到登录页
+          localStorage.removeItem('nova_token')
+          localStorage.removeItem('nova_user')
+          localStorage.removeItem('nova_alias')
+          localStorage.removeItem('nova_avatar')
+          mountApp([], config, true)
+          return
+        }
+        mountApp((resp.code === 200 && resp.data) ? resp.data : [], config)
+      },
+      error: function () { mountApp([], config) }
+    })
   })
-})
+} else {
+  // 无 token：直接挂载空菜单，显示登录页
+  mountApp([], { theme: { default: 'daytime' }, menu: { toggle: { default: 'down' } } })
+}
 
-function mountApp(menuList, config) {
+function mountApp(menuList, config, loginExpired) {
   var processed   = processMenus(menuList)
   var menuTree    = processed.menuTree
   var routeMeta   = processed.routeMeta
@@ -154,6 +175,8 @@ function mountApp(menuList, config) {
       const expandedKeys = ref([])
 
       const theme = computed(() => isDark.value ? darkTheme : null)
+      // 是否为登录路由（独立页面，无布局）
+      const isLoginRoute = computed(() => route.path === '/login')
 
       watch(isDark, (val) => {
         document.body.classList.toggle('dark', val)
@@ -165,7 +188,7 @@ function mountApp(menuList, config) {
 
       // 监听路由变化，维护 tab 列表
       watch(() => route.path, (path) => {
-        if (path === '/') return
+        if (path === '/' || path === '/login') return
         const meta = routeMeta[path] || { title: path, icon: null }
         if (!openedTabs.value.find(t => t.key === path)) {
           openedTabs.value.push({ key: path, title: meta.title, icon: meta.icon, closable: path !== '/home' })
@@ -243,7 +266,7 @@ function mountApp(menuList, config) {
 
       return {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
-        menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey,
+        menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isLoginRoute,
         handleMenuSelect, handleTabClose, handleTabClick, userDropdown,
         barStyle, barReady, tabBarRef
       }
@@ -255,101 +278,111 @@ function mountApp(menuList, config) {
           <n-dialog-provider>
             <dialog-bridge />
             <n-notification-provider>
-              <n-layout has-sider style="height:100vh">
 
-                <!-- 侧边栏 -->
-                <n-layout-sider bordered :collapsed="collapsed" collapse-mode="width" :collapsed-width="64" :width="220" :show-trigger="togglePos === 'down' ? 'bar' : false" @update:collapsed="collapsed = $event">
-                  <div style="height:50px;display:flex;align-items:center;justify-content:center">
-                    <div style="display:flex;align-items:center;gap:8px">
-                      <div style="width:28px;height:28px;background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                        <iconify-icon icon="material-symbols:bolt" style="color:#fff;font-size:18px"></iconify-icon>
-                      </div>
-                      <span v-show="!collapsed" class="logo-text">Nova Admin</span>
-                    </div>
-                  </div>
-                  <n-menu
-                    :value="activeTab"
-                    :options="menuTree"
-                    :collapsed="collapsed"
-                    :collapsed-width="64"
-                    :collapsed-icon-size="22"
-                    :expanded-keys="expandedKeys"
-                    @update:expanded-keys="expandedKeys = $event"
-                    @update:value="handleMenuSelect"
-                  />
-                </n-layout-sider>
+              <!-- 登录页：独立渲染，无侧边栏/头部/tab 布局 -->
+              <router-view v-if="isLoginRoute" v-slot="{ Component }">
+                <component :is="Component" />
+              </router-view>
 
-                <!-- 右侧主区域 -->
-                <n-layout>
+              <!-- 主布局：带侧边栏/头部/tab -->
+              <div v-else>
+                <n-layout has-sider style="height:100vh">
 
-                  <!-- 顶部 Header -->
-                  <n-layout-header bordered style="height:50px;padding:0 16px;display:flex;align-items:center;justify-content:space-between">
-                    <div style="display:flex;align-items:center;gap:12px">
-                      <n-icon v-if="togglePos !== 'down'" size="20" style="cursor:pointer" @click="collapsed=!collapsed">
-                        <iconify-icon icon="material-symbols:menu"></iconify-icon>
-                      </n-icon>
-                      <n-breadcrumb separator="»">
-                        <n-breadcrumb-item v-for="item in breadcrumbItems" :key="item.label">
-                          <n-icon :size="14" style="margin-right:4px;vertical-align:middle" v-if="item.icon">
-                            <iconify-icon :icon="item.icon"></iconify-icon>
-                          </n-icon>
-                          {{ item.label }}
-                        </n-breadcrumb-item>
-                      </n-breadcrumb>
-                    </div>
-                    <n-space align="center" :size="4">
-                      <div class="header-action">
-                        <n-badge :value="3" :max="9">
-                          <n-icon size="20"><iconify-icon icon="material-symbols:notifications-outline"></iconify-icon></n-icon>
-                        </n-badge>
-                      </div>
-                      <div class="header-action theme-switch">
-                        <n-icon size="18"><iconify-icon icon="material-symbols:dark-mode-outline"></iconify-icon></n-icon>
-                        <n-switch v-model:value="isDark" />
-                        <n-icon size="18"><iconify-icon icon="material-symbols:light-mode-outline"></iconify-icon></n-icon>
-                      </div>
-                      <n-dropdown :options="userDropdown" trigger="hover">
-                        <div class="header-action user-info">
-                          <iconify-icon icon="material-symbols:account-circle" style="font-size:22px"></iconify-icon>
-                          <span style="font-size:14px">Super</span>
+                  <!-- 侧边栏 -->
+                  <n-layout-sider bordered :collapsed="collapsed" collapse-mode="width" :collapsed-width="64" :width="220" :show-trigger="togglePos === 'down' ? 'bar' : false" @update:collapsed="collapsed = $event">
+                    <div style="height:50px;display:flex;align-items:center;justify-content:center">
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <div style="width:28px;height:28px;background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                          <iconify-icon icon="material-symbols:bolt" style="color:#fff;font-size:18px"></iconify-icon>
                         </div>
-                      </n-dropdown>
-                    </n-space>
-                  </n-layout-header>
+                        <span v-show="!collapsed" class="logo-text">Nova Admin</span>
+                      </div>
+                    </div>
+                    <n-menu
+                      :value="activeTab"
+                      :options="menuTree"
+                      :collapsed="collapsed"
+                      :collapsed-width="64"
+                      :collapsed-icon-size="22"
+                      :expanded-keys="expandedKeys"
+                      @update:expanded-keys="expandedKeys = $event"
+                      @update:value="handleMenuSelect"
+                    />
+                  </n-layout-sider>
 
-                  <!-- Tab 栏 -->
-                  <div class="tab-bar tab-bar-wrap" style="padding:8px 16px 0;display:flex;align-items:flex-start;gap:4px" ref="tabBarRef">
-                    <n-tabs type="line" :key="tabsKey" :value="activeTab" :tabs-padding="0" @update:value="handleTabClick" style="flex:1;min-width:0">
-                      <n-tab
-                        v-for="tab in openedTabs" :key="tab.key" :name="tab.key"
-                        :closable="tab.closable && openedTabs.length > 1" @close.stop="handleTabClose(tab.key)"
-                        style="padding:6px 12px;font-size:13px"
-                      >
-                        <span style="display:inline-flex;align-items:center;gap:4px">
-                          <n-icon :size="14" v-if="tab.icon"><iconify-icon :icon="tab.icon"></iconify-icon></n-icon>
-                          {{ tab.title }}
-                          <n-icon v-if="tab.closable && openedTabs.length > 1" :size="12" style="cursor:pointer;margin-left:4px" @click.stop="handleTabClose(tab.key)">
-                            <iconify-icon icon="material-symbols:close"></iconify-icon>
-                          </n-icon>
-                        </span>
-                      </n-tab>
-                    </n-tabs>
-                    <div class="tab-bar-line" :class="{ 'bar-ready': barReady }" :style="barStyle"></div>
-                  </div>
+                  <!-- 右侧主区域 -->
+                  <n-layout>
 
-                  <!-- 内容区 -->
-                  <n-layout-content class="page-content">
-                    <router-view v-slot="{ Component }">
-                      <transition name="page-fade" mode="out-in">
-                        <keep-alive :max="20">
-                          <component :is="Component" :key="routeKey" />
-                        </keep-alive>
-                      </transition>
-                    </router-view>
-                  </n-layout-content>
+                    <!-- 顶部 Header -->
+                    <n-layout-header bordered style="height:50px;padding:0 16px;display:flex;align-items:center;justify-content:space-between">
+                      <div style="display:flex;align-items:center;gap:12px">
+                        <n-icon v-if="togglePos !== 'down'" size="20" style="cursor:pointer" @click="collapsed=!collapsed">
+                          <iconify-icon icon="material-symbols:menu"></iconify-icon>
+                        </n-icon>
+                        <n-breadcrumb separator="»">
+                          <n-breadcrumb-item v-for="item in breadcrumbItems" :key="item.label">
+                            <n-icon :size="14" style="margin-right:4px;vertical-align:middle" v-if="item.icon">
+                              <iconify-icon :icon="item.icon"></iconify-icon>
+                            </n-icon>
+                            {{ item.label }}
+                          </n-breadcrumb-item>
+                        </n-breadcrumb>
+                      </div>
+                      <n-space align="center" :size="4">
+                        <div class="header-action">
+                          <n-badge :value="3" :max="9">
+                            <n-icon size="20"><iconify-icon icon="material-symbols:notifications-outline"></iconify-icon></n-icon>
+                          </n-badge>
+                        </div>
+                        <div class="header-action theme-switch">
+                          <n-icon size="18"><iconify-icon icon="material-symbols:dark-mode-outline"></iconify-icon></n-icon>
+                          <n-switch v-model:value="isDark" />
+                          <n-icon size="18"><iconify-icon icon="material-symbols:light-mode-outline"></iconify-icon></n-icon>
+                        </div>
+                        <n-dropdown :options="userDropdown" trigger="hover">
+                          <div class="header-action user-info">
+                            <iconify-icon icon="material-symbols:account-circle" style="font-size:22px"></iconify-icon>
+                            <span style="font-size:14px">Super</span>
+                          </div>
+                        </n-dropdown>
+                      </n-space>
+                    </n-layout-header>
 
+                    <!-- Tab 栏 -->
+                    <div class="tab-bar tab-bar-wrap" style="padding:8px 16px 0;display:flex;align-items:flex-start;gap:4px" ref="tabBarRef">
+                      <n-tabs type="line" :key="tabsKey" :value="activeTab" :tabs-padding="0" @update:value="handleTabClick" style="flex:1;min-width:0">
+                        <n-tab
+                          v-for="tab in openedTabs" :key="tab.key" :name="tab.key"
+                          :closable="tab.closable && openedTabs.length > 1" @close.stop="handleTabClose(tab.key)"
+                          style="padding:6px 12px;font-size:13px"
+                        >
+                          <span style="display:inline-flex;align-items:center;gap:4px">
+                            <n-icon :size="14" v-if="tab.icon"><iconify-icon :icon="tab.icon"></iconify-icon></n-icon>
+                            {{ tab.title }}
+                            <n-icon v-if="tab.closable && openedTabs.length > 1" :size="12" style="cursor:pointer;margin-left:4px" @click.stop="handleTabClose(tab.key)">
+                              <iconify-icon icon="material-symbols:close"></iconify-icon>
+                            </n-icon>
+                          </span>
+                        </n-tab>
+                      </n-tabs>
+                      <div class="tab-bar-line" :class="{ 'bar-ready': barReady }" :style="barStyle"></div>
+                    </div>
+
+                    <!-- 内容区 -->
+                    <n-layout-content class="page-content">
+                      <router-view v-slot="{ Component }">
+                        <transition name="page-fade" mode="out-in">
+                          <keep-alive :max="20">
+                            <component :is="Component" :key="routeKey" />
+                          </keep-alive>
+                        </transition>
+                      </router-view>
+                    </n-layout-content>
+
+                  </n-layout>
                 </n-layout>
-              </n-layout>
+              </div>
+
             </n-notification-provider>
           </n-dialog-provider>
         </n-message-provider>
@@ -361,16 +394,34 @@ function mountApp(menuList, config) {
   const router = createRouter({
     history: createWebHashHistory(),
     routes: [
-      { path: '/',              redirect: defaultPath },
-      { path: '/home',          component: { template: '<div style="padding:24px"><h2>欢迎使用 Nova Admin</h2><p>请从左侧菜单进入各功能模块。</p></div>' } },
-      { path: '/nova/:novaName', component: window.NovaTable }
+      { path: '/',                    redirect: '/login' },
+      { path: '/login',               component: LoginPage, meta: { loginRequired: false } },
+      { path: '/home',                component: { template: '<div style="padding:24px"><h2>欢迎使用 Nova Admin</h2><p>请从左侧菜单进入各功能模块。</p></div>' } },
+      { path: '/nova/:novaName',      component: window.NovaTable }
     ]
+  })
+
+  // 登录过期：挂载后立即跳到登录页
+  if (loginExpired) {
+    router.push('/login')
+  }
+
+  // 路由守卫：未登录拦截
+  router.beforeEach((to, from, next) => {
+    var token = localStorage.getItem('nova_token')
+    if (to.path !== '/login' && !token) {
+      next('/login')
+    } else {
+      next()
+    }
   })
 
   // ── 挂载 ────────────────────────────────────────────────────────
   const app = createApp(App)
   app.use(naive)
   app.use(router)
+  // 暴露 router 供 LoginPage 等独立组件使用
+  window.__novaRouter = router
   app.mount('#app')
 }
 

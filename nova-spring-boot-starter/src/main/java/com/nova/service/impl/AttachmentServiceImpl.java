@@ -1,6 +1,6 @@
 package com.nova.service.impl;
 
-import com.nova.annotation.fun.AttachmentProxy;
+import com.nova.service.file.AttachmentProxy;
 import com.nova.dto.AttachmentUpload;
 import com.nova.service.AttachmentService;
 import com.nova.utils.R;

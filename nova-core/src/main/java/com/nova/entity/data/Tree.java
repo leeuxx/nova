@@ -1,4 +1,4 @@
-package com.nova.annotation.fun;
+package com.nova.entity.data;
 
 import com.nova.annotation.config.Comment;
 import lombok.Data;

@@ -1,12 +1,16 @@
 package com.nova.service.impl;
 
-import com.nova.annotation.fun.*;
 import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.row.OperationHandler;
 import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.dto.*;
 import com.nova.dto.page.PageBean;
+import com.nova.entity.data.Details;
+import com.nova.entity.data.Fetch;
+import com.nova.entity.data.PromptSearch;
+import com.nova.entity.data.Tree;
+import com.nova.service.data.DataProxy;
 import com.nova.service.NovaTableService;
 import com.nova.utils.*;
 import lombok.AllArgsConstructor;

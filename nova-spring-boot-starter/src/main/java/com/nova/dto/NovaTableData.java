@@ -1,7 +1,6 @@
 package com.nova.dto;
 
 import com.nova.annotation.config.Comment;
-import com.nova.annotation.fun.Fetch;
 import com.nova.dto.page.PageBean;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
