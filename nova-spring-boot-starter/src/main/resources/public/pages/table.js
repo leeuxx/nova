@@ -2801,11 +2801,8 @@ const NovaTable = {
       if (!this.dualTableViewActive) return
       this._dualSelectedRow = row
 
-      // 树模式：重新加载树数据（目标树不变，但已勾选需根据新行重新加载）
+      // 树模式：重新加载树数据（不清旧数据避免闪烁，loadLinkTreeData 内部会自动覆盖）
       if (this.linkTreeData['__dual__']) {
-        this.linkTreeData['__dual__'] = null
-        this.linkTreeCheckedKeys['__dual__'] = null
-        // loadLinkTreeData 内部会设置 loading=true，这里不设避免被 return 拦住
         this.loadLinkTreeData(this.dualTableCurrentNova, { row: row, stateKey: '__dual__' })
         return
       }
@@ -2863,9 +2860,9 @@ const NovaTable = {
                 if (panelEl) {
                   var contentEl = panelEl.querySelector('.page-card, .embedded-table')
                   if (contentEl) {
-                    contentEl.classList.remove('dual-content-fade')
+                    contentEl.classList.remove('dual-content-slideup')
                     void contentEl.offsetWidth
-                    contentEl.classList.add('dual-content-fade')
+                    contentEl.classList.add('dual-content-slideup')
                   }
                 }
               })
@@ -4104,6 +4101,7 @@ const NovaTable = {
             :link-tree-expanded-keys="linkTreeExpandedKeys['__dual__'] || []"
             :link-tree-display-keys="linkTreeDisplayKeys['__dual__'] || []"
             :link-tree-search-keyword="linkTreeSearchKeyword['__dual__'] || ''"
+            :loading-style="loadingStyle"
             @tree-search="(val) => { linkTreeSearchKeyword['__dual__'] = val; filterLinkTreeData('__dual__', dualTableCurrentNova); }"
             @tree-check="(keys) => onLinkTreeCheck(keys, '__dual__')"
             @save-tree="submitDualLinkTree"

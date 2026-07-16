@@ -136,6 +136,19 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     transform: translateY(0);
   }
 }
+.dual-content-slideup {
+  animation: dualContentSlideUp 0.35s ease-out;
+}
+@keyframes dualContentSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 
 .page-card {

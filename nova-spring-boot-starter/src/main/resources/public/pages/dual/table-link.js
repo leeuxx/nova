@@ -23,13 +23,38 @@ window.DualLinkTable = {
     linkTreeDefaultExpandedKeys: { type: Array, default: function() { return [] } },
     linkTreeExpandedKeys:      { type: Array, default: function() { return [] } },
     linkTreeDisplayKeys:       { type: Array, default: function() { return [] } },
-    linkTreeSearchKeyword:     { type: String, default: '' }
+    linkTreeSearchKeyword:     { type: String, default: '' },
+    loadingStyle:              { type: String, default: 'spinner' }
   },
 
   emits: ['tree-search', 'tree-check', 'save-tree', 'link-add'],
 
   data: function() {
-    return { _dualReloading: false }
+    return {
+      _dualReloading: false,
+      _animateNext: false    // 切换子表时触发入场动画
+    }
+  },
+
+  watch: {
+    // novaName 变化说明是切换子表（非行点击），标记需要动画
+    novaName: function() {
+      this._animateNext = true
+    },
+    // 树加载完成 → 触发 slide-up 动画（仅切换子表时）
+    linkTreeLoading: function(val) {
+      if (!val && this._animateNext) {
+        this._animateNext = false
+        this.$nextTick(function() {
+          var el = this.$el && this.$el.querySelector('.link-tree-scroll')
+          if (el) {
+            el.classList.remove('dual-content-slideup')
+            void el.offsetWidth
+            el.classList.add('dual-content-slideup')
+          }
+        })
+      }
+    }
   },
 
   computed: {
@@ -91,11 +116,29 @@ window.DualLinkTable = {
   },
 
   template: `
-<div style="display:flex;flex-direction:column;overflow:hidden;height:100%">
-  <!-- 树模式加载中 -->
-  <div v-if="linkTreeLoading" style="padding:40px;text-align:center;color:#999">加载中...</div>
-  <!-- 树模式已加载 -->
-  <template v-else-if="linkTreeData">
+<div style="display:flex;flex-direction:column;overflow:hidden;height:100%;position:relative">
+  <!-- 树模式：加载时保留 DOM，用遮罩覆盖避免闪 -->
+  <template v-if="linkTreeData">
+    <!-- 加载特效：浮在树上方，无背景色，跟随用户设置的 loadingStyle -->
+    <div v-if="linkTreeLoading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;pointer-events:none">
+      <n-spin v-if="loadingStyle === 'spinner'" size="small" />
+      <div v-else-if="loadingStyle === 'wave'" class="custom-loading loading-wave" style="padding:0">
+        <span class="wave-bars">
+          <span class="bar b1"></span>
+          <span class="bar b2"></span>
+          <span class="bar b3"></span>
+          <span class="bar b4"></span>
+          <span class="bar b5"></span>
+        </span>
+      </div>
+      <div v-else-if="loadingStyle === 'dots'" class="custom-loading loading-dots" style="padding:0">
+        <span class="dots-wrap">
+          <span class="dot d1"></span>
+          <span class="dot d2"></span>
+          <span class="dot d3"></span>
+        </span>
+      </div>
+    </div>
     <!-- 搜索条件卡 -->
     <n-card v-if="linkTreeTargetConfig && linkTreeTargetConfig.treeSearchField"
       :bordered="false" class="page-card filter-card" style="flex-shrink:0;min-height:0">
@@ -143,8 +186,8 @@ window.DualLinkTable = {
       </div>
     </n-card>
   </template>
-  <!-- LINK 非树模式：内嵌中间表表格 -->
-  <nova-table v-else
+  <!-- LINK 非树模式 -->
+  <nova-table v-else-if="!linkTreeLoading"
     ref="innerTable"
     :key="embedKey"
     :dual-mode="true"
@@ -154,6 +197,8 @@ window.DualLinkTable = {
     :source-fields-prop="sourceFields"
     @link-add="onLinkAdd"
   />
+  <!-- 首次加载（树还没数据） -->
+  <div v-else style="padding:40px;text-align:center;color:#999">加载中…</div>
 </div>`
 }
 
