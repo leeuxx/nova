@@ -3831,18 +3831,14 @@ const NovaTable = {
             @preview-click="(f) => openPreview(f, tab.tapNovaName)"
           />
           <!-- appendagesTable 内容 -->
-          <template v-else-if="tab.tapType === 'appendagesTable'">
-            <div :style="'display:flex;flex-direction:column;overflow:hidden;height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px')">
-              <nova-table
-                v-if="showForm && visitedEmbTabs.has('emb_' + tab.tapNovaName)"
-                :key="'emb_' + tab.tapNovaName + '_' + (currentRow && currentRow[novaIdFieldName])"
-                :embedded-mode="true"
-                :nova-name-prop="tab.tapNovaName"
-                :source-nova-name-prop="novaName"
-                :source-fields-prop="buildEmbSourceFields(tab)"
-              />
-            </div>
-          </template>
+          <nova-appendages-table v-else-if="tab.tapType === 'appendagesTable'"
+            :app-nova-name="tab.tapNovaName"
+            :parent-nova-name="novaName"
+            :visible="showForm && visitedEmbTabs.has('emb_' + tab.tapNovaName)"
+            :embed-key="'emb_' + tab.tapNovaName + '_' + (currentRow && currentRow[novaIdFieldName])"
+            :is-emb-tab="isEmbTab"
+            :source-fields="buildEmbSourceFields(tab)"
+          />
 
           <!-- linkForm 内容（中间表嵌入式表格 / linkTree 树） -->
           <template v-else-if="tab.tapType === 'linkForm'">
