@@ -2043,18 +2043,7 @@ const NovaTable = {
       })
     },
     buildEmbSourceFields(tab) {
-      const appendageMap = this.appendageMap || {}
-      for (const k in appendageMap) {
-        if (appendageMap[k].referenceName === tab.tapNovaName) {
-          const appInfo = appendageMap[k]
-          const storageField = appInfo.storageField || 'id'
-          const pkVal = this.currentRow && this.currentRow[storageField]
-          if (!pkVal) return {}
-          // key 用父表 PK 字段名（storageField），后端结合 sourceNovaName 做关联过滤
-          return { [storageField]: String(pkVal) }
-        }
-      }
-      return {}
+      return window.NovaTableJQ_appendages.buildEmbSourceFields(this, tab)
     },
     buildPickerSourceFields(picker) {
       const fields = {}
