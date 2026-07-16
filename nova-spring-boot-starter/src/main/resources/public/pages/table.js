@@ -1178,29 +1178,10 @@ const NovaTable = {
       if (this.appendageFormData[n])   this.appendageFormData[n][f] = v
       if (this.appendageFormErrors[n]) delete this.appendageFormErrors[n][f]
     },
-    appChoice(n, f)    { return ((this.appendageTabBuild[n] || {}).choiceMap || {})[f] || null },
-    appFieldOpts(n, f) {
-      const c = this.appChoice(n, f.field)
-      if (!c || !c.values) return []
-      return c.values.map(v => ({ label: v.label, value: v.value }))
+    onAppFieldChange(appNovaName, { field, value }) {
+      this.appSetFd(appNovaName, field, value)
     },
-    appTagOpts(n, field) {
-      const t = ((this.appendageTabBuild[n] || {}).tagMap || {})[field]
-      if (!t || !t.tags) return []
-      return t.tags.map(v => ({ label: v, value: v }))
-    },
-    appDateType(n, field) {
-      const d = ((this.appendageTabBuild[n] || {}).dateMap || {})[field]
-      return (d && d.type === 'DATE_TIME') ? 'datetime' : 'date'
-    },
-    appNumInfo(n, field) { return ((this.appendageTabBuild[n] || {}).numberMap || {})[field] || {} },
-    appFieldVisible(n, f) {
-      if (!f.showByExpr) return true
-      var fd = this.appFd(n), refMap = (this.appBuild(n).referenceMap || {})
-      var evalFd = Object.assign({}, fd)
-      for (var k in refMap) { var rf = refMap[k] && refMap[k].referenceField; if (rf) evalFd[k] = fd[rf] !== undefined ? fd[rf] : null }
-      return evalShowExpr(f.showByExpr, evalFd)
-    },
+
     evalShowExprSafe(expr, fd) {
       if (!expr) return true
       return evalShowExpr(expr, fd)
@@ -3165,7 +3146,7 @@ const NovaTable = {
       } else if (tab.startsWith('app_')) {
         var appNovaName = tab.slice(4)
         if (this.appendageDetailsLoaded && this.appendageDetailsLoaded[appNovaName]) return
-        if (window.NovaTableJQ) window.NovaTableJQ.loadAppendageDetails(this.novaName, appNovaName)
+        if (window.NovaTableJQ_app) window.NovaTableJQ_app.loadAppendageDetails(this.novaName, appNovaName)
       }
     },
 
@@ -3836,109 +3817,19 @@ const NovaTable = {
           />
 
           <!-- appendageForm 内容 -->
-          <template v-else-if="tab.tapType === 'appendageForm'">
-          <div v-if="!(appBuild(tab.tapNovaName).editFields || []).length" style="text-align:center;padding:40px;color:#aaa;font-size:13px">加载中…</div>
-          <div v-else :style="'display:grid;gap:16px 24px;' + (appBuild(tab.tapNovaName).editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
-            <template v-for="f in (appBuild(tab.tapNovaName).editFields || [])" :key="f.field">
-              <n-divider v-if="f.type === 'DIVIDE' && appBuild(tab.tapNovaName).editLayout !== 'FULL_LINE'" v-show="appFieldVisible(tab.tapNovaName, f)" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
-              <div v-else-if="f.type === 'EMPTY' && appBuild(tab.tapNovaName).editLayout !== 'FULL_LINE'" v-show="appFieldVisible(tab.tapNovaName, f)"></div>
-              <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && !(f.type === 'REFERENCE' && (appBuild(tab.tapNovaName).referenceMap || {})[f.field] && (appBuild(tab.tapNovaName).referenceMap || {})[f.field].referenceName === novaName)"
-                v-show="appFieldVisible(tab.tapNovaName, f)"
-                :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
-                <span class="edit-form-label">
-                  <span v-if="f.notNull && !isReadonly(f)" class="form-label-required">*</span>{{ f.title }}
-                  <n-tooltip v-if="f.desc" trigger="hover" placement="top"><template #trigger><span class="form-label-help"><iconify-icon icon="material-symbols:help-outline" style="font-size:15px"></iconify-icon></span></template>{{ f.desc }}</n-tooltip>
-                </span>
-                <n-checkbox-group v-if="f.type === 'CHOICE' && appChoice(tab.tapNovaName,f.field) && appChoice(tab.tapNovaName,f.field).showType === 'RADIO' && appChoice(tab.tapNovaName,f.field).selectType === 'MULTI'"
-                  :value="appFd(tab.tapNovaName)[f.field]" :disabled="isReadonly(f)"
-                  @update:value="appSetFd(tab.tapNovaName,f.field,$event)">
-                  <n-space><n-checkbox v-for="o in appFieldOpts(tab.tapNovaName,f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
-                </n-checkbox-group>
-                <n-radio-group v-else-if="f.type === 'CHOICE' && appChoice(tab.tapNovaName,f.field) && appChoice(tab.tapNovaName,f.field).showType === 'RADIO'"
-                  :value="appFd(tab.tapNovaName)[f.field]" :disabled="isReadonly(f)"
-                  @update:value="appSetFd(tab.tapNovaName,f.field,$event)">
-                  <n-space><n-radio v-for="o in appFieldOpts(tab.tapNovaName,f)" :key="o.value" :value="o.value" :label="o.label" /></n-radio-group>
-                <n-select v-else-if="f.type === 'CHOICE' && appChoice(tab.tapNovaName,f.field) && appChoice(tab.tapNovaName,f.field).selectType === 'MULTI'"
-                  :value="appFd(tab.tapNovaName)[f.field]" :options="appFieldOpts(tab.tapNovaName,f)"
-                  :placeholder="'请选择'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
-                  :disabled="isReadonly(f)" multiple clearable @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
-                <n-select v-else-if="f.type === 'CHOICE'"
-                  :value="appFd(tab.tapNovaName)[f.field]" :options="appFieldOpts(tab.tapNovaName,f)"
-                  :placeholder="'请选择'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
-                  :disabled="isReadonly(f)" clearable @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
-                <n-select v-else-if="f.type === 'BOOLEAN'"
-                  :value="appFd(tab.tapNovaName)[f.field]" :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"
-                  :placeholder="'请选择'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
-                  :disabled="isReadonly(f)" clearable @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
-                <n-input-number v-else-if="f.type === 'NUMBER'"
-                  :value="appFd(tab.tapNovaName)[f.field]"
-                  :placeholder="'请输入'+f.title" :show-button="false" style="width:100%"
-                  :min="appNumInfo(tab.tapNovaName,f.field).min" :max="appNumInfo(tab.tapNovaName,f.field).max"
-                  :precision="appNumInfo(tab.tapNovaName,f.field).type==='DECIMAL'?(appNumInfo(tab.tapNovaName,f.field).decimal||2):0"
-                  :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
-                  :disabled="isReadonly(f)" clearable @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
-                <n-date-picker v-else-if="f.type === 'DATE'"
-                  :value="appFd(tab.tapNovaName)[f.field]" :type="appDateType(tab.tapNovaName,f.field)"
-                  :placeholder="'请选择'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
-                  :disabled="isReadonly(f)" clearable style="width:100%"
-                  @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
-                <n-select v-else-if="f.type === 'TAG'"
-                  :value="appFd(tab.tapNovaName)[f.field]" :options="appTagOpts(tab.tapNovaName,f.field)"
-                  :placeholder="'请输入或选择'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
-                  :disabled="isReadonly(f)" filterable multiple clearable
-                  @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
-                <n-input v-else-if="f.type === 'TEXTAREA'"
-                  :value="appFd(tab.tapNovaName)[f.field]" type="textarea" :autosize="{minRows:3}"
-                  :placeholder="'请输入'+f.title" :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
-                  :disabled="isReadonly(f)" @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
-                <div v-else-if="f.type === 'REFERENCE' && (appBuild(tab.tapNovaName).referenceMap||{})[f.field]"
-                  @click="!isReadonly(f) && openAppReferenceModal(tab.tapNovaName, f)" style="cursor:pointer">
-                  <n-input
-                    :value="appFd(tab.tapNovaName)[f.field+'_display'] || appFd(tab.tapNovaName)[f.field]"
-                    :placeholder="'请选择'+f.title" readonly clearable
-                    :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
-                    :disabled="isReadonly(f)"
-                    @clear.stop="appSetFd(tab.tapNovaName,f.field,null);appSetFd(tab.tapNovaName,f.field+'_display','')">
-                    <template #suffix><iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon></template>
-                  </n-input>
-                </div>
-                <div v-else-if="f.type === 'ATTACHMENT'" class="attachment-field"
-                  @mouseenter="setAttachmentDropdown(tab.tapNovaName+'__'+f.field)" @mouseleave="clearAttachmentDropdown">
-                  <div class="attachment-btn">
-                    <iconify-icon icon="mdi:paperclip" style="font-size:13px"></iconify-icon>附件管理
-                    <iconify-icon icon="mdi:chevron-down" :style="'font-size:12px;transition:transform .2s ease;transform:' + (attachmentDropdownKey === tab.tapNovaName+'__'+f.field ? 'rotate(180deg)' : 'rotate(0deg)')"></iconify-icon>
-                  </div>
-                  <transition name="dropdown-fade">
-                    <div v-if="attachmentDropdownKey === tab.tapNovaName+'__'+f.field" :class="'attachment-dropdown' + ((appBuild(tab.tapNovaName).attachmentMap||{})[f.field] && (appBuild(tab.tapNovaName).attachmentMap||{})[f.field].showType === 'DOWN' ? ' down' : '')">
-                      <div class="attachment-dropdown-inner">
-                        <label v-if="!isReadonly(f) && (!(appBuild(tab.tapNovaName).attachmentMap||{})[f.field] || !(appBuild(tab.tapNovaName).attachmentMap||{})[f.field].maxLimit || (appFd(tab.tapNovaName)[f.field]||[]).length < (appBuild(tab.tapNovaName).attachmentMap||{})[f.field].maxLimit)"
-                          class="attachment-dropdown-item" :for="'upload-app-'+tab.tapNovaName+'-'+f.field">
-                          <iconify-icon icon="mdi:upload" style="font-size:13px"></iconify-icon>
-                          上传文件{{ (appBuild(tab.tapNovaName).attachmentMap||{})[f.field] && (appBuild(tab.tapNovaName).attachmentMap||{})[f.field].maxLimit ? '（共'+((appBuild(tab.tapNovaName).attachmentMap||{})[f.field].maxLimit-(appFd(tab.tapNovaName)[f.field]||[]).length)+'个）' : '' }}
-                          <input :id="'upload-app-'+tab.tapNovaName+'-'+f.field" type="file" style="display:none"
-                            :multiple="(appBuild(tab.tapNovaName).attachmentMap||{})[f.field] && (appBuild(tab.tapNovaName).attachmentMap||{})[f.field].maxLimit > 1"
-                            @change="handleAttachmentChange(f, $event, tab.tapNovaName)" />
-                        </label>
-                        <div v-if="(appFd(tab.tapNovaName)[f.field]||[]).length > 0" class="attachment-dropdown-item" @click="openPreview(f, tab.tapNovaName)">
-                          <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>查看文件（共{{ (appFd(tab.tapNovaName)[f.field]||[]).length }}个）
-                        </div>
-                        <div v-else class="attachment-dropdown-item attachment-disabled">
-                          <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>查看文件（共0个）
-                        </div>
-                      </div>
-                    </div>
-                  </transition>
-                </div>
-                <n-input v-else
-                  :value="appFd(tab.tapNovaName)[f.field]" :placeholder="'请输入'+f.title"
-                  :status="appErrs(tab.tapNovaName)[f.field]?'error':undefined"
-                  :disabled="isReadonly(f)" clearable @update:value="appSetFd(tab.tapNovaName,f.field,$event)" />
-                <span v-if="appErrs(tab.tapNovaName)[f.field]" class="form-error-tip">{{ appErrs(tab.tapNovaName)[f.field] }}</span>
-              </div>
-            </template>
-          </div>
-          </template>
-
+          <nova-app-form v-else-if="tab.tapType === 'appendageForm'"
+            :app-nova-name="tab.tapNovaName"
+            :parent-nova-name="novaName"
+            :form-data="appendageFormData[tab.tapNovaName] || {}"
+            :form-errors="appendageFormErrors[tab.tapNovaName] || {}"
+            :build-data="appendageTabBuild[tab.tapNovaName] || {}"
+            :form-mode="formMode"
+            :readonly="readonly"
+            @field-change="onAppFieldChange(tab.tapNovaName, $event)"
+            @reference-click="(f) => openAppReferenceModal(tab.tapNovaName, f)"
+            @attachment-change="(f, e) => handleAttachmentChange(f, e, tab.tapNovaName)"
+            @preview-click="(f) => openPreview(f, tab.tapNovaName)"
+          />
           <!-- appendagesTable 内容 -->
           <template v-else-if="tab.tapType === 'appendagesTable'">
             <div :style="'display:flex;flex-direction:column;overflow:hidden;height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px')">
