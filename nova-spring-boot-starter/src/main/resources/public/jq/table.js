@@ -829,7 +829,7 @@ window.NovaTableJQ = (function ($) {
     if (appResult.firstErrAppTab) { target.formTab = 'app_' + appResult.firstErrAppTab; return }
 
     // 组装附属表单数据
-    var appendageFormInfo = NovaAppendageUtils.buildAppendageFormInfo(target)
+    var appendageFormInfo = buildAppendageFormInfo(target)
     if (target.currentRow) {
       // 编辑
       var novaName = target.novaName
