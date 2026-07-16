@@ -343,48 +343,6 @@ window.NovaTableJQ = (function ($) {
     viewVm.currentRow = source
   }
 
-  // ── 点击 referenceForm tab：立即展示组件，/build 与 /details 并行 ──
-  function loadReferenceDetails(novaName, refNovaName) {
-    var target = window.vmMap && window.vmMap[novaName]
-    if (!target) return
-    var referenceMap = target.referenceMap || {}
-    var storageVal = null
-    for (var field in referenceMap) {
-      if ((referenceMap[field] || {}).referenceName === refNovaName) {
-        storageVal = target.formData && target.formData[field]
-        if (!storageVal && target._rawDetailRow) {
-          var rawNested = target._rawDetailRow[field]
-          var sf = (referenceMap[field] || {}).storageField || 'id'
-          if (rawNested && typeof rawNested === 'object') storageVal = rawNested[sf]
-        }
-        break
-      }
-    }
-    // 立即展示 nova-table，触发 /build
-    var nd = Object.assign({}, target.refTabData)
-    nd[refNovaName] = {}
-    target.refTabData = nd
-    if (!storageVal) return
-    // 初始化并行协调状态
-    target._refCoord = target._refCoord || {}
-    target._refCoord[refNovaName] = { data: null, buildVmKey: null }
-    $.ajax({
-      url: '/nova/table/details', method: 'POST', contentType: 'application/json',
-      data: JSON.stringify({ novaName: refNovaName, storageFieldValue: String(storageVal) }),
-      success: function(resp) {
-        var t = window.vmMap && window.vmMap[novaName]
-        if (!t || !t._refCoord || !t._refCoord[refNovaName]) return
-        var data = (resp.code === 200 && resp.data) ? resp.data : {}
-        t._refCoord[refNovaName].data = data
-        var buildVmKey = t._refCoord[refNovaName].buildVmKey
-        if (buildVmKey) {
-          var viewVm = window.vmMap && window.vmMap[buildVmKey]
-          if (viewVm) fillViewFormData(viewVm, data)
-        }
-      }
-    })
-  }
-
   // ── 懒加载 appendage sub-build（首次打开弹窗时调用）──────────────
   function loadAppendageDetails(novaName, appNovaName, vmKey) {
     var key = vmKey || novaName
@@ -829,14 +787,12 @@ window.NovaTableJQ = (function ($) {
       target._sourceFields || {}
     )
     target.currentRow              = null
-    target._rawDetailRow           = null
+    target.rawDetailRow           = null
     // appendageDetailsLoaded 需清空：让切换 tab 时能按需重新请求 /details
     target.appendageDetailsLoaded  = {}
     target.formMode                = 'add'
     target.formData   = formData
     target.formErrors = {}
-    target.refTabData = {}
-    target._refCoord  = {}
     var appFds = {}
     var appBuild = target.appendageTabBuild || {}
     ;(target.editAppendageTabs || []).forEach(function(appTab) {
@@ -892,14 +848,12 @@ window.NovaTableJQ = (function ($) {
         )
 
         t.currentRow            = $.extend({}, source)
-        t._rawDetailRow         = detailRow
+        t.rawDetailRow         = detailRow
         // appendageDetailsLoaded 需清空：让切换 tab 时能按需重新请求 /details
         t.appendageDetailsLoaded = {}
         t.formMode              = 'edit'
         t.formData   = $.extend({}, source)
         t.formErrors = {}
-        t.refTabData = {}
-        t._refCoord  = {}
         t.linkFormData     = {}
         t.linkTabBuild     = {}
         // 保留双表面板状态（__dual__）
@@ -1181,7 +1135,7 @@ window.NovaTableJQ = (function ($) {
     })
   }
 
-  // ── view 模式初始化：/build，数据由 _refCoord 或 rawRow 提供 ───────
+  // ── view 模式初始化：/build，直接填充 rawRow ────────────────────
   function onViewMounted(novaName, vmKey, rawRow, parentNovaName) {
     if (!novaName || !vmKey) return
     $.ajax({
@@ -1205,18 +1159,8 @@ window.NovaTableJQ = (function ($) {
         target.editFields = fields
         if (d.novaIdFieldName) target.novaIdFieldName = d.novaIdFieldName
         target.formMode = 'edit'
-        // 尝试从并行协调状态获取 /details 数据
-        var parentVm = parentNovaName && window.vmMap && window.vmMap[parentNovaName]
-        var coord = parentVm && parentVm._refCoord && parentVm._refCoord[novaName]
-        if (coord) {
-          if (coord.data !== null) {
-            fillViewFormData(target, coord.data)
-          } else {
-            coord.buildVmKey = vmKey  // /details 还未回来，登记等候
-          }
-        } else {
-          fillViewFormData(target, rawRow)  // 非 tab 场景直接用 rawRow
-        }
+        // 直接填充 viewRow 数据（referenceForm 已由 NovaRefForm 子组件自行加载）
+        fillViewFormData(target, rawRow)
       }
     })
   }
@@ -1350,7 +1294,7 @@ window.NovaTableJQ = (function ($) {
     handleBatchDelete, handleFormSubmit,
     loadData, onPageChange, onPageSizeChange, onSortChange,
     onPickerMounted, onViewMounted, onEmbeddedMounted,
-    loadReferenceDetails, loadAppendageDetails,
+    loadAppendageDetails,
     buildLinkTabs, handleLinkAdd, loadTreeData
   }
 

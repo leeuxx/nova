@@ -137,7 +137,8 @@ public class TestDemoView {
                     title = "部门信息",
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(
-                            referenceField = "demo2Id"
+                            referenceField = "demo2Id",
+                            tapShow = true
                     ),
                     search = @Search(vague = true),
                     notNull = true
@@ -209,7 +210,8 @@ public class TestDemoView {
                     title = "上级信息",
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(
-                            referenceField = "testDemoView"
+                            referenceField = "testDemoView",
+                            tapShow = true
                     ),
                     search = @Search
             )

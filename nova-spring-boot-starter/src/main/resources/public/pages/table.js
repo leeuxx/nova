@@ -220,9 +220,9 @@ const NovaTable = {
       formData:       {},
       editFields:        [],
       editReferenceTabs:   [],
-      refTabData:          {},
       editAppendageTabs:   [],
       editExtraTabs:       [],
+      rawDetailRow:       null,
       appendageTabBuild:   {},
       appendageFormData:   {},
       appendageFormErrors: {},
@@ -829,8 +829,6 @@ const NovaTable = {
         this.appendageTabBuild      = {}
         this.appendageFormData      = {}
         this.appendageFormErrors    = {}
-        this.refTabData          = {}
-        this._refCoord           = {}
         this.linkFormData            = {}
         this.linkTabBuild           = {}
         // 重置关联树状态，保留双表面板（__dual__）
@@ -3164,36 +3162,13 @@ const NovaTable = {
       if (tab.startsWith('emb_') || tab.startsWith('link_')) {
         this.visitedEmbTabs = new Set([...this.visitedEmbTabs, tab])
         // linkForm 的 linkTarget 等元数据在子 <nova-table> 自行 /build 后由 syncLinkTabBuild 同步
-      } else if (tab.startsWith('ref_')) {
-        var refNovaName = tab.slice(4)
-        if (this.refTabData[refNovaName] != null) return
-        if (window.NovaTableJQ) window.NovaTableJQ.loadReferenceDetails(this.novaName, refNovaName)
       } else if (tab.startsWith('app_')) {
         var appNovaName = tab.slice(4)
         if (this.appendageDetailsLoaded && this.appendageDetailsLoaded[appNovaName]) return
         if (window.NovaTableJQ) window.NovaTableJQ.loadAppendageDetails(this.novaName, appNovaName)
       }
     },
-    refTabDisplayValue(novaName, f) {
-      const maps = this.refTabMaps[novaName] || {}
-      const data = this.refTabData[novaName] || {}
-      const val  = data[f.field]
-      if (val === null || val === undefined || val === '') return ''
-      const choiceInfo = maps.choiceMap && maps.choiceMap[f.field]
-      if (choiceInfo) {
-        const vals = choiceInfo.selectType === 'MULTI' ? String(val).split(',') : [String(val)]
-        return vals.map(v => { const o = (choiceInfo.values || []).find(x => x.value === v); return o ? o.label : v }).join('、')
-      }
-      if (f.type === 'DATE') {
-        const ts = Number(val); if (!ts || isNaN(ts)) return String(val)
-        const type = maps.dateMap && maps.dateMap[f.field] && maps.dateMap[f.field].type
-        return this.formatDateTs(ts, type)
-      }
-      if (f.type === 'BOOLEAN') return (val === 'true' || val === true) ? '是' : '否'
-      if (f.type === 'TAG')  return Array.isArray(val) ? val.join('、') : String(val).split(',').filter(Boolean).join('、')
-      if (f.type === 'REFERENCE') return String(data[f.field + '_display'] || val)
-      return String(val)
-    },
+
     formatDateTs(ts, type) {
       const d = new Date(ts)
       const p = n => String(n).padStart(2, '0')
@@ -3853,12 +3828,12 @@ const NovaTable = {
           <div :key="tab.tapNovaName" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
 
           <!-- referenceForm 内容 -->
-          <div v-if="tab.tapType === 'referenceForm' && refTabData[tab.tapNovaName] == null" style="text-align:center;padding:40px;color:#aaa;font-size:13px">加载中…</div>
-          <nova-table v-else-if="tab.tapType === 'referenceForm'"
-            :view-mode="true"
-            :nova-name-prop="tab.tapNovaName"
-            :source-nova-name-prop="novaName"
-            :view-row="refTabData[tab.tapNovaName]" />
+          <nova-ref-form v-if="tab.tapType === 'referenceForm'"
+            :ref-nova-name="tab.tapNovaName"
+            :source-form-data="formData"
+            :source-reference-map="referenceMap"
+            :source-raw-detail-row="rawDetailRow"
+          />
 
           <!-- appendageForm 内容 -->
           <template v-else-if="tab.tapType === 'appendageForm'">
