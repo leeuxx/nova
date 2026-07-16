@@ -830,8 +830,7 @@ const NovaTable = {
         this.appendageFormData      = {}
         this.appendageFormErrors    = {}
         this.linkFormData            = {}
-        this.linkTabBuild           = {}
-        // 重置关联树状态，保留双表面板（__dual__）
+        // 保留双表面板状态和所有子表构建数据（双表视图需要 linkTabBuild[novaName]，不是 linkTabBuild['__dual__']）
         ;['linkTreeData','linkTreeFilteredData','linkTreeDefaultExpandedKeys',
           'linkTreeExpandedKeys','linkTreeCheckedKeys','linkTreeDisplayKeys',
           'linkTreeLoading','linkTreeSearchKeyword','linkTreeNodeMap'].forEach(function(p) {
@@ -839,6 +838,17 @@ const NovaTable = {
           this[p] = {}
           if (d !== undefined) this[p]['__dual__'] = d
         }, this)
+        // 保存所有子表构建数据（key 不是 '__dual__'）
+        var savedSubBuilds = {}
+        for (var key in this.linkTabBuild) {
+          if (key !== '__dual__') savedSubBuilds[key] = this.linkTabBuild[key]
+        }
+        // 清空 linkTabBuild
+        this.linkTabBuild = {}
+        // 恢复子表构建数据
+        for (var key in savedSubBuilds) {
+          this.linkTabBuild[key] = savedSubBuilds[key]
+        }
       } else {
         // 弹窗打开：置标记屏蔽 n-tabs 因 value 同步触发的 onFormTabChange
         this.openingForm = true

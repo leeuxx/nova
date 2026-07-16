@@ -694,8 +694,7 @@ window.NovaTableJQ = (function ($) {
         t.formData   = $.extend({}, source)
         t.formErrors = {}
         t.linkFormData     = {}
-        t.linkTabBuild     = {}
-        // 保留双表面板状态（__dual__）
+        // 保留双表面板状态和所有子表构建数据（双表视图需要 linkTabBuild[novaName]，不是 linkTabBuild['__dual__']）
         ;['linkTreeData','linkTreeFilteredData','linkTreeDefaultExpandedKeys',
           'linkTreeExpandedKeys','linkTreeCheckedKeys','linkTreeDisplayKeys',
           'linkTreeLoading','linkTreeSearchKeyword','linkTreeNodeMap'].forEach(function(p) {
@@ -703,6 +702,17 @@ window.NovaTableJQ = (function ($) {
           t[p] = {}
           if (d !== undefined) t[p]['__dual__'] = d
         })
+        // 保存所有子表构建数据（key 不是 '__dual__'）
+        var savedSubBuilds = {}
+        for (var key in t.linkTabBuild) {
+          if (key !== '__dual__') savedSubBuilds[key] = t.linkTabBuild[key]
+        }
+        // 清空 linkTabBuild
+        t.linkTabBuild = {}
+        // 恢复子表构建数据
+        for (var key in savedSubBuilds) {
+          t.linkTabBuild[key] = savedSubBuilds[key]
+        }
         t.formTab    = 'form'
         // 立即：当前 nova /details + APPENDAGE /build + APPENDAGE /details
         window.NovaTableJQ_app.buildAppendageTabs(novaName, detailRow, vmKey)
