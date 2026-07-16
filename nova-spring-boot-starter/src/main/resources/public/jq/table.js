@@ -823,24 +823,11 @@ window.NovaTableJQ = (function ($) {
   function handleAdd(vmKey) {
     var target = vmKey ? (window.vmMap && window.vmMap[vmKey]) : vm()
     if (!target) return
-    var formData = {}
-    var choiceMap = target.choiceMap || {}
-    var editFields = target.editFields || []
-    editFields.forEach(function (f) {
-      var choiceInfo = choiceMap[f.field]
-      var isMulti = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'MULTI'
-      var isSingle = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE'
-      var isDate   = f.type === 'DATE'
-      formData[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (isSingle || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
-      if (f.type === 'REFERENCE') {
-        formData[f.field + '_display'] = ''
-      }
-    })
-    // embedded 模式：预注入外键值
-    var sourceFields = target._sourceFields || {}
-    Object.keys(sourceFields).forEach(function(sk) {
-      formData[sk] = sourceFields[sk]
-    })
+    var formData = window.NovaTableJQ_form.initFormData(
+      target.editFields || [],
+      target.choiceMap || {},
+      target._sourceFields || {}
+    )
     target.currentRow              = null
     target._rawDetailRow           = null
     // appendageDetailsLoaded 需清空：让切换 tab 时能按需重新请求 /details
@@ -896,37 +883,13 @@ window.NovaTableJQ = (function ($) {
         var detailRow = resp.data
         if (!detailRow) return
 
-        var choiceMap    = t.choiceMap    || {}
-        var referenceMap = t.referenceMap || {}
-        var source = {}
-        source[novaIdField] = pkVal
-
-        ;(t.editFields || []).forEach(function(f) {
-          var val = detailRow[f.field]
-          var choice = choiceMap[f.field]
-          if (choice && choice.selectType === 'MULTI') {
-            source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
-          } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
-            source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
-          } else if (f.type === 'DATE') {
-            var ts = val !== null && val !== undefined ? Number(val) : null
-            source[f.field] = (ts && !isNaN(ts)) ? ts : null
-          } else if (f.type === 'BOOLEAN') {
-            source[f.field] = (val === null || val === undefined) ? null : String(val)
-          } else if (f.type === 'NUMBER') {
-            source[f.field] = (val === null || val === undefined || val === '') ? null : Number(val)
-          } else if (f.type === 'REFERENCE') {
-            var refInfo = referenceMap[f.field] || {}
-            var sf = refInfo.storageField || 'id'
-            source[f.field] = (val && typeof val === 'object')
-              ? (val[sf] !== undefined && val[sf] !== null ? String(val[sf]) : null)
-              : (val !== null && val !== undefined && val !== '' ? String(val) : null)
-            source[f.field + '_display'] = (val && typeof val === 'object' && refInfo.displayField)
-              ? (val[refInfo.displayField] != null ? String(val[refInfo.displayField]) : '') : ''
-          } else {
-            source[f.field] = (val === null || val === undefined) ? '' : val
-          }
-        })
+        var source = window.NovaTableJQ_form.mapDetailToFormData(
+          detailRow,
+          t.editFields || [],
+          t.choiceMap || {},
+          t.referenceMap || {},
+          { [novaIdField]: pkVal }
+        )
 
         t.currentRow            = $.extend({}, source)
         t._rawDetailRow         = detailRow
@@ -1037,15 +1000,7 @@ window.NovaTableJQ = (function ($) {
     var target     = vmKey ? (window.vmMap && window.vmMap[vmKey]) : vm()
     var formData   = target.formData
     var editFields = target.editFields || []
-    var visibleSet = new Set((target.visibleEditFields || []).filter(function(v) { return v.visible }).map(function(v) { return v.field.field }))
-    var errors     = {}
-    editFields.forEach(function (f) {
-      if (f.type === 'DIVIDE' || f.type === 'EMPTY' || !f.notNull) return
-      if (!visibleSet.has(f.field)) return
-      var val = formData[f.field]
-      var empty = val === null || val === undefined || val === '' || (Array.isArray(val) && val.length === 0)
-      if (empty) errors[f.field] = f.title + '不能为空'
-    })
+    var errors = window.NovaTableJQ_form.validateThisForm(editFields, target.visibleEditFields || [], formData)
     target.formErrors = errors
     if (Object.keys(errors).length > 0) { target.formTab = 'form'; return }
 
@@ -1100,30 +1055,10 @@ window.NovaTableJQ = (function ($) {
       var novaName = target.novaName
       var novaIdField = target.novaIdFieldName
       var pkValue = String(target.currentRow[novaIdField])
-      var formInfo = editFields.filter(function (f) { return f.type !== 'DIVIDE' && f.type !== 'EMPTY' }).map(function (f) {
-        var val = formData[f.field]
-        var strVal
-        if (val === null || val === undefined || val === '') {
-          strVal = ''
-        } else if (Array.isArray(val)) {
-          strVal = val.join(',')
-        } else {
-          strVal = String(val)
-        }
-        var item = { field: f.field, value: strVal, type: f.type }
-        if (f.type === 'REFERENCE') {
-          var refInfo = (target.referenceMap && target.referenceMap[f.field]) || {}
-          if (refInfo.referenceField) item.reference = { field: refInfo.referenceField }
-        }
-        return item
-      })
-      formInfo.unshift({ field: novaIdField, value: pkValue, type: '' })
-      // embedded 模式：注入预置外键字段（按 REFERENCE 格式）
-      var _sf = target._sourceRefFields || []
-      _sf.forEach(function(rf) {
-        if (!formInfo.some(function(i) { return i.field === rf.field }) && rf.value != null && rf.value !== '') {
-          formInfo.push({ field: rf.field, value: String(rf.value), type: 'REFERENCE', reference: { field: rf.referenceField } })
-        }
+      var formInfo = window.NovaTableJQ_form.buildFormInfo(editFields, formData, target.referenceMap, {
+        currentRow: target.currentRow,
+        novaIdField: novaIdField,
+        sourceRefFields: target._sourceRefFields || []
       })
       $.ajax({
         url:         '/nova/table/update',
@@ -1145,29 +1080,9 @@ window.NovaTableJQ = (function ($) {
     } else {
       // 新增
       var novaName = target.novaName
-      var formInfo = editFields.filter(function (f) { return f.type !== 'DIVIDE' && f.type !== 'EMPTY' }).map(function (f) {
-        var val = formData[f.field]
-        var strVal
-        if (val === null || val === undefined || val === '') {
-          strVal = ''
-        } else if (Array.isArray(val)) {
-          strVal = val.join(',')
-        } else {
-          strVal = String(val)
-        }
-        var item = { field: f.field, value: strVal, type: f.type }
-        if (f.type === 'REFERENCE') {
-          var refInfo = (target.referenceMap && target.referenceMap[f.field]) || {}
-          if (refInfo.referenceField) item.reference = { field: refInfo.referenceField }
-        }
-        return item
-      }).filter(function (item) { return item.value !== '' })
-      // embedded 模式：注入预置外键字段（按 REFERENCE 格式）
-      var _sf2 = target._sourceRefFields || []
-      _sf2.forEach(function(rf) {
-        if (!formInfo.some(function(i) { return i.field === rf.field }) && rf.value != null && rf.value !== '') {
-          formInfo.push({ field: rf.field, value: String(rf.value), type: 'REFERENCE', reference: { field: rf.referenceField } })
-        }
+      var formInfo = window.NovaTableJQ_form.buildFormInfo(editFields, formData, target.referenceMap, {
+        skipEmpty: true,
+        sourceRefFields: target._sourceRefFields || []
       })
       $.ajax({
         url:         '/nova/table/add',

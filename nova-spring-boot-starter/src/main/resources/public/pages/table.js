@@ -153,6 +153,7 @@ window.evalShowExpr = evalShowExpr
 
 const NovaTable = {
   name: 'NovaTable',
+  components: { NovaFormThis: window.NovaFormThis },
 
   props: {
     pickerMode:         { type: Boolean, default: false },
@@ -1054,11 +1055,7 @@ const NovaTable = {
       if (!choice || !choice.values) return []
       return choice.values.map(v => ({ label: v.label, value: v.value }))
     },
-    editFieldOptions(f) {
-      const choice = this.choiceMap[f.field]
-      if (!choice || !choice.values) return []
-      return choice.values.map(v => ({ label: v.label, value: v.value }))
-    },
+    // editFieldOptions moved to NovaFormThis child component
     buildFoldedOptions(buttons, disabledFn) {
       var self = this
       var ungrouped = []
@@ -2008,6 +2005,16 @@ const NovaTable = {
     clearAttachmentDropdown() {
       this.attachmentDropdownKey = null
     },
+    onFormFieldChange({ field, value }) {
+      this.formData[field] = value
+      if (value === null && this.referenceMap && this.referenceMap[field]) {
+        this.formData[field + '_display'] = ''
+        var refInfo = this.referenceMap[field]
+        if (refInfo && refInfo.referenceField) this.formData[refInfo.referenceField] = null
+      }
+      delete this.formErrors[field]
+    },
+
     openReferenceModal(f) {
       if (this.isReadonly(f)) return
       const refInfo = this.referenceMap[f.field]
@@ -3137,13 +3144,7 @@ const NovaTable = {
       this.formData[f.field + '_display'] = option ? option.label : ''
       delete this.formErrors[f.field]
     },
-    referenceDisplayLabel(field) {
-      const displayVal = this.formData[field + '_display']
-      if (displayVal !== null && displayVal !== undefined && displayVal !== '') return String(displayVal)
-      const val = this.formData[field]
-      if (val === null || val === undefined || val === '') return ''
-      return String(val)
-    },
+    // referenceDisplayLabel moved to NovaFormThis child component
     selectRow(row) {
       this.selectedRowKey = row[this.novaIdFieldName]
       // 平铺 REFERENCE 字段的外键值，使 APPENDAGE filter 能通过 referenceField 名称直接取值
@@ -3822,183 +3823,25 @@ const NovaTable = {
           <!-- Tab 1: 表单 -->
           <n-tab-pane name="form" style="padding:16px 0 20px 0">
             <template #tab><iconify-icon icon="mdi:pencil-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>基本信息<span v-if="tabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('form') }}</span><span v-else-if="tabTotalRequired('form') > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template>
-            <div :key="'tab_' + formTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
-            <div :style="'display:grid;gap:16px 24px;' + (editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
-          <template v-for="{field: f, visible: _vis} in visibleEditFields" :key="f.field">
-            <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" v-show="_vis" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
-            <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'" v-show="_vis"></div>
-            <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY'" v-show="_vis" :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')"
-                 :aria-hidden="!_vis ? 'true' : undefined">
-              <span class="edit-form-label">
-                <span v-if="f.notNull && !isReadonly(f)" class="form-label-required">*</span>{{ f.title }}
-                <n-tooltip v-if="f.desc" trigger="hover" placement="top">
-                  <template #trigger>
-                    <span class="form-label-help">
-                      <iconify-icon icon="material-symbols:help-outline" style="font-size:15px"></iconify-icon>
-                    </span>
-                  </template>
-                  {{ f.desc }}
-                </n-tooltip>
-              </span>
-              <n-checkbox-group
-                v-if="f.type === 'CHOICE' && choiceMap[f.field] && choiceMap[f.field].showType === 'RADIO' && choiceMap[f.field].selectType === 'MULTI'"
-                v-model:value="formData[f.field]"
-                :disabled="isReadonly(f)"
-                @update:value="delete formErrors[f.field]"
-              >
-                <n-space><n-checkbox v-for="o in editFieldOptions(f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
-              </n-checkbox-group>
-              <n-radio-group
-                v-else-if="f.type === 'CHOICE' && choiceMap[f.field] && choiceMap[f.field].showType === 'RADIO'"
-                v-model:value="formData[f.field]"
-                :disabled="isReadonly(f)"
-                @update:value="delete formErrors[f.field]"
-              >
-                <n-space><n-radio v-for="o in editFieldOptions(f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
-              </n-radio-group>
-              <n-select
-                v-else-if="f.type === 'CHOICE' && choiceMap[f.field] && choiceMap[f.field].selectType === 'MULTI'"
-                v-model:value="formData[f.field]"
-                :options="editFieldOptions(f)"
-                :placeholder="'请选择' + f.title"
-                :status="formErrors[f.field] ? 'error' : undefined"
-                :disabled="isReadonly(f)"
-                multiple clearable
-                @update:value="delete formErrors[f.field]"
-              />
-              <n-select
-                v-else-if="f.type === 'CHOICE'"
-                v-model:value="formData[f.field]"
-                :options="editFieldOptions(f)"
-                :placeholder="'请选择' + f.title"
-                :status="formErrors[f.field] ? 'error' : undefined"
-                :disabled="isReadonly(f)"
-                clearable
-                @update:value="delete formErrors[f.field]"
-              />
-              <n-select
-                v-else-if="f.type === 'BOOLEAN'"
-                v-model:value="formData[f.field]"
-                :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"
-                :placeholder="'请选择' + f.title"
-                :status="formErrors[f.field] ? 'error' : undefined"
-                :disabled="isReadonly(f)"
-                clearable
-                @update:value="delete formErrors[f.field]"
-              />
-              <n-input-number
-                v-else-if="f.type === 'NUMBER'"
-                v-model:value="formData[f.field]"
-                :placeholder="'请输入' + f.title"
-                :min="numberMap[f.field] && numberMap[f.field].min"
-                :max="numberMap[f.field] && numberMap[f.field].max"
-                :precision="numberMap[f.field] && numberMap[f.field].type === 'DECIMAL' ? (numberMap[f.field].decimal || 2) : 0"
-                :show-button="false"
-                :status="formErrors[f.field] ? 'error' : undefined"
-                :disabled="isReadonly(f)"
-                clearable style="width:100%"
-                @update:value="delete formErrors[f.field]"
-              />
-              <n-date-picker
-                v-else-if="f.type === 'DATE'"
-                v-model:value="formData[f.field]"
-                :type="datePickerType(f.field, false, true)"
-                :is-date-disabled="datePickerDisabled(f.field, true)"
-                :placeholder="'请选择' + f.title"
-                :status="formErrors[f.field] ? 'error' : undefined"
-                :disabled="isReadonly(f)"
-                clearable style="width:100%"
-                @update:value="delete formErrors[f.field]"
-              />
-              <n-select
-                v-else-if="f.type === 'TAG'"
-                v-model:value="formData[f.field]"
-                :options="tagOptions(f.field)"
-                :placeholder="'请输入或选择' + f.title"
-                :status="formErrors[f.field] ? 'error' : undefined"
-                :disabled="isReadonly(f)"
-                :max-tag-count="tagMap[f.field] && tagMap[f.field].maxTagCount"
-                :tag="tagMap[f.field] && tagMap[f.field].allowExtension"
-                filterable multiple clearable
-                @update:value="delete formErrors[f.field]"
-              />
-              <n-input
-                v-else-if="f.type === 'TEXTAREA'"
-                v-model:value="formData[f.field]"
-                type="textarea"
-                :autosize="{ minRows: 3 }"
-                :placeholder="'请输入' + f.title"
-                :status="formErrors[f.field] ? 'error' : undefined"
-                :disabled="isReadonly(f)"
-                @update:value="delete formErrors[f.field]"
-              />
-              <div v-else-if="f.type === 'REFERENCE' && referenceMap[f.field]"
-                @click="!isReadonly(f) && openReferenceModal(f)"
-                style="cursor:pointer">
-                <n-input
-                  :value="referenceDisplayLabel(f.field)"
-                  :placeholder="'请选择' + f.title"
-                  readonly
-                  clearable
-                  :status="formErrors[f.field] ? 'error' : undefined"
-                  :disabled="isReadonly(f)"
-                  @clear.stop="formData[f.field] = null; formData[f.field + '_display'] = ''; if (referenceMap[f.field] && referenceMap[f.field].referenceField) formData[referenceMap[f.field].referenceField] = null; delete formErrors[f.field]"
-                >
-                  <template #suffix>
-                    <iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon>
-                  </template>
-                </n-input>
-              </div>
-              <div v-else-if="f.type === 'ATTACHMENT'" class="attachment-field"
-                @mouseenter="setAttachmentDropdown(f.field)" @mouseleave="clearAttachmentDropdown">
-                <div class="attachment-btn">
-                  <iconify-icon icon="mdi:paperclip" style="font-size:13px"></iconify-icon>
-                  附件管理
-                  <iconify-icon icon="mdi:chevron-down" :style="'font-size:12px;transition:transform .2s ease;transform:' + (attachmentDropdownKey === f.field ? (attachmentMap[f.field] && attachmentMap[f.field].showType === 'DOWN' ? 'rotate(180deg)' : 'rotate(180deg)') : 'rotate(0deg)')"></iconify-icon>
-                </div>
-                <transition name="dropdown-fade">
-                  <div v-if="attachmentDropdownKey === f.field" :class="'attachment-dropdown' + (attachmentMap[f.field] && attachmentMap[f.field].showType === 'DOWN' ? ' down' : '')">
-                    <div class="attachment-dropdown-inner">
-                      <label v-if="!isReadonly(f) && (!attachmentMap[f.field] || !attachmentMap[f.field].maxLimit || (formData[f.field] || []).length < attachmentMap[f.field].maxLimit)"
-                        class="attachment-dropdown-item"
-                        :for="'upload-dd-' + f.field">
-                        <iconify-icon icon="mdi:upload" style="font-size:13px"></iconify-icon>
-                        上传文件{{ attachmentMap[f.field] && attachmentMap[f.field].maxLimit ? '（共' + (attachmentMap[f.field].maxLimit - (formData[f.field] || []).length) + '个）' : '' }}
-                        <input :id="'upload-dd-' + f.field" type="file" style="display:none"
-                          :multiple="attachmentMap[f.field] && attachmentMap[f.field].maxLimit > 1"
-                          :accept="attachmentMap[f.field] && attachmentMap[f.field].fileTypes && attachmentMap[f.field].fileTypes.length ? attachmentMap[f.field].fileTypes.join(',') : undefined"
-                          @change="handleAttachmentChange(f, $event)"
-                        />
-                      </label>
-                      <div v-if="(formData[f.field] || []).length > 0"
-                        class="attachment-dropdown-item"
-                        @click="openPreview(f)">
-                        <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>
-                        查看文件（共{{ (formData[f.field] || []).length }}个）
-                      </div>
-                      <div v-else class="attachment-dropdown-item attachment-disabled">
-                        <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>
-                        查看文件（共0个）
-                      </div>
-                    </div>
-                  </div>
-                </transition>
-              </div>
-              <n-input
-                v-else
-                v-model:value="formData[f.field]"
-                :placeholder="'请输入' + f.title"
-                :status="formErrors[f.field] ? 'error' : undefined"
-                :disabled="isReadonly(f)"
-                clearable
-                @update:value="delete formErrors[f.field]"
-              />
-              <span v-if="formErrors[f.field]" class="form-error-tip">{{ formErrors[f.field] }}</span>
-            </div>
-          </template>
-        </div>
-        </div>
-        </n-tab-pane>
+            <nova-form-this
+              :form-data="formData"
+              :form-errors="formErrors"
+              :edit-fields="editFields"
+              :edit-layout="editLayout"
+              :choice-map="choiceMap"
+              :reference-map="referenceMap"
+              :number-map="numberMap"
+              :date-map="dateMap"
+              :tag-map="tagMap"
+              :attachment-map="attachmentMap"
+              :form-mode="formMode"
+              :form-tab="formTab"
+              @field-change="onFormFieldChange"
+              @reference-click="openReferenceModal"
+              @preview-click="openPreview"
+              @attachment-change="handleAttachmentChange"
+            />
+          </n-tab-pane>
 
         <!-- referenceForm / appendageForm 统一按后端顺序渲染 -->
         <template v-for="tab in editExtraTabs" :key="tab.tapNovaName">
@@ -4619,7 +4462,7 @@ const NovaTable = {
   `
 }
 
-NovaTable.components = { NovaTable }
+NovaTable.components = Object.assign(NovaTable.components || {}, { NovaTable })
 
 window.NovaTable = NovaTable
 })()
