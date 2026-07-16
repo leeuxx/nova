@@ -2940,21 +2940,28 @@ const NovaTable = {
         return
       }
 
-      var dualVm = this.$refs.dualTableRef
-      if (dualVm) dualVm._dualReloading = true
-      this.buildDualTableSourceFields()
-      var self = this
-      this.$nextTick(function () {
-        var dualVm = self.$refs.dualTableRef
-        if (dualVm && dualVm._vmKey) {
-          dualVm._dualReloading = false
-          var target = window.vmMap && window.vmMap[dualVm._vmKey]
-          if (target) {
-            self._applyDualSourceFields(target)
-            window.NovaTableJQ.loadData(dualVm._vmKey)
+      if (this.isDualTableLink) {
+        // LINK 非树模式（保留，后续 LINK 提取时移走）
+        var dualVm = this.$refs.dualTableRef
+        if (dualVm) dualVm._dualReloading = true
+        this.buildDualTableSourceFields()
+        var self = this
+        this.$nextTick(function () {
+          var dualVm = self.$refs.dualTableRef
+          if (dualVm && dualVm._vmKey) {
+            dualVm._dualReloading = false
+            var target = window.vmMap && window.vmMap[dualVm._vmKey]
+            if (target) {
+              self._applyDualSourceFields(target)
+              window.NovaTableJQ.loadData(dualVm._vmKey)
+            }
           }
-        }
-      })
+        })
+        return
+      }
+
+      // APPENDAGES 委托 JQ
+      window.NovaDualAppendagesJQ.onRowClick(this, row)
     },
     onDualTableSubChange(novaName) {
       const item = this.dualTableSubTables.find(s => s.novaName === novaName)
@@ -2996,36 +3003,12 @@ const NovaTable = {
           }
         })
       } else {
-        // APPENDAGES 类型：渲染普通表格
-        this.$nextTick(function () {
-          var vm = self.$refs.dualTableRef
-          if (vm) {
-            vm._dualReloading = false
-            vm.reloadDual(item.novaName, self.dualTableSourceFields)
-          }
-          self.$nextTick(function () {
-            var panelEl = document.querySelector('.dual-right-panel')
-            if (panelEl) {
-              var contentEl = panelEl.querySelector('.page-card, .embedded-table')
-              if (contentEl) {
-                contentEl.classList.remove('dual-content-fade')
-                void contentEl.offsetWidth
-                contentEl.classList.add('dual-content-fade')
-              }
-            }
-          })
-        })
+        // APPENDAGES 类型：委托 JQ
+        window.NovaDualAppendagesJQ.onSubChange(this, item.novaName)
       }
     },
     _syncDualTableClass() {
-      const el = document.querySelector('.page-content')
-      if (el) {
-        if (this.dualTableViewActive || this.dualTableClosing) {
-          el.classList.add('dual-mode')
-        } else {
-          el.classList.remove('dual-mode')
-        }
-      }
+      window.NovaDualAppendagesJQ.syncTableClass(this)
     },
     // 双表视图：仅树模式用 JS 读左表高度赋给右面板，非树模式清除固定高度让 flex 拉伸
     syncDualPanelHeight() {
@@ -4287,8 +4270,21 @@ const NovaTable = {
               </div>
             </n-card>
           </template>
-          <!-- 普通表格模式 -->
-          <nova-table v-else ref="dualTableRef" :key="dualTableCurrentKey" :dual-mode="true" :link-mode="isDualTableLink" :nova-name-prop="dualTableCurrentNova" :source-nova-name-prop="novaName" :source-fields-prop="dualTableSourceFields" @link-add="handleDualLinkAdd" />
+          <!-- APPENDAGES 表格模式（双表视图） -->
+          <dual-appendages-table v-else-if="dualTableViewActive && !isDualTableLink"
+            ref="dualTableRef"
+            :nova-name="dualTableCurrentNova"
+            :parent-nova-name="novaName"
+            :source-fields="dualTableSourceFields"
+            :embed-key="dualTableCurrentKey"
+          />
+          <!-- LINK 非树模式（后续提取） -->
+          <nova-table v-else-if="dualTableViewActive && isDualTableLink" ref="dualTableRef"
+            :key="dualTableCurrentKey" :dual-mode="true" link-mode
+            :nova-name-prop="dualTableCurrentNova" :source-nova-name-prop="novaName"
+            :source-fields-prop="dualTableSourceFields"
+            @link-add="handleDualLinkAdd"
+          />
         </div>
       </Teleport>
     </div>
