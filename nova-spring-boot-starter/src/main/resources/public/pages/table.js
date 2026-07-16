@@ -732,7 +732,8 @@ const NovaTable = {
               })
               buttons.push(h(NDropdown, {
                 options: foldedOpts,
-                trigger: 'click',
+                trigger: 'hover',
+                showArrow: false,
                 onSelect: function(key) {
                   var btn = rowFolded.find(function(b) { return b.title === key })
                   if (!btn) return
