@@ -2227,7 +2227,7 @@ const NovaTable = {
         targetVmKey = this._findEmbVmKey(linkNovaName)
       }
 
-      window.NovaTableJQ.handleLinkAdd(
+      window.NovaTableJQ_link.handleLinkAdd(
         this.novaName, linkNovaName,
         sourceField, sourceValue,
         targetField, this.linkPickerSelectedKeys,
@@ -2386,7 +2386,7 @@ const NovaTable = {
         return
       }
 
-      window.NovaTableJQ.handleLinkAdd(
+      window.NovaTableJQ_link.handleLinkAdd(
         this.novaName, tapNovaName,
         sourceField, String(sourceValue),
         targetField, checkedIds,
@@ -2788,13 +2788,20 @@ const NovaTable = {
         return
       }
 
-      window.NovaTableJQ.handleLinkAdd(
+      window.NovaTableJQ_link.handleLinkAdd(
         this.novaName, tapNovaName,
         sourceField, sourceValue,
         targetField, checkedIds,
         this._vmKey || this.novaName,
         null
       )
+    },
+    onLinkTreeSearch(linkNovaName, keyword) {
+      this.linkTreeSearchKeyword[linkNovaName] = keyword
+      this.filterLinkTreeData(linkNovaName)
+    },
+    onLinkFormSave(linkNovaName) {
+      this.submitLinkTree({ tapNovaName: linkNovaName })
     },
     toggleDualTableView() {
       if (this.dualTableViewActive) {
@@ -3840,65 +3847,29 @@ const NovaTable = {
             :source-fields="buildEmbSourceFields(tab)"
           />
 
-          <!-- linkForm 内容（中间表嵌入式表格 / linkTree 树） -->
-          <template v-else-if="tab.tapType === 'linkForm'">
-            <div v-if="showForm && visitedEmbTabs.has('link_' + tab.tapNovaName)"
-              @vue:mounted="initLinkTreeTab(tab.tapNovaName)"
-              :style="'display:flex;flex-direction:column;overflow:hidden;' + (linkTreeData[tab.tapNovaName] ? 'max-height:500px' : 'height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px'))">
-              <!-- 加载中（initLinkTreeTab 发 build 判断模式） -->
-              <div v-if="linkTreeLoading[tab.tapNovaName] && !linkTabBuild[tab.tapNovaName]"
-                style="padding:40px;text-align:center;color:#999">加载中...</div>
-              <!-- 树模式 -->
-              <div v-else-if="linkTreeData[tab.tapNovaName] && (linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig"
-                style="display:flex;flex-direction:column;max-height:500px">
-                <div v-if="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeSearchField" style="flex-shrink:0;padding:12px 0 8px 0">
-                  <n-input
-                    :value="linkTreeSearchKeyword[tab.tapNovaName]"
-                    :placeholder="linkTreeSearchPlaceholder(tab.tapNovaName)"
-                    clearable
-                    @update:value="(val) => { linkTreeSearchKeyword[tab.tapNovaName] = val; filterLinkTreeData(tab.tapNovaName); }"
-                    style="width:100%" />
-                </div>
-                <div class="link-tree-scroll" style="flex:1;overflow:auto;padding:0 0 12px 0">
-                  <n-tree v-if="!linkTreeFilteredData[tab.tapNovaName] && linkTreeData[tab.tapNovaName]"
-                    :default-expanded-keys="linkTreeDefaultExpandedKeys[tab.tapNovaName] || []"
-                    :data="linkTreeData[tab.tapNovaName]"
-                    :checked-keys="linkTreeDisplayKeys[tab.tapNovaName]"
-                    :cascade="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
-                    :key-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
-                    :label-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeSearchField"
-                    checkable block-line
-                    @update:checked-keys="(keys) => onLinkTreeCheck(keys, tab.tapNovaName)"
-                  />
-                  <n-tree v-if="linkTreeFilteredData[tab.tapNovaName]"
-                    :key="'linkTreeSearch_' + tab.tapNovaName + '_' + (linkTreeSearchKeyword[tab.tapNovaName] || '')"
-                    :data="linkTreeFilteredData[tab.tapNovaName]"
-                    :checked-keys="linkTreeDisplayKeys[tab.tapNovaName]"
-                    :expanded-keys="linkTreeExpandedKeys[tab.tapNovaName] || []"
-                    :cascade="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
-                    :key-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
-                    :label-field="(linkTabBuild[tab.tapNovaName] || {}).linkTreeTargetConfig.treeSearchField"
-                    :render-label="linkTreeRenderLabel(tab.tapNovaName)"
-                    checkable block-line
-                    @update:checked-keys="(keys) => onLinkTreeCheck(keys, tab.tapNovaName)"
-                  />
-                </div>
-                <div style="flex-shrink:0;padding:8px 0;display:flex;justify-content:flex-end;border-top:1px solid #eee">
-                  <n-button type="primary" @click="submitLinkTree(tab)">保 存</n-button>
-                </div>
-              </div>
-              <!-- 普通模式：内嵌中间表（linkTreeLoading 为 true 时说明树模式正在加载，不渲染） -->
-              <nova-table v-else-if="linkTabBuild[tab.tapNovaName] && !linkTreeLoading[tab.tapNovaName]"
-                :key="'link_' + tab.tapNovaName + '_' + (currentRow && currentRow[novaIdFieldName])"
-                :embedded-mode="true"
-                :link-mode="true"
-                :nova-name-prop="tab.tapNovaName"
-                :source-nova-name-prop="novaName"
-                :source-fields-prop="buildLinkSourceFields(tab)"
-                @link-add="openLinkPicker(tab.tapNovaName, tab.tapTitle)"
-              />
-            </div>
-          </template>
+          <!-- linkForm 内容 -->
+          <nova-link-form v-else-if="tab.tapType === 'linkForm'"
+            :link-nova-name="tab.tapNovaName"
+            :nova-name="novaName"
+            :tap-title="tab.tapTitle"
+            :visible="showForm && visitedEmbTabs.has('link_' + tab.tapNovaName)"
+            :embed-key="'link_' + tab.tapNovaName + '_' + (currentRow && currentRow[novaIdFieldName])"
+            :is-emb-tab="isEmbTab"
+            :source-fields="buildLinkSourceFields(tab)"
+            :link-tab-build="linkTabBuild"
+            :link-tree-data="linkTreeData"
+            :link-tree-filtered-data="linkTreeFilteredData"
+            :link-tree-default-expanded-keys="linkTreeDefaultExpandedKeys"
+            :link-tree-expanded-keys="linkTreeExpandedKeys"
+            :link-tree-display-keys="linkTreeDisplayKeys"
+            :link-tree-loading="linkTreeLoading"
+            :link-tree-search-keyword="linkTreeSearchKeyword"
+            @init="initLinkTreeTab($event)"
+            @link-add="(n, t) => openLinkPicker(n, t)"
+            @tree-check="(n, k) => onLinkTreeCheck(k, n)"
+            @tree-search="onLinkTreeSearch"
+            @save-tree="onLinkFormSave"
+          />
 
           </div>
         </n-tab-pane>
