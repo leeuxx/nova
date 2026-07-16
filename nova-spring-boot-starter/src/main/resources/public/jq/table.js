@@ -752,18 +752,11 @@ window.NovaTableJQ = (function ($) {
     })
   }
 
-  // ── 提交表单 ──────────────────────────────────────────────────
-  function handleFormSubmit(vmKey) {
-    var target     = vmKey ? (window.vmMap && window.vmMap[vmKey]) : vm()
-    var formData   = target.formData
-    var editFields = target.editFields || []
-    var errors = window.NovaTableJQ_form.validateThisForm(editFields, target.visibleEditFields || [], formData)
-    target.formErrors = errors
-    if (Object.keys(errors).length > 0) { target.formTab = 'form'; return }
-
-    // 校验附属表单
+  // ── 校验 appendage 表单必填项 ──────────────────────────────────
+  function validateAppendageForms(target) {
     var appErrors = {}
     var firstErrAppTab = null
+    var formData = target.formData || {}
     ;(target.editAppendageTabs || []).forEach(function(appTab) {
       var n = appTab.tapNovaName
       if (appTab.tapShow === false || (appTab.tapShowByExpr && window.evalShowExpr && !window.evalShowExpr(appTab.tapShowByExpr, formData))) return
@@ -784,12 +777,13 @@ window.NovaTableJQ = (function ($) {
       appErrors[n] = errs
       if (!firstErrAppTab && Object.keys(errs).length > 0) firstErrAppTab = n
     })
-    var newAppErrors = Object.assign({}, target.appendageFormErrors, appErrors)
-    target.appendageFormErrors = newAppErrors
-    if (firstErrAppTab) { target.formTab = 'app_' + firstErrAppTab; return }
+    return { appErrors: appErrors, firstErrAppTab: firstErrAppTab }
+  }
 
-    // 组装附属表单数据
+  // ── 序列化 appendage 表单数据为提交格式 ──────────────────────────
+  function buildAppendageFormInfo(target) {
     var appendageFormInfo = {}
+    var formData = target.formData || {}
     ;(target.editAppendageTabs || []).forEach(function(appTab) {
       var n = appTab.tapNovaName
       if (appTab.tapShow === false || (appTab.tapShowByExpr && window.evalShowExpr && !window.evalShowExpr(appTab.tapShowByExpr, formData))) return
@@ -807,6 +801,25 @@ window.NovaTableJQ = (function ($) {
         return item
       })
     })
+    return appendageFormInfo
+  }
+
+  // ── 提交表单 ──────────────────────────────────────────────────
+  function handleFormSubmit(vmKey) {
+    var target     = vmKey ? (window.vmMap && window.vmMap[vmKey]) : vm()
+    var formData   = target.formData
+    var editFields = target.editFields || []
+    var errors = window.NovaTableJQ_form.validateThisForm(editFields, target.visibleEditFields || [], formData)
+    target.formErrors = errors
+    if (Object.keys(errors).length > 0) { target.formTab = 'form'; return }
+
+    // 校验附属表单
+    var appResult = validateAppendageForms(target)
+    target.appendageFormErrors = Object.assign({}, target.appendageFormErrors, appResult.appErrors)
+    if (appResult.firstErrAppTab) { target.formTab = 'app_' + appResult.firstErrAppTab; return }
+
+    // 组装附属表单数据
+    var appendageFormInfo = NovaAppendageUtils.buildAppendageFormInfo(target)
     if (target.currentRow) {
       // 编辑
       var novaName = target.novaName
@@ -936,6 +949,41 @@ window.NovaTableJQ = (function ($) {
         console.info('[Nova Picker] build接口未就绪，novaName:', novaName)
       }
     })
+  }
+
+  // ── view 模式：从 rawRow 填充 target.formData ───────────────────
+  function fillViewFormData(target, rawRow) {
+    var editFields = target.editFields || []
+    var choiceMap = target.choiceMap || {}
+    var referenceMap = target.referenceMap || {}
+    var fd = {}
+    editFields.forEach(function(f) {
+      var val = rawRow[f.field]
+      var choice = choiceMap[f.field]
+      if (choice && choice.selectType === 'MULTI') {
+        fd[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+      } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
+        fd[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+      } else if (f.type === 'DATE') {
+        var ts = val !== null && val !== undefined ? Number(val) : null
+        fd[f.field] = (ts && !isNaN(ts)) ? ts : null
+      } else if (f.type === 'BOOLEAN') {
+        fd[f.field] = (val === null || val === undefined) ? null : String(val)
+      } else if (f.type === 'NUMBER') {
+        fd[f.field] = (val === null || val === undefined || val === '') ? null : Number(val)
+      } else if (f.type === 'REFERENCE') {
+        var refInfo = referenceMap[f.field] || {}
+        var sf = refInfo.storageField || 'id'
+        fd[f.field] = (val && typeof val === 'object')
+          ? (val[sf] !== undefined && val[sf] !== null ? String(val[sf]) : null)
+          : (val !== null && val !== undefined && val !== '' ? String(val) : null)
+        fd[f.field + '_display'] = (val && typeof val === 'object' && refInfo.displayField)
+          ? (val[refInfo.displayField] != null ? String(val[refInfo.displayField]) : '') : ''
+      } else {
+        fd[f.field] = (val === null || val === undefined) ? '' : val
+      }
+    })
+    target.formData = fd
   }
 
   // ── view 模式初始化：/build，直接填充 rawRow ────────────────────

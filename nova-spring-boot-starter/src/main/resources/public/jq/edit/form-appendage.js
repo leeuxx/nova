@@ -1,4 +1,4 @@
-// jq/form-app.js — appendageForm 业务逻辑（数据填充、懒加载、tab 构建）
+// jq/form-appendage.js — appendageForm 业务逻辑（tab 构建、数据填充、详情加载）
 
 window.NovaTableJQ_app = (function () {
 
@@ -40,7 +40,7 @@ window.NovaTableJQ_app = (function () {
     t.appendageFormData = newFds
   }
 
-  // ── 懒加载 appendage sub-build（首次打开弹窗时调用）──────────────
+  // ── 懒加载 appendage 详情（/details 接口）────────────────────────
   function loadAppendageDetails(novaName, appNovaName, vmKey) {
     var key = vmKey || novaName
     var target = window.vmMap && window.vmMap[key]
@@ -103,7 +103,6 @@ window.NovaTableJQ_app = (function () {
             var ci = cm[f.field]
             var isMulti = f.type === 'CHOICE' && ci && ci.selectType === 'MULTI'
             var isSingle = f.type === 'CHOICE' && ci && ci.selectType === 'SINGLE'
-            // 如果用户已输入过值，保留；否则用默认值
             if (existingFd[f.field] !== undefined) {
               fd[f.field] = existingFd[f.field]
             } else {
@@ -120,12 +119,16 @@ window.NovaTableJQ_app = (function () {
             Object.keys(appendageMap).forEach(function(k) { if (appendageMap[k].referenceName === appNovaName) appFieldKey = k })
             if (appFieldKey) fillAppendageData(t2, appNovaName, rowData[appFieldKey])
           }
-          // APPENDAGE 组件的 /details 立即加载（需求 1）
+          // APPENDAGE 组件的 /details 立即加载
           loadAppendageDetails(novaName, appNovaName, key)
         }
       })
     })
   }
 
-  return { fillAppendageData, loadAppendageDetails, buildAppendageTabs }
+  return {
+    buildAppendageTabs: buildAppendageTabs,
+    fillAppendageData: fillAppendageData,
+    loadAppendageDetails: loadAppendageDetails
+  }
 })()
