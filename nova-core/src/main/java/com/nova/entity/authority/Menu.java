@@ -17,8 +17,8 @@ public class Menu {
     @Comment("名称")
     private String name;
 
-    @Comment("类型 table=表格视图")
-    private String type;
+    @Comment("类型 ")
+    private Type type;
 
     @Comment("值")
     private String value;
@@ -29,4 +29,14 @@ public class Menu {
     @Comment("父级id")
     private Long pid;
 
+    public enum Type {
+        @Comment("目录")
+        DIR,
+        @Comment("nova视图")
+        NOVA,
+        @Comment("自定义视图")
+        TPL,
+        @Comment("按钮")
+        BUTTON
+    }
 }

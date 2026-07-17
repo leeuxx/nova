@@ -47,10 +47,10 @@ function processMenus(list) {
 
   // 第一遍：建 nodeMap
   list.forEach(function (item) {
-    // type=table 才有路由，其他类型（目录/未实现）key 用 code 占位且不可点击
-    var key      = item.type === 'table' ? '/nova/' + item.value : item.code
+    // type=NOVA 才有路由，其他类型key 用 code 占位且不可点击
+    var key      = item.type === 'NOVA' ? '/nova/' + item.value : item.code
     var disabled = !item.type || item.type === ''  ? false  // 目录：不禁用（可展开）
-                 : item.type === 'table'            ? false  // 表格：可点击
+                 : item.type === 'NOVA'            ? false  // nova视图：可点击
                  : true                                      // 其他：禁用
     nodeMap[item.id] = {
       label:    item.name,
@@ -75,9 +75,9 @@ function processMenus(list) {
     }
   })
 
-  // 第三遍：只给 type=table 的叶子节点构建 routeMeta（含面包屑路径）
+  // 第三遍：只给 type=NOVA 的叶子节点构建 routeMeta（含面包屑路径）
   list.forEach(function (item) {
-    if (item.type !== 'table' || !item.value) return
+    if (item.type !== 'NOVA' || !item.value) return
     var key        = '/nova/' + item.value
     var breadcrumb = [item.name]
     var cur        = item

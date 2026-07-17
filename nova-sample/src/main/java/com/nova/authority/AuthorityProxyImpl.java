@@ -55,7 +55,7 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                         .setId(3L)
                         .setCode("user")
                         .setValue("TestDemoView")
-                        .setType("table")
+                        .setType(Menu.Type.NOVA)
                         .setName("用户管理")
                         .setIcon("material-symbols:person-outline")
                         .setPid(2L),
@@ -63,7 +63,7 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                         .setId(4L)
                         .setCode("role")
                         .setValue("TestDemo2View")
-                        .setType("table")
+                        .setType(Menu.Type.NOVA)
                         .setName("部门管理")
                         .setIcon("material-symbols:group-outline")
                         .setPid(2L),
@@ -71,7 +71,7 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                         .setId(5L)
                         .setCode("menu")
                         .setValue("MENU")
-                        .setType("tpl")
+                        .setType(Menu.Type.TPL)
                         .setName("菜单管理")
                         .setIcon("material-symbols:menu")
                         .setPid(2L)
