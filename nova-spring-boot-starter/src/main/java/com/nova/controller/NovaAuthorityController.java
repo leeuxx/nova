@@ -37,9 +37,9 @@ public class NovaAuthorityController {
 
     @Comment("登录")
     @PostMapping("login")
-    public R<Login.Vo> login(@RequestBody @Validated Login login) {
-        Login.Vo vo = authorityProxy.login(login);
-        return R.ok(vo);
+    public R<Login.User> login(@RequestBody @Validated Login login) {
+        Login.User user = authorityProxy.login(login);
+        return R.ok(user);
     }
 
     @Comment("登出")

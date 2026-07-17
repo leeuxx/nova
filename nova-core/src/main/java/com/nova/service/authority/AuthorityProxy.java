@@ -12,7 +12,7 @@ public interface AuthorityProxy {
     boolean checkToken(String token);
 
     @Comment("登录")
-    Login.Vo login(Login login);
+    Login.User login(Login login);
 
     @Comment("登出")
     void logout(String token);

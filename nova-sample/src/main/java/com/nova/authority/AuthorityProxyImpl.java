@@ -96,10 +96,10 @@ public class AuthorityProxyImpl implements AuthorityProxy {
     }
 
     @Override
-    public Login.Vo login(Login login) {
+    public Login.User login(Login login) {
         String token = String.valueOf(YitIdHelper.nextId());
         map.put(token, login.getUsername());
-        return new Login.Vo()
+        return new Login.User()
                 .setToken(token)
                 .setName("张三")
                 .setAlias("财务人员")

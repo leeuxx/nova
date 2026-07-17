@@ -16,7 +16,7 @@ public class Login {
 
     @Data
     @Accessors(chain = true)
-    public static class Vo {
+    public static class User {
 
         @Comment("token,必填")
         private String token;
