@@ -18,7 +18,7 @@ public class Menu {
     private String name;
 
     @Comment("类型 ")
-    private Type type;
+    private Type type = Type.DIR;
 
     @Comment("值")
     private String value;
