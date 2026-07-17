@@ -41,7 +41,7 @@ window.DualAppendagesTable = {
   template: `
 <div style="display:flex;flex-direction:column;overflow:hidden;height:100%">
   <nova-table ref="innerTable"
-    :key="embedKey"
+    :key="'app_' + novaName + '_' + embedKey"
     :dual-mode="true"
     :nova-name-prop="novaName"
     :source-nova-name-prop="parentNovaName"
