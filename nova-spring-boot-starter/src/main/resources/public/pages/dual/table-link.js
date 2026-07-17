@@ -189,7 +189,7 @@ window.DualLinkTable = {
   <!-- LINK 非树模式 -->
   <nova-table v-else-if="!linkTreeLoading"
     ref="innerTable"
-    :key="embedKey"
+    :key="'dual_' + novaName + '_' + embedKey"
     :dual-mode="true"
     link-mode
     :nova-name-prop="novaName"

@@ -2706,15 +2706,12 @@ const NovaTable = {
       this.novaName = novaName
       this._vmKey = '__dual_' + novaName + '_' + Date.now()
       window.vmMap[this._vmKey] = this
+      // 不传 deferDataLoad（默认 false），让 /build 响应回调中初始化好
+      // _sourceRefFields 后自动调用 loadData，避免先于 /build 响应加载导致
+      // 使用旧表元数据构造错误条件
       if (window.NovaTableJQ) {
-        window.NovaTableJQ.onEmbeddedMounted(novaName, this._vmKey, this.sourceNovaNameProp || novaName, sourceFields || {}, true)
+        window.NovaTableJQ.onEmbeddedMounted(novaName, this._vmKey, this.sourceNovaNameProp || novaName, sourceFields || {})
       }
-      var self = this
-      this.$nextTick(function () {
-        if (self._vmKey && window.NovaTableJQ) {
-          window.NovaTableJQ.loadData(self._vmKey)
-        }
-      })
     },
     onDualTableRowClick(row) {
       if (!this.dualTableViewActive) return
@@ -2727,22 +2724,8 @@ const NovaTable = {
       }
 
       if (this.isDualTableLink) {
-        // LINK 非树模式：通过 DualLinkTable 组件代理访问内嵌表格
-        var dualVm = this.$refs.dualTableRef
-        if (dualVm) dualVm._dualReloading = true
+        // LINK 非树模式：更新 sourceFields，由 watcher 自动处理条件更新和 loadData
         this.buildDualTableSourceFields()
-        var self = this
-        this.$nextTick(function () {
-          var dualVm = self.$refs.dualTableRef
-          if (dualVm && dualVm._vmKey) {
-            dualVm._dualReloading = false
-            var target = window.vmMap && window.vmMap[dualVm._vmKey]
-            if (target) {
-              self._applyDualSourceFields(target)
-              window.NovaTableJQ.loadData(dualVm._vmKey)
-            }
-          }
-        })
         return
       }
 
@@ -2753,12 +2736,16 @@ const NovaTable = {
       const item = this.dualTableSubTables.find(s => s.novaName === novaName)
       if (!item) return
 
+      // 相同 tab 不重复处理
+      if (this.dualTableCurrentNova === item.novaName) return
+
       // 清除双表树状态
       this.linkTreeData['__dual__'] = null
       this.linkTreeCheckedKeys['__dual__'] = null
 
       this.dualTableCurrentNova = item.novaName
       this.dualTableCurrentLabel = item.label
+
       this.buildDualTableSourceFields()
       var self = this
 
@@ -2766,25 +2753,19 @@ const NovaTable = {
         // LINK 类型：尝试加载树模式
         window.NovaDualLinkJQ.initDualLinkTreeTab(this, function(isTreeMode) {
           if (!isTreeMode) {
-            // 非树模式：渲染普通表格
+            // 非树模式：设置 loading=false 让 nova-table 显示
+            // 内层表格已通过 novaName key 重建，mounted() 自动调用 build/loadData
             self.linkTreeLoading['__dual__'] = false
-            self.$nextTick(function() {
-              var vm = self.$refs.dualTableRef
-              if (vm) {
-                vm._dualReloading = false
-                vm.reloadDual(item.novaName, self.dualTableSourceFields)
-              }
-              self.$nextTick(function () {
-                var panelEl = document.querySelector('.dual-right-panel')
-                if (panelEl) {
-                  var contentEl = panelEl.querySelector('.page-card, .embedded-table')
-                  if (contentEl) {
-                    contentEl.classList.remove('dual-content-slideup')
-                    void contentEl.offsetWidth
-                    contentEl.classList.add('dual-content-slideup')
-                  }
+            self.$nextTick(function () {
+              var panelEl = document.querySelector('.dual-right-panel')
+              if (panelEl) {
+                var contentEl = panelEl.querySelector('.page-card, .embedded-table')
+                if (contentEl) {
+                  contentEl.classList.remove('dual-content-slideup')
+                  void contentEl.offsetWidth
+                  contentEl.classList.add('dual-content-slideup')
                 }
-              })
+              }
             })
           }
         })
