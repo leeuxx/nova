@@ -30,16 +30,11 @@ window.NovaTableJQ_ref = (function () {
   // callback:  Function(data)  成功或失败均回调，data 可能为 {}
   function fetchRefDetails(novaName, fkValue, callback) {
     if (!fkValue) { callback && callback({}); return }
-    $.ajax({
-      url: '/nova/table/details', method: 'POST', contentType: 'application/json',
-      data: JSON.stringify({ novaName: novaName, storageFieldValue: String(fkValue) }),
-      success: function(resp) {
-        var data = (resp.code === 200 && resp.data) ? resp.data : {}
-        callback && callback(data)
-      },
-      error: function() {
-        callback && callback({})
-      }
+    window.fetchApi.post('/nova/table/details', { novaName: novaName, storageFieldValue: String(fkValue) }).then(function(resp) {
+      var data = resp.data || {}
+      callback && callback(data)
+    }).catch(function() {
+      callback && callback({})
     })
   }
 

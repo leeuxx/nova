@@ -1,5 +1,6 @@
 package com.nova.controller;
 
+import com.nova.annotation.NovaRouter;
 import com.nova.annotation.config.Comment;
 import com.nova.annotation.config.RestMappingController;
 import com.nova.entity.authority.Login;
@@ -24,7 +25,10 @@ public class NovaAuthorityController {
     @PostMapping("checkToken")
     public R<Boolean> checkToken() {
         String token = AuthorityUtils.getToken();
-        boolean checkToken = authorityProxy.checkToken(token);
+        if (token == null || token.isEmpty()) {
+            return R.ok(false);
+        }
+        boolean checkToken = authorityProxy.checkToken(AuthorityUtils.getToken());
         return R.ok(checkToken);
     }
 
@@ -37,24 +41,16 @@ public class NovaAuthorityController {
 
     @Comment("登出")
     @PostMapping("logout")
+    @NovaRouter
     public R logout() {
-        String token = AuthorityUtils.getToken();
-        boolean checkToken = authorityProxy.checkToken(token);
-        if (!checkToken) {
-            return R.ok();
-        }
-        authorityProxy.logout(token);
+        authorityProxy.logout(AuthorityUtils.getToken());
         return R.ok();
     }
 
     @Comment("获取菜单")
     @PostMapping("getMenu")
+    @NovaRouter
     public R<List<Menu>> getMenu() {
-        String token = AuthorityUtils.getToken();
-        boolean checkToken = authorityProxy.checkToken(token);
-        if (!checkToken) {
-            return R.fail(520, "token无效", null);
-        }
         List<Menu> menu = authorityProxy.getMenu(AuthorityUtils.getToken());
         return R.ok(menu);
     }

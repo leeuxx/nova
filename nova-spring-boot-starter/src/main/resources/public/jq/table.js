@@ -53,13 +53,7 @@ window.NovaTableJQ = (function ($) {
   function buildTable(novaName, vmKey, embSourceFields, sourceNovaName, deferDataLoad) {
     if (!novaName) return
     var key = vmKey || novaName
-    $.ajax({
-      url:         '/nova/table/build',
-      method:      'POST',
-      contentType: 'application/json',
-      data:        JSON.stringify({ novaName: novaName }),
-      success: function (resp) {
-        if (resp.code !== 200) return
+    window.fetchApi.post('/nova/table/build', { novaName: novaName }).then(function (resp) {
         var target = window.vmMap && window.vmMap[key]
         if (!target) return
         target.choiceMap  = resp.data.choice  || {}
@@ -261,11 +255,7 @@ window.NovaTableJQ = (function ($) {
         if (!deferDataLoad && !(sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField && parentVm && parentVm.currentRow)) {
           loadData(key)
         }
-      },
-      error: function () {
-        console.info('[Nova] build接口未就绪，novaName:', novaName)
-      }
-    })
+      })
   }
 
   // ── 懒加载 link sub-build（首次打开弹窗时调用）─────────────────
@@ -276,11 +266,8 @@ window.NovaTableJQ = (function ($) {
     ;(target.editExtraTabs || []).forEach(function(linkTab) {
       if (linkTab.tapType !== 'linkForm' || !linkTab.tapNovaName) return
       var linkNovaName = linkTab.tapNovaName
-      $.ajax({
-        url: '/nova/table/build', method: 'POST', contentType: 'application/json',
-        data: JSON.stringify({ novaName: linkNovaName }),
-        success: function(br) {
-          if (br.code !== 200) return
+      window.fetchApi.post('/nova/table/build', { novaName: linkNovaName }).then(function(br) {
+        if (br.code !== 200) return
           var t2 = window.vmMap && window.vmMap[key]
           if (!t2) return
           var bd = br.data
@@ -303,7 +290,6 @@ window.NovaTableJQ = (function ($) {
           var newFds = Object.assign({}, t2.linkFormData)
           newFds[linkNovaName] = { targetIds: [] }
           t2.linkFormData = newFds
-        }
       })
     })
   }
@@ -395,17 +381,11 @@ window.NovaTableJQ = (function ($) {
     if (Object.keys(conditions).length === 0 && target._embConditions && Object.keys(target._embConditions).length > 0) {
       Object.assign(conditions, target._embConditions)
     }
-    $.ajax({
-      url:         '/nova/table/data',
-      method:      'POST',
-      contentType: 'application/json',
-      data:        JSON.stringify({ novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, linkConditions: linkConditions, pageBean: pageBean, conditions: conditions }),
-      success: function (resp) {
-        var t = window.vmMap && window.vmMap[vmKey]
-        if (!t) return
+    window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, linkConditions: linkConditions, pageBean: pageBean, conditions: conditions }).then(function (resp) {
+      var t = window.vmMap && window.vmMap[vmKey]
+      if (!t) return
         t.loading = false
-        if (resp.code !== 200) return
-        console.time('[perf] loadData total')
+          console.time('[perf] loadData total')
         t.expandedRowKeys = []
         t.treeLoadingKeys = []
         var records = resp.data.records || []
@@ -427,13 +407,7 @@ window.NovaTableJQ = (function ($) {
           console.timeEnd('[perf] Vue nextTick')
           console.log('[perf] Vue render complete')
         })
-      },
-      error: function () {
-        var t = window.vmMap && window.vmMap[vmKey]
-        if (t) t.loading = false
-        console.info('[Nova] data接口未就绪，novaName:', queryName)
-      }
-    })
+      })
   }
 
   // ── 构建排序参数 ──────────────────────────────────────────────
@@ -666,13 +640,7 @@ window.NovaTableJQ = (function ($) {
     var novaIdField = target.novaIdFieldName
     var pkVal = String(row[novaIdField])
 
-    $.ajax({
-      url: '/nova/table/details',
-      method: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify({ novaName: novaName, storageFieldValue: pkVal }),
-      success: function(resp) {
-        if (resp.code !== 200) return
+    window.fetchApi.post('/nova/table/details', { novaName: novaName, storageFieldValue: pkVal }).then(function(resp) {
         var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
         if (!t) return
         var detailRow = resp.data
@@ -718,8 +686,7 @@ window.NovaTableJQ = (function ($) {
         window.NovaTableJQ_app.buildAppendageTabs(novaName, detailRow, vmKey)
         // LINK 的 build 改为点击 tab 后由 onFormTabChange 触发
         t.showForm   = true
-      }
-    })
+      })
   }
 
   // ── 删除单条 ──────────────────────────────────────────────────
@@ -743,22 +710,14 @@ window.NovaTableJQ = (function ($) {
 
   // ── 删除公共逻辑 ──────────────────────────────────────────────
   function doDelete(novaName, novaIdFieldName, novaIdValues, vmKey) {
-    $.ajax({
-      url:         '/nova/table/delete',
-      method:      'POST',
-      contentType: 'application/json',
-      data:        JSON.stringify({ novaName: novaName, novaIdFieldName: novaIdFieldName, novaIdValues: novaIdValues }),
-      success: function (resp) {
-        var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
-        if (!t) return
-        if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '删除失败'); return }
-        t.checkedRowKeys = []
-        if (window.$message) window.$message.success('删除成功')
-        loadData(vmKey || novaName)
-      },
-      error: function () {
-        console.info('[Nova] delete接口请求失败，novaName:', novaName)
-      }
+    window.fetchApi.post('/nova/table/delete', { novaName: novaName, novaIdFieldName: novaIdFieldName, novaIdValues: novaIdValues }).then(function (resp) {
+      var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
+      if (!t) return
+      t.checkedRowKeys = []
+      if (window.$message) window.$message.success('删除成功')
+      loadData(vmKey || novaName)
+    }).catch(function () {
+      console.info('[Nova] delete接口请求失败，novaName:', novaName)
     })
   }
 
@@ -840,22 +799,14 @@ window.NovaTableJQ = (function ($) {
         novaIdField: novaIdField,
         sourceRefFields: target._sourceRefFields || []
       })
-      $.ajax({
-        url:         '/nova/table/update',
-        method:      'POST',
-        contentType: 'application/json',
-        data:        JSON.stringify({ novaName: novaName, formInfo: formInfo, appendageFormInfo: appendageFormInfo }),
-        success: function (resp) {
-          var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
-          if (!t) return
-          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '修改失败'); return }
-          t.showForm = false
-          if (window.$message) window.$message.success('修改成功')
-          loadData(vmKey || novaName)
-        },
-        error: function () {
-          console.info('[Nova] update接口请求失败，novaName:', novaName)
-        }
+      window.fetchApi.post('/nova/table/update', { novaName: novaName, formInfo: formInfo, appendageFormInfo: appendageFormInfo }).then(function (resp) {
+        var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
+        if (!t) return
+        t.showForm = false
+        if (window.$message) window.$message.success('修改成功')
+        loadData(vmKey || novaName)
+      }).catch(function () {
+        console.info('[Nova] update接口请求失败，novaName:', novaName)
       })
     } else {
       // 新增
@@ -864,22 +815,14 @@ window.NovaTableJQ = (function ($) {
         skipEmpty: true,
         sourceRefFields: target._sourceRefFields || []
       })
-      $.ajax({
-        url:         '/nova/table/add',
-        method:      'POST',
-        contentType: 'application/json',
-        data:        JSON.stringify({ novaName: novaName, formInfo: formInfo, appendageFormInfo: appendageFormInfo }),
-        success: function (resp) {
-          var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
-          if (!t) return
-          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '新增失败'); return }
-          t.showForm = false
-          if (window.$message) window.$message.success('新增成功')
-          loadData(vmKey || novaName)
-        },
-        error: function () {
-          console.info('[Nova] add接口请求失败，novaName:', novaName)
-        }
+      window.fetchApi.post('/nova/table/add', { novaName: novaName, formInfo: formInfo, appendageFormInfo: appendageFormInfo }).then(function (resp) {
+        var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
+        if (!t) return
+        t.showForm = false
+        if (window.$message) window.$message.success('新增成功')
+        loadData(vmKey || novaName)
+      }).catch(function () {
+        console.info('[Nova] add接口请求失败，novaName:', novaName)
       })
     }
   }
@@ -892,13 +835,7 @@ window.NovaTableJQ = (function ($) {
   // ── picker 专用 buildTable，用 vmKey 索引而非 novaName ─────────
   function buildTableForKey(novaName, vmKey, sourceNovaName, sourceFields) {
     if (!novaName || !vmKey) return
-    $.ajax({
-      url:         '/nova/table/build',
-      method:      'POST',
-      contentType: 'application/json',
-      data:        JSON.stringify({ novaName: novaName }),
-      success: function (resp) {
-        if (resp.code !== 200) return
+    window.fetchApi.post('/nova/table/build', { novaName: novaName }).then(function (resp) {
         var target = window.vmMap && window.vmMap[vmKey]
         if (!target) return
         target._sourceNovaName = sourceNovaName || novaName
@@ -954,11 +891,7 @@ window.NovaTableJQ = (function ($) {
           }
         }
         loadData(vmKey)
-      },
-      error: function () {
-        console.info('[Nova Picker] build接口未就绪，novaName:', novaName)
-      }
-    })
+      })
   }
 
   // ── view 模式：从 rawRow 填充 target.formData ───────────────────
@@ -999,30 +932,25 @@ window.NovaTableJQ = (function ($) {
   // ── view 模式初始化：/build，直接填充 rawRow ────────────────────
   function onViewMounted(novaName, vmKey, rawRow, parentNovaName) {
     if (!novaName || !vmKey) return
-    $.ajax({
-      url: '/nova/table/build', method: 'POST', contentType: 'application/json',
-      data: JSON.stringify({ novaName: novaName }),
-      success: function(resp) {
-        if (resp.code !== 200) return
-        var target = window.vmMap && window.vmMap[vmKey]
-        if (!target) return
-        var d = resp.data
-        target.choiceMap     = d.choice      || {}
-        target.tagMap        = d.tag         || {}
-        target.dateMap       = d.date        || {}
-        target.numberMap     = d.number      || {}
-        target.booleanMap    = d.booleanInfo || {}
-        target.attachmentMap = d.attachment  || {}
-        target.referenceMap  = d.reference   || {}
-        target.editLayout    = (d.layout && d.layout.editLayout) || 'DEFAULT'
-        var allEdit = d.edit || []
-        var fields = allEdit.filter(function(e){ return e.tapType === 'thisForm' }).reduce(function(acc, e){ return acc.concat(e.thisForms || []) }, [])
-        target.editFields = fields
-        if (d.novaIdFieldName) target.novaIdFieldName = d.novaIdFieldName
-        target.formMode = 'edit'
-        // 直接填充 viewRow 数据（referenceForm 已由 NovaRefForm 子组件自行加载）
-        fillViewFormData(target, rawRow)
-      }
+    window.fetchApi.post('/nova/table/build', { novaName: novaName }).then(function(resp) {
+      var target = window.vmMap && window.vmMap[vmKey]
+      if (!target) return
+      var d = resp.data
+      target.choiceMap     = d.choice      || {}
+      target.tagMap        = d.tag         || {}
+      target.dateMap       = d.date        || {}
+      target.numberMap     = d.number      || {}
+      target.booleanMap    = d.booleanInfo || {}
+      target.attachmentMap = d.attachment  || {}
+      target.referenceMap  = d.reference   || {}
+      target.editLayout    = (d.layout && d.layout.editLayout) || 'DEFAULT'
+      var allEdit = d.edit || []
+      var fields = allEdit.filter(function(e){ return e.tapType === 'thisForm' }).reduce(function(acc, e){ return acc.concat(e.thisForms || []) }, [])
+      target.editFields = fields
+      if (d.novaIdFieldName) target.novaIdFieldName = d.novaIdFieldName
+      target.formMode = 'edit'
+      // 直接填充 viewRow 数据（referenceForm 已由 NovaRefForm 子组件自行加载）
+      fillViewFormData(target, rawRow)
     })
   }
 
@@ -1039,17 +967,11 @@ window.NovaTableJQ = (function ($) {
     var sourceFields = Object.assign({}, target._sourceFields || {})
     var sourceNovaName = target._sourceNovaName || queryName
     target.loading = true
-    $.ajax({
-      url: '/nova/table/tree',
-      method: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify({ novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, orders: buildOrderItems(target.sortStates) }),
-      success: function(resp) {
-        var t = window.vmMap && window.vmMap[vmKey]
-        if (!t) return
+    window.fetchApi.post('/nova/table/tree', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, orders: buildOrderItems(target.sortStates) }).then(function(resp) {
+      var t = window.vmMap && window.vmMap[vmKey]
+      if (!t) return
         t.loading = false
-        if (resp.code !== 200) return
-        t.treeSearchHitKeys = new Set()
+          t.treeSearchHitKeys = new Set()
         console.time('[perf] loadTreeData total')
         var data = resp.data || {}
         var rootList = data.rootList || []
@@ -1072,12 +994,10 @@ window.NovaTableJQ = (function ($) {
           console.timeEnd('[perf] Vue nextTick (tree)')
           console.log('[perf] Vue render complete (tree)')
         })
-      },
-      error: function() {
+      }).catch(function() {
         var t = window.vmMap && window.vmMap[vmKey]
         if (t) t.loading = false
-      }
-    })
+      })
   }
 
   // ── 根据 treeLevel 计算初始展开的节点 key ──────────────────

@@ -603,12 +603,7 @@ const NovaTable = {
               const isDark = document.body.classList.contains('dark')
               const offBg = isDark ? '#444' : '#d9d9d9'
               const onClick = disabled ? undefined : () => {
-                const newVal = !isTrue
-                $.ajax({
-                  url: '/nova/table/update', method: 'POST', contentType: 'application/json',
-                  data: JSON.stringify({ novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: String(newVal), type: 'BOOLEAN' }] }),
-                  success: (resp) => { if (resp.code === 200) { if (window.$message) window.$message.success('修改成功'); window.NovaTableJQ.loadData(novaName) } }
-                })
+                window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: String(newVal), type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success('修改成功'); window.NovaTableJQ.loadData(novaName) })
               }
               return h('span', { style: `display:inline-block;vertical-align:middle;width:44px;height:22px;border-radius:11px;background:${isTrue ? '#006be6' : offBg};position:relative;cursor:${disabled ? 'not-allowed' : 'pointer'};opacity:${disabled ? '0.5' : '1'};flex-shrink:0;transition:background .2s`, onClick }, [
                 h('span', { style: `position:absolute;top:0;${isTrue ? 'left:0;right:20px' : 'right:0;left:20px'};bottom:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;user-select:none` }, isTrue ? '是' : '否'),
@@ -1169,17 +1164,12 @@ const NovaTable = {
       toUpload.forEach(function(file) { formData.append('files', file) })
       var self = this
       var field = f.field
-      $.ajax({
-        url: '/nova/attachment/upload', method: 'POST', data: formData, processData: false, contentType: false,
-        success: function(resp) {
-          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '上传失败'); return }
-          if (!self.opFormAppFormData[appNovaName]) self.opFormAppFormData[appNovaName] = {}
-          if (!self.opFormAppFormData[appNovaName][field]) self.opFormAppFormData[appNovaName][field] = []
-          ;(resp.data || []).forEach(function(url) { self.opFormAppFormData[appNovaName][field].push(url) })
-          if (window.$message) window.$message.success('上传成功')
-        },
-        error: function() { if (window.$message) window.$message.error('上传请求失败') }
-      })
+      window.fetchApi.upload('/nova/attachment/upload', formData).then(function(resp) {
+        if (!self.opFormAppFormData[appNovaName]) self.opFormAppFormData[appNovaName] = {}
+        if (!self.opFormAppFormData[appNovaName][field]) self.opFormAppFormData[appNovaName][field] = []
+        ;(resp.data || []).forEach(function(url) { self.opFormAppFormData[appNovaName][field].push(url) })
+        if (window.$message) window.$message.success('上传成功')
+      }).catch(function() { if (window.$message) window.$message.error('上传请求失败') })
     },
     // ── appendageForm helpers ───────────────────────────────────
     appBuild(n)        { return this.appendageTabBuild[n] || {} },
@@ -1463,11 +1453,7 @@ const NovaTable = {
         // 工具栏按钮：取勾选行
         novaIds = this.checkedRowKeys.map(function(k) { return String(k) })
       }
-      $.ajax({
-        url: '/nova/table/rowOperationSubmit',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
+      window.fetchApi.post('/nova/table/rowOperationSubmit', {
           novaName: this.novaName,
           type: btn.type,
           novaIds: novaIds,
@@ -1476,18 +1462,14 @@ const NovaTable = {
           novaFromName: btn.novaClassName || null,
           formInfo: [],
           appendageFormInfo: {}
-        }),
-        success: function(resp) {
-          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '操作失败'); return }
+        }).then(function(resp) {
           if (window.$message) window.$message.success('操作成功')
           if (resp.data && resp.data.jsExpression) {
             try { new Function(resp.data.jsExpression)() } catch(e) { console.error('[CustomBtn] jsExpression error:', e) }
           } else {
             if (window.NovaTableJQ) window.NovaTableJQ.loadData(self.vmKey || self.novaName)
           }
-        },
-        error: function() { if (window.$message) window.$message.error('请求失败') }
-      })
+        }).catch(function() { if (window.$message) window.$message.error('请求失败') })
     },
     handleCustomBtnClick(btn, skipConfirm) {
       if (btn.type === 'NOVA' && btn.novaClassName) {
@@ -1503,14 +1485,8 @@ const NovaTable = {
       if (!btn.novaClassName) return
       var self = this
       self.opFormLoading = true
-      $.ajax({
-        url: '/nova/table/build',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ novaName: btn.novaClassName }),
-        success: function(resp) {
+      window.fetchApi.post('/nova/table/build', { novaName: btn.novaClassName }).then(function(resp) {
           self.opFormLoading = false
-          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '加载失败'); return }
           var d = resp.data
           self.opFormBtn = btn
           self.opFormRow = row || null
@@ -1554,12 +1530,10 @@ const NovaTable = {
           self.opFormShow = true
           // 加载表单初始值（handler.novaFormValue 返回的数据）
           self.loadOpFormInitialValues()
-        },
-        error: function() {
+        }).catch(function() {
           self.opFormLoading = false
           if (window.$message) window.$message.error('请求失败')
-        }
-      })
+        })
     },
     closeOpForm() {
       this.opFormShow = false
@@ -1645,13 +1619,7 @@ const NovaTable = {
     },
     loadOpAppendageBuild(appNovaName) {
       var self = this
-      $.ajax({
-        url: '/nova/table/build',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ novaName: appNovaName }),
-        success: function(resp) {
-          if (resp.code !== 200) return
+      window.fetchApi.post('/nova/table/build', { novaName: appNovaName }).then(function(resp) {
           var d = resp.data
           var tab = (self.opFormExtraTabs || []).find(function(t) { return t.tapNovaName === appNovaName })
           if (!tab) return
@@ -1687,8 +1655,7 @@ const NovaTable = {
             self._applyOpLoadData(pendingLoad, fd, editFields, d.reference || {}, cm)
             delete self._opLoadPending[appNovaName]
           }
-        }
-      })
+        })
     },
     _applyOpLoadData(source, targetData, fields, refMap, choiceMap) {
       var rm = refMap || {}
@@ -1732,18 +1699,13 @@ const NovaTable = {
       } else {
         novaIds = this.checkedRowKeys.map(function(k) { return String(k) })
       }
-      $.ajax({
-        url: '/nova/table/rowOperationLoad',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
+      window.fetchApi.post('/nova/table/rowOperationLoad', {
           novaName: this.opFormNovaName,
           novaIds: novaIds,
           operationHandler: this.opFormBtn.operationHandler,
           operationParam: this.opFormBtn.operationParam || ''
-        }),
-        success: function(resp) {
-          if (resp.code !== 200 || !resp.data) return
+        }).then(function(resp) {
+          if (!resp.data) return
           var data = resp.data
           // 基本表单数据
           var mainData = data[self.opFormNovaName]
@@ -1763,8 +1725,7 @@ const NovaTable = {
               self._opLoadPending[key] = appData
             }
           })
-        }
-      })
+        })
     },
     submitOpForm() {
       var formData = this.opFormData
@@ -1826,11 +1787,7 @@ const NovaTable = {
         var fd = self.opFormAppFormData[n] || {}
         appendageFormInfo[n] = _buildFormInfoList(build.editFields || [], fd, build.referenceMap || {})
       })
-      $.ajax({
-        url: '/nova/table/rowOperationSubmit',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
+      window.fetchApi.post('/nova/table/rowOperationSubmit', {
           novaName: this.novaName,
           type: this.opFormBtn.type,
           novaIds: novaIds,
@@ -1839,9 +1796,7 @@ const NovaTable = {
           novaFromName: this.opFormBtn.novaClassName,
           formInfo: formInfo,
           appendageFormInfo: appendageFormInfo
-        }),
-        success: function(resp) {
-          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '提交失败'); return }
+        }).then(function(resp) {
           self.closeOpForm()
           if (window.$message) window.$message.success('操作成功')
           if (resp.data && resp.data.jsExpression) {
@@ -1849,9 +1804,7 @@ const NovaTable = {
           } else {
             if (window.NovaTableJQ) window.NovaTableJQ.loadData(self.vmKey || self.novaName)
           }
-        },
-        error: function() { if (window.$message) window.$message.error('请求失败') }
-      })
+        }).catch(function() { if (window.$message) window.$message.error('请求失败') })
     },
     handleOpAttachmentChange(f, event) {
       var files = Array.from(event.target.files || [])
@@ -1885,16 +1838,11 @@ const NovaTable = {
       toUpload.forEach(function(file) { formData.append('files', file) })
       var self = this
       var field = f.field
-      $.ajax({
-        url: '/nova/attachment/upload', method: 'POST', data: formData, processData: false, contentType: false,
-        success: function(resp) {
-          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '上传失败'); return }
-          if (!self.opFormData[field]) self.opFormData[field] = []
-          ;(resp.data || []).forEach(function(url) { self.opFormData[field].push(url) })
-          if (window.$message) window.$message.success('上传成功')
-        },
-        error: function() { if (window.$message) window.$message.error('上传请求失败') }
-      })
+      window.fetchApi.upload('/nova/attachment/upload', formData).then(function(resp) {
+        if (!self.opFormData[field]) self.opFormData[field] = []
+        ;(resp.data || []).forEach(function(url) { self.opFormData[field].push(url) })
+        if (window.$message) window.$message.success('上传成功')
+      }).catch(function() { if (window.$message) window.$message.error('上传请求失败') })
     },
     handleFormSubmit()  { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleFormSubmit(this._vmKey); else window.NovaTableJQ.handleFormSubmit() },
     handleAttachmentChange(f, event, appNovaName) {
@@ -1928,23 +1876,18 @@ const NovaTable = {
       toUpload.forEach(file => formData.append('files', file))
       const field = f.field
       const vm = this
-      $.ajax({
-        url: '/nova/attachment/upload', method: 'POST', data: formData, processData: false, contentType: false,
-        success(resp) {
-          if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '上传失败'); return }
-          if (appNovaName) {
-            if (!vm.appendageFormData[appNovaName]) return
-            if (!vm.appendageFormData[appNovaName][field]) vm.appendageFormData[appNovaName][field] = []
-            ;(resp.data || []).forEach(url => vm.appendageFormData[appNovaName][field].push(url))
-          } else {
-            if (!vm.formData[field]) vm.formData[field] = []
-            ;(resp.data || []).forEach(url => vm.formData[field].push(url))
-          }
-          if (window.$message) window.$message.success('上传成功')
-          vm.openPreview(f, appNovaName || null)
-        },
-        error() { if (window.$message) window.$message.error('上传请求失败') }
-      })
+      window.fetchApi.upload('/nova/attachment/upload', formData).then(resp => {
+        if (appNovaName) {
+          if (!vm.appendageFormData[appNovaName]) return
+          if (!vm.appendageFormData[appNovaName][field]) vm.appendageFormData[appNovaName][field] = []
+          ;(resp.data || []).forEach(url => vm.appendageFormData[appNovaName][field].push(url))
+        } else {
+          if (!vm.formData[field]) vm.formData[field] = []
+          ;(resp.data || []).forEach(url => vm.formData[field].push(url))
+        }
+        if (window.$message) window.$message.success('上传成功')
+        vm.openPreview(f, appNovaName || null)
+      }).catch(() => { if (window.$message) window.$message.error('上传请求失败') })
     },
     openPreview(f, appNovaName, isOpForm) {
       this.previewField = f
@@ -2247,16 +2190,7 @@ const NovaTable = {
       }
       var self = this
       this.linkTreeLoading[tapNovaName] = true
-      $.ajax({
-        url: '/nova/table/build',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ novaName: tapNovaName }),
-        success: function(resp) {
-          if (resp.code !== 200) {
-            self.linkTreeLoading[tapNovaName] = false
-            return
-          }
+      window.fetchApi.post('/nova/table/build', { novaName: tapNovaName }).then(function(resp) {
           var bd = resp.data || {}
           var lt = bd.linkTarget || {}
           var ltEditFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
@@ -2278,12 +2212,10 @@ const NovaTable = {
             self.loadLinkTreeData(tapNovaName)
           }
           // 普通模式：linkTabBuild 已填充，模板自动渲染内嵌表格
-        },
-        error: function() {
+        }).catch(function() {
           self.linkTreeLoading[tapNovaName] = false
           if (window.$message) window.$message.error('获取中间表配置失败')
-        }
-      })
+        })
     },
     submitDualLinkTree() {
       window.NovaDualLinkJQ.submitDualLinkTree(this)
@@ -2310,12 +2242,7 @@ const NovaTable = {
       }
 
       // 获取目标 Nova 的 build 配置（treeSearchField, treeParentField 等）
-      $.ajax({
-        url: '/nova/table/build',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ novaName: targetNovaName }),
-        success: function(buildResp) {
+      window.fetchApi.post('/nova/table/build', { novaName: targetNovaName }).then(function(buildResp) {
             if (buildResp.code !== 200) {
               self.linkTreeLoading[stateKey] = false
               if (window.$message) window.$message.error('获取目标表配置失败')
@@ -2405,12 +2332,7 @@ const NovaTable = {
             }
 
             // Step 2a: 目标表 tree（全量树结构）
-            $.ajax({
-              url: '/nova/table/tree',
-              method: 'POST',
-              contentType: 'application/json',
-              data: JSON.stringify({ novaName: targetNovaName, sourceNovaName: targetNovaName, sourceFields: srcFields }),
-              success: function(treeResp) {
+            window.fetchApi.post('/nova/table/tree', { novaName: targetNovaName, sourceNovaName: targetNovaName, sourceFields: srcFields }).then(function(treeResp) {
                 if (treeResp.code !== 200) {
                   self.linkTreeLoading[stateKey] = false
                   if (window.$message) window.$message.error('加载树数据失败')
@@ -2471,21 +2393,14 @@ const NovaTable = {
 
                 treeRendered = true
                 renderTree()
-              },
-              error: function() {
+              }).catch(function() {
                 self.linkTreeLoading[stateKey] = false
                 if (window.$message) window.$message.error('加载树数据失败')
-              }
-            })
+              })
 
             // Step 2b: 中间表 tree（获取已勾选的节点 ID，回显勾选）
             var storageField = lt.thisStorageField
-            $.ajax({
-              url: '/nova/table/tree',
-              method: 'POST',
-              contentType: 'application/json',
-              data: JSON.stringify({ novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String((row || self.currentRow)[storageField]) }),
-              success: function(linkResp) {
+            window.fetchApi.post('/nova/table/tree', { novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String((row || self.currentRow)[storageField]) }).then(function(linkResp) {
                 if (linkResp.code === 200) {
                   // 合并 rootList + childrenList 取所有节点
                   var allRecords = (linkResp.data.rootList || []).concat(linkResp.data.childrenList || [])
@@ -2499,19 +2414,15 @@ const NovaTable = {
                 }
                 checkedReady = true
                 renderTree()
-              },
-              error: function() {
+              }).catch(function() {
                 // 中间表 tree 失败：不回显勾选，树仍可正常显示
                 checkedReady = true
                 renderTree()
-              }
-            })
-          },
-          error: function() {
+              })
+          }).catch(function() {
             self.linkTreeLoading[stateKey] = false
             if (window.$message) window.$message.error('获取目标表配置失败')
-          }
-      })
+          })
     },
     updateLinkTreeDisplayKeys(tapNovaName) {
       const fullSet = this.linkTreeCheckedKeys[tapNovaName] || new Set()
@@ -2918,33 +2829,26 @@ const NovaTable = {
         })
       }
       this.refSelectLoading[field] = true
-      $.ajax({
-        url: '/nova/table/promptSearch',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
-          novaName: refNovaName,
-          sourceNovaName: this.novaName,
-          sourceFields,
-          prompt: query,
-          pageBean: { current: page, size: 10 }
-        }),
-        success: (resp) => {
-          const pb = resp.data || {}
-          const items = (pb.records || []).map(item => ({
-            label: String(item.displayField ?? ''),
-            value: item.storageField
-          }))
-          this.refSelectOptions[field] = append
-            ? (this.refSelectOptions[field] || []).concat(items)
-            : items
-          this.refSelectTotal[field] = pb.total || 0
-          this.refSelectPage[field]  = page
-          this.refSelectLoading[field] = false
-          if (onDone) this.$nextTick(onDone)
-        },
-        error: () => { this.refSelectLoading[field] = false }
-      })
+      window.fetchApi.post('/nova/table/promptSearch', {
+        novaName: refNovaName,
+        sourceNovaName: this.novaName,
+        sourceFields,
+        prompt: query,
+        pageBean: { current: page, size: 10 }
+      }).then(resp => {
+        const pb = resp.data || {}
+        const items = (pb.records || []).map(item => ({
+          label: String(item.displayField ?? ''),
+          value: item.storageField
+        }))
+        this.refSelectOptions[field] = append
+          ? (this.refSelectOptions[field] || []).concat(items)
+          : items
+        this.refSelectTotal[field] = pb.total || 0
+        this.refSelectPage[field]  = page
+        this.refSelectLoading[field] = false
+        if (onDone) this.$nextTick(onDone)
+      }).catch(() => { this.refSelectLoading[field] = false })
     },
     onRefSelectSearch(f, query) {
       const field = f.field

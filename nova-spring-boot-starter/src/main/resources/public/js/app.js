@@ -114,26 +114,9 @@ const themeOverrides = {
 var _startToken = localStorage.getItem('nova_token')
 if (_startToken) {
   window.loadJSON('json/index.json', function (config) {
-    $.ajax({
-      url: "/nova/authority/getMenu",
-      method: 'POST',
-      contentType: 'application/json',
-      data: '{}',
-      headers: { 'token': _startToken },
-      success: function (resp) {
-        if (resp.code === 520) {
-          // token 过期：清除登录态，先挂载应用，再跳到登录页
-          localStorage.removeItem('nova_token')
-          localStorage.removeItem('nova_user')
-          localStorage.removeItem('nova_alias')
-          localStorage.removeItem('nova_avatar')
-          mountApp([], config, true)
-          return
-        }
-        mountApp((resp.code === 200 && resp.data) ? resp.data : [], config)
-      },
-      error: function () { mountApp([], config) }
-    })
+    window.fetchApi.post('/nova/authority/getMenu', {}).then(function (resp) {
+      mountApp(resp.data || [], config)
+    }).catch(function () { mountApp([], config) })
   })
 } else {
   // 无 token：直接挂载空菜单，显示登录页
@@ -244,22 +227,17 @@ function mountApp(menuList, config, loginExpired) {
       // 右上角用户菜单
       const handleUserMenuSelect = (key) => {
         if (key === 'logout') {
-          window.msg.confirm('warning', '退出登录', '确定要退出登录吗？', async () => {
-            var token = localStorage.getItem('nova_token')
-            try {
-              await fetch('/nova/authority/logout', {
-                method: 'POST',
-                headers: { 'token': token }
-              })
-            } catch (e) {}
-            // 清空本地登录态
-            localStorage.removeItem('nova_token')
-            localStorage.removeItem('nova_user')
-            localStorage.removeItem('nova_alias')
-            localStorage.removeItem('nova_avatar')
-            // 跳到登录页并刷新
-            window.location.hash = '#/login'
-            window.location.reload()
+          window.msg.confirm('warning', '退出登录', '确定要退出登录吗？', () => {
+            window.fetchApi.post('/nova/authority/logout').finally(() => {
+              // 清空本地登录态
+              localStorage.removeItem('nova_token')
+              localStorage.removeItem('nova_user')
+              localStorage.removeItem('nova_alias')
+              localStorage.removeItem('nova_avatar')
+              // 跳到登录页并刷新
+              window.location.hash = '#/login'
+              window.location.reload()
+            })
           })
         }
       }

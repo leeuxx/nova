@@ -35,18 +35,10 @@ window.LoginPage = {
 
   methods: {
     // 检查本地 token 是否有效
-    async checkTokenAndRedirect() {
-      var token = localStorage.getItem('nova_token')
-      if (!token) return
-      try {
-        var resp = await fetch('/nova/authority/checkToken', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'token': token
-          }
-        }).then(r => r.json())
-        if (resp.code === 200 && resp.data === true) {
+    checkTokenAndRedirect() {
+      if (!localStorage.getItem('nova_token')) return
+      window.fetchApi.post('/nova/authority/checkToken').then((resp) => {
+        if (resp.data === true) {
           // token 有效，直接进入主页
           window.location.hash = '#/home'
           window.location.reload()
@@ -54,9 +46,9 @@ window.LoginPage = {
           // token 无效，清除本地
           this.clearAuth()
         }
-      } catch (e) {
+      }).catch(() => {
         // 网络错误时不清除，让用户手动登录
-      }
+      })
     },
 
     clearAuth() {
@@ -75,44 +67,37 @@ window.LoginPage = {
       }
     },
 
-    async handleLogin() {
+    handleLogin() {
       // 验证表单
-      const valid = await this.$refs.formRef?.validate().catch(() => false)
-      if (!valid) return
-
-      // 记住账号逻辑
-      if (this.rememberMe) {
-        localStorage.setItem('nova_remember_user', this.formData.username)
-      } else {
-        localStorage.removeItem('nova_remember_user')
-      }
-
-      this.loading = true
-      try {
-        const resp = await fetch('/nova/authority/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.formData)
-        }).then(r => r.json())
-
-        if (resp.code === 200 && resp.data) {
-          // 完整保存登录态
-          localStorage.setItem('nova_token', resp.data.token || '')
-          localStorage.setItem('nova_user', resp.data.name)
-          localStorage.setItem('nova_alias', resp.data.alias || '')
-          localStorage.setItem('nova_avatar', resp.data.avatar || '')
-          if (window.$message) window.$message.success('登录成功，欢迎 ' + resp.data.name)
-          // 登录成功后重新加载页面以拉取菜单
-          window.location.hash = '#/home'
-          window.location.reload()
+      this.$refs.formRef?.validate().then(() => {
+        // 记住账号逻辑
+        if (this.rememberMe) {
+          localStorage.setItem('nova_remember_user', this.formData.username)
         } else {
-          if (window.$message) window.$message.error(resp.message || '登录失败，请检查账号密码')
+          localStorage.removeItem('nova_remember_user')
         }
-      } catch (e) {
-        if (window.$message) window.$message.error('网络错误，请稍后重试')
-      } finally {
-        this.loading = false
-      }
+
+        this.loading = true
+        window.fetchApi.post('/nova/authority/login', this.formData).then((resp) => {
+          if (resp.data) {
+            // 完整保存登录态
+            localStorage.setItem('nova_token', resp.data.token || '')
+            localStorage.setItem('nova_user', resp.data.name)
+            localStorage.setItem('nova_alias', resp.data.alias || '')
+            localStorage.setItem('nova_avatar', resp.data.avatar || '')
+            if (window.$message) window.$message.success('登录成功，欢迎 ' + resp.data.name)
+            // 登录成功后重新加载页面以拉取菜单
+            window.location.hash = '#/home'
+            window.location.reload()
+          } else {
+            if (window.$message) window.$message.error(resp.message || '登录失败，请检查账号密码')
+          }
+        }).catch(() => {
+          if (window.$message) window.$message.error('网络错误，请稍后重试')
+        }).finally(() => {
+          this.loading = false
+        })
+      }).catch(() => {})
     },
 
     handleKeyPress(e) {

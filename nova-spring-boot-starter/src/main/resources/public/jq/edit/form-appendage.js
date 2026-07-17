@@ -57,15 +57,11 @@ window.NovaTableJQ_app = (function () {
     loaded[appNovaName] = true
     target.appendageDetailsLoaded = loaded
     if (!storageVal) return
-    $.ajax({
-      url: '/nova/table/details', method: 'POST', contentType: 'application/json',
-      data: JSON.stringify({ novaName: appNovaName, storageFieldValue: String(storageVal) }),
-      success: function(resp) {
-        if (resp.code !== 200 || !resp.data) return
-        var t = window.vmMap && window.vmMap[key]
-        if (!t) return
-        fillAppendageData(t, appNovaName, resp.data)
-      }
+    window.fetchApi.post('/nova/table/details', { novaName: appNovaName, storageFieldValue: String(storageVal) }).then(function(resp) {
+      if (!resp.data) return
+      var t = window.vmMap && window.vmMap[key]
+      if (!t) return
+      fillAppendageData(t, appNovaName, resp.data)
     })
   }
 
@@ -77,51 +73,47 @@ window.NovaTableJQ_app = (function () {
     ;(target.editAppendageTabs || []).forEach(function(appTab) {
       if (!appTab.tapNovaName) return
       var appNovaName = appTab.tapNovaName
-      $.ajax({
-        url: '/nova/table/build', method: 'POST', contentType: 'application/json',
-        data: JSON.stringify({ novaName: appNovaName }),
-        success: function(br) {
-          if (br.code !== 200) return
-          var t2 = window.vmMap && window.vmMap[key]
-          if (!t2) return
-          var bd = br.data
-          var editFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
-          var newBuild = Object.assign({}, t2.appendageTabBuild)
-          var cm = bd.choice || {}
-          newBuild[appNovaName] = {
-            editFields: editFields, choiceMap: cm, numberMap: bd.number || {},
-            dateMap: bd.date || {}, booleanMap: bd.booleanInfo || {},
-            referenceMap: bd.reference || {}, tagMap: bd.tag || {},
-            attachmentMap: bd.attachment || {},
-            editLayout: (bd.layout && bd.layout.editLayout) || 'DEFAULT'
-          }
-          t2.appendageTabBuild = newBuild
-          // 保留用户已输入的值，不覆盖
-          var existingFd = (t2.appendageFormData || {})[appNovaName] || {}
-          var fd = {}
-          editFields.forEach(function(f) {
-            var ci = cm[f.field]
-            var isMulti = f.type === 'CHOICE' && ci && ci.selectType === 'MULTI'
-            var isSingle = f.type === 'CHOICE' && ci && ci.selectType === 'SINGLE'
-            if (existingFd[f.field] !== undefined) {
-              fd[f.field] = existingFd[f.field]
-            } else {
-              fd[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (isSingle || f.type === 'DATE' || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
-            }
-            if (f.type === 'REFERENCE') fd[f.field + '_display'] = existingFd[f.field + '_display'] || ''
-          })
-          var newFds = Object.assign({}, t2.appendageFormData)
-          newFds[appNovaName] = fd
-          t2.appendageFormData = newFds
-          if (rowData) {
-            var appendageMap = t2.appendageMap || {}
-            var appFieldKey = null
-            Object.keys(appendageMap).forEach(function(k) { if (appendageMap[k].referenceName === appNovaName) appFieldKey = k })
-            if (appFieldKey) fillAppendageData(t2, appNovaName, rowData[appFieldKey])
-          }
-          // APPENDAGE 组件的 /details 立即加载
-          loadAppendageDetails(novaName, appNovaName, key)
+      window.fetchApi.post('/nova/table/build', { novaName: appNovaName }).then(function(br) {
+        if (br.code !== 200) return
+        var t2 = window.vmMap && window.vmMap[key]
+        if (!t2) return
+        var bd = br.data
+        var editFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
+        var newBuild = Object.assign({}, t2.appendageTabBuild)
+        var cm = bd.choice || {}
+        newBuild[appNovaName] = {
+          editFields: editFields, choiceMap: cm, numberMap: bd.number || {},
+          dateMap: bd.date || {}, booleanMap: bd.booleanInfo || {},
+          referenceMap: bd.reference || {}, tagMap: bd.tag || {},
+          attachmentMap: bd.attachment || {},
+          editLayout: (bd.layout && bd.layout.editLayout) || 'DEFAULT'
         }
+        t2.appendageTabBuild = newBuild
+        // 保留用户已输入的值，不覆盖
+        var existingFd = (t2.appendageFormData || {})[appNovaName] || {}
+        var fd = {}
+        editFields.forEach(function(f) {
+          var ci = cm[f.field]
+          var isMulti = f.type === 'CHOICE' && ci && ci.selectType === 'MULTI'
+          var isSingle = f.type === 'CHOICE' && ci && ci.selectType === 'SINGLE'
+          if (existingFd[f.field] !== undefined) {
+            fd[f.field] = existingFd[f.field]
+          } else {
+            fd[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (isSingle || f.type === 'DATE' || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
+          }
+          if (f.type === 'REFERENCE') fd[f.field + '_display'] = existingFd[f.field + '_display'] || ''
+        })
+        var newFds = Object.assign({}, t2.appendageFormData)
+        newFds[appNovaName] = fd
+        t2.appendageFormData = newFds
+        if (rowData) {
+          var appendageMap = t2.appendageMap || {}
+          var appFieldKey = null
+          Object.keys(appendageMap).forEach(function(k) { if (appendageMap[k].referenceName === appNovaName) appFieldKey = k })
+          if (appFieldKey) fillAppendageData(t2, appNovaName, rowData[appFieldKey])
+        }
+        // APPENDAGE 组件的 /details 立即加载
+        loadAppendageDetails(novaName, appNovaName, key)
       })
     })
   }

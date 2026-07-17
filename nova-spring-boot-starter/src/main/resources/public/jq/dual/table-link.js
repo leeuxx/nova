@@ -30,45 +30,33 @@ window.NovaDualLinkJQ = (function () {
     // 需要先加载 build
     hostVm.linkTreeLoading['__dual__'] = true
     var self = hostVm
-    $.ajax({
-      url: '/nova/table/build',
-      method: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify({ novaName: tapNovaName }),
-      success: function(resp) {
-        if (resp.code !== 200) {
-          hostVm.linkTreeLoading['__dual__'] = false
-          if (callback) callback(false)
-          return
-        }
-        var bd = resp.data || {}
-        var lt = bd.linkTarget || {}
-        var ltEditFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
-        var newBuild = Object.assign({}, hostVm.linkTabBuild)
-        newBuild[tapNovaName] = {
-          linkTarget: lt,
-          sourceFieldName: lt.thisFieldName || '',
-          targetFieldName: lt.linkFieldName || '',
-          editFields: ltEditFields,
-          tableColumns: bd.tableColumns || [],
-          novaIdFieldName: bd.novaIdFieldName,
-          choiceMap: bd.choice || {},
-          referenceMap: bd.reference || {},
-          linkMap: bd.link || {}
-        }
-        hostVm.linkTabBuild = newBuild
-        hostVm.linkTreeLoading['__dual__'] = false
-        if (lt.linkTree) {
-          hostVm.loadLinkTreeData(tapNovaName, { row: hostVm._dualSelectedRow, stateKey: '__dual__' })
-          if (callback) callback(true)
-        } else {
-          if (callback) callback(false)
-        }
-      },
-      error: function() {
-        hostVm.linkTreeLoading['__dual__'] = false
+    window.fetchApi.post('/nova/table/build', { novaName: tapNovaName }).then(function(resp) {
+      var bd = resp.data || {}
+      var lt = bd.linkTarget || {}
+      var ltEditFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
+      var newBuild = Object.assign({}, hostVm.linkTabBuild)
+      newBuild[tapNovaName] = {
+        linkTarget: lt,
+        sourceFieldName: lt.thisFieldName || '',
+        targetFieldName: lt.linkFieldName || '',
+        editFields: ltEditFields,
+        tableColumns: bd.tableColumns || [],
+        novaIdFieldName: bd.novaIdFieldName,
+        choiceMap: bd.choice || {},
+        referenceMap: bd.reference || {},
+        linkMap: bd.link || {}
+      }
+      hostVm.linkTabBuild = newBuild
+      hostVm.linkTreeLoading['__dual__'] = false
+      if (lt.linkTree) {
+        hostVm.loadLinkTreeData(tapNovaName, { row: hostVm._dualSelectedRow, stateKey: '__dual__' })
+        if (callback) callback(true)
+      } else {
         if (callback) callback(false)
       }
+    }).catch(function() {
+      hostVm.linkTreeLoading['__dual__'] = false
+      if (callback) callback(false)
     })
   }
 

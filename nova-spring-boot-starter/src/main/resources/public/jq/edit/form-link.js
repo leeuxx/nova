@@ -18,23 +18,15 @@ window.NovaTableJQ_link = (function () {
       { field: sourceField, value: String(sourceValue), type: 'LINK_TARGET' },
       { field: targetField, value: JSON.stringify(targetIds.map(String)), type: 'LINK_TARGET' }
     ]
-    $.ajax({
-      url:         '/nova/table/addLinkTarget',
-      method:      'POST',
-      contentType: 'application/json',
-      data:        JSON.stringify({ novaName: linkNovaName, formInfo: formInfo }),
-      success: function (resp) {
-        var t = window.vmMap && window.vmMap[key]
-        if (!t) return
-        if (resp.code !== 200) { if (window.$message) window.$message.error(resp.msg || '新增失败'); return }
-        if (window.$message) window.$message.success('新增成功')
-        // 刷新目标表格：优先使用传入的 refreshVmKey，否则查找嵌入式 vmKey
-        var embVmKey = refreshVmKey || findEmbVmKey(linkNovaName)
-        if (embVmKey && window.NovaTableJQ) window.NovaTableJQ.loadData(embVmKey)
-      },
-      error: function () {
-        console.info('[Nova] link add接口请求失败，novaName:', linkNovaName)
-      }
+    window.fetchApi.post('/nova/table/addLinkTarget', { novaName: linkNovaName, formInfo: formInfo }).then(function (resp) {
+      var t = window.vmMap && window.vmMap[key]
+      if (!t) return
+      if (window.$message) window.$message.success('新增成功')
+      // 刷新目标表格：优先使用传入的 refreshVmKey，否则查找嵌入式 vmKey
+      var embVmKey = refreshVmKey || findEmbVmKey(linkNovaName)
+      if (embVmKey && window.NovaTableJQ) window.NovaTableJQ.loadData(embVmKey)
+    }).catch(function () {
+      console.info('[Nova] link add接口请求失败，novaName:', linkNovaName)
     })
   }
 
