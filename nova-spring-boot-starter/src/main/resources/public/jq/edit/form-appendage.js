@@ -73,7 +73,7 @@ window.NovaTableJQ_app = (function () {
     ;(target.editAppendageTabs || []).forEach(function(appTab) {
       if (!appTab.tapNovaName) return
       var appNovaName = appTab.tapNovaName
-      window.fetchApi.post('/nova/table/build', { novaName: appNovaName }).then(function(br) {
+      window.fetchApi.post('/nova/table/build', { novaName: appNovaName }, window.__novaMenuCode(appNovaName)).then(function(br) {
         if (br.code !== 200) return
         var t2 = window.vmMap && window.vmMap[key]
         if (!t2) return

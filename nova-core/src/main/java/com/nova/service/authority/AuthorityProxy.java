@@ -20,4 +20,6 @@ public interface AuthorityProxy {
     @Comment("获取菜单")
     List<Menu> getMenu(String token);
 
+    @Comment("菜单权限验证")
+    boolean menuPermission(String token, String code);
 }

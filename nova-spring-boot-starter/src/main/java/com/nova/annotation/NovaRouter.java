@@ -1,5 +1,7 @@
 package com.nova.annotation;
 
+import com.nova.annotation.config.Comment;
+
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -7,4 +9,13 @@ import java.lang.annotation.*;
 @Documented
 public @interface NovaRouter {
 
+    @Comment("验证类型")
+    VerifyType verifyType() default VerifyType.LOGIN;
+
+    enum VerifyType {
+        @Comment("验证是否登录")
+        LOGIN,
+        @Comment("验证是否登录与菜单权限")
+        LOGIN_MENU
+    }
 }

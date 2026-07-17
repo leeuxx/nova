@@ -30,7 +30,7 @@ window.NovaDualLinkJQ = (function () {
     // 需要先加载 build
     hostVm.linkTreeLoading['__dual__'] = true
     var self = hostVm
-    window.fetchApi.post('/nova/table/build', { novaName: tapNovaName }).then(function(resp) {
+    window.fetchApi.post('/nova/table/build', { novaName: tapNovaName }, window.__novaMenuCode(tapNovaName)).then(function(resp) {
       var bd = resp.data || {}
       var lt = bd.linkTarget || {}
       var ltEditFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])

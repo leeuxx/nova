@@ -1,6 +1,19 @@
 // js/app.js — 路由 + 布局组件，先加载菜单再挂载 Vue 应用
 ;(function () {
 
+// ─── 独立页面快速退出：404 页面不加载任何资源 ──────────────────────
+if (window.location.hash === '#/404') {
+  document.getElementById('app').innerHTML =
+    '<div style="height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;background:#fff;padding:60px 80px;">' +
+    '<div class="blur-orb orb-1"></div><div class="blur-orb orb-2"></div><div class="blur-orb orb-3"></div><div class="blur-orb orb-4"></div><div class="blur-orb orb-5"></div>' +
+    '<div style="text-align:center;position:relative;z-index:1;margin-top:-20%">' +
+    '<div style="font-size:120px;font-weight:700;color:#2563eb;line-height:1;margin-bottom:8px;opacity:0.15">404</div>' +
+    '<h1 style="font-size:28px;font-weight:600;color:#1e293b;margin:0 0 12px 0">页面未找到</h1>' +
+    '<p style="font-size:14px;color:#94a3b8;margin:0 0 32px 0">抱歉，您访问的页面不存在或已被移除</p>' +
+    '</div></div>'
+  return
+}
+
 // ─── 配置项 ──────────────────────────────────────────────────────
 // true = 离线模式：禁止 iconify 请求外网 CDN，图标数据全部走 icons-offline.js
 // false = 在线模式：iconify 自动从 api.iconify.design 拉取图标数据
@@ -30,6 +43,8 @@ const {
 
 // 登录页面组件
 const LoginPage = window.LoginPage
+// 404 页面组件
+const NotFoundPage = window.NotFoundPage
 
 // ─── 图标辅助 ────────────────────────────────────────────────────
 function iconNode(iconName) {
@@ -49,7 +64,7 @@ function processMenus(list) {
   list.forEach(function (item) {
     // type=NOVA 才有路由，其他类型key 用 code 占位且不可点击
     var key      = item.type === 'NOVA' ? '/nova/' + item.value : item.code
-    var disabled = !item.type || item.type === ''  ? false  // 目录：不禁用（可展开）
+    var disabled = item.type === 'DIR'  ? false  // 目录：不禁用（可展开）
                  : item.type === 'NOVA'            ? false  // nova视图：可点击
                  : true                                      // 其他：禁用
     nodeMap[item.id] = {
@@ -72,6 +87,14 @@ function processMenus(list) {
       parent.children.push(node)
     } else {
       roots.push(node)
+    }
+  })
+
+  // 构建 novaName → menuCode 映射（用于 build/data 接口请求头）
+  var novaCodeMap = {}
+  list.forEach(function (item) {
+    if (item.type === 'NOVA' && item.value) {
+      novaCodeMap[item.value] = item.code
     }
   })
 
@@ -99,7 +122,7 @@ function processMenus(list) {
     }
   })
 
-  return { menuTree: roots, routeMeta: routeMeta, bcIconMap: bcIconMap, defaultPath: defaultPath, parentKeyMap: parentKeyMap }
+  return { menuTree: roots, routeMeta: routeMeta, bcIconMap: bcIconMap, defaultPath: defaultPath, parentKeyMap: parentKeyMap, novaCodeMap: novaCodeMap }
 }
 
 // ─── themeOverrides ──────────────────────────────────────────────
@@ -131,6 +154,13 @@ function mountApp(menuList, config, loginExpired) {
   var defaultPath = processed.defaultPath
   var parentKeyMap = processed.parentKeyMap
 
+  // 暴露 novaName → menuCode 映射，供 build/data 接口添加请求头
+  window.__novaMenuCodeMap = processed.novaCodeMap
+  window.__novaMenuCode = function (novaName) {
+    var code = (window.__novaMenuCodeMap || {})[novaName]
+    return code ? { menuCode: code } : {}
+  }
+
   // ── 桥接组件：从 provider 内部获取 dialog/message，天然继承主题 ──
   const DialogBridge = {
     setup() {
@@ -158,8 +188,8 @@ function mountApp(menuList, config, loginExpired) {
       const expandedKeys = ref([])
 
       const theme = computed(() => isDark.value ? darkTheme : null)
-      // 是否为登录路由（独立页面，无布局）
-      const isLoginRoute = computed(() => route.path === '/login')
+      // 是否为独立页面（登录/404 等，无布局）
+      const isStandaloneRoute = computed(() => route.path === '/login' || route.path === '/404')
 
       watch(isDark, (val) => {
         document.body.classList.toggle('dark', val)
@@ -272,7 +302,7 @@ function mountApp(menuList, config, loginExpired) {
 
       return {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
-        menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isLoginRoute,
+        menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isStandaloneRoute,
         handleMenuSelect, handleTabClose, handleTabClick, userDropdown, handleUserMenuSelect,
         barStyle, barReady, tabBarRef, userName, userAlias, userAvatar
       }
@@ -285,8 +315,8 @@ function mountApp(menuList, config, loginExpired) {
             <dialog-bridge />
             <n-notification-provider>
 
-              <!-- 登录页：独立渲染，无侧边栏/头部/tab 布局 -->
-              <router-view v-if="isLoginRoute" v-slot="{ Component }">
+              <!-- 独立页面（登录/404 等）：无侧边栏/头部/tab 布局 -->
+              <router-view v-if="isStandaloneRoute" v-slot="{ Component }">
                 <component :is="Component" />
               </router-view>
 
@@ -410,6 +440,8 @@ function mountApp(menuList, config, loginExpired) {
       { path: '/',                    redirect: '/login' },
       { path: '/login',               component: LoginPage, meta: { loginRequired: false } },
       { path: '/home',                component: { template: '<div style="padding:24px"><h2>欢迎使用 Nova Admin</h2><p>请从左侧菜单进入各功能模块。</p></div>' } },
+      { path: '/404',                 component: NotFoundPage, meta: { loginRequired: false } },
+      { path: '/:pathMatch(.*)*',     redirect: '/404' },
       { path: '/nova/:novaName',      component: window.NovaTable }
     ]
   })
@@ -422,7 +454,7 @@ function mountApp(menuList, config, loginExpired) {
   // 路由守卫：未登录拦截
   router.beforeEach((to, from, next) => {
     var token = localStorage.getItem('nova_token')
-    if (to.path !== '/login' && !token) {
+    if (to.path !== '/login' && to.path !== '/404' && !token) {
       next('/login')
     } else {
       next()

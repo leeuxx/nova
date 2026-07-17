@@ -53,7 +53,7 @@ window.NovaTableJQ = (function ($) {
   function buildTable(novaName, vmKey, embSourceFields, sourceNovaName, deferDataLoad) {
     if (!novaName) return
     var key = vmKey || novaName
-    window.fetchApi.post('/nova/table/build', { novaName: novaName }).then(function (resp) {
+    window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function (resp) {
         var target = window.vmMap && window.vmMap[key]
         if (!target) return
         target.choiceMap  = resp.data.choice  || {}
@@ -266,7 +266,7 @@ window.NovaTableJQ = (function ($) {
     ;(target.editExtraTabs || []).forEach(function(linkTab) {
       if (linkTab.tapType !== 'linkForm' || !linkTab.tapNovaName) return
       var linkNovaName = linkTab.tapNovaName
-      window.fetchApi.post('/nova/table/build', { novaName: linkNovaName }).then(function(br) {
+      window.fetchApi.post('/nova/table/build', { novaName: linkNovaName }, window.__novaMenuCode(linkNovaName)).then(function(br) {
         if (br.code !== 200) return
           var t2 = window.vmMap && window.vmMap[key]
           if (!t2) return
@@ -381,7 +381,7 @@ window.NovaTableJQ = (function ($) {
     if (Object.keys(conditions).length === 0 && target._embConditions && Object.keys(target._embConditions).length > 0) {
       Object.assign(conditions, target._embConditions)
     }
-    window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, linkConditions: linkConditions, pageBean: pageBean, conditions: conditions }).then(function (resp) {
+    window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, linkConditions: linkConditions, pageBean: pageBean, conditions: conditions }, window.__novaMenuCode(queryName)).then(function (resp) {
       var t = window.vmMap && window.vmMap[vmKey]
       if (!t) return
         t.loading = false
@@ -835,7 +835,7 @@ window.NovaTableJQ = (function ($) {
   // ── picker 专用 buildTable，用 vmKey 索引而非 novaName ─────────
   function buildTableForKey(novaName, vmKey, sourceNovaName, sourceFields) {
     if (!novaName || !vmKey) return
-    window.fetchApi.post('/nova/table/build', { novaName: novaName }).then(function (resp) {
+    window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function (resp) {
         var target = window.vmMap && window.vmMap[vmKey]
         if (!target) return
         target._sourceNovaName = sourceNovaName || novaName
@@ -932,7 +932,7 @@ window.NovaTableJQ = (function ($) {
   // ── view 模式初始化：/build，直接填充 rawRow ────────────────────
   function onViewMounted(novaName, vmKey, rawRow, parentNovaName) {
     if (!novaName || !vmKey) return
-    window.fetchApi.post('/nova/table/build', { novaName: novaName }).then(function(resp) {
+    window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function(resp) {
       var target = window.vmMap && window.vmMap[vmKey]
       if (!target) return
       var d = resp.data

@@ -1485,7 +1485,7 @@ const NovaTable = {
       if (!btn.novaClassName) return
       var self = this
       self.opFormLoading = true
-      window.fetchApi.post('/nova/table/build', { novaName: btn.novaClassName }).then(function(resp) {
+      window.fetchApi.post('/nova/table/build', { novaName: btn.novaClassName }, window.__novaMenuCode(btn.novaClassName)).then(function(resp) {
           self.opFormLoading = false
           var d = resp.data
           self.opFormBtn = btn
@@ -1619,7 +1619,7 @@ const NovaTable = {
     },
     loadOpAppendageBuild(appNovaName) {
       var self = this
-      window.fetchApi.post('/nova/table/build', { novaName: appNovaName }).then(function(resp) {
+      window.fetchApi.post('/nova/table/build', { novaName: appNovaName }, window.__novaMenuCode(appNovaName)).then(function(resp) {
           var d = resp.data
           var tab = (self.opFormExtraTabs || []).find(function(t) { return t.tapNovaName === appNovaName })
           if (!tab) return
@@ -2190,7 +2190,7 @@ const NovaTable = {
       }
       var self = this
       this.linkTreeLoading[tapNovaName] = true
-      window.fetchApi.post('/nova/table/build', { novaName: tapNovaName }).then(function(resp) {
+      window.fetchApi.post('/nova/table/build', { novaName: tapNovaName }, window.__novaMenuCode(tapNovaName)).then(function(resp) {
           var bd = resp.data || {}
           var lt = bd.linkTarget || {}
           var ltEditFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
@@ -2242,7 +2242,7 @@ const NovaTable = {
       }
 
       // 获取目标 Nova 的 build 配置（treeSearchField, treeParentField 等）
-      window.fetchApi.post('/nova/table/build', { novaName: targetNovaName }).then(function(buildResp) {
+      window.fetchApi.post('/nova/table/build', { novaName: targetNovaName }, window.__novaMenuCode(targetNovaName)).then(function(buildResp) {
             if (buildResp.code !== 200) {
               self.linkTreeLoading[stateKey] = false
               if (window.$message) window.$message.error('获取目标表配置失败')

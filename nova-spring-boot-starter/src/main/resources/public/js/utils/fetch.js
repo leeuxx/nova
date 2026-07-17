@@ -56,6 +56,11 @@ function errorHandle(resp) {
       })
       return true
     }
+    // 用户权限校验未通过
+    if (resp.code === 521) {
+        window.location.hash = '#/404'
+        window.location.reload()
+    }
     // 接口异常
     if (resp.code === 500) {
         if (window.$message) {

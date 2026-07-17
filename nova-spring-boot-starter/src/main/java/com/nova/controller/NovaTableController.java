@@ -22,7 +22,7 @@ public class NovaTableController {
 
     @Comment("构建表格页")
     @PostMapping("build")
-    @NovaRouter
+    @NovaRouter(verifyType = NovaRouter.VerifyType.LOGIN_MENU)
     public R<NovaTableBuild.Vo> build(@RequestBody @Validated NovaTableBuild novaTableBuild) {
         NovaTableBuild.Vo vo = novaTableService.build(novaTableBuild);
         return R.ok(vo);
@@ -30,7 +30,7 @@ public class NovaTableController {
 
     @Comment("获取表格数据")
     @PostMapping("data")
-    @NovaRouter
+    @NovaRouter(verifyType = NovaRouter.VerifyType.LOGIN_MENU)
     public R<PageBean<?>> data(@RequestBody @Validated NovaTableData novaTableData) {
         PageBean<?> pageBean = novaTableService.data(novaTableData);
         return R.ok(pageBean);

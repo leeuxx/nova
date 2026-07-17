@@ -4,9 +4,10 @@ import com.github.yitter.idgen.YitIdHelper;
 import com.nova.entity.authority.Login;
 import com.nova.entity.authority.Menu;
 import com.nova.service.authority.AuthorityProxy;
+import com.nova.utils.collections.list.JArrayList;
+import com.nova.utils.collections.list.JList;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,48 @@ import java.util.Map;
 public class AuthorityProxyImpl implements AuthorityProxy {
 
     private static final Map<String, String> map = new LinkedHashMap<>();
+
+    private static final JList<Menu> menus = new JArrayList<>() {{
+        add(new Menu()
+                .setId(1L)
+                .setCode("home")
+                .setName("主页")
+                .setIcon("material-symbols:home-outline")
+        );
+        add(new Menu()
+                .setId(2L)
+                .setCode("sys")
+                .setName("系统管理")
+                .setIcon("material-symbols:settings-outline")
+        );
+        add(new Menu()
+                .setId(3L)
+                .setCode("user")
+                .setValue("TestDemoView")
+                .setType(Menu.Type.NOVA)
+                .setName("用户管理")
+                .setIcon("material-symbols:person-outline")
+                .setPid(2L)
+        );
+        add(new Menu()
+                .setId(4L)
+                .setCode("role")
+                .setValue("TestDemo2View")
+                .setType(Menu.Type.NOVA)
+                .setName("部门管理")
+                .setIcon("material-symbols:group-outline")
+                .setPid(2L)
+        );
+        add(new Menu()
+                .setId(5L)
+                .setCode("menu")
+                .setValue("MENU")
+                .setType(Menu.Type.TPL)
+                .setName("菜单管理")
+                .setIcon("material-symbols:menu")
+                .setPid(2L)
+        );
+    }};
 
     @Override
     public boolean checkToken(String token) {
@@ -40,41 +83,12 @@ public class AuthorityProxyImpl implements AuthorityProxy {
 
     @Override
     public List<Menu> getMenu(String token) {
-        return Arrays.asList(
-                new Menu()
-                        .setId(1L)
-                        .setCode("home")
-                        .setName("主页")
-                        .setIcon("material-symbols:home-outline"),
-                new Menu()
-                        .setId(2L)
-                        .setCode("sys")
-                        .setName("系统管理")
-                        .setIcon("material-symbols:settings-outline"),
-                new Menu()
-                        .setId(3L)
-                        .setCode("user")
-                        .setValue("TestDemoView")
-                        .setType(Menu.Type.NOVA)
-                        .setName("用户管理")
-                        .setIcon("material-symbols:person-outline")
-                        .setPid(2L),
-                new Menu()
-                        .setId(4L)
-                        .setCode("role")
-                        .setValue("TestDemo2View")
-                        .setType(Menu.Type.NOVA)
-                        .setName("部门管理")
-                        .setIcon("material-symbols:group-outline")
-                        .setPid(2L),
-                new Menu()
-                        .setId(5L)
-                        .setCode("menu")
-                        .setValue("MENU")
-                        .setType(Menu.Type.TPL)
-                        .setName("菜单管理")
-                        .setIcon("material-symbols:menu")
-                        .setPid(2L)
-        );
+        return menus;
+    }
+
+    @Override
+    public boolean menuPermission(String token, String code) {
+        Menu menu = menus.filter().eq(Menu::getCode, code).object();
+        return menu != null;
     }
 }
