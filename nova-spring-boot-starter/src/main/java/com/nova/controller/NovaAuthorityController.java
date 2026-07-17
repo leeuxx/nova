@@ -66,18 +66,26 @@ public class NovaAuthorityController {
         // id → Menu 索引，用于沿父链查找
         Map<Long, Menu> idMap = menus.stream()
                 .collect(Collectors.toMap(Menu::getId, m -> m, (a, b) -> a));
-        // 过滤：父隐藏则子也隐藏
-        List<Menu> visibleMenus = menus.stream().filter(m -> {
-            if (!visibleIds.contains(m.getId())) return false;
-            Long pid = m.getPid();
-            while (pid != null) {
-                if (!visibleIds.contains(pid)) return false;
-                Menu parent = idMap.get(pid);
-                pid = (parent != null) ? parent.getPid() : null;
+        // 标记隐藏的菜单：父隐藏则子也隐藏
+        for (Menu menu : menus) {
+            // 如果菜单本身可见，但父菜单隐藏，则设为隐藏
+            if (menu.getShow() != Boolean.FALSE) {
+                Long pid = menu.getPid();
+                boolean hasHiddenParent = false;
+                while (pid != null) {
+                    if (!visibleIds.contains(pid)) {
+                        hasHiddenParent = true;
+                        break;
+                    }
+                    Menu parent = idMap.get(pid);
+                    pid = (parent != null) ? parent.getPid() : null;
+                }
+                if (hasHiddenParent) {
+                    menu.setShow(false);  // 设置为隐藏
+                }
             }
-            return true;
-        }).collect(Collectors.toList());
-        return R.ok(visibleMenus);
+        }
+        return R.ok(menus);  // 返回所有菜单，但隐藏的已标记为 false
     }
 
 }

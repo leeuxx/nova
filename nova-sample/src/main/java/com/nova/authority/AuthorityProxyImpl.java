@@ -80,12 +80,20 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setType(Menu.Type.NOVA)
         );
         add(new Menu()
-                .setId(YitIdHelper.nextId())
+                .setId(10L)
                 .setCode("refSalary")
                 .setValue("TestDemoRefView")
                 .setName("引用薪资")
                 .setPid(3L)
                 .setType(Menu.Type.NOVA)
+        );
+        add(new Menu()
+                .setId(YitIdHelper.nextId())
+                .setCode("demos")
+                .setValue("demos")
+                .setName("测试按钮")
+                .setPid(10L)
+                .setType(Menu.Type.BUTTON)
         );
     }};
 
