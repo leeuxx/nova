@@ -102,7 +102,7 @@ public class NovaTableController {
 
     @Comment("获取树形结构数据")
     @PostMapping("tree")
-    @NovaRouter
+    @NovaRouter(verifyType = NovaRouter.VerifyType.LOGIN_MENU)
     public R<NovaTableTree.Vo> tree(@RequestBody @Validated NovaTableTree req) {
         NovaTableTree.Vo tree = novaTableService.tree(req);
         return R.ok(tree);

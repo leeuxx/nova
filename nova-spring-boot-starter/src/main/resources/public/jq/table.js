@@ -955,7 +955,7 @@ window.NovaTableJQ = (function ($) {
     var sourceFields = Object.assign({}, target._sourceFields || {})
     var sourceNovaName = target._sourceNovaName || queryName
     target.loading = true
-    window.fetchApi.post('/nova/table/tree', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, orders: buildOrderItems(target.sortStates) }).then(function(resp) {
+    window.fetchApi.post('/nova/table/tree', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, orders: buildOrderItems(target.sortStates) }, window.__novaMenuCode(queryName)).then(function(resp) {
       var t = window.vmMap && window.vmMap[vmKey]
       if (!t) return
         t.loading = false

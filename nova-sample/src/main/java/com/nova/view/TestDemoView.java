@@ -28,6 +28,9 @@ import java.time.LocalDateTime;
                 editLayout = Layout.EditLayout.DEFAULT
         ),
         dataProxy = TestDemoService.class,
+        tree = @TreeType(
+                searchField = "name"
+        ),
         rowOperation = {
                 @RowOperation(
                         title = "下发指令",

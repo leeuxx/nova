@@ -2329,7 +2329,7 @@ const NovaTable = {
             }
 
             // Step 2a: 目标表 tree（全量树结构）
-            window.fetchApi.post('/nova/table/tree', { novaName: targetNovaName, sourceNovaName: targetNovaName, sourceFields: srcFields }).then(function(treeResp) {
+            window.fetchApi.post('/nova/table/tree', { novaName: targetNovaName, sourceNovaName: targetNovaName, sourceFields: srcFields }, window.__novaMenuCode(targetNovaName)).then(function(treeResp) {
                 if (treeResp.code !== 200) {
                   self.linkTreeLoading[stateKey] = false
                   if (window.$message) window.$message.error('加载树数据失败')
@@ -2397,7 +2397,7 @@ const NovaTable = {
 
             // Step 2b: 中间表 tree（获取已勾选的节点 ID，回显勾选）
             var storageField = lt.thisStorageField
-            window.fetchApi.post('/nova/table/tree', { novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String((row || self.currentRow)[storageField]) }).then(function(linkResp) {
+            window.fetchApi.post('/nova/table/tree', { novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String((row || self.currentRow)[storageField]) }, window.__novaMenuCode(tapNovaName)).then(function(linkResp) {
                 if (linkResp.code === 200) {
                   // 合并 rootList + childrenList 取所有节点
                   var allRecords = (linkResp.data.rootList || []).concat(linkResp.data.childrenList || [])
