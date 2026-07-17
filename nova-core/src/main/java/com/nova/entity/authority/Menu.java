@@ -26,11 +26,14 @@ public class Menu {
     @Comment("父级id")
     private Long pid;
 
-    @Comment("类型 ")
+    @Comment("类型")
     private Type type = Type.DIR;
 
     @Comment("是否显示")
     private Boolean show = true;
+
+    @Comment("系统按钮配置,Type.NOVA时有效")
+    private SystemButton systemButton = new SystemButton();
 
     public enum Type {
         @Comment("目录")
@@ -41,5 +44,20 @@ public class Menu {
         TPL,
         @Comment("按钮")
         BUTTON
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class SystemButton {
+
+        @Comment("新增按钮")
+        private Boolean add = false;
+
+        @Comment("编辑按钮")
+        private Boolean edit = false;
+
+        @Comment("删除按钮")
+        private Boolean delete = false;
+
     }
 }

@@ -38,6 +38,11 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setIcon("material-symbols:person-outline")
                 .setPid(2L)
                 .setType(Menu.Type.NOVA)
+                .setSystemButton(new Menu.SystemButton()
+                        .setAdd(true)
+                        .setEdit(true)
+                        .setDelete(true)
+                )
         );
         add(new Menu()
                 .setId(YitIdHelper.nextId())
