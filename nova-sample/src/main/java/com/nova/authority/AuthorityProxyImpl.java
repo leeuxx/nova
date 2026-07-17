@@ -62,7 +62,6 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setName("岗位管理")
                 .setPid(3L)
                 .setType(Menu.Type.NOVA)
-                .setShow(false)
         );
         add(new Menu()
                 .setId(YitIdHelper.nextId())
@@ -71,7 +70,6 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setName("薪资管理")
                 .setPid(3L)
                 .setType(Menu.Type.NOVA)
-                .setShow(false)
         );
         add(new Menu()
                 .setId(YitIdHelper.nextId())
@@ -80,7 +78,6 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setName("引用用户")
                 .setPid(3L)
                 .setType(Menu.Type.NOVA)
-                .setShow(false)
         );
         add(new Menu()
                 .setId(YitIdHelper.nextId())
@@ -89,7 +86,6 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setName("引用薪资")
                 .setPid(3L)
                 .setType(Menu.Type.NOVA)
-                .setShow(false)
         );
     }};
 

@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @RestMappingController("nova/authority")
@@ -51,8 +54,30 @@ public class NovaAuthorityController {
     @PostMapping("getMenu")
     @NovaRouter
     public R<List<Menu>> getMenu() {
-        List<Menu> menu = authorityProxy.getMenu(AuthorityUtils.getToken());
-        return R.ok(menu);
+        List<Menu> menus = authorityProxy.getMenu(AuthorityUtils.getToken());
+        if (menus == null || menus.isEmpty()) {
+            return R.ok(menus);
+        }
+        // 收集所有 show != false 的 id
+        Set<Long> visibleIds = menus.stream()
+                .filter(m -> m.getShow() != Boolean.FALSE)
+                .map(Menu::getId)
+                .collect(Collectors.toSet());
+        // id → Menu 索引，用于沿父链查找
+        Map<Long, Menu> idMap = menus.stream()
+                .collect(Collectors.toMap(Menu::getId, m -> m, (a, b) -> a));
+        // 过滤：父隐藏则子也隐藏
+        List<Menu> visibleMenus = menus.stream().filter(m -> {
+            if (!visibleIds.contains(m.getId())) return false;
+            Long pid = m.getPid();
+            while (pid != null) {
+                if (!visibleIds.contains(pid)) return false;
+                Menu parent = idMap.get(pid);
+                pid = (parent != null) ? parent.getPid() : null;
+            }
+            return true;
+        }).collect(Collectors.toList());
+        return R.ok(visibleMenus);
     }
 
 }
