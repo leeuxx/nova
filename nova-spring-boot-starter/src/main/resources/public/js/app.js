@@ -3,14 +3,7 @@
 
 // ─── 独立页面快速退出：404 页面不加载任何资源 ──────────────────────
 if (window.location.hash === '#/404') {
-  document.getElementById('app').innerHTML =
-    '<div style="height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;background:#fff;padding:60px 80px;">' +
-    '<div class="blur-orb orb-1"></div><div class="blur-orb orb-2"></div><div class="blur-orb orb-3"></div><div class="blur-orb orb-4"></div><div class="blur-orb orb-5"></div>' +
-    '<div style="text-align:center;position:relative;z-index:1;margin-top:-20%">' +
-    '<div style="font-size:120px;font-weight:700;color:#2563eb;line-height:1;margin-bottom:8px;opacity:0.15">404</div>' +
-    '<h1 style="font-size:28px;font-weight:600;color:#1e293b;margin:0 0 12px 0">页面未找到</h1>' +
-    '<p style="font-size:14px;color:#94a3b8;margin:0 0 32px 0">抱歉，您访问的页面不存在或已被移除</p>' +
-    '</div></div>'
+  document.getElementById('app').innerHTML = window._404_TEMPLATE || '404'
   return
 }
 
@@ -60,8 +53,9 @@ function processMenus(list) {
   var bcIconMap  = { '首页': 'material-symbols:home-outline' }
   var defaultPath = '/home'
 
-  // 第一遍：建 nodeMap
+  // 第一遍：建 nodeMap（show===false 的菜单不加入导航树）
   list.forEach(function (item) {
+    if (item.show === false) return
     // type=NOVA 才有路由，其他类型key 用 code 占位且不可点击
     var key      = item.type === 'NOVA' ? '/nova/' + item.value : item.code
     var disabled = item.type === 'DIR'  ? false  // 目录：不禁用（可展开）
@@ -77,24 +71,17 @@ function processMenus(list) {
     if (item.icon) bcIconMap[item.name] = item.icon
   })
 
-  // 第二遍：组装树
+  // 第二遍：组装树（不在 nodeMap 中的跳过）
   var roots = []
   list.forEach(function (item) {
     var node = nodeMap[item.id]
+    if (!node) return
     if (item.pid && nodeMap[item.pid]) {
       var parent = nodeMap[item.pid]
       if (!parent.children) parent.children = []
       parent.children.push(node)
     } else {
       roots.push(node)
-    }
-  })
-
-  // 构建 novaName → menuCode 映射（用于 build/data 接口请求头）
-  var novaCodeMap = {}
-  list.forEach(function (item) {
-    if (item.type === 'NOVA' && item.value) {
-      novaCodeMap[item.value] = item.code
     }
   })
 
@@ -115,14 +102,14 @@ function processMenus(list) {
   // 构建 childKey → parentKey 的映射，用于自动展开父级菜单
   var parentKeyMap = {}
   list.forEach(function (item) {
-    if (item.pid && nodeMap[item.pid]) {
+    if (item.pid && nodeMap[item.id] && nodeMap[item.pid]) {
       var childKey  = nodeMap[item.id].key
       var parentKey = nodeMap[item.pid].key
       parentKeyMap[childKey] = parentKey
     }
   })
 
-  return { menuTree: roots, routeMeta: routeMeta, bcIconMap: bcIconMap, defaultPath: defaultPath, parentKeyMap: parentKeyMap, novaCodeMap: novaCodeMap }
+  return { menuTree: roots, routeMeta: routeMeta, bcIconMap: bcIconMap, defaultPath: defaultPath, parentKeyMap: parentKeyMap }
 }
 
 // ─── themeOverrides ──────────────────────────────────────────────
@@ -154,12 +141,8 @@ function mountApp(menuList, config, loginExpired) {
   var defaultPath = processed.defaultPath
   var parentKeyMap = processed.parentKeyMap
 
-  // 暴露 novaName → menuCode 映射，供 build/data 接口添加请求头
-  window.__novaMenuCodeMap = processed.novaCodeMap
-  window.__novaMenuCode = function (novaName) {
-    var code = (window.__novaMenuCodeMap || {})[novaName]
-    return code ? { menuCode: code } : {}
-  }
+  // 初始化菜单 code 映射（供 build/data 接口添加 menuCode 请求头）
+  window.__initMenuCodeMap(menuList)
 
   // ── 桥接组件：从 provider 内部获取 dialog/message，天然继承主题 ──
   const DialogBridge = {

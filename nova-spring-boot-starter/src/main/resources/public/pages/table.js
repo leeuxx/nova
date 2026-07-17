@@ -495,7 +495,6 @@ const NovaTable = {
       return (this.opFormLayoutObj && this.opFormLayoutObj.editLayout) || 'DEFAULT'
     },
     columns() {
-      console.time('[perf] columns')
       const vm   = this
       const cols = []
 
@@ -769,8 +768,6 @@ const NovaTable = {
           }
         }
       }
-
-      console.timeEnd('[perf] columns')
       return cols
     }
   },

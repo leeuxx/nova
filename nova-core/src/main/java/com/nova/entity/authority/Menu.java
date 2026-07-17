@@ -17,9 +17,6 @@ public class Menu {
     @Comment("名称")
     private String name;
 
-    @Comment("类型 ")
-    private Type type = Type.DIR;
-
     @Comment("值")
     private String value;
 
@@ -28,6 +25,12 @@ public class Menu {
 
     @Comment("父级id")
     private Long pid;
+
+    @Comment("类型 ")
+    private Type type = Type.DIR;
+
+    @Comment("是否显示")
+    private Boolean show = true;
 
     public enum Type {
         @Comment("目录")
