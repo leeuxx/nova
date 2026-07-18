@@ -386,7 +386,7 @@ const NovaTable = {
       return window.NovaTableButtons.filterRowCustomButtons(this.rowOperations)
     },
     rowActionColWidth() {
-      return window.NovaTableButtons.calcRowActionColWidth(this.linkMode, this.rowOperations)
+      return window.NovaTableButtons.calcRowActionColWidth(this.linkMode, this.rowOperations, this.novaName)
     },
     toolbarCustomButtons() {
       return window.NovaTableButtons.filterToolbarCustomButtons(this.rowOperations)
@@ -675,7 +675,7 @@ const NovaTable = {
         cols.push(colDef)
       })
 
-      if (!vm.pickerMode) {
+      if (!vm.pickerMode && window.NovaTableButtons.hasRowActions(vm)) {
         cols.push({
           title: '操作', key: 'actions', width: vm.rowActionColWidth, fixed: 'right',
           render(row) {

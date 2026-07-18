@@ -115,12 +115,25 @@ function filterToolbarCustomButtons(rowOperations) {
   return (rowOperations || []).filter(function(b) { return b.mode === 'MULTI' || b.mode === 'MULTI_ONLY' || b.mode === 'BUTTON' })
 }
 
+// ─── 行操作列是否有按钮（决定是否渲染操作列）────────────────
+function hasRowActions(vm) {
+  var hasEdit    = !vm.linkMode && window.__hasButton(vm.novaName, 'edit')
+  var hasDelete  = window.__hasButton(vm.novaName, 'delete')
+  var hasCustom  = filterRowCustomButtons(vm.rowOperations).length > 0
+  return hasEdit || hasDelete || hasCustom
+}
+
 // ─── 行操作列宽度计算 ──────────────────────────────────────
-function calcRowActionColWidth(linkMode, rowOperations) {
+function calcRowActionColWidth(linkMode, rowOperations, novaName) {
+  var hasEdit   = !linkMode && window.__hasButton(novaName, 'edit')
+  var hasDelete = window.__hasButton(novaName, 'delete')
   var btns = filterRowCustomButtons(rowOperations)
   var unfolded = btns.length > 0 ? 1 : 0
   var hasFolded = btns.length > 1
-  var w = linkMode ? 45 : 85     // 编辑+删除(85) / 仅删除(45)
+  var w = 0
+  if (hasEdit && hasDelete) w = 85
+  else if (hasEdit)         w = 50
+  else if (hasDelete)       w = 45
   w += unfolded * 60             // 每个非折叠按钮
   if (hasFolded) w += 38        // 更多图标
   return w
@@ -174,6 +187,7 @@ function buildFoldedOptions(buttons, disabledFn) {
 window.NovaTableButtons = {
   STANDARD: STANDARD,
   buildRowActions: buildRowActions,
+  hasRowActions: hasRowActions,
   filterRowCustomButtons: filterRowCustomButtons,
   filterToolbarCustomButtons: filterToolbarCustomButtons,
   calcRowActionColWidth: calcRowActionColWidth,

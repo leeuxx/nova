@@ -68,8 +68,6 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setPid(3L)
                 .setType(Menu.Type.NOVA)
                 .setSystemButton(new Menu.SystemButton()
-                        .setAdd(true)
-                        .setEdit(true)
                 )
         );
         add(new Menu()
@@ -81,6 +79,7 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setType(Menu.Type.NOVA)
                 .setSystemButton(new Menu.SystemButton()
                         .setAdd(true)
+                        .setEdit(true)
                         .setDelete(true)
                 )
         );
