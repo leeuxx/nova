@@ -2911,13 +2911,6 @@ const NovaTable = {
         </template>
         <div v-if="previewField && attachmentMap[previewField.field] && attachmentMap[previewField.field].type === 'IMAGE'" class="gallery-wrap">
           <div class="gallery-body">
-            <div class="gallery-stage">
-              <button v-if="previewIndex > 0" class="gallery-nav gallery-nav-prev" @click="slideDirection = 'left'; previewIndex--">‹</button>
-              <transition :name="'slide-' + slideDirection">
-                <img :key="previewIndex" :src="formData[previewField.field][previewIndex]" class="gallery-main-img" />
-              </transition>
-              <button v-if="previewIndex < (formData[previewField.field] || []).length - 1" class="gallery-nav gallery-nav-next" @click="slideDirection = 'right'; previewIndex++">›</button>
-            </div>
             <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-sider">
               <div class="gallery-thumb-list">
                 <div v-for="(url, idx) in (formData[previewField.field] || [])" :key="idx" class="gallery-thumb-item">
@@ -2926,11 +2919,11 @@ const NovaTable = {
                 </div>
               </div>
             </div>
-          </div>
-          <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-dots">
-            <span v-for="(url, idx) in (formData[previewField.field] || [])" :key="'dot-' + idx"
-              :class="'gallery-dot' + (previewIndex === idx ? ' active' : '')"
-              @click="slideDirection = previewIndex < idx ? 'right' : 'left'; previewIndex = idx"></span>
+            <div class="gallery-stage">
+              <transition :name="'slide-' + slideDirection">
+                <img :key="previewIndex" :src="formData[previewField.field][previewIndex]" class="gallery-main-img" />
+              </transition>
+            </div>
           </div>
           <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-url-wrap" :title="'点击复制: ' + (formData[previewField.field] || [])[previewIndex]" @click="copyText((formData[previewField.field] || [])[previewIndex])">
             <div class="gallery-url-label">图片地址</div>
@@ -3543,13 +3536,6 @@ const NovaTable = {
         </template>
         <div v-if="previewField && previewAttachCfg.type === 'IMAGE'" class="gallery-wrap">
           <div class="gallery-body">
-            <div class="gallery-stage">
-              <button v-if="previewIndex > 0" class="gallery-nav gallery-nav-prev" @click="slideDirection = 'left'; previewIndex--">‹</button>
-              <transition :name="'slide-' + slideDirection">
-                <img :key="previewIndex" :src="previewFileList[previewIndex]" class="gallery-main-img" />
-              </transition>
-              <button v-if="previewIndex < previewFileList.length - 1" class="gallery-nav gallery-nav-next" @click="slideDirection = 'right'; previewIndex++">›</button>
-            </div>
             <div v-if="previewFileList.length > 0" class="gallery-sider">
               <div class="gallery-thumb-list">
                 <div v-for="(url, idx) in previewFileList" :key="idx" class="gallery-thumb-item">
@@ -3559,11 +3545,11 @@ const NovaTable = {
                 </div>
               </div>
             </div>
-          </div>
-          <div v-if="previewFileList.length > 0" class="gallery-dots">
-            <span v-for="(url, idx) in previewFileList" :key="'dot-' + idx"
-              :class="'gallery-dot' + (previewIndex === idx ? ' active' : '')"
-              @click="slideDirection = previewIndex < idx ? 'right' : 'left'; previewIndex = idx"></span>
+            <div class="gallery-stage">
+              <transition :name="'slide-' + slideDirection">
+                <img :key="previewIndex" :src="previewFileList[previewIndex]" class="gallery-main-img" />
+              </transition>
+            </div>
           </div>
           <div v-if="previewFileList.length > 0" class="gallery-url-wrap" :title="'点击复制: ' + previewFileList[previewIndex]" @click="copyText(previewFileList[previewIndex])">
             <div class="gallery-url-label">图片地址</div>
