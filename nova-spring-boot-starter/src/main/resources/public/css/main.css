@@ -256,6 +256,9 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   font-size: 13px;
   font-weight: 500;
   flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 全局 Naive UI 覆盖 */

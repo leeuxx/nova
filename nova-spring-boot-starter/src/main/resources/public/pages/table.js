@@ -2954,7 +2954,7 @@ const NovaTable = {
       <!-- 树形表格搜索 -->
       <component v-if="isTree && !linkMode && treeSearchField" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
         <div style="display:flex;align-items:center;gap:12px">
-          <span class="form-label">{{ treeSearchFieldTitle }}</span>
+          <span class="form-label" :title="treeSearchFieldTitle">{{ treeSearchFieldTitle }}</span>
           <n-input
             v-model:value="treeSearchKeyword"
             :placeholder="'请输入' + treeSearchFieldTitle"
@@ -2984,7 +2984,7 @@ const NovaTable = {
         <div :class="['filter-grid', embeddedMode ? 'embedded' : '', (dualMode || dualTableViewActive) ? 'dual' : '']" :style="embeddedMode ? 'padding:8px 0' : ''">
           <template v-for="(field, index) in searchFields" :key="field.field">
             <div v-if="filterExpanded || index < ((dualMode || dualTableViewActive) ? 1 : 3)" style="display:flex;align-items:center;gap:8px;width:100%">
-              <span class="form-label">{{ field.title }}</span>
+              <span class="form-label" :title="field.title">{{ field.title }}</span>
               <n-select v-if="field.type === 'CHOICE' && choiceMap[field.field] && choiceMap[field.field].selectType === 'SINGLE' && !field.vague"
                 v-model:value="filterForm[field.field]"
                 :options="fieldOptions(field)"
