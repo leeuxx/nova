@@ -383,19 +383,13 @@ const NovaTable = {
     },
     // 自定义按钮分类
     rowCustomButtons() {
-      return (this.rowOperations || []).filter(b => b.mode === 'SINGLE' || b.mode === 'MULTI')
+      return window.NovaTableButtons.filterRowCustomButtons(this.rowOperations)
     },
     rowActionColWidth() {
-      var btns = (this.rowOperations || []).filter(function(b) { return b.mode === 'SINGLE' || b.mode === 'MULTI' })
-      var unfolded = btns.length > 0 ? 1 : 0
-      var hasFolded = btns.length > 1
-      var w = this.linkMode ? 45 : 85     // 编辑+删除(85) / 仅删除(45)
-      w += unfolded * 60                  // 每个非折叠按钮
-      if (hasFolded) w += 38              // 更多图标
-      return w
+      return window.NovaTableButtons.calcRowActionColWidth(this.linkMode, this.rowOperations)
     },
     toolbarCustomButtons() {
-      return (this.rowOperations || []).filter(b => b.mode === 'MULTI' || b.mode === 'MULTI_ONLY' || b.mode === 'BUTTON')
+      return window.NovaTableButtons.filterToolbarCustomButtons(this.rowOperations)
     },
     toolbarUnfoldedButtons() {
       return this.toolbarCustomButtons.slice(0, 1)
@@ -405,7 +399,7 @@ const NovaTable = {
     },
     toolbarFoldedOptions() {
       var self = this
-      return this.buildFoldedOptions(this.toolbarFoldedButtons, function(btn) {
+      return window.NovaTableButtons.buildFoldedOptions(this.toolbarFoldedButtons, function(btn) {
         return (btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && self.checkedRowKeys.length === 0
       })
     },
@@ -413,6 +407,9 @@ const NovaTable = {
       if (!this.dualTableViewActive) return false
       const sub = this.dualTableSubTables.find(s => s.novaName === this.dualTableCurrentNova)
       return sub && sub.type === 'link'
+    },
+    tbStandardShow() {
+      return window.NovaTableButtons.toolbarStandardShow(this)
     },
     // 固定列像素：checkbox 50 + 操作列 140
     colPixels() {
@@ -682,69 +679,7 @@ const NovaTable = {
         cols.push({
           title: '操作', key: 'actions', width: vm.rowActionColWidth, fixed: 'right',
           render(row) {
-            var buttons = []
-            if (!vm.linkMode) {
-              buttons.push(h('span', { class: 'row-action-btn', style: { color: '#2080f0', cursor: 'pointer', fontSize: '13px' }, onClick: () => vm.handleEdit(row) }, '编辑'))
-            }
-            // 删除
-            buttons.push(h(NPopconfirm, {
-              onPositiveClick: function() { vm.handleDelete(row) },
-              onNegativeClick: function() {},
-              positiveText: '确定', negativeText: '取消'
-            }, {
-              default: function() { return '确定删除吗？' },
-              trigger: function() { return h('span', { class: 'row-action-btn', style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除') }
-            }))
-            // ── 自定义按钮：SINGLE / MULTI（行操作区）────────────────
-            var rowBtns = vm.rowCustomButtons || []
-            var rowUnfolded = rowBtns.slice(0, 1)
-            var rowFolded   = rowBtns.slice(1)
-            rowUnfolded.forEach(function(btn) {
-              var enabled = !btn.ifExpr || window.evalShowExpr(btn.ifExpr, row)
-              var btnStyle = { color: enabled ? (btn.color || '#7c3aed') : '#ccc', cursor: enabled ? 'pointer' : 'not-allowed', fontSize: '13px' }
-              var btnTitle = enabled ? (btn.tip || btn.title) : (btn.tip || btn.title) + ' (不可用)'
-              var triggerEl = h('span', { class: 'row-action-btn', style: btnStyle, title: btnTitle }, btn.title)
-              var handler = function() {
-                if (btn.type === 'NOVA' && btn.novaClassName) { vm.openOpForm(btn, row); return }
-                vm.submitCustomBtn(btn, row)
-              }
-              if (enabled && btn.callHint) {
-                buttons.push(h(NPopconfirm, {
-                  onPositiveClick: function() { handler() },
-                  onNegativeClick: function() {},
-                  positiveText: '确定', negativeText: '取消'
-                }, { default: function() { return btn.callHint }, trigger: function() { return triggerEl } }))
-              } else if (enabled) {
-                buttons.push(h('span', { class: 'row-action-btn', style: btnStyle, title: btnTitle, onClick: handler }, btn.title))
-              } else {
-                buttons.push(triggerEl)
-              }
-            })
-            if (rowFolded.length > 0) {
-              var foldedOpts = vm.buildFoldedOptions(rowFolded, function(btn) {
-                return !(!btn.ifExpr || window.evalShowExpr(btn.ifExpr, row))
-              })
-              buttons.push(h(NDropdown, {
-                options: foldedOpts,
-                trigger: 'hover',
-                showArrow: false,
-                onSelect: function(key) {
-                  var btn = rowFolded.find(function(b) { return b.title === key })
-                  if (!btn) return
-                  var action = function() {
-                    if (btn.type === 'NOVA' && btn.novaClassName) { vm.openOpForm(btn, row); return }
-                    vm.submitCustomBtn(btn, row)
-                  }
-                  if (btn.callHint) { window.msg.confirm('warning', '确认操作', btn.callHint, action) }
-                  else { action() }
-                }
-              }, {
-                default: function() {
-                  return h('iconify-icon', { icon: 'material-symbols:more-horiz', style: { color: '#888', cursor: 'pointer', fontSize: '18px' } })
-                }
-              }))
-            }
-            return h('span', { style: 'display:inline-flex;align-items:center;gap:8px' }, buttons)
+            return window.NovaTableButtons.buildRowActions(vm, row)
           }
         })
       }
@@ -1058,38 +993,7 @@ const NovaTable = {
     },
     // editFieldOptions moved to NovaFormThis child component
     buildFoldedOptions(buttons, disabledFn) {
-      var self = this
-      var ungrouped = []
-      var groupedMap = {}
-      var groupOrder = []
-      buttons.forEach(function(btn) {
-        var item = {
-          label: btn.title,
-          key: btn.title,
-          icon: btn.icon ? function() { return h('iconify-icon', { icon: btn.icon }) } : undefined,
-          disabled: disabledFn ? disabledFn(btn) : false,
-          props: btn.tip ? { title: btn.tip } : undefined
-        }
-        if (!btn.group) {
-          ungrouped.push(item)
-        } else {
-          if (!groupedMap[btn.group]) {
-            groupedMap[btn.group] = []
-            groupOrder.push(btn.group)
-          }
-          groupedMap[btn.group].push(item)
-        }
-      })
-      var result = ungrouped
-      groupOrder.forEach(function(groupName) {
-        result.push({
-          label: groupName,
-          key: '__group_' + groupName,
-          icon: function() { return h('iconify-icon', { icon: 'material-symbols:folder-outline' }) },
-          children: groupedMap[groupName]
-        })
-      })
-      return result
+      return window.NovaTableButtons.buildFoldedOptions(buttons, disabledFn)
     },
     // ── 操作表单 helpers ────────────────────────────────────────
     opFieldOpts(f) {
@@ -3373,15 +3277,15 @@ const NovaTable = {
                 {{ btn.title }}
               </n-button>
             </template>
-            <n-button v-if="checkedRowKeys.length > 0 && !readonly" :size="embSize" type="error" @click="handleBatchDelete">
+            <n-button v-if="tbStandardShow.batchDelete" :size="embSize" type="error" @click="handleBatchDelete">
               <template #icon><n-icon><iconify-icon icon="material-symbols:delete-outline"></iconify-icon></n-icon></template>
               删 除
             </n-button>
-            <n-button v-if="linkMode && !readonly" :size="embSize" type="primary" @click="$emit('link-add')">
+            <n-button v-if="tbStandardShow.linkAdd" :size="embSize" type="primary" @click="$emit('link-add')">
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
               新增
             </n-button>
-            <n-button v-if="!readonly && !linkMode" :size="embSize" type="primary" @click="handleAdd">
+            <n-button v-if="tbStandardShow.add" :size="embSize" type="primary" @click="handleAdd">
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
               新 增
             </n-button>
