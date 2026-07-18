@@ -53,9 +53,10 @@ function processMenus(list) {
   var bcIconMap  = { '首页': 'material-symbols:home-outline' }
   var defaultPath = '/home'
 
-  // 第一遍：建 nodeMap（show===false 的菜单不加入导航树）
+  // 第一遍：建 nodeMap（show===false 或 type=BUTTON 的菜单不加入导航树）
   list.forEach(function (item) {
     if (item.show === false) return
+    if (item.type === 'BUTTON') return
     // type=NOVA 才有路由，其他类型key 用 code 占位且不可点击
     var key      = item.type === 'NOVA' ? '/nova/' + item.value : item.code
     var disabled = item.type === 'DIR'  ? false  // 目录：不禁用（可展开）

@@ -11,6 +11,7 @@ import com.nova.annotation.sub.nova.field.edit.*;
 import com.nova.annotation.sub.nova.row.ExprBool;
 import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.service.TestDemoService;
+import com.nova.service.authority.RowAuthExpr;
 import com.nova.utils.VoidDataProxy;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -39,8 +40,8 @@ import java.time.LocalDateTime;
                         operationHandler = TestDemoService.class,
                         operationParam = "1",
                         show = @ExprBool(
-                                exprHandler = TestDemoService.class,
-                                params = "1"
+                                exprHandler = RowAuthExpr.class,
+                                params = "sendCmd"
                         )
                 ),
                 @RowOperation(

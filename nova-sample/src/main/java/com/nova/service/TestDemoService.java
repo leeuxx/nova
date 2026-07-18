@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yitter.idgen.YitIdHelper;
 import com.nova.annotation.sub.nova.field.edit.ChoiceFetchHandler;
-import com.nova.annotation.sub.nova.row.ExprBool;
 import com.nova.annotation.sub.nova.row.OperationHandler;
 import com.nova.entity.TestDemo;
 import com.nova.entity.TestDemo2;
@@ -35,7 +34,7 @@ import java.util.Objects;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Lazy)
-public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemoView>, OperationHandler<Long, Object>, ExprBool.ExprHandler {
+public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemoView>, OperationHandler<Long, Object> {
 
     private TestDemo2Service testDemo2Service;
 
@@ -238,11 +237,4 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         return null;
     }
 
-    @Override
-    public boolean handler(String params) {
-        if (params.equals("1")) {
-            return true;
-        }
-        return false;
-    }
 }

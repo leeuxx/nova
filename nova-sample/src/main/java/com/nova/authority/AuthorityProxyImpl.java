@@ -31,7 +31,7 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setIcon("material-symbols:settings-outline")
         );
         add(new Menu()
-                .setId(YitIdHelper.nextId())
+                .setId(100L)
                 .setCode("user")
                 .setValue("TestDemoView")
                 .setName("用户管理")
@@ -53,6 +53,15 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setPid(2L)
                 .setType(Menu.Type.NOVA)
         );
+        add(new Menu()
+                .setId(YitIdHelper.nextId())
+                .setCode("sendCmd")
+                .setValue("sendCmd")
+                .setName("下发指令")
+                .setPid(100L)
+                .setType(Menu.Type.BUTTON)
+        );
+
 
         add(new Menu()
                 .setId(3L)
