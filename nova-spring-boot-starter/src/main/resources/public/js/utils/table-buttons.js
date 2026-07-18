@@ -20,7 +20,7 @@ function buildRowActions(vm, row) {
   var buttons = []
 
   // 编辑
-  if (!vm.linkMode) {
+  if (!vm.linkMode && window.__hasButton(vm.novaName, 'edit')) {
     buttons.push(h('span', {
       class: 'row-action-btn',
       style: { color: '#2080f0', cursor: 'pointer', fontSize: '13px' },
@@ -29,17 +29,19 @@ function buildRowActions(vm, row) {
   }
 
   // 删除
-  buttons.push(h(NPopconfirm, {
-    onPositiveClick: function() { vm.handleDelete(row) },
-    onNegativeClick: function() {},
-    positiveText: '确定',
-    negativeText: '取消'
-  }, {
-    default: function() { return '确定删除吗？' },
-    trigger: function() {
-      return h('span', { class: 'row-action-btn', style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除')
-    }
-  }))
+  if (window.__hasButton(vm.novaName, 'delete')) {
+    buttons.push(h(NPopconfirm, {
+      onPositiveClick: function() { vm.handleDelete(row) },
+      onNegativeClick: function() {},
+      positiveText: '确定',
+      negativeText: '取消'
+    }, {
+      default: function() { return '确定删除吗？' },
+      trigger: function() {
+        return h('span', { class: 'row-action-btn', style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除')
+      }
+    }))
+  }
 
   // ── 自定义按钮：SINGLE / MULTI（行操作区）────────────────
   var rowBtns = filterRowCustomButtons(vm.rowOperations)
@@ -127,9 +129,9 @@ function calcRowActionColWidth(linkMode, rowOperations) {
 // ─── 工具栏标准按钮显示条件 ────────────────────────────────
 function toolbarStandardShow(vm) {
   return {
-    add:         !vm.readonly && !vm.linkMode,
+    add:         !vm.readonly && !vm.linkMode && window.__hasButton(vm.novaName, 'add'),
     linkAdd:     vm.linkMode && !vm.readonly,
-    batchDelete: vm.checkedRowKeys.length > 0 && !vm.readonly,
+    batchDelete: vm.checkedRowKeys.length > 0 && !vm.readonly && window.__hasButton(vm.novaName, 'delete'),
   }
 }
 

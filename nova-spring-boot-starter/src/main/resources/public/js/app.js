@@ -143,6 +143,8 @@ function mountApp(menuList, config, loginExpired) {
 
   // 初始化菜单 code 映射（供 build/data 接口添加 menuCode 请求头）
   window.__initMenuCodeMap(menuList)
+  // 初始化按钮权限集（供按钮权限校验）
+  window.__initButtonCodes(menuList)
 
   // ── 桥接组件：从 provider 内部获取 dialog/message，天然继承主题 ──
   const DialogBridge = {
