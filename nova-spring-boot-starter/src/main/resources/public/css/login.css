@@ -107,3 +107,50 @@
 .n-button--primary:active {
   transform: translateY(0);
 }
+
+/* 隐藏必填红色星号 */
+.n-form-item-label__asterisk {
+  display: none !important;
+}
+
+/* ─── 暗色模式 ─────────────────────────────────── */
+.dark .login-container {
+  background: #0f0f0f !important;
+}
+.login-title {
+  font-size: 32px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+  letter-spacing: 1px;
+}
+.dark .login-title {
+  color: #e8e8e8;
+}
+.login-subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0;
+}
+.dark .login-subtitle {
+  color: #888;
+}
+.login-card {
+  background: rgba(255,255,255,0.95) !important;
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.08);
+  min-height: 380px;
+}
+.dark .login-card {
+  background: rgba(30,30,30,0.95) !important;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.4);
+}
+.login-remember-text {
+  font-size: 13px;
+  color: #64748b;
+  cursor: pointer;
+}
+.dark .login-remember-text {
+  color: #999;
+}

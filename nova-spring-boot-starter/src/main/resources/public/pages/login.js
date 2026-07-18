@@ -108,7 +108,7 @@ window.LoginPage = {
   },
 
   template: `
-<div style="height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;background:#fff;padding:60px 80px;">
+<div class="login-container" style="height:100vh;overflow:hidden;display:flex;justify-content:center;align-items:flex-start;position:relative;padding:80px 80px 0;">
   <!-- 动态光晕背景 -->
   <div class="blur-orb orb-1"></div>
   <div class="blur-orb orb-2"></div>
@@ -117,13 +117,13 @@ window.LoginPage = {
   <div class="blur-orb orb-5"></div>
 
   <!-- 登录卡片 -->
-  <div style="width:400px;max-width:90vw;position:relative;z-index:1;margin-top:-10%">
+  <div style="width:400px;max-width:90vw;position:relative;z-index:1">
     <div style="text-align:center;margin-bottom:40px">
-      <h1 style="font-size:32px;font-weight:600;color:#1e293b;margin:0 0 12px 0;letter-spacing:1px">Nova Admin</h1>
-      <p style="font-size:14px;color:#94a3b8;margin:0">简洁高效的后台管理系统</p>
+      <h1 class="login-title">Nova Admin</h1>
+      <p class="login-subtitle">简洁高效的后台管理系统</p>
     </div>
 
-    <n-card :bordered="false" style="background:rgba(255,255,255,0.85);backdrop-filter:blur(10px);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.06);min-height:380px;" content-style="min-height:380px;padding:48px 32px;display:flex;flex-direction:column;justify-content:center;">
+    <n-card class="login-card" :bordered="false" content-style="min-height:380px;padding:48px 32px;display:flex;flex-direction:column;justify-content:center;">
       <n-form
         ref="formRef"
         :model="formData"
@@ -162,9 +162,9 @@ window.LoginPage = {
         </n-form-item>
 
         <n-form-item :show-label="false" style="margin-top:-20px;margin-bottom:-20px">
-          <div style="display:flex;align-items:center;gap:6px">
+          <div style="display:flex;align-items:center;gap:6px;margin-left:12px">
             <n-checkbox v-model:checked="rememberMe" size="small" />
-            <span style="font-size:13px;color:#64748b;cursor:pointer" @click="rememberMe=!rememberMe">记住账号</span>
+            <span class="login-remember-text" @click="rememberMe=!rememberMe">记住账号</span>
           </div>
         </n-form-item>
 
