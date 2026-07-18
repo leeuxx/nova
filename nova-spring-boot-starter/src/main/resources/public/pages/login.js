@@ -108,7 +108,7 @@ window.LoginPage = {
   },
 
   template: `
-<div class="login-container" style="height:100vh;overflow:hidden;display:flex;justify-content:center;align-items:flex-start;position:relative;padding:80px 80px 0;">
+<div class="login-container">
   <!-- 动态光晕背景 -->
   <div class="blur-orb orb-1"></div>
   <div class="blur-orb orb-2"></div>

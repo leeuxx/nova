@@ -1,12 +1,6 @@
 // js/app.js — 路由 + 布局组件，先加载菜单再挂载 Vue 应用
 ;(function () {
 
-// ─── 独立页面快速退出：404 页面不加载任何资源 ──────────────────────
-if (window.location.hash === '#/404') {
-  document.getElementById('app').innerHTML = window._404_TEMPLATE || '404'
-  return
-}
-
 // ─── 配置项 ──────────────────────────────────────────────────────
 // true = 离线模式：禁止 iconify 请求外网 CDN，图标数据全部走 icons-offline.js
 // false = 在线模式：iconify 自动从 api.iconify.design 拉取图标数据

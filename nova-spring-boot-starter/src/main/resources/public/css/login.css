@@ -113,6 +113,16 @@
   display: none !important;
 }
 
+/* ─── 登录/404 公共容器 ───────────────────────── */
+.login-container {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  position: relative;
+  padding: 120px 80px 0;
+}
 /* ─── 暗色模式 ─────────────────────────────────── */
 .dark .login-container {
   background: #0f0f0f !important;

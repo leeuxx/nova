@@ -6,8 +6,16 @@
   <title>Nova Admin</title>
   <link rel="stylesheet" href="css/main.css" />
   <link rel="stylesheet" href="css/login.css" />
+  <link rel="stylesheet" href="css/404.css" />
 </head>
 <body>
+  <!-- 主题前置：在任何 JS/CSS 渲染前同步写入 body.dark，避免刷新时白闪 -->
+  <script>
+    try {
+      var t = localStorage.getItem('nova-theme');
+      if (t === 'night') document.body.classList.add('dark');
+    } catch (e) {}
+  </script>
   <div id="app"></div>
 
   <!-- Vue 3 -->

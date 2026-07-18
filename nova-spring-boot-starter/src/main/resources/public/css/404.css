@@ -1,0 +1,45 @@
+/* 404 页面样式 */
+
+.notfound-wrap {
+  position: relative;
+  z-index: 1;
+  width: 400px;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.notfound-code {
+  font-size: 120px;
+  font-weight: 700;
+  color: #2563eb;
+  line-height: 1;
+  margin-bottom: 8px;
+  opacity: 0.15;
+}
+
+.notfound-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+}
+
+.notfound-desc {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0 0 32px 0;
+}
+
+.notfound-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ─── 暗色模式 ─────────────────────────────────── */
+.dark .notfound-title {
+  color: #e8e8e8;
+}
+.dark .notfound-desc {
+  color: #888;
+}
