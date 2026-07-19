@@ -1,0 +1,81 @@
+/* 首页欢迎页样式 */
+
+.home-wrap {
+  padding: 48px 32px;
+  max-width: 900px;
+}
+
+.home-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.home-logo {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.home-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.home-subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 4px 0 0 0;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.home-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.home-card-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  margin-top: 8px;
+}
+
+.home-card-desc {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* ─── 暗色模式适配 ─────────────────────────────────── */
+.dark .home-title {
+  color: #e8e8e8 !important;
+}
+.dark .home-subtitle {
+  color: #888 !important;
+}
+.dark .home-card {
+  background: rgba(255,255,255,0.05) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+.dark .home-card-title {
+  color: #e0e0e0 !important;
+}
+.dark .home-card-desc {
+  color: #888 !important;
+}

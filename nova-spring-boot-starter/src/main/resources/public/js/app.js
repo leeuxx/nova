@@ -32,6 +32,7 @@ const {
 const LoginPage = window.LoginPage
 // 404 页面组件
 const NotFoundPage = window.NotFoundPage
+const HomePage = window.HomePage
 
 // ─── 图标辅助 ────────────────────────────────────────────────────
 function iconNode(iconName) {
@@ -43,8 +44,8 @@ function iconNode(iconName) {
 // ─── 将后端平铺菜单列表转为 NMenu 树 + routeMeta + bcIconMap ────
 function processMenus(list) {
   var nodeMap    = {}
-  var routeMeta  = { '/home': { title: '首页', icon: 'material-symbols:home-outline', breadcrumb: null } }
-  var bcIconMap  = { '首页': 'material-symbols:home-outline' }
+  var routeMeta  = {}
+  var bcIconMap  = {}
   var defaultPath = '/home'
 
   // 第一遍：建 nodeMap（show===false 或 type=BUTTON 的菜单不加入导航树）
@@ -182,9 +183,14 @@ function mountApp(menuList, config, loginExpired) {
       // 监听路由变化，维护 tab 列表
       watch(() => route.path, (path) => {
         if (path === '/' || path === '/login') return
+        // noTab 路由（如首页）：仅切换显示，不生成 tab，不展开菜单
+        if (route.meta && route.meta.noTab) {
+          activeTab.value = path
+          return
+        }
         const meta = routeMeta[path] || { title: path, icon: null }
         if (!openedTabs.value.find(t => t.key === path)) {
-          openedTabs.value.push({ key: path, title: meta.title, icon: meta.icon, closable: path !== '/home' })
+          openedTabs.value.push({ key: path, title: meta.title, icon: meta.icon, closable: true })
         }
         activeTab.value = path
         // 自动展开当前路由的祖先菜单节点
@@ -198,12 +204,11 @@ function mountApp(menuList, config, loginExpired) {
 
       // 面包屑
       const breadcrumbItems = computed(() => {
-        const meta  = routeMeta[route.path]
-        const items = [{ label: '首页', icon: 'material-symbols:home-outline' }]
+        const meta = routeMeta[route.path]
         if (meta && meta.breadcrumb) {
-          meta.breadcrumb.forEach(label => items.push({ label, icon: bcIconMap[label] || null }))
+          return meta.breadcrumb.map(label => ({ label, icon: bcIconMap[label] || null }))
         }
-        return items
+        return []
       })
 
       const handleMenuSelect = (key) => { if (key.startsWith('/')) router.push(key) }
@@ -419,7 +424,7 @@ function mountApp(menuList, config, loginExpired) {
     routes: [
       { path: '/',                    redirect: '/login' },
       { path: '/login',               component: LoginPage, meta: { loginRequired: false } },
-      { path: '/home',                component: { template: '<div style="padding:24px"><h2>欢迎使用 Nova Admin</h2><p>请从左侧菜单进入各功能模块。</p></div>' } },
+      { path: '/home',                component: HomePage, meta: { noTab: true } },
       { path: '/404',                 component: NotFoundPage, meta: { loginRequired: false } },
       { path: '/:pathMatch(.*)*',     redirect: '/404' },
       { path: '/nova/:novaName',      component: window.NovaTable }
