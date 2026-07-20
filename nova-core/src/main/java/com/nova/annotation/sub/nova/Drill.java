@@ -1,6 +1,7 @@
 package com.nova.annotation.sub.nova;
 
 import com.nova.annotation.config.Comment;
+import com.nova.annotation.sub.nova.row.ExprBool;
 
 public @interface Drill {
 
@@ -9,6 +10,9 @@ public @interface Drill {
 
     @Comment("下钻目标配置")
     Link link();
+
+    @Comment("控制显示与隐藏（后端控制,多用于访问权限）")
+    ExprBool show() default @ExprBool;
 
     @interface Link {
 

@@ -203,8 +203,7 @@ public class TestDemoView {
                     linkType = @LinkType(
                             referenceTransmitField = {
                                     "nick"
-                            },
-                            show = @ExprBool(false)
+                            }
                     ),
                     search = @Search(vague = true)
             )
