@@ -16,10 +16,10 @@ public @interface Drill {
 
     @interface Link {
 
-        @Comment("当前类关联属性")
+        @Comment("当前类关联属性（支持属性名和对象.属性名,如：id和obj.id）")
         String column();
 
-        @Comment("目标类关联属性")
+        @Comment("目标类关联属性（支持属性名和对象.属性名,如：id和obj.id）")
         String joinColumn();
 
         @Comment("关联类")
