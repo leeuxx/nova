@@ -3,8 +3,8 @@ package com.nova.view;
 import com.nova.annotation.Nova;
 import com.nova.annotation.NovaField;
 import com.nova.annotation.config.NovaId;
+import com.nova.annotation.sub.nova.Drill;
 import com.nova.annotation.sub.nova.Layout;
-import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
@@ -93,6 +93,16 @@ import java.time.LocalDateTime;
                         mode = RowOperation.Mode.SINGLE,
                         operationHandler = TestDemoService.class
                 )
+        },
+        drills = {
+                @Drill(
+                        title = "部门钻取",
+                        link = @Drill.Link(
+                                column = "id",
+                                joinColumn = "demo2Id",
+                                linkNova = TestDemo2View.class
+                        )
+                )
         }
 )
 public class TestDemoView {
@@ -165,8 +175,7 @@ public class TestDemoView {
                     title = "薪资信息",
                     type = Edit.Type.APPENDAGES,
                     appendageType = @AppendageType(
-                            referenceField = "demoId",
-                            dualTable = true
+                            referenceField = "demoId"
                     ),
                     search = @Search
             )
@@ -178,7 +187,6 @@ public class TestDemoView {
                     title = "引用薪资",
                     type = Edit.Type.LINK,
                     linkType = @LinkType(
-                            dualTable = true,
                             referenceTransmitField = {
                                     "name"
                             }
@@ -193,10 +201,10 @@ public class TestDemoView {
                     title = "用户树节点",
                     type = Edit.Type.LINK,
                     linkType = @LinkType(
-                            dualTable = true,
                             referenceTransmitField = {
                                     "nick"
-                            }
+                            },
+                            show = @ExprBool(false)
                     ),
                     search = @Search(vague = true)
             )

@@ -5,6 +5,7 @@ import com.nova.annotation.config.Comment;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
+import com.nova.annotation.sub.nova.row.ExprBool;
 import com.nova.config.NovaApplication;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -165,22 +166,24 @@ public class NovaFieldUtils {
             // 附属对象tap
             if (edit.type() == Edit.Type.APPENDAGE) {
                 AppendageType appendageType = edit.appendageType();
-                if (appendageType.tapShow()) {
+                boolean tapShow = exprBool(appendageType.tapShow(), appendageType.show());
+                if (tapShow) {
                     Class<?> fieldClass = novaFieldInfo.getFieldClass();
-                    editInfos.add(new EditInfo()
+                    EditInfo editInfo = new EditInfo()
                             .setTapType("appendageForm")
                             .setTapNovaName(fieldClass.getSimpleName())
                             .setTapTitle(edit.title())
                             .setTapShow(appendageType.tapShow())
                             .setTapShowByExpr(appendageType.tapShowBy().value())
-                            .setTapSort(1)
-                    );
+                            .setTapSort(1);
+                    editInfos.add(editInfo);
                 }
             }
             // 附属集合tap
             if (edit.type() == Edit.Type.APPENDAGES) {
                 AppendageType appendageType = edit.appendageType();
-                if (appendageType.tapShow()) {
+                boolean tapShow = exprBool(appendageType.tapShow(), appendageType.show());
+                if (tapShow) {
                     Class<?> fieldClass = novaFieldInfo.getFieldClass();
                     editInfos.add(new EditInfo()
                             .setTapType("appendagesTable")
@@ -195,7 +198,8 @@ public class NovaFieldUtils {
             // 集合引用tap
             if (edit.type() == Edit.Type.LINK) {
                 LinkType linkType = edit.linkType();
-                if (linkType.tapShow()) {
+                boolean tapShow = exprBool(linkType.tapShow(), linkType.show());
+                if (tapShow) {
                     Class<?> fieldClass = novaFieldInfo.getFieldClass();
                     editInfos.add(new EditInfo()
                             .setTapType("linkForm")
@@ -210,7 +214,8 @@ public class NovaFieldUtils {
             // 引用详情tap
             if (edit.type() == Edit.Type.REFERENCE) {
                 ReferenceType referenceType = edit.referenceType();
-                if (referenceType.tapShow()) {
+                boolean tapShow = exprBool(referenceType.tapShow(), referenceType.show());
+                if (tapShow) {
                     Class<?> fieldClass = novaFieldInfo.getFieldClass();
                     editInfos.add(new EditInfo()
                             .setTapType("referenceForm")
@@ -524,7 +529,7 @@ public class NovaFieldUtils {
                         .setReferenceField(appendageType.referenceField())
                         .setStorageField(appendageType.storageField())
                         .setDisplayField(appendageType.displayField())
-                        .setDualTable(appendageType.dualTable())
+                        .setDualTable(exprBool(appendageType.dualTable(), appendageType.show()))
                         .setDualTableTitle(edit.title());
                 appendageTypeInfos.put(field, appendageTypeInfo);
             }
@@ -554,7 +559,7 @@ public class NovaFieldUtils {
                 LinkInfo linkInfo = new LinkInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
                         .setReferenceTransmitField(Arrays.asList(linkType.referenceTransmitField()))
-                        .setDualTable(linkType.dualTable())
+                        .setDualTable(exprBool(linkType.dualTable(), linkType.show()))
                         .setDualTableTitle(edit.title());
                 linkInfos.put(field, linkInfo);
                 // 获取中间类中的LINK_TARGET声明属性
@@ -626,6 +631,23 @@ public class NovaFieldUtils {
             }
         });
         return linkTargetInfo;
+    }
+
+    private static boolean exprBool(boolean show, ExprBool exprBool) {
+        if (!show || !exprBool.value()) {
+            return false;
+        }
+        Class<? extends ExprBool.ExprHandler>[] exprHandlers = exprBool.exprHandler();
+        if (exprHandlers.length > 0) {
+            String params = exprBool.params();
+            for (Class<? extends ExprBool.ExprHandler> exprHandler : exprHandlers) {
+                ExprBool.ExprHandler service = SpringBeanUtils.getBean(exprHandler);
+                return service.handler(params);
+            }
+            return false;
+        } else {
+            return true;
+        }
     }
 
     @Data

@@ -1,6 +1,7 @@
 package com.nova.annotation;
 
 import com.nova.annotation.config.Comment;
+import com.nova.annotation.sub.nova.Drill;
 import com.nova.service.data.DataProxy;
 import com.nova.annotation.sub.nova.Layout;
 import com.nova.annotation.sub.nova.TreeType;
@@ -33,5 +34,8 @@ public @interface Nova {
 
     @Comment("树结构配置")
     TreeType tree() default @TreeType(value = false);
+
+    @Comment("数据钻取")
+    Drill[] drills() default {};
 
 }
