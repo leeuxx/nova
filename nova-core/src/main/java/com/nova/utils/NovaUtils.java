@@ -2,6 +2,7 @@ package com.nova.utils;
 
 import com.nova.annotation.Nova;
 import com.nova.annotation.config.Comment;
+import com.nova.annotation.sub.nova.Drill;
 import com.nova.annotation.sub.nova.Layout;
 import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.row.ExprBool;
@@ -100,6 +101,54 @@ public class NovaUtils {
         return result;
     }
 
+    /**
+     * 获取数据钻取信息
+     *
+     * @param className 类名
+     * @return 钻取信息
+     */
+    public static List<DrillInfo> getDrill(String className) {
+        NovaApplication.ScanNova scanNova = NovaApplication.getScanNovas().get(className);
+        if (scanNova == null) {
+            return Collections.emptyList();
+        }
+        List<DrillInfo> drillInfos = new ArrayList<>();
+        Nova nova = scanNova.getNova();
+        Drill[] drills = nova.drills();
+        for (Drill drill : drills) {
+            if (drill.show()) {
+                boolean show = exprBool(true, drill.showBy());
+                if (show) {
+                    Drill.Link link = drill.link();
+                    DrillInfo drillInfo = new DrillInfo()
+                            .setDualTableTitle(drill.title())
+                            .setLinkNova(link.linkNova())
+                            .setColumn(link.column())
+                            .setJoinColumn(link.joinColumn());
+                    drillInfos.add(drillInfo);
+                }
+            }
+        }
+        return drillInfos;
+    }
+
+    public static boolean exprBool(boolean show, ExprBool exprBool) {
+        if (!show || !exprBool.value()) {
+            return false;
+        }
+        Class<? extends ExprBool.ExprHandler>[] exprHandlers = exprBool.exprHandler();
+        if (exprHandlers.length > 0) {
+            String params = exprBool.params();
+            for (Class<? extends ExprBool.ExprHandler> exprHandler : exprHandlers) {
+                ExprBool.ExprHandler service = SpringBeanUtils.getBean(exprHandler);
+                return service.handler(params);
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     @Data
     @Accessors(chain = true)
     public static class LayoutInfo {
@@ -115,4 +164,21 @@ public class NovaUtils {
 
     }
 
+    @Data
+    @Accessors(chain = true)
+    public static class DrillInfo {
+
+        @Comment("双表视图标题")
+        private String dualTableTitle;
+
+        @Comment("关联类")
+        private Class<?> linkNova;
+
+        @Comment("当前类关联属性（支持 属性名 和 对象.属性名，如：id 和 obj.id）")
+        private String column;
+
+        @Comment("目标类关联属性（支持 属性名 和 对象.属性名，如：id 和 obj.id）")
+        private String joinColumn;
+
+    }
 }

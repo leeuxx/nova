@@ -166,7 +166,7 @@ public class NovaFieldUtils {
             // 附属对象tap
             if (edit.type() == Edit.Type.APPENDAGE) {
                 AppendageType appendageType = edit.appendageType();
-                boolean tapShow = exprBool(appendageType.tapShow(), appendageType.show());
+                boolean tapShow = NovaUtils.exprBool(appendageType.tapShow(), appendageType.show());
                 if (tapShow) {
                     Class<?> fieldClass = novaFieldInfo.getFieldClass();
                     EditInfo editInfo = new EditInfo()
@@ -182,7 +182,7 @@ public class NovaFieldUtils {
             // 附属集合tap
             if (edit.type() == Edit.Type.APPENDAGES) {
                 AppendageType appendageType = edit.appendageType();
-                boolean tapShow = exprBool(appendageType.tapShow(), appendageType.show());
+                boolean tapShow = NovaUtils.exprBool(appendageType.tapShow(), appendageType.show());
                 if (tapShow) {
                     Class<?> fieldClass = novaFieldInfo.getFieldClass();
                     editInfos.add(new EditInfo()
@@ -198,7 +198,7 @@ public class NovaFieldUtils {
             // 集合引用tap
             if (edit.type() == Edit.Type.LINK) {
                 LinkType linkType = edit.linkType();
-                boolean tapShow = exprBool(linkType.tapShow(), linkType.show());
+                boolean tapShow = NovaUtils.exprBool(linkType.tapShow(), linkType.show());
                 if (tapShow) {
                     Class<?> fieldClass = novaFieldInfo.getFieldClass();
                     editInfos.add(new EditInfo()
@@ -214,7 +214,7 @@ public class NovaFieldUtils {
             // 引用详情tap
             if (edit.type() == Edit.Type.REFERENCE) {
                 ReferenceType referenceType = edit.referenceType();
-                boolean tapShow = exprBool(referenceType.tapShow(), referenceType.show());
+                boolean tapShow = NovaUtils.exprBool(referenceType.tapShow(), referenceType.show());
                 if (tapShow) {
                     Class<?> fieldClass = novaFieldInfo.getFieldClass();
                     editInfos.add(new EditInfo()
@@ -529,7 +529,7 @@ public class NovaFieldUtils {
                         .setReferenceField(appendageType.referenceField())
                         .setStorageField(appendageType.storageField())
                         .setDisplayField(appendageType.displayField())
-                        .setDualTable(edit.type() == Edit.Type.APPENDAGES && exprBool(appendageType.dualTable(), appendageType.show()))
+                        .setDualTable(edit.type() == Edit.Type.APPENDAGES && NovaUtils.exprBool(appendageType.dualTable(), appendageType.show()))
                         .setDualTableTitle(edit.title());
                 appendageTypeInfos.put(field, appendageTypeInfo);
             }
@@ -559,7 +559,7 @@ public class NovaFieldUtils {
                 LinkInfo linkInfo = new LinkInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
                         .setReferenceTransmitField(Arrays.asList(linkType.referenceTransmitField()))
-                        .setDualTable(exprBool(linkType.dualTable(), linkType.show()))
+                        .setDualTable(NovaUtils.exprBool(linkType.dualTable(), linkType.show()))
                         .setDualTableTitle(edit.title());
                 linkInfos.put(field, linkInfo);
                 // 获取中间类中的LINK_TARGET声明属性
@@ -631,23 +631,6 @@ public class NovaFieldUtils {
             }
         });
         return linkTargetInfo;
-    }
-
-    private static boolean exprBool(boolean show, ExprBool exprBool) {
-        if (!show || !exprBool.value()) {
-            return false;
-        }
-        Class<? extends ExprBool.ExprHandler>[] exprHandlers = exprBool.exprHandler();
-        if (exprHandlers.length > 0) {
-            String params = exprBool.params();
-            for (Class<? extends ExprBool.ExprHandler> exprHandler : exprHandlers) {
-                ExprBool.ExprHandler service = SpringBeanUtils.getBean(exprHandler);
-                return service.handler(params);
-            }
-            return false;
-        } else {
-            return true;
-        }
     }
 
     @Data

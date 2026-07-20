@@ -277,6 +277,18 @@ public class NovaTableServiceImpl implements NovaTableService {
             rowOperationInfos.add(rowOperationInfo);
         }
         vo.setRowOperations(rowOperationInfos);
+        // 获取数据钻取信息
+        List<NovaUtils.DrillInfo> drills = NovaUtils.getDrill(novaTableBuild.getNovaName());
+        List<NovaTableBuild.Vo.Drill> drillInfos = new ArrayList<>();
+        for (NovaUtils.DrillInfo drillInfo : drills) {
+            NovaTableBuild.Vo.Drill drillInfoObj = new NovaTableBuild.Vo.Drill()
+                    .setDualTableTitle(drillInfo.getDualTableTitle())
+                    .setLinkNovaName(drillInfo.getLinkNova().getSimpleName())
+                    .setColumn(drillInfo.getColumn())
+                    .setJoinColumn(drillInfo.getJoinColumn());
+            drillInfos.add(drillInfoObj);
+        }
+        vo.setDrills(drillInfos);
         return vo;
     }
 

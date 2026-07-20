@@ -71,6 +71,9 @@ public class NovaTableBuild {
         @Comment("树结构信息")
         private TreeInfo tree;
 
+        @Comment("数据钻取信息")
+        private List<Drill> drills;
+
         @Data
         @Accessors(chain = true)
         public static class Search {
@@ -493,6 +496,24 @@ public class NovaTableBuild {
 
             @Comment("默认展开层级")
             private Integer level;
+
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class Drill {
+
+            @Comment("双表视图标题")
+            private String dualTableTitle;
+
+            @Comment("关联类名")
+            private String linkNovaName;
+
+            @Comment("当前类关联属性（支持 属性名 和 对象.属性名，如：id 和 obj.id）")
+            private String column;
+
+            @Comment("目标类关联属性（支持 属性名 和 对象.属性名，如：id 和 obj.id）")
+            private String joinColumn;
 
         }
     }

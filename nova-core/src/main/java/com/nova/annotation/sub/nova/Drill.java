@@ -11,19 +11,22 @@ public @interface Drill {
     @Comment("下钻目标配置")
     Link link();
 
-    @Comment("控制显示与隐藏（后端控制,多用于访问权限）")
-    ExprBool show() default @ExprBool;
+    @Comment("是否显示")
+    boolean show() default true;
+
+    @Comment("控制显示与隐藏,使用此方式必须把show设置为true（后端控制,多用于访问权限）")
+    ExprBool showBy() default @ExprBool;
 
     @interface Link {
 
-        @Comment("当前类关联属性（支持属性名和对象.属性名,如：id和obj.id）")
-        String column();
-
-        @Comment("目标类关联属性（支持属性名和对象.属性名,如：id和obj.id）")
-        String joinColumn();
-
         @Comment("关联类")
         Class<?> linkNova();
+
+        @Comment("当前类关联属性（支持 属性名 和 对象.属性名，如：id 和 obj.id）")
+        String column();
+
+        @Comment("目标类关联属性（支持 属性名 和 对象.属性名，如：id 和 obj.id）")
+        String joinColumn();
 
     }
 
