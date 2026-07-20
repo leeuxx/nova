@@ -529,7 +529,7 @@ public class NovaFieldUtils {
                         .setReferenceField(appendageType.referenceField())
                         .setStorageField(appendageType.storageField())
                         .setDisplayField(appendageType.displayField())
-                        .setDualTable(exprBool(appendageType.dualTable(), appendageType.show()))
+                        .setDualTable(edit.type() == Edit.Type.APPENDAGES && exprBool(appendageType.dualTable(), appendageType.show()))
                         .setDualTableTitle(edit.title());
                 appendageTypeInfos.put(field, appendageTypeInfo);
             }
