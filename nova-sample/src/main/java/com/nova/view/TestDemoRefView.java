@@ -22,7 +22,7 @@ public class TestDemoRefView {
 
     @NovaId
     @NovaField(
-            views = @View(title = "ID", width = "25%"),
+            views = @View(title = "ID"),
             edit = @Edit(
                     title = "ID",
                     show = false
@@ -32,7 +32,7 @@ public class TestDemoRefView {
 
     @NovaField(
             views = {
-                    @View(title = "用户名称", column = "name", width = "25%")
+                    @View(title = "用户名称", column = "name")
             },
             edit = @Edit(
                     title = "用户信息",
@@ -47,8 +47,8 @@ public class TestDemoRefView {
 
     @NovaField(
             views = {
-                    @View(title = "薪资名称", column = "name", width = "25%"),
-                    @View(title = "薪资说明", column = "msg", width = "25%"),
+                    @View(title = "薪资名称", column = "name"),
+                    @View(title = "薪资说明", column = "msg"),
             },
             edit = @Edit(
                     title = "引用薪资",

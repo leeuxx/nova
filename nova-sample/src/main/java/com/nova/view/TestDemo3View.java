@@ -24,7 +24,7 @@ public class TestDemo3View {
 
     @NovaId
     @NovaField(
-            views = @View(title = "ID", width = "25%"),
+            views = @View(title = "ID"),
             edit = @Edit(
                     title = "ID",
                     show = false
@@ -44,7 +44,7 @@ public class TestDemo3View {
     private TestDemoView testDemoView;
 
     @NovaField(
-            views = @View(title = "岗位名称", width = "25%"),
+            views = @View(title = "岗位名称"),
             edit = @Edit(
                     title = "岗位名称",
                     notNull = true,
@@ -54,7 +54,7 @@ public class TestDemo3View {
     private String name;
 
     @NovaField(
-            views = @View(title = "说明", width = "25%"),
+            views = @View(title = "说明"),
             edit = @Edit(
                     title = "说明",
                     notNull = true
@@ -63,7 +63,7 @@ public class TestDemo3View {
     private String msg;
 
     @NovaField(
-            views = @View(title = "文件", width = "25%"),
+            views = @View(title = "文件"),
             edit = @Edit(
                     title = "文件",
                     type = Edit.Type.ATTACHMENT,
@@ -77,7 +77,7 @@ public class TestDemo3View {
     private String file;
 
     @NovaField(
-            views = @View(title = "创建时间", width = "25%"),
+            views = @View(title = "创建时间"),
             edit = @Edit(
                     title = "创建时间",
                     type = Edit.Type.DATE,
