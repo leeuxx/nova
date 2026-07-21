@@ -96,11 +96,11 @@ import java.time.LocalDateTime;
         },
         drills = {
                 @Drill(
-                        title = "部门钻取",
+                        title = "薪资钻取",
                         link = @Drill.Link(
                                 column = "id",
-                                joinColumn = "demo2Id",
-                                linkNova = TestDemo2View.class
+                                joinColumn = "demoId",
+                                linkNova = TestDemo4View.class
                         )
                 )
         }

@@ -229,6 +229,7 @@ const NovaTable = {
       appendageDetailsLoaded: {},
       editLayout:     'DEFAULT',
       linkMap:        {},
+      drills:         [],  // drill 配置数组：[{ dualTableTitle, linkNovaName, column, joinColumn }]
       linkTargetInfo: {},
       linkTabBuild:     {},
       linkFormData:     {},
@@ -253,6 +254,7 @@ const NovaTable = {
       _dualReloading:             false,
       dualTableCurrentKey:        '',
       dualTableCurrentNova:       '',
+      dualTableCurrentSubId:      '',
       dualTableCurrentLabel:      '',
       dualTableSourceFields:      {},
       _dualSelectedRow:           null,
@@ -355,14 +357,24 @@ const NovaTable = {
       for (const field in appendageMap) {
         const info = appendageMap[field]
         if (info && info.dualTable) {
-          list.push({ label: info.dualTableTitle || info.referenceName, novaName: info.referenceName, type: 'appendage', field, fieldInfo: info })
+          const novaName = info.referenceName
+          list.push({ id: 'appendage:' + novaName, label: info.dualTableTitle || novaName, novaName, type: 'appendage', field, fieldInfo: info })
         }
       }
       const linkMap = this.linkMap || {}
       for (const field in linkMap) {
         const info = linkMap[field]
         if (info && info.dualTable) {
-          list.push({ label: info.dualTableTitle || info.referenceName, novaName: info.referenceName, type: 'link', field, fieldInfo: info })
+          const novaName = info.referenceName
+          list.push({ id: 'link:' + novaName, label: info.dualTableTitle || novaName, novaName, type: 'link', field, fieldInfo: info })
+        }
+      }
+      const drills = this.drills || []
+      for (var i = 0; i < drills.length; i++) {
+        var info = drills[i]
+        if (info && info.show !== false) {
+          const novaName = info.linkNovaName
+          list.push({ id: 'drill:' + novaName, label: info.dualTableTitle, novaName, type: 'drill', field: i, fieldInfo: info })
         }
       }
       return list
@@ -405,8 +417,13 @@ const NovaTable = {
     },
     isDualTableLink() {
       if (!this.dualTableViewActive) return false
-      const sub = this.dualTableSubTables.find(s => s.novaName === this.dualTableCurrentNova)
+      const sub = this.dualTableSubTables.find(s => s.id === this.dualTableCurrentSubId)
       return sub && sub.type === 'link'
+    },
+    isDualTableDrill() {
+      if (!this.dualTableViewActive) return false
+      const sub = this.dualTableSubTables.find(s => s.id === this.dualTableCurrentSubId)
+      return sub && sub.type === 'drill'
     },
     tbStandardShow() {
       return window.NovaTableButtons.toolbarStandardShow(this)
@@ -857,6 +874,13 @@ const NovaTable = {
             }
           })
         }
+        // drill / 兜底：对未匹配 REFERENCE / LINK_TARGET 的 source key，
+        // 直接以 TEXT 类型注入条件（drill 的 joinColumn 不过 refMap 映射）
+        sourceKeys.forEach(function(k) {
+          if (embSourceFields[k] != null && !sourceRefFields.some(function(s) { return s.referenceField === k })) {
+            sourceRefFields.push({ field: k, type: 'TEXT', referenceField: k, value: String(embSourceFields[k]) })
+          }
+        })
         target._sourceRefFields = sourceRefFields
         // dualMode / embeddedMode 都需要在 sourceFields 变化时重新加载数据
         if (this.dualMode || this.embeddedMode) {
@@ -2518,14 +2542,15 @@ const NovaTable = {
           this._syncDualTableClass()
         }, 300)
       } else {
-        this.openDualTableView(this.dualTableSubTables[0].novaName)
+        var first = this.dualTableSubTables[0]
+        this.openDualTableView(first ? first.id : '')
       }
     },
     handleDualLinkAdd() {
       window.NovaDualLinkJQ.handleDualLinkAdd(this)
     },
-    openDualTableView(novaName) {
-      const item = this.dualTableSubTables.find(s => s.novaName === novaName)
+    openDualTableView(subId) {
+      const item = this.dualTableSubTables.find(s => s.id === subId)
       if (!item) return
       if (!this._dualSelectedRow && this.filteredData && this.filteredData.length > 0) {
         this._dualSelectedRow = this.filteredData[0]
@@ -2537,9 +2562,10 @@ const NovaTable = {
 
       this.dualTableViewActive = true
       this._dualTableVersion++
+      this.dualTableCurrentSubId = item.id
       this.dualTableCurrentNova = item.novaName
       this.dualTableCurrentLabel = item.label
-      this.dualTableCurrentKey = '__dual_' + item.novaName + '_v' + this._dualTableVersion
+      this.dualTableCurrentKey = '__dual_' + item.id + '_v' + this._dualTableVersion
       this.buildDualTableSourceFields()
       this._syncDualTableClass()
 
@@ -2558,7 +2584,7 @@ const NovaTable = {
       const row = this._dualSelectedRow
       if (!row) { this.dualTableSourceFields = {}; return }
       // 查找当前子表在 dualTableSubTables 中的类型
-      const sub = this.dualTableSubTables.find(s => s.novaName === this.dualTableCurrentNova)
+      const sub = this.dualTableSubTables.find(s => s.id === this.dualTableCurrentSubId)
       if (!sub) { this.dualTableSourceFields = {}; return }
 
       if (sub.type === 'link') {
@@ -2571,6 +2597,15 @@ const NovaTable = {
         const val = row[storageField]
         if (val == null) { this.dualTableSourceFields = {}; return }
         this.dualTableSourceFields = { [refField]: String(val) }
+      } else if (sub.type === 'drill') {
+        // DRILL 类型：key 用 joinColumn，value 用当前行[column]的值
+        const drillInfo = sub.fieldInfo || {}
+        const column = drillInfo.column
+        const joinColumn = drillInfo.joinColumn
+        if (!column || !joinColumn) { this.dualTableSourceFields = {}; return }
+        const val = row[column]
+        if (val == null) { this.dualTableSourceFields = {}; return }
+        this.dualTableSourceFields = { [joinColumn]: String(val) }
       } else {
         // APPENDAGES 类型：取 fieldInfo.storageField，值为当前行对应字段值
         const appInfo = sub.fieldInfo || {}
@@ -2636,17 +2671,18 @@ const NovaTable = {
       // APPENDAGES 委托 JQ
       window.NovaDualAppendagesJQ.onRowClick(this, row)
     },
-    onDualTableSubChange(novaName) {
-      const item = this.dualTableSubTables.find(s => s.novaName === novaName)
+    onDualTableSubChange(subId) {
+      const item = this.dualTableSubTables.find(s => s.id === subId)
       if (!item) return
 
       // 相同 tab 不重复处理
-      if (this.dualTableCurrentNova === item.novaName) return
+      if (this.dualTableCurrentSubId === item.id) return
 
       // 清除双表树状态
       this.linkTreeData['__dual__'] = null
       this.linkTreeCheckedKeys['__dual__'] = null
 
+      this.dualTableCurrentSubId = item.id
       this.dualTableCurrentNova = item.novaName
       this.dualTableCurrentLabel = item.label
 
@@ -2674,8 +2710,8 @@ const NovaTable = {
           }
         })
       } else {
-        // APPENDAGES 类型：委托 JQ
-        window.NovaDualAppendagesJQ.onSubChange(this, item.novaName)
+        // APPENDAGES / DRILL 类型：委托 JQ
+        window.NovaDualAppendagesJQ.onSubChange(this, item.novaName, item.id)
       }
     },
     _syncDualTableClass() {
@@ -3305,10 +3341,10 @@ const NovaTable = {
                 </n-tooltip>
               </template>
               <div style="display:flex;flex-direction:column;gap:2px;font-size:13px;min-width:120px;padding:4px 0">
-                  <div v-for="s in dualTableSubTables" :key="s.novaName"
+                  <div v-for="s in dualTableSubTables" :key="s.id"
                     style="padding:6px 10px;cursor:pointer;border-radius:4px;transition:background .15s;text-align:center"
-                    :style="{ color: (dualTableViewActive && s.novaName === dualTableCurrentNova) ? '#2563eb' : '' }"
-                    @click.stop="dualTableViewActive ? onDualTableSubChange(s.novaName) : openDualTableView(s.novaName)"
+                    :style="{ color: (dualTableViewActive && s.id === dualTableCurrentSubId) ? '#2563eb' : '' }"
+                    @click.stop="dualTableViewActive ? onDualTableSubChange(s.id) : openDualTableView(s.id)"
                     @mouseenter="e => e.target.style.background='rgba(37,99,235,0.06)'"
                     @mouseleave="e => e.target.style.background=''">
                     {{ s.label }}
@@ -3890,8 +3926,17 @@ const NovaTable = {
             @save-tree="submitDualLinkTree"
             @link-add="handleDualLinkAdd"
           />
+          <!-- DRILL 表格模式（双表视图，纯展示） -->
+          <dual-drill-table v-else-if="dualTableViewActive && isDualTableDrill"
+            ref="dualTableRef"
+            :nova-name="dualTableCurrentNova"
+            :parent-nova-name="novaName"
+            :source-fields="dualTableSourceFields"
+            :embed-key="dualTableCurrentKey"
+            :drill-info="(dualTableSubTables.find(s => s.id === dualTableCurrentSubId) || {}).fieldInfo || {}"
+          />
           <!-- APPENDAGES 表格模式（双表视图） -->
-          <dual-appendages-table v-else-if="dualTableViewActive && !isDualTableLink"
+          <dual-appendages-table v-else-if="dualTableViewActive && !isDualTableLink && !isDualTableDrill"
             ref="dualTableRef"
             :nova-name="dualTableCurrentNova"
             :parent-nova-name="novaName"

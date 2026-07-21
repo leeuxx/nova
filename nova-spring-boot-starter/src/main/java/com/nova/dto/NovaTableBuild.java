@@ -509,10 +509,10 @@ public class NovaTableBuild {
             @Comment("关联类名")
             private String linkNovaName;
 
-            @Comment("当前类关联属性（支持 属性名 和 对象.属性名，如：id 和 obj.id）")
+            @Comment("当前类关联属性")
             private String column;
 
-            @Comment("目标类关联属性（支持 属性名 和 对象.属性名，如：id 和 obj.id）")
+            @Comment("目标类关联属性")
             private String joinColumn;
 
         }

@@ -3,12 +3,28 @@
 
 window.NovaDualAppendagesJQ = (function () {
 
-  // ── 构建 APPENDAGES 的 sourceFields ─────────────────────────────
+  // ── 构建 sourceFields ────────────────────────────────────────────
+  // APPENDAGES: key = storageField, value = row[storageField]
+  // DRILL:      key = joinColumn,   value = row[column]
   function buildSourceFields(hostVm) {
     const row = hostVm._dualSelectedRow
     if (!row) { hostVm.dualTableSourceFields = {}; return }
-    const sub = (hostVm.dualTableSubTables || []).find(s => s.novaName === hostVm.dualTableCurrentNova)
+    const sub = (hostVm.dualTableSubTables || []).find(s => s.id === hostVm.dualTableCurrentSubId)
     if (!sub) { hostVm.dualTableSourceFields = {}; return }
+
+    // DRILL 类型：key 用 joinColumn，value 用当前行[column]的值
+    if (sub.type === 'drill') {
+      const drillInfo = sub.fieldInfo || {}
+      const column = drillInfo.column
+      const joinColumn = drillInfo.joinColumn
+      if (!column || !joinColumn) { hostVm.dualTableSourceFields = {}; return }
+      const val = row[column]
+      if (val == null) { hostVm.dualTableSourceFields = {}; return }
+      hostVm.dualTableSourceFields = { [joinColumn]: String(val) }
+      return
+    }
+
+    // APPENDAGES 类型：key 用 storageField，value 用当前行对应字段值
     const appInfo = sub.fieldInfo || {}
     const storageField = appInfo.storageField || 'id'
     const val = row[storageField]
@@ -22,6 +38,19 @@ window.NovaDualAppendagesJQ = (function () {
     target._sourceFields = embSourceFields
     var sourceKeys = Object.keys(embSourceFields)
     var sourceRefFields = []
+
+    // drill 类型：直接用 joinColumn 作为 referenceField（不经 refMap 映射）
+    var sub = (hostVm.dualTableSubTables || []).find(s => s.id === hostVm.dualTableCurrentSubId)
+    if (sub && sub.type === 'drill') {
+      var drillInfo = sub.fieldInfo || {}
+      var joinColumn = drillInfo.joinColumn
+      if (joinColumn && embSourceFields[joinColumn] != null) {
+        sourceRefFields.push({ field: joinColumn, type: 'DRILL', referenceField: joinColumn, value: String(embSourceFields[joinColumn]) })
+      }
+      target._sourceRefFields = sourceRefFields
+      return
+    }
+
     if (sourceKeys.length > 0) {
       var refMap = target.referenceMap || {}
       for (var field in refMap) {
@@ -66,8 +95,10 @@ window.NovaDualAppendagesJQ = (function () {
   }
 
   // ── 切换子表 ────────────────────────────────────────────────────
-  function onSubChange(hostVm, novaName) {
+  // subId: 子表条目的唯一标识 (type:novaName)，用于设置 dualTableCurrentSubId
+  function onSubChange(hostVm, novaName, subId) {
     hostVm.dualTableCurrentNova = novaName
+    if (subId != null) hostVm.dualTableCurrentSubId = subId
     buildSourceFields(hostVm)
     var self = hostVm
     hostVm.$nextTick(function () {
