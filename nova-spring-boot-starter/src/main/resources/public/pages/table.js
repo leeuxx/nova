@@ -429,14 +429,13 @@ const NovaTable = {
       return window.NovaTableButtons.toolbarStandardShow(this)
     },
     // 列宽像素：checkbox 50 + 操作列 + 数据列
-    // 后端列宽总和 < 阈值时补全铺满，≥ 阈值时原样渲染（出现滚动条）
-    // 普通模式阈值 100%，双表模式阈值 50%（右面板只占半屏）
+    // 后端列宽总和 < 100% 时补全铺满，≥ 100% 时原样渲染（出现滚动条）
     // 补全策略：未设宽度的列视为弹性列，剩余空间优先平均分给它们
+    // 双表模式：容器变窄，同样配置可能出现滚动条，属正常现象，不做特殊处理
     colPixels() {
       const fixedPx = 50 + this.rowActionColWidth
       const width = this.tableWrapperWidth || 1200
       const available = Math.max(width - fixedPx, 0)
-      const threshold = this.dualTableViewActive ? 50 : 100  // 双表模式下 50% 即铺满
 
       // 分类：有明确百分比的列 / 未设宽度的弹性列 / 固定像素列
       let specifiedPct = 0
@@ -453,16 +452,13 @@ const NovaTable = {
 
       // 弹性列分到的百分比：剩余空间平均分配
       let flexPct = 0
-      if (specifiedPct < threshold && flexCount > 0) {
-        flexPct = (threshold - specifiedPct) / flexCount
-      } else if (specifiedPct < threshold && flexCount === 0) {
-        // 没有弹性列，等比放大所有百分比列
-        flexPct = 0
+      if (specifiedPct < 100 && flexCount > 0) {
+        flexPct = (100 - specifiedPct) / flexCount
       }
 
-      // 放大比率（无弹性列且不足阈值时使用）
-      const ratio = flexCount === 0 && specifiedPct > 0 && specifiedPct < threshold
-        ? threshold / specifiedPct
+      // 放大比率（无弹性列且不足 100% 时等比放大）
+      const ratio = flexCount === 0 && specifiedPct > 0 && specifiedPct < 100
+        ? 100 / specifiedPct
         : 1
 
       return this.tableColumns.map(function(col) {
