@@ -531,6 +531,9 @@ const NovaTable = {
           })
         }
       } else if (!vm.readonly) {
+        // dualMode 下即使 readonly 也保留复选框列，保持与 appendages 等子表格式统一（纯展示无实际操作）
+        cols.push({ type: 'selection', title: '', key: 'selection', width: 50 })
+      } else if (vm.dualMode && !vm.linkMode) {
         cols.push({ type: 'selection', title: '', key: 'selection', width: 50 })
       }
 

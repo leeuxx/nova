@@ -151,6 +151,9 @@ window.NovaTableJQ = (function ($) {
         // 注意：这里只是先准备 _sourceFields 和 _sourceNovaName，_embConditions 在 sourceRefFields 构建完后才计算
         target._sourceFields = embSourceFields || {}
         target._sourceNovaName = sourceNovaName || novaName
+        // consumedKeys: 记录已被 REFERENCE / LINK_TARGET 匹配消费掉的 sourceField key，
+        // 剩余的 key 由 drill 兜底逻辑以 TEXT 类型注入条件
+        var consumedKeys = []
         if (embSourceFields && Object.keys(embSourceFields).length > 0) {
           var sourceKeys = Object.keys(embSourceFields)
           var hiddenRefNovas = []
@@ -161,6 +164,7 @@ window.NovaTableJQ = (function ($) {
             // storageField = 引用表的值字段（父表PK），与 sourceFields 的 key 对应
             if (sourceKeys.indexOf(refInfo.storageField) !== -1) {
               hiddenRefNovas.push(refInfo.referenceName)
+              consumedKeys.push(refInfo.storageField)
               sourceRefFields.push({ field: f.field, type: 'REFERENCE', referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
               return false
             }
@@ -188,10 +192,21 @@ window.NovaTableJQ = (function ($) {
           var ltFields = [linkTargetInfo.thisReferenceField, linkTargetInfo.linkReferenceField]
           ltFields.forEach(function(refField) {
             if (refField && embSourceFields[refField] != null) {
+              if (consumedKeys.indexOf(refField) === -1) consumedKeys.push(refField)
               existingRefFields.push({ field: refField, type: 'LINK_TARGET', referenceField: refField, value: embSourceFields[refField] })
             }
           })
           target._sourceRefFields = existingRefFields
+        }
+        // drill / 兜底：对未匹配 REFERENCE / LINK_TARGET 的 source key，
+        // 直接以 TEXT 类型注入条件（drill 的 joinColumn 不过 refMap 映射）
+        if (target._sourceRefFields && embSourceFields && Object.keys(embSourceFields).length > 0) {
+          var _srfs = target._sourceRefFields
+          sourceKeys.forEach(function(k) {
+            if (embSourceFields[k] != null && consumedKeys.indexOf(k) === -1) {
+              _srfs.push({ field: k, type: 'TEXT', referenceField: k, value: String(embSourceFields[k]) })
+            }
+          })
         }
         // 从主表 currentRow 直接构建 _embConditions（兜底：_sourceRefFields 为空时使用）
         if (sourceNovaName && embSourceFields && Object.keys(embSourceFields).length > 0) {
