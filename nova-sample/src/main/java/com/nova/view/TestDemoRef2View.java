@@ -22,7 +22,7 @@ public class TestDemoRef2View {
 
     @NovaId
     @NovaField(
-            views = @View(title = "ID", width = "25%"),
+            views = @View(title = "ID", width = "34%"),
             edit = @Edit(
                     title = "ID",
                     show = false
@@ -32,7 +32,7 @@ public class TestDemoRef2View {
 
     @NovaField(
             views = {
-                    @View(title = "用户名称", column = "name", width = "25%")
+                    @View(title = "用户名称", column = "name", width = "33%")
             },
             edit = @Edit(
                     title = "用户信息",
@@ -47,7 +47,7 @@ public class TestDemoRef2View {
 
     @NovaField(
             views = {
-                    @View(title = "引用用户名称", column = "name", width = "25%")
+                    @View(title = "引用用户名称", column = "name", width = "33%")
             },
             edit = @Edit(
                     title = "引用用户信息",
