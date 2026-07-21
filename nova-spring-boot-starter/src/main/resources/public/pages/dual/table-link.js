@@ -69,6 +69,9 @@ window.DualLinkTable = {
     },
     linkTreeTargetConfig: function() {
       return (this.linkTabBuild || {}).linkTreeTargetConfig || null
+    },
+    hasAddPermission: function() {
+      return window.__hasButton(this.novaName, 'add')
     }
   },
 
@@ -158,7 +161,7 @@ window.DualLinkTable = {
       <div class="table-card-header" style="flex-shrink:0;padding:0 16px">
         <span style="font-size:16px;font-weight:500">数据节点</span>
         <div style="display:flex;gap:8px">
-          <n-button type="primary" @click="onSave">保 存</n-button>
+          <n-button v-if="hasAddPermission" type="primary" @click="onSave">保 存</n-button>
         </div>
       </div>
       <div class="link-tree-scroll" style="flex:1;overflow:auto;min-height:0;padding:0 12px 8px">

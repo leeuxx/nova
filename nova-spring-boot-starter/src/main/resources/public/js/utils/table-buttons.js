@@ -143,7 +143,7 @@ function calcRowActionColWidth(linkMode, rowOperations, novaName) {
 function toolbarStandardShow(vm) {
   return {
     add:         !vm.readonly && !vm.linkMode && window.__hasButton(vm.novaName, 'add'),
-    linkAdd:     vm.linkMode && !vm.readonly,
+    linkAdd:     vm.linkMode && !vm.readonly && window.__hasButton(vm.novaName, 'add'),
     batchDelete: vm.checkedRowKeys.length > 0 && !vm.readonly && window.__hasButton(vm.novaName, 'delete'),
   }
 }

@@ -34,6 +34,11 @@ window.NovaLinkForm = {
     this.$emit('init', this.linkNovaName)
   },
 
+  computed: {
+    hasAddPermission() {
+      return window.__hasButton(this.linkNovaName, 'add')
+    }
+  },
   methods: {
     linkTreeSearchPlaceholder() {
       const config = (this.linkTabBuild[this.linkNovaName] || {}).linkTreeTargetConfig
@@ -172,7 +177,7 @@ window.NovaLinkForm = {
         />
       </div>
       <div style="flex-shrink:0;padding:8px 0;display:flex;justify-content:flex-end;border-top:1px solid #eee">
-        <n-button type="primary" @click="onSave">保 存</n-button>
+        <n-button v-if="hasAddPermission" type="primary" @click="onSave">保 存</n-button>
       </div>
     </template>
   </div>
