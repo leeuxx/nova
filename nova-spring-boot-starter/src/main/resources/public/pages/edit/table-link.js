@@ -25,6 +25,7 @@ window.NovaLinkForm = {
     linkTreeDisplayKeys:    { type: Object, default: function() { return {} } },
     linkTreeLoading:        { type: Object, default: function() { return {} } },
     linkTreeSearchKeyword:  { type: Object, default: function() { return {} } },
+    loadingStyle:           { type: String, default: 'spinner' },
   },
 
   emits: ['init', 'link-add', 'tree-check', 'tree-search', 'save-tree'],
@@ -92,47 +93,88 @@ window.NovaLinkForm = {
   template: `
 <div v-if="visible"
   :style="'display:flex;flex-direction:column;overflow:hidden;' + (linkTreeData[linkNovaName] ? 'max-height:500px' : 'height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px'))">
-  <!-- 加载中 -->
+  <!-- 加载中：复用三种加载效果 -->
   <div v-if="linkTreeLoading[linkNovaName] && !linkTabBuild[linkNovaName]"
-    style="padding:40px;text-align:center;color:#999">加载中...</div>
-  <!-- 树模式 -->
-  <div v-else-if="linkTreeData[linkNovaName] && (linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig"
-    style="display:flex;flex-direction:column;max-height:500px">
-    <div v-if="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField" style="flex-shrink:0;padding:12px 0 8px 0">
-      <n-input
-        :value="linkTreeSearchKeyword[linkNovaName]"
-        :placeholder="linkTreeSearchPlaceholder()"
-        clearable
-        @update:value="onSearchUpdate"
-        style="width:100%" />
+    style="display:flex;align-items:center;justify-content:center;padding:60px">
+    <n-spin v-if="loadingStyle === 'spinner'" size="small" />
+    <div v-else-if="loadingStyle === 'wave'" class="custom-loading loading-wave" style="padding:0">
+      <span class="wave-bars">
+        <span class="bar b1"></span>
+        <span class="bar b2"></span>
+        <span class="bar b3"></span>
+        <span class="bar b4"></span>
+        <span class="bar b5"></span>
+      </span>
     </div>
-    <div class="link-tree-scroll" style="flex:1;overflow:auto;padding:0 0 12px 0">
-      <n-tree v-if="!linkTreeFilteredData[linkNovaName] && linkTreeData[linkNovaName]"
-        :default-expanded-keys="linkTreeDefaultExpandedKeys[linkNovaName] || []"
-        :data="linkTreeData[linkNovaName]"
-        :checked-keys="linkTreeDisplayKeys[linkNovaName]"
-        :cascade="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
-        :key-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
-        :label-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField"
-        checkable block-line
-        @update:checked-keys="onTreeCheck"
-      />
-      <n-tree v-if="linkTreeFilteredData[linkNovaName]"
-        :key="'linkTreeSearch_' + linkNovaName + '_' + (linkTreeSearchKeyword[linkNovaName] || '')"
-        :data="linkTreeFilteredData[linkNovaName]"
-        :checked-keys="linkTreeDisplayKeys[linkNovaName]"
-        :expanded-keys="linkTreeExpandedKeys[linkNovaName] || []"
-        :cascade="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
-        :key-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
-        :label-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField"
-        :render-label="linkTreeRenderLabel()"
-        checkable block-line
-        @update:checked-keys="onTreeCheck"
-      />
+    <div v-else-if="loadingStyle === 'dots'" class="custom-loading loading-dots" style="padding:0">
+      <span class="dots-wrap">
+        <span class="dot d1"></span>
+        <span class="dot d2"></span>
+        <span class="dot d3"></span>
+      </span>
     </div>
-    <div style="flex-shrink:0;padding:8px 0;display:flex;justify-content:flex-end;border-top:1px solid #eee">
-      <n-button type="primary" @click="onSave">保 存</n-button>
+  </div>
+  <!-- 树模式（含加载遮罩）：build 返回后立即占据树区域，避免空白 -->
+  <div v-else-if="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig"
+    style="position:relative;display:flex;flex-direction:column;max-height:500px;min-height:200px">
+    <!-- 树数据加载遮罩 -->
+    <div v-if="linkTreeLoading[linkNovaName]"
+      style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;pointer-events:none">
+      <n-spin v-if="loadingStyle === 'spinner'" size="small" />
+      <div v-else-if="loadingStyle === 'wave'" class="custom-loading loading-wave" style="padding:0">
+        <span class="wave-bars">
+          <span class="bar b1"></span>
+          <span class="bar b2"></span>
+          <span class="bar b3"></span>
+          <span class="bar b4"></span>
+          <span class="bar b5"></span>
+        </span>
+      </div>
+      <div v-else-if="loadingStyle === 'dots'" class="custom-loading loading-dots" style="padding:0">
+        <span class="dots-wrap">
+          <span class="dot d1"></span>
+          <span class="dot d2"></span>
+          <span class="dot d3"></span>
+        </span>
+      </div>
     </div>
+    <template v-if="linkTreeData[linkNovaName]">
+      <div v-if="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField" style="flex-shrink:0;padding:12px 0 8px 0">
+        <n-input
+          :value="linkTreeSearchKeyword[linkNovaName]"
+          :placeholder="linkTreeSearchPlaceholder()"
+          clearable
+          @update:value="onSearchUpdate"
+          style="width:100%" />
+      </div>
+      <div class="link-tree-scroll" style="flex:1;overflow:auto;padding:0 0 12px 0">
+        <n-tree v-if="!linkTreeFilteredData[linkNovaName] && linkTreeData[linkNovaName]"
+          :default-expanded-keys="linkTreeDefaultExpandedKeys[linkNovaName] || []"
+          :data="linkTreeData[linkNovaName]"
+          :checked-keys="linkTreeDisplayKeys[linkNovaName]"
+          :cascade="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
+          :key-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
+          :label-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField"
+          checkable block-line
+          @update:checked-keys="onTreeCheck"
+        />
+        <n-tree v-if="linkTreeFilteredData[linkNovaName]"
+          :key="'linkTreeSearch_' + linkNovaName + '_' + (linkTreeSearchKeyword[linkNovaName] || '')"
+          :data="linkTreeFilteredData[linkNovaName]"
+          :checked-keys="linkTreeDisplayKeys[linkNovaName]"
+          :expanded-keys="linkTreeExpandedKeys[linkNovaName] || []"
+          :cascade="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
+          :key-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
+          :label-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField"
+          :render-label="linkTreeRenderLabel()"
+          checkable block-line
+          @update:checked-keys="onTreeCheck"
+        />
+      </div>
+      <div style="flex-shrink:0;padding:8px 0;display:flex;justify-content:flex-end;border-top:1px solid #eee">
+        <n-button type="primary" @click="onSave">保 存</n-button>
+      </div>
+    </template>
   </div>
   <!-- 普通模式：内嵌中间表 -->
   <nova-table v-else-if="linkTabBuild[linkNovaName] && !linkTreeLoading[linkNovaName]"

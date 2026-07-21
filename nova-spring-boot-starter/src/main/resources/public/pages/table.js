@@ -3571,6 +3571,7 @@ const NovaTable = {
             :link-tree-display-keys="linkTreeDisplayKeys"
             :link-tree-loading="linkTreeLoading"
             :link-tree-search-keyword="linkTreeSearchKeyword"
+            :loading-style="loadingStyle"
             @init="initLinkTreeTab($event)"
             @link-add="(n, t) => openLinkPicker(n, t)"
             @tree-check="(n, k) => onLinkTreeCheck(k, n)"
