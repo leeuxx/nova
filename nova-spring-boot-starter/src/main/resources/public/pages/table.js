@@ -2713,8 +2713,29 @@ const NovaTable = {
           }
         })
       } else {
-        // APPENDAGES / DRILL 类型：委托 JQ
-        window.NovaDualAppendagesJQ.onSubChange(this, item.novaName, item.id)
+        // APPENDAGES / DRILL 类型：直接操作 NovaTable 实例，
+        // _dualReloading 阻止 sourceFieldsProp watcher 干扰，reloadDual 全权负责
+        var nt = this.$refs.dualTableRef
+        if (nt) nt._dualReloading = true
+        var self2 = this
+        self2.$nextTick(function () {
+          var nt2 = self2.$refs.dualTableRef
+          if (nt2) {
+            nt2._dualReloading = false
+            nt2.reloadDual(item.novaName, self2.dualTableSourceFields)
+          }
+          self2.$nextTick(function () {
+            var panelEl = document.querySelector('.dual-right-panel')
+            if (panelEl) {
+              var contentEl = panelEl.querySelector('.page-card, .embedded-table')
+              if (contentEl) {
+                contentEl.classList.remove('dual-content-fade')
+                void contentEl.offsetWidth
+                contentEl.classList.add('dual-content-fade')
+              }
+            }
+          })
+        })
       }
     },
     _syncDualTableClass() {
@@ -3929,22 +3950,14 @@ const NovaTable = {
             @save-tree="submitDualLinkTree"
             @link-add="handleDualLinkAdd"
           />
-          <!-- DRILL 表格模式（双表视图，纯展示） -->
-          <dual-drill-table v-else-if="dualTableViewActive && isDualTableDrill"
+          <!-- DRILL / APPENDAGES 表格模式：直接使用 NovaTable，不重建实例 -->
+          <nova-table v-else-if="dualTableViewActive && !isDualTableLink"
             ref="dualTableRef"
-            :nova-name="dualTableCurrentNova"
-            :parent-nova-name="novaName"
-            :source-fields="dualTableSourceFields"
-            :embed-key="dualTableCurrentKey"
-            :drill-info="(dualTableSubTables.find(s => s.id === dualTableCurrentSubId) || {}).fieldInfo || {}"
-          />
-          <!-- APPENDAGES 表格模式（双表视图） -->
-          <dual-appendages-table v-else-if="dualTableViewActive && !isDualTableLink && !isDualTableDrill"
-            ref="dualTableRef"
-            :nova-name="dualTableCurrentNova"
-            :parent-nova-name="novaName"
-            :source-fields="dualTableSourceFields"
-            :embed-key="dualTableCurrentKey"
+            :dual-mode="true"
+            :readonly="isDualTableDrill"
+            :nova-name-prop="dualTableCurrentNova"
+            :source-nova-name-prop="novaName"
+            :source-fields-prop="dualTableSourceFields"
           />
         </div>
       </Teleport>
