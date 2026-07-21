@@ -2582,6 +2582,8 @@ const NovaTable = {
           if (!isTreeMode) {
             // 非树模式：模板会回退到 nova-table
             self.linkTreeLoading['__dual__'] = false
+            // 清除之前树模式可能设置的固定高度
+            self.$nextTick(function() { self.syncDualPanelHeight() })
           }
         })
       }
@@ -2703,6 +2705,7 @@ const NovaTable = {
             // 内层表格已通过 novaName key 重建，mounted() 自动调用 build/loadData
             self.linkTreeLoading['__dual__'] = false
             self.$nextTick(function () {
+              self.syncDualPanelHeight()
               var panelEl = document.querySelector('.dual-right-panel')
               if (panelEl) {
                 var contentEl = panelEl.querySelector('.page-card, .embedded-table')
