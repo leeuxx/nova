@@ -919,7 +919,10 @@ const NovaTable = {
       this.paginationConfig.onUpdatePage     = this.handlePageChange
       this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
       this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
-      if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onEmbeddedMounted(this.novaName, this._vmKey, this.sourceNovaNameProp || this.novaName, this.sourceFieldsProp || {})
+      // _dualReloadPending 为 true 说明 reloadDual 会接管，跳过初始加载
+      var _drp = window._dualReloadPending
+      window._dualReloadPending = false
+      if (!_drp && this.novaName && window.NovaTableJQ) window.NovaTableJQ.onEmbeddedMounted(this.novaName, this._vmKey, this.sourceNovaNameProp || this.novaName, this.sourceFieldsProp || {})
     } else if (this.embeddedMode) {
       this.novaName = this.novaNameProp || ''
       this._vmKey = '__emb_' + this.novaName + '_' + Date.now()
@@ -2715,6 +2718,7 @@ const NovaTable = {
       } else {
         // APPENDAGES / DRILL 类型：直接操作 NovaTable 实例，
         // _dualReloading 阻止 sourceFieldsProp watcher 干扰，reloadDual 全权负责
+        window._dualReloadPending = true
         var nt = this.$refs.dualTableRef
         if (nt) nt._dualReloading = true
         var self2 = this
