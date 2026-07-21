@@ -52,6 +52,11 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setIcon("material-symbols:group-outline")
                 .setPid(2L)
                 .setType(Menu.Type.NOVA)
+                .setSystemButton(new Menu.SystemButton()
+                        .setAdd(true)
+                        .setEdit(true)
+                        .setDelete(true)
+                )
         );
         add(new Menu()
                 .setId(YitIdHelper.nextId())
@@ -77,6 +82,9 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setPid(3L)
                 .setType(Menu.Type.NOVA)
                 .setSystemButton(new Menu.SystemButton()
+                        .setAdd(true)
+                        .setEdit(true)
+                        .setDelete(true)
                 )
         );
         add(new Menu()

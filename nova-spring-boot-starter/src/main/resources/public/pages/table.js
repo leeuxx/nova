@@ -2926,43 +2926,39 @@ const NovaTable = {
   template: `
     <div v-if="viewMode">
       <div v-if="editFields.length === 0" style="text-align:center;padding:60px;color:#aaa;font-size:14px">加载中…</div>
-      <div v-else style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+      <div v-else style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0px 24px">
         <template v-for="f in editFields.filter(f => f.type !== 'DIVIDE' && f.type !== 'EMPTY')" :key="f.field">
-          <div style="background:var(--n-card-color);border:1px solid var(--n-border-color);border-radius:8px;overflow:hidden;display:flex"
-            :style="f.type === 'ATTACHMENT' ? 'grid-column: 1 / -1' : ''">
-            <div style="width:4px;flex-shrink:0;background:var(--n-primary-color);opacity:0.6"></div>
-            <div style="flex:1;padding:12px 14px;min-width:0">
-              <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
-                <iconify-icon v-if="viewFieldIcon(f)" :icon="viewFieldIcon(f)" width="14" style="color:var(--n-primary-color);opacity:0.8;flex-shrink:0"></iconify-icon>
-                <span style="font-size:11px;font-weight:500;color:var(--n-text-color-3);letter-spacing:0.3px;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ f.title }}</span>
-              </div>
-              <!-- 附件类型 -->
-              <div v-if="f.type === 'ATTACHMENT'">
-                <div v-if="!(formData[f.field] || []).length" style="font-size:13px;color:var(--n-text-color-3);font-style:italic">-</div>
-                <template v-else-if="attachmentMap[f.field] && attachmentMap[f.field].type === 'IMAGE'">
-                  <div style="display:flex;flex-wrap:wrap;gap:8px">
-                    <div v-for="(url, idx) in (formData[f.field] || [])" :key="idx" class="gallery-thumb-item" style="width:72px;height:72px">
-                      <img :src="url" class="gallery-thumb-img" style="width:72px;height:72px"
-                        @click="previewField = f; previewIndex = idx; previewModalShow = true" />
-                    </div>
+          <div :style="f.type === 'ATTACHMENT' ? 'grid-column: 1 / -1' : ''" style="padding:12px 0;border-bottom:1px dashed var(--n-border-color)">
+            <div style="font-size:12px;color:var(--n-text-color-3);opacity:0.7;margin-bottom:6px;display:flex;align-items:center;gap:4px">
+              <iconify-icon v-if="viewFieldIcon(f)" :icon="viewFieldIcon(f)" width="13" style="color:var(--n-text-color-3);flex-shrink:0"></iconify-icon>
+              <span>{{ f.title }}</span>
+            </div>
+            <!-- 附件类型 -->
+            <div v-if="f.type === 'ATTACHMENT'">
+              <div v-if="!(formData[f.field] || []).length" style="font-size:14px;color:var(--n-text-color-3);font-style:italic">-</div>
+              <template v-else-if="attachmentMap[f.field] && attachmentMap[f.field].type === 'IMAGE'">
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <div v-for="(url, idx) in (formData[f.field] || [])" :key="idx" class="gallery-thumb-item" style="width:72px;height:72px">
+                    <img :src="url" class="gallery-thumb-img" style="width:72px;height:72px"
+                      @click="previewField = f; previewIndex = idx; previewModalShow = true" />
                   </div>
-                </template>
-                <template v-else>
-                  <div v-for="(url, idx) in (formData[f.field] || [])" :key="idx"
-                    style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--n-border-color)">
-                    <iconify-icon icon="mdi:paperclip" width="13" style="color:var(--n-primary-color);flex-shrink:0"></iconify-icon>
-                    <span style="flex:1;font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--n-text-color-1)" :title="url">{{ url }}</span>
-                    <span style="font-size:12px;color:var(--n-primary-color);cursor:pointer;flex-shrink:0" @click="copyText(url)">复制</span>
-                  </div>
-                </template>
-              </div>
-              <!-- 普通类型 -->
-              <div v-else style="font-size:14px;color:var(--n-text-color-1);line-height:1.5;min-height:21px;overflow:hidden">
-                <span v-if="!viewDisplayValue(f)" style="color:var(--n-text-color-3);font-style:italic">-</span>
-                <span v-else
-                  style="display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:default"
-                  :title="viewDisplayValue(f)">{{ viewDisplayValue(f) }}</span>
-              </div>
+                </div>
+              </template>
+              <template v-else>
+                <div v-for="(url, idx) in (formData[f.field] || [])" :key="idx"
+                  style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--n-border-color)">
+                  <iconify-icon icon="mdi:paperclip" width="13" style="color:var(--n-primary-color);flex-shrink:0"></iconify-icon>
+                  <span style="flex:1;font-size:14px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--n-text-color-1)" :title="url">{{ url }}</span>
+                  <span style="font-size:12px;color:var(--n-primary-color);cursor:pointer;flex-shrink:0" @click="copyText(url)">复制</span>
+                </div>
+              </template>
+            </div>
+            <!-- 普通类型 -->
+            <div v-else style="font-size:15px;font-weight:500;color:#1f1f1f;line-height:1.5">
+              <span v-if="!viewDisplayValue(f)" style="color:var(--n-text-color-3);font-style:italic;font-weight:400">-</span>
+              <span v-else
+                style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+                :title="viewDisplayValue(f)">{{ viewDisplayValue(f) }}</span>
             </div>
           </div>
         </template>
