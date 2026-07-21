@@ -3334,8 +3334,7 @@ const NovaTable = {
               <template #trigger>
                 <n-tooltip trigger="hover">
                   <template #trigger>
-                    <n-button :size="embSize" circle class="btn-circle" type="default"
-                    :style="dualTableViewActive ? { color: '#2563eb', background: 'transparent' } : { background: 'transparent' }"
+                    <n-button :size="embSize" circle class="btn-circle btn-dual-table" :class="{ 'is-active': dualTableViewActive }"
                     @click="toggleDualTableView">
                     <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
                   </n-button>
@@ -3357,8 +3356,7 @@ const NovaTable = {
             <!-- 单子表：仅按钮，无下拉 -->
             <n-tooltip v-if="dualTableEnabled && !dualMode && dualTableSubTables.length === 1" trigger="hover">
               <template #trigger>
-                <n-button :size="embSize" circle class="btn-circle" type="default"
-                  :style="dualTableViewActive ? { color: '#2563eb', background: 'transparent' } : { background: 'transparent' }"
+                <n-button :size="embSize" circle class="btn-circle btn-dual-table" :class="{ 'is-active': dualTableViewActive }"
                   @click="toggleDualTableView">
                   <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
                 </n-button>

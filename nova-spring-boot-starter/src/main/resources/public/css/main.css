@@ -265,6 +265,27 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 .n-layout { background: #f5f7fa; }
 .n-button { border-radius: 6px !important; }
 .btn-circle { border-radius: 50% !important; }
+
+/* 双表视图按钮：通过 Naive UI CSS 变量统一控制所有状态颜色，避免 type="default" 的伪类覆盖 */
+.btn-dual-table {
+  background: transparent !important;
+  --n-color-hover: transparent !important;
+  --n-color-pressed: transparent !important;
+  --n-color-focus: transparent !important;
+  --n-text-color: #64748b !important;
+  --n-text-color-hover: #64748b !important;
+  --n-text-color-pressed: #64748b !important;
+  --n-text-color-focus: #64748b !important;
+  --n-border-hover: transparent !important;
+  --n-border-pressed: transparent !important;
+  --n-border-focus: transparent !important;
+}
+.btn-dual-table.is-active {
+  --n-text-color: #2563eb !important;
+  --n-text-color-hover: #2563eb !important;
+  --n-text-color-pressed: #2563eb !important;
+  --n-text-color-focus: #2563eb !important;
+}
 .n-input  { border-radius: 6px !important; }
 .n-select { border-radius: 6px !important; }
 .n-data-table { border-radius: 6px !important; }
