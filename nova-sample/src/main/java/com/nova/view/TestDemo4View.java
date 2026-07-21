@@ -6,7 +6,9 @@ import com.nova.annotation.config.NovaId;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
+import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.service.TestDemo4Service;
+import com.nova.service.TestDemoService;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -18,7 +20,27 @@ import java.time.LocalDateTime;
         name = "测试功能4",
         desc = "测试功能4描述",
         orderBy = "id desc",
-        dataProxy = TestDemo4Service.class
+        dataProxy = TestDemo4Service.class,
+        rowOperation = {
+                @RowOperation(
+                        title = "测试按钮",
+                        icon = "material-symbols:amp-stories-rounded",
+                        mode = RowOperation.Mode.SINGLE,
+                        operationHandler = TestDemoService.class
+                ),
+                @RowOperation(
+                        title = "龙之谷",
+                        icon = "material-symbols:amp-stories-rounded",
+                        mode = RowOperation.Mode.BUTTON,
+                        operationHandler = TestDemoService.class
+                ),
+                @RowOperation(
+                        title = "九阴真经",
+                        icon = "material-symbols:amp-stories-rounded",
+                        mode = RowOperation.Mode.MULTI,
+                        operationHandler = TestDemoService.class
+                )
+        }
 )
 public class TestDemo4View {
 
