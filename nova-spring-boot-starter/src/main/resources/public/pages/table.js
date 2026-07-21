@@ -2954,7 +2954,7 @@ const NovaTable = {
               </template>
             </div>
             <!-- 普通类型 -->
-            <div v-else style="font-size:15px;font-weight:500;color:#1f1f1f;line-height:1.5">
+            <div v-else style="font-size:15px;font-weight:500;color:var(--n-text-color-1);line-height:1.5">
               <span v-if="!viewDisplayValue(f)" style="color:var(--n-text-color-3);font-style:italic;font-weight:400">-</span>
               <span v-else
                 style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
@@ -3524,6 +3524,7 @@ const NovaTable = {
             :source-form-data="formData"
             :source-reference-map="referenceMap"
             :source-raw-detail-row="rawDetailRow"
+            :loading-style="loadingStyle"
           />
 
           <!-- appendageForm 内容 -->

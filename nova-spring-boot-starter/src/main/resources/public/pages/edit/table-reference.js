@@ -12,7 +12,8 @@ var NovaRefForm = {
     refNovaName:        { type: String, required: true },
     sourceFormData:     { type: Object, default: function() { return {} } },
     sourceReferenceMap: { type: Object, default: function() { return {} } },
-    sourceRawDetailRow: { type: Object, default: function() { return {} } }
+    sourceRawDetailRow: { type: Object, default: function() { return {} } },
+    loadingStyle:       { type: String, default: 'spinner' }
   },
 
   data: function() {
@@ -44,7 +45,25 @@ var NovaRefForm = {
 
   template: `
 <div>
-  <div v-if="viewData === null" style="text-align:center;padding:40px;color:#aaa;font-size:13px">加载中...</div>
+  <div v-if="viewData === null" style="display:flex;align-items:center;justify-content:center;padding:60px">
+    <n-spin v-if="loadingStyle === 'spinner'" size="small" />
+    <div v-else-if="loadingStyle === 'wave'" class="custom-loading loading-wave" style="padding:0">
+      <span class="wave-bars">
+        <span class="bar b1"></span>
+        <span class="bar b2"></span>
+        <span class="bar b3"></span>
+        <span class="bar b4"></span>
+        <span class="bar b5"></span>
+      </span>
+    </div>
+    <div v-else-if="loadingStyle === 'dots'" class="custom-loading loading-dots" style="padding:0">
+      <span class="dots-wrap">
+        <span class="dot d1"></span>
+        <span class="dot d2"></span>
+        <span class="dot d3"></span>
+      </span>
+    </div>
+  </div>
   <nova-table v-else
     :view-mode="true"
     :nova-name-prop="refNovaName"
