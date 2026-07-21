@@ -428,15 +428,51 @@ const NovaTable = {
     tbStandardShow() {
       return window.NovaTableButtons.toolbarStandardShow(this)
     },
-    // 固定列像素：checkbox 50 + 操作列 140
+    // 列宽像素：checkbox 50 + 操作列 + 数据列
+    // 后端列宽总和 < 阈值时补全铺满，≥ 阈值时原样渲染（出现滚动条）
+    // 普通模式阈值 100%，双表模式阈值 50%（右面板只占半屏）
+    // 补全策略：未设宽度的列视为弹性列，剩余空间优先平均分给它们
     colPixels() {
       const fixedPx = 50 + this.rowActionColWidth
-      const width = this.dualTableViewActive ? Math.max(this.tableWrapperWidth || 1200, 1200) : (this.tableWrapperWidth || 1200)
-      const available = width - fixedPx
-      // 各列宽度（百分比转像素 or 固定像素）
-      return this.tableColumns.map(col => {
+      const width = this.tableWrapperWidth || 1200
+      const available = Math.max(width - fixedPx, 0)
+      const threshold = this.dualTableViewActive ? 50 : 100  // 双表模式下 50% 即铺满
+
+      // 分类：有明确百分比的列 / 未设宽度的弹性列 / 固定像素列
+      let specifiedPct = 0
+      let flexCount = 0
+      this.tableColumns.forEach(function(col) {
+        if (!col.width) {
+          flexCount++          // 未设宽度 → 弹性列
+        } else {
+          const w = parseWidthPct(col.width)
+          if (w > 0) specifiedPct += w  // 百分比列累加
+          // w < 0 是固定像素列，不参与百分比分配
+        }
+      })
+
+      // 弹性列分到的百分比：剩余空间平均分配
+      let flexPct = 0
+      if (specifiedPct < threshold && flexCount > 0) {
+        flexPct = (threshold - specifiedPct) / flexCount
+      } else if (specifiedPct < threshold && flexCount === 0) {
+        // 没有弹性列，等比放大所有百分比列
+        flexPct = 0
+      }
+
+      // 放大比率（无弹性列且不足阈值时使用）
+      const ratio = flexCount === 0 && specifiedPct > 0 && specifiedPct < threshold
+        ? threshold / specifiedPct
+        : 1
+
+      return this.tableColumns.map(function(col) {
+        if (!col.width) {
+          // 弹性列：分到平均宽度
+          return Math.round(flexPct / 100 * available)
+        }
         const w = parseWidthPct(col.width)
-        return w < 0 ? -w : Math.round(w / 100 * available)
+        if (w < 0) return -w // 固定像素列直接返回
+        return Math.round(w * ratio / 100 * available)
       })
     },
 
@@ -450,7 +486,6 @@ const NovaTable = {
       if (!this.tableColumns.length) return undefined
       const fixedPx = 50 + this.rowActionColWidth
       const total = fixedPx + this.colPixels.reduce((s, w) => s + w, 0)
-      if (this.dualTableViewActive) return total
       const container = this.tableWrapperWidth || 0
       return total > container ? total : undefined
     },

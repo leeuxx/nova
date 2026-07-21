@@ -30,7 +30,7 @@ public class TestDemo2View {
 
     @NovaId
     @NovaField(
-            views = @View(title = "ID", width = "25%"),
+            views = @View(title = "ID"),
             edit = @Edit(
                     title = "ID",
                     show = false
@@ -40,7 +40,7 @@ public class TestDemo2View {
 
     @NovaField(
             views = {
-                    @View(title = "用户名", column = "name", width = "25%")
+                    @View(title = "用户名", column = "name")
             },
             edit = @Edit(
                     title = "用户信息",
@@ -55,7 +55,7 @@ public class TestDemo2View {
     private TestDemoView testDemoView;
 
     @NovaField(
-            views = @View(title = "部门名称", width = "25%"),
+            views = @View(title = "部门名称"),
             edit = @Edit(
                     title = "部门名称",
                     notNull = true,
@@ -65,7 +65,7 @@ public class TestDemo2View {
     private String name;
 
     @NovaField(
-            views = @View(title = "说明", width = "25%"),
+            views = @View(title = "说明"),
             edit = @Edit(
                     title = "说明",
                     notNull = true
@@ -74,7 +74,7 @@ public class TestDemo2View {
     private String msg;
 
     @NovaField(
-            views = @View(title = "创建时间", width = "25%"),
+            views = @View(title = "创建时间"),
             edit = @Edit(
                     title = "创建时间",
                     type = Edit.Type.DATE,
