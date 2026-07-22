@@ -10,8 +10,8 @@ import com.nova.entity.data.Details;
 import com.nova.entity.data.Fetch;
 import com.nova.entity.data.PromptSearch;
 import com.nova.entity.data.Tree;
-import com.nova.service.data.DataProxy;
 import com.nova.service.NovaTableService;
+import com.nova.service.data.DataProxy;
 import com.nova.utils.*;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
@@ -272,8 +272,20 @@ public class NovaTableServiceImpl implements NovaTableService {
                     .setIfExpr(rowOperation.ifExpr())
                     .setGroup(rowOperation.group())
                     .setNovaClassName(rowOperation.novaClass().getSimpleName().equals("void") ? null : rowOperation.novaClass().getSimpleName())
-                    .setOperationParam(rowOperation.operationParam())
-                    .setOperationHandler(rowOperation.operationHandler().getName());
+                    .setOperationParam(rowOperation.param());
+            if (rowOperation.type() == RowOperation.Type.NOVA) {
+                rowOperationInfo.setOperationHandler(rowOperation.operationHandler().getName());
+            }
+            if (rowOperation.type() == RowOperation.Type.TPL) {
+                RowOperation.Tpl tpl = rowOperation.tpl();
+                rowOperationInfo.setTpl(new NovaTableBuild.Vo.RowOperationInfo.TplInfo()
+                        .setPath(tpl.path())
+                        .setWidth(tpl.width())
+                        .setHeight(tpl.height())
+                        .setOpenWay(tpl.openWay().name())
+                        .setDrawerPlacement(tpl.drawerPlacement().name())
+                );
+            }
             rowOperationInfos.add(rowOperationInfo);
         }
         vo.setRowOperations(rowOperationInfos);

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>读取URL参数</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #f0f2f5;
+            font-family: system-ui, sans-serif;
+        }
+        #result {
+            background: white;
+            padding: 40px 50px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            min-width: 400px;
+        }
+        #result p {
+            font-size: 18px;
+            margin: 12px 0;
+            line-height: 1.6;
+        }
+        #result b {
+            color: #1a4d8f;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+<div id="result"></div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+
+    const token = params.get('token');
+    const novaName = params.get('novaName');
+    const novaIds = params.get('novaIds');
+    const param = params.get('param');
+
+    document.getElementById('result').innerHTML = `
+        <p><b>token:</b> ${token}</p>
+        <p><b>novaName:</b> ${novaName}</p>
+        <p><b>novaIds:</b> ${novaIds}</p>
+        <p><b>param:</b> ${param}</p>
+    `;
+
+    console.log('token:', token);
+    console.log('novaName:', novaName);
+    console.log('novaIds:', novaIds);
+    console.log('param:', param);
+</script>
+</body>
+</html>

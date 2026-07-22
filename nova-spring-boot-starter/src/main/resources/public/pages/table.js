@@ -280,6 +280,12 @@ const NovaTable = {
       opFormLayoutObj:      {},
       opFormBtn:      null,
       opFormRow:      null,
+      // ── TPL 自定义模板弹窗/抽屉 ──
+      tplModalShow:       false,
+      tplDrawerShow:      false,
+      tplUrl:             '',
+      tplTitle:           '',
+      tplDrawerPlacement: 'right',
       // opForm tab 相关
       opFormTab:          'form',
       opFormExtraTabs:    [],      // APPENDAGE 表单 tab
@@ -1438,10 +1444,58 @@ const NovaTable = {
         this.openOpForm(btn, null)
         return
       }
+      if (btn.type === 'TPL') {
+        this.openTpl(btn, null)
+        return
+      }
       var self = this
       var action = function() { self.submitCustomBtn(btn, null) }
       if (btn.callHint && !skipConfirm) { window.msg.confirm('warning', '确认操作', btn.callHint, action) }
       else { action() }
+    },
+    openTpl(btn, row) {
+      var self = this
+      var tpl = btn.tpl || {}
+      var novaIds = []
+      if (row) {
+        var pk = row[this.novaIdFieldName]
+        if (pk != null) novaIds.push(String(pk))
+      } else if (btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') {
+        novaIds = this.checkedRowKeys.map(function(k) { return String(k) })
+      }
+      window.fetchApi.post('/nova/tpl/getTplPath', {
+        novaName: this.novaName,
+        novaIdValues: novaIds,
+        path: tpl.path || '',
+        operationParam: btn.operationParam || ''
+      }).then(function(resp) {
+        var url = resp.data
+        if (tpl.openWay === 'DRAWER') {
+          self.tplUrl = url
+          self.tplTitle = btn.title || ''
+          self.tplDrawerPlacement = (tpl.drawerPlacement || 'RIGHT').toLowerCase()
+          self.tplDrawerShow = true
+        } else {
+          self.tplUrl = url
+          self.tplTitle = btn.title || ''
+          self.tplWidth = tpl.width
+          self.tplHeight = self._pctToVh(tpl.height)
+          self.tplModalShow = true
+        }
+      }).catch(function() { if (window.$message) window.$message.error('获取模板地址失败') })
+    },
+    // 百分比转 vh（后端配 '80%' → '80vh'，fixed 元素百分比高度失效，改用视口单位）
+    _pctToVh(value) {
+      if (!value) return value
+      value = String(value).trim()
+      if (value.endsWith('%')) return value.replace('%', 'vh')
+      return value
+    },
+    closeTpl() {
+      this.tplModalShow = false
+      this.tplDrawerShow = false
+      this.tplUrl = ''
+      this.tplTitle = ''
     },
     openOpForm(btn, row) {
       if (!btn.novaClassName) return
@@ -3961,6 +4015,18 @@ const NovaTable = {
           </n-space>
         </template>
       </n-modal>
+
+      <!-- TPL 对话框模式：宽高为 vw/vh 视口单位，100% = 撑满页面 -->
+      <n-modal v-model:show="tplModalShow" display-directive="if" preset="card" :title="tplTitle" :style="'width:' + tplWidth + ';height:' + tplHeight + ';display:flex;flex-direction:column'" :content-style="{padding:'0',overflow:'hidden',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
+        <iframe v-if="tplUrl" :src="tplUrl" style="width:100%;height:100%;border:none;flex:1"></iframe>
+      </n-modal>
+
+      <!-- TPL 抽屉模式 -->
+      <n-drawer v-model:show="tplDrawerShow" :placement="tplDrawerPlacement" display-directive="if" style="width:50%">
+        <n-drawer-content :title="tplTitle" :body-content-style="{padding:'0',overflow:'hidden',display:'flex',flexDirection:'column'}">
+          <iframe v-if="tplUrl" :src="tplUrl" style="width:100%;height:100%;border:none;flex:1"></iframe>
+        </n-drawer-content>
+      </n-drawer>
 
       <!-- 双表视图右面板：Teleport 到 .page-content 作为 flex 兄弟元素 -->
       <Teleport to=".page-content" v-if="(dualTableViewActive || dualTableClosing) && dualTableEnabled && dualTableCurrentNova">

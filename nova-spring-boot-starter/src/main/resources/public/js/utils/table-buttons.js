@@ -59,6 +59,7 @@ function buildRowActions(vm, row) {
     var triggerEl = h('span', { class: 'row-action-btn', style: btnStyle, title: btnTitle }, btn.title)
     var handler = function() {
       if (btn.type === 'NOVA' && btn.novaClassName) { vm.openOpForm(btn, row); return }
+      if (btn.type === 'TPL') { vm.openTpl(btn, row); return }
       vm.submitCustomBtn(btn, row)
     }
     if (enabled && btn.callHint) {
@@ -91,6 +92,7 @@ function buildRowActions(vm, row) {
         if (!btn) return
         var action = function() {
           if (btn.type === 'NOVA' && btn.novaClassName) { vm.openOpForm(btn, row); return }
+          if (btn.type === 'TPL') { vm.openTpl(btn, row); return }
           vm.submitCustomBtn(btn, row)
         }
         if (btn.callHint) { window.msg.confirm('warning', '确认操作', btn.callHint, action) }

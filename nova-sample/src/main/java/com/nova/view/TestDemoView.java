@@ -42,7 +42,7 @@ import java.time.LocalDateTime;
                         ifExpr = "sex == '男'",
                         novaClass = TestDemoView.TestRow.class,
                         operationHandler = TestDemoService.class,
-                        operationParam = "1",
+                        param = "1",
                         show = @ExprBool(
                                 exprHandler = RowAuthExpr.class,
                                 params = "sendCmd"
@@ -96,6 +96,17 @@ import java.time.LocalDateTime;
                         icon = "material-symbols:amp-stories-rounded",
                         mode = RowOperation.Mode.SINGLE,
                         operationHandler = TestDemoService.class
+                ),
+                @RowOperation(
+                        title = "打开tpl",
+                        icon = "material-symbols:amp-stories-rounded",
+                        mode = RowOperation.Mode.SINGLE,
+                        type = RowOperation.Type.TPL,
+                        tpl =  @RowOperation.Tpl(
+                                path = "tpl/test.html",
+                                openWay = RowOperation.Tpl.OpenWay.DRAWER
+                        ),
+                        param = "tplParam"
                 )
         },
         drills = {

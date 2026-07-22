@@ -473,12 +473,35 @@ public class NovaTableBuild {
             @Comment("按钮提交时，需要填写的表单信息")
             private String novaClassName;
 
-            @Comment("钩子透传参数")
+            @Comment("透传参数")
             private String operationParam;
 
             @Comment("操作按钮点击后的后端钩子完全类名")
             private String operationHandler;
 
+            @Comment("自定义模板")
+            private TplInfo tpl;
+
+            @Data
+            @Accessors(chain = true)
+            public static class TplInfo {
+
+                @Comment("模板文件路径")
+                private String path;
+
+                @Comment("弹出层宽度（%）")
+                private String width;
+
+                @Comment("弹出层高度（%）")
+                private String height;
+
+                @Comment("弹出层打开方式")
+                private String openWay;
+
+                @Comment("抽屉打开方向")
+                private String drawerPlacement;
+
+            }
         }
 
         @Data

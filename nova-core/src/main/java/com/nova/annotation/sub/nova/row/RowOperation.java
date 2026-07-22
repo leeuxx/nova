@@ -34,14 +34,17 @@ public @interface RowOperation {
     @Comment("所有按钮控制显示与隐藏（后端,仅该按钮一次）")
     ExprBool show() default @ExprBool;
 
-    @Comment("按钮提交时，需要填写的表单信息")
+    @Comment("该配置可在operationHandler和tpl模版中获取")
+    String param() default "";
+
+    @Comment("type=NOVA时可用，按钮提交时，需要填写的表单信息")
     Class<?> novaClass() default void.class;
 
-    @Comment("该配置可在operationHandler中获取")
-    String operationParam() default "";
-
-    @Comment("type为NOVA时可用，操作按钮点击后，后台处理逻辑")
+    @Comment("type=NOVA时可用，操作按钮点击后，后台处理逻辑")
     Class<? extends OperationHandler> operationHandler() default OperationHandler.class;
+
+    @Comment("type=TPL时可用，自定义模板配置")
+    Tpl tpl() default @Tpl(path = "");
 
     enum Mode {
         @Comment("依赖单行数据")
@@ -60,4 +63,43 @@ public @interface RowOperation {
         @Comment("通过自定义模板渲染")
         TPL
     }
+
+    @interface Tpl {
+
+        @Comment("模板文件路径")
+        String path();
+
+        @Comment("弹出层宽度（%）")
+        String width() default "80%";
+
+        @Comment("弹出层高度（%）")
+        String height() default "80%";
+
+        @Comment("弹出层打开方式")
+        OpenWay openWay() default OpenWay.MODAL;
+
+        @Comment("抽屉打开方向")
+        Placement drawerPlacement() default Placement.RIGHT;
+
+        enum OpenWay {
+            @Comment("对话框")
+            MODAL,
+            @Comment("抽屉")
+            DRAWER
+        }
+
+        enum Placement {
+            @Comment("上")
+            TOP,
+            @Comment("下")
+            BOTTOM,
+            @Comment("左")
+            LEFT,
+            @Comment("右")
+            RIGHT
+        }
+
+
+    }
+
 }
