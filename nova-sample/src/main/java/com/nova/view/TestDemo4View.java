@@ -120,7 +120,8 @@ public class TestDemo4View {
                             handleJs = "js/test.js",
                             param = "query",
                             id = "query"
-                    )
+                    ),
+                    readonly = @Readonly(add = true)
             )
     )
     private String button;

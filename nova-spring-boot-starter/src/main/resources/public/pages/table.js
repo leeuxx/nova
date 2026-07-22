@@ -3822,7 +3822,8 @@ const NovaTable = {
               <div v-else-if="f.type === 'EMPTY' && opFormLayout !== 'FULL_LINE'" v-show="_vis"></div>
               <div v-else-if="f.type === 'BUTTON'" v-show="_vis" style="display:flex;flex-direction:column;gap:4px;justify-content:flex-end;align-items:flex-start">
                 <n-button v-if="opFormButtons[f.field]" :color="opFormButtons[f.field].color" :id="opFormButtons[f.field].id"
-                  @click="handleFormButton(f, opFormButtons, opFormData)">
+                  :disabled="f.readonly === true || (typeof f.readonly === 'object' && f.readonly.add !== false)" :style="f.readonly === true || (typeof f.readonly === 'object' && f.readonly.add !== false) ? 'opacity:0.5;cursor:not-allowed' : undefined"
+                  @click="f.readonly === true || (typeof f.readonly === 'object' && f.readonly.add !== false) ? undefined : handleFormButton(f, opFormButtons, opFormData)">
                   {{ f.title }}
                 </n-button>
               </div>
@@ -3942,7 +3943,8 @@ const NovaTable = {
                 <div v-else-if="f.type === 'EMPTY' && (opFormAppBuild(tab.tapNovaName).layout || {}).editLayout !== 'FULL_LINE'"></div>
                 <div v-else-if="f.type === 'BUTTON'" style="display:flex;flex-direction:column;gap:4px;padding-top:25px;align-items:flex-start">
                   <n-button v-if="(opFormAppBuild(tab.tapNovaName).buttons || {})[f.field]" :color="(opFormAppBuild(tab.tapNovaName).buttons || {})[f.field].color" :id="(opFormAppBuild(tab.tapNovaName).buttons || {})[f.field].id" class="form-btn"
-                    @click="handleFormButton(f, opFormAppBuild(tab.tapNovaName).buttons, opFormData, tab.tapNovaName)">
+                    :disabled="f.readonly === true || (typeof f.readonly === 'object' && f.readonly.add !== false)" :style="f.readonly === true || (typeof f.readonly === 'object' && f.readonly.add !== false) ? 'opacity:0.5;cursor:not-allowed' : undefined"
+                    @click="f.readonly === true || (typeof f.readonly === 'object' && f.readonly.add !== false) ? undefined : handleFormButton(f, opFormAppBuild(tab.tapNovaName).buttons, opFormData, tab.tapNovaName)">
                     {{ f.title }}
                   </n-button>
                 </div>

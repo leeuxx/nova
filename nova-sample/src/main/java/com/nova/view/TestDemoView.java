@@ -541,7 +541,8 @@ public class TestDemoView {
                                         "name"
                                 },
                                 id = "timeout"
-                        )
+                        ),
+                        readonly = @Readonly(add = true, edit = true)
                 )
         )
         private String button;

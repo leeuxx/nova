@@ -96,7 +96,8 @@ public class TestDemo3View {
                             handleJs = "js/test.js",
                             param = "check",
                             id = "check"
-                    )
+                    ),
+                    readonly = @Readonly(add = true)
             )
     )
     private String button;
