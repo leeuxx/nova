@@ -387,6 +387,8 @@ body.dark { background: #151515 !important; }
 
 .dark .n-button            { background: #252525; color: #e0e0e0; }
 .dark .n-button--primary   { background: #2563eb; color: #fff; }
+/* 表单按钮：暗色模式下提亮，让颜色在深色背景上更醒目 */
+.dark .n-button.form-btn { filter: brightness(1.5) saturate(1.2); }
 
 .dark .n-modal             { background: #1f1f1f; }
 .dark .n-modal-header      { color: #e0e0e0; }

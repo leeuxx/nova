@@ -18,6 +18,7 @@ window.NovaFormThis = {
     dateMap:        { type: Object, default: function() { return {} } },
     tagMap:         { type: Object, default: function() { return {} } },
     attachmentMap:  { type: Object, default: function() { return {} } },
+    buttons:        { type: Object, default: function() { return {} } },
     formMode:       { type: String, default: 'add' },
     formTab:        { type: String, default: 'form' }
   },
@@ -103,7 +104,20 @@ window.NovaFormThis = {
     },
     clearAttachmentDropdown() {
       this.attachmentDropdownKey = null
-    }
+    },
+    handleFormButton(field) {
+      var cfg = this.buttons[field.field]
+      if (!cfg) return
+      var transmit = {}
+      if (cfg.transmitParams) {
+        cfg.transmitParams.forEach(function(key) {
+          var val = this.formData[key]
+          if (val != null) transmit[key] = val
+        }.bind(this))
+      }
+      // TODO: handleJs / handleName 实现后在此分发
+      console.log('[FormButton] click:', field.title, { param: cfg.param || '', transmitParams: transmit, handleName: cfg.handleName || '' })
+    },
   },
 
   template: `
@@ -112,7 +126,13 @@ window.NovaFormThis = {
   <template v-for="{field: f, visible: _vis} in visibleEditFields" :key="f.field">
     <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" v-show="_vis" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
     <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'" v-show="_vis"></div>
-    <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY'" v-show="_vis" :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')"
+    <div v-else-if="f.type === 'BUTTON'" v-show="_vis" style="display:flex;flex-direction:column;gap:4px;justify-content:flex-end;align-items:flex-start">
+      <n-button v-if="buttons[f.field]" :color="buttons[f.field].color" :id="buttons[f.field].id" class="form-btn"
+        @click="handleFormButton(f)">
+        {{ f.title }}
+      </n-button>
+    </div>
+    <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON'" v-show="_vis" :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')"
          :aria-hidden="!_vis ? 'true' : undefined">
       <span class="edit-form-label">
         <span v-if="f.notNull && !isReadonly(f)" class="form-label-required">*</span>{{ f.title }}

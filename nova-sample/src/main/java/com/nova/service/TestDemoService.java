@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yitter.idgen.YitIdHelper;
+import com.nova.annotation.sub.nova.field.edit.ButtonHandle;
 import com.nova.annotation.sub.nova.field.edit.ChoiceFetchHandler;
 import com.nova.annotation.sub.nova.row.OperationHandler;
 import com.nova.entity.TestDemo;
@@ -27,14 +28,11 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Lazy)
-public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemoView>, OperationHandler<Long, Object> {
+public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemoView>, OperationHandler<Long, Object>, ButtonHandle {
 
     private TestDemo2Service testDemo2Service;
 
@@ -237,4 +235,8 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         return null;
     }
 
+    @Override
+    public boolean buttonHandle(String param, Map<String, String> transmitParam) {
+        return true;
+    }
 }

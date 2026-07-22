@@ -59,6 +59,9 @@ public @interface Edit {
     @Comment("集合引用目标组件配置")
     LinkTargetType linkTargetType() default @LinkTargetType(referenceField = "");
 
+    @Comment("按钮组件配置")
+    ButtonType buttonType() default @ButtonType;
+
     enum Type {
 
         @Comment("自动匹配")
@@ -104,6 +107,9 @@ public @interface Edit {
         @Comment("集合引用目标组件")
         LINK_TARGET,
 
+
+        @Comment("按钮")
+        BUTTON,
 
         @Comment("分割线")
         DIVIDE,

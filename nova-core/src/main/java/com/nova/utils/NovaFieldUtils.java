@@ -5,7 +5,6 @@ import com.nova.annotation.config.Comment;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
-import com.nova.annotation.sub.nova.row.ExprBool;
 import com.nova.config.NovaApplication;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -108,8 +107,11 @@ public class NovaFieldUtils {
             boolean isReference = (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE || type == Edit.Type.LINK_TARGET);
             boolean isAppendages = type == Edit.Type.APPENDAGES;
             boolean isLink = type == Edit.Type.LINK;
+            boolean isBoolean = type == Edit.Type.BOOLEAN;
+            boolean isDivide = type == Edit.Type.DIVIDE;
+            boolean isEmpty = type == Edit.Type.EMPTY;
             for (View view : views) {
-                if (!view.show() || isAppendages || isLink) {
+                if (!view.show() || isAppendages || isLink || isBoolean || isDivide || isEmpty) {
                     continue;
                 }
                 String fieldName = isReference ? field + "." + view.column() : field;
@@ -633,6 +635,38 @@ public class NovaFieldUtils {
         return linkTargetInfo;
     }
 
+    /**
+     * 获取按钮参数信息
+     *
+     * @param className 类名
+     * @return 按钮参数信息
+     */
+    public static Map<String, ButtonInfo> getButton(String className) {
+        Map<String, ButtonInfo> buttonInfos = new LinkedHashMap<>();
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return buttonInfos;
+        }
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
+            Edit edit = novaField.edit();
+            if (edit.type() == Edit.Type.BUTTON) {
+                ButtonType buttonType = edit.buttonType();
+                ButtonInfo buttonInfo = new ButtonInfo()
+                        .setId(buttonType.id())
+                        .setColor(buttonType.color())
+                        .setParam(buttonType.param())
+                        .setTransmitParams(Arrays.asList(buttonType.transmitParams()))
+                        .setHandleClass(buttonType.handle()[0])
+                        .setHandleJs(buttonType.handleJs());
+                buttonInfos.put(field, buttonInfo);
+            }
+        });
+        return buttonInfos;
+    }
+
     @Data
     @Accessors(chain = true)
     public static class SearchInfo {
@@ -970,6 +1004,30 @@ public class NovaFieldUtils {
 
         @Comment("目标关联类是否为树结构")
         private Boolean linkTree;
+
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class ButtonInfo {
+
+        @Comment("可供js读取dom")
+        private String id;
+
+        @Comment("按钮颜色")
+        private String color;
+
+        @Comment("静态参数")
+        private String param;
+
+        @Comment("当前类表单上下文信息")
+        private List<String> transmitParams;
+
+        @Comment("按钮点击处理类")
+        private Class<? extends ButtonHandle> handleClass;
+
+        @Comment("按钮点击处理js文件")
+        private String handleJs;
 
     }
 

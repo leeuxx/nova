@@ -278,6 +278,7 @@ const NovaTable = {
       opFormTagMap:      {},
       opFormAttachmentMap: {},
       opFormLayoutObj:      {},
+      opFormButtons:    {},
       opFormBtn:      null,
       opFormRow:      null,
       // ── TPL 自定义模板弹窗/抽屉 ──
@@ -1501,6 +1502,19 @@ const NovaTable = {
       this.tplUrl = ''
       this.tplTitle = ''
     },
+    handleFormButton(field, buttons, formData) {
+      var cfg = (buttons || {})[field.field]
+      if (!cfg) return
+      var transmit = {}
+      if (cfg.transmitParams) {
+        cfg.transmitParams.forEach(function(key) {
+          var val = formData[key]
+          if (val != null) transmit[key] = val
+        })
+      }
+      // TODO: handleJs / handleName 实现后在此分发
+      console.log('[FormButton] click:', field.title, { param: cfg.param || '', transmitParams: transmit, handleName: cfg.handleName || '' })
+    },
     openOpForm(btn, row) {
       if (!btn.novaClassName) return
       var self = this
@@ -1519,6 +1533,7 @@ const NovaTable = {
           self.opFormBooleanMap  = d.booleanInfo || {}
           self.opFormTagMap      = d.tag || {}
           self.opFormAttachmentMap = d.attachment || {}
+          self.opFormButtons    = d.buttons || {}
           self.opFormLayoutObj   = d.layout || {}
           var allEdit = d.edit || []
           // 基本信息 tab 字段
@@ -1567,6 +1582,7 @@ const NovaTable = {
       this.opFormAppTabBuild = {}
       this.opFormAppFormData = {}
       this.opFormAppFormErrors = {}
+      this.opFormButtons = {}
       this.opFormTab = 'form'
       this._opLoadPending = null
     },
@@ -3589,6 +3605,7 @@ const NovaTable = {
               :date-map="dateMap"
               :tag-map="tagMap"
               :attachment-map="attachmentMap"
+              :buttons="buttons"
               :form-mode="formMode"
               :form-tab="formTab"
               @field-change="onFormFieldChange"
@@ -3771,6 +3788,12 @@ const NovaTable = {
             <template v-for="{field: f, visible: _vis} in visibleOpFormFields" :key="f.field">
               <n-divider v-if="f.type === 'DIVIDE' && opFormLayout !== 'FULL_LINE'" v-show="_vis" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
               <div v-else-if="f.type === 'EMPTY' && opFormLayout !== 'FULL_LINE'" v-show="_vis"></div>
+              <div v-else-if="f.type === 'BUTTON'" v-show="_vis" style="display:flex;flex-direction:column;gap:4px;justify-content:flex-end;align-items:flex-start">
+                <n-button v-if="opFormButtons[f.field]" :color="opFormButtons[f.field].color" :id="opFormButtons[f.field].id"
+                  @click="handleFormButton(f, opFormButtons, opFormData)">
+                  {{ f.title }}
+                </n-button>
+              </div>
               <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY'" v-show="_vis"
                 :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
                 <span class="edit-form-label">

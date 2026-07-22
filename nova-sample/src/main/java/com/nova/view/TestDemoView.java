@@ -289,6 +289,21 @@ public class TestDemoView {
 
     @NovaField(
             edit = @Edit(
+                    title = "发送短信",
+                    type = Edit.Type.BUTTON,
+                    buttonType = @ButtonType(
+                            handle = TestDemoService.class,
+                            transmitParams = {
+                                    "name"
+                            },
+                            id = "sms"
+                    )
+            )
+    )
+    private String button;
+
+    @NovaField(
+            edit = @Edit(
                     title = "华丽分割线1",
                     type = Edit.Type.DIVIDE
             )

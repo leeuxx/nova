@@ -74,6 +74,9 @@ public class NovaTableBuild {
         @Comment("数据钻取信息")
         private List<Drill> drills;
 
+        @Comment("按钮信息")
+        private Map<String, Button> buttons;
+
         @Data
         @Accessors(chain = true)
         public static class Search {
@@ -537,6 +540,30 @@ public class NovaTableBuild {
 
             @Comment("目标类关联属性")
             private String joinColumn;
+
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class Button {
+
+            @Comment("id（可供js读取dom）")
+            private String id;
+
+            @Comment("按钮颜色")
+            private String color;
+
+            @Comment("静态参数")
+            private String param;
+
+            @Comment("当前类表单上下文信息")
+            private List<String> transmitParams;
+
+            @Comment("按钮点击处理的后端完全类名")
+            private String handleName;
+
+            @Comment("按钮点击处理的js文件")
+            private String handleJs;
 
         }
     }

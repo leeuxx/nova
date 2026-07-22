@@ -99,7 +99,6 @@ public @interface RowOperation {
             RIGHT
         }
 
-
     }
 
 }

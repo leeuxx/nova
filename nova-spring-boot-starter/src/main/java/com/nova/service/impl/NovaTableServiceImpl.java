@@ -308,6 +308,20 @@ public class NovaTableServiceImpl implements NovaTableService {
             drillInfos.add(drillInfoObj);
         }
         vo.setDrills(drillInfos);
+        // 获取按钮参数信息
+        Map<String, NovaFieldUtils.ButtonInfo> buttonInfos = NovaFieldUtils.getButton(novaTableBuild.getNovaName());
+        Map<String, NovaTableBuild.Vo.Button> buttons = new LinkedHashMap<>();
+        buttonInfos.forEach((field, buttonInfo) -> {
+            NovaTableBuild.Vo.Button button = new NovaTableBuild.Vo.Button()
+                    .setId(buttonInfo.getId())
+                    .setColor(buttonInfo.getColor())
+                    .setParam(buttonInfo.getParam())
+                    .setTransmitParams(buttonInfo.getTransmitParams())
+                    .setHandleName(buttonInfo.getHandleClass() != null ? buttonInfo.getHandleClass().getName() : null)
+                    .setHandleJs(buttonInfo.getHandleJs());
+            buttons.put(field, button);
+        });
+        vo.setButtons(buttons);
         return vo;
     }
 
