@@ -126,7 +126,7 @@ window.NovaFormThis = {
   <template v-for="{field: f, visible: _vis} in visibleEditFields" :key="f.field">
     <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" v-show="_vis" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
     <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'" v-show="_vis"></div>
-    <div v-else-if="f.type === 'BUTTON'" v-show="_vis" style="display:flex;flex-direction:column;gap:4px;justify-content:flex-end;align-items:flex-start">
+    <div v-else-if="f.type === 'BUTTON'" v-show="_vis" style="display:flex;flex-direction:column;gap:4px;padding-top:25px;align-items:flex-start">
       <n-button v-if="buttons[f.field]" :color="buttons[f.field].color" :id="buttons[f.field].id" class="form-btn"
         :disabled="isReadonly(f)" :style="isReadonly(f) ? 'opacity:0.5;cursor:not-allowed' : undefined"
         @click="isReadonly(f) ? undefined : handleFormButton(f)">
