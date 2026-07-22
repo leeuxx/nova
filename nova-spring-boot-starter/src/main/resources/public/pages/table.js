@@ -1512,21 +1512,38 @@ const NovaTable = {
           if (val != null) transmit[key] = val
         })
       }
-      window.fetchApi.post('/nova/table/buttonClick', {
-        novaName: this.opFormNovaName || this.novaName,
-        handleName: cfg.handleName || '',
-        param: cfg.param || '',
-        transmitParams: transmit
-      }).then(function(resp) {
-        var data = resp.data || {}
-        if (data.status !== false) {
-          if (window.$message) window.$message.success(data.message || '操作成功')
-        } else {
-          if (window.$message) window.$message.error(data.message || '操作失败')
-        }
-      }).catch(function(err) {
-        if (window.$message) window.$message.error(err.message || '请求失败')
-      })
+      var param = cfg.param || ''
+      var handleJs = cfg.handleJs || ''
+      var handleName = cfg.handleName || ''
+
+      if (handleJs) {
+        window.fetch(handleJs).then(function(resp) {
+          if (!resp.ok) throw new Error('加载 JS 失败: ' + handleJs)
+          return resp.text()
+        }).then(function(code) {
+          var $btn = cfg.id ? $(window.parent.document).find('#' + cfg.id) : null
+          var fn = new Function('param', 'transmitParams', '$btn', code)
+          fn(param, transmit, $btn)
+        }).catch(function(err) {
+          if (window.$message) window.$message.error(err.message || '请求失败')
+        })
+      } else if (handleName) {
+        window.fetchApi.post('/nova/table/buttonClick', {
+          novaName: this.opFormNovaName || this.novaName,
+          handleName: handleName,
+          param: param,
+          transmitParams: transmit
+        }).then(function(resp) {
+          var data = resp.data || {}
+          if (data.status !== false) {
+            if (window.$message) window.$message.success(data.message || '操作成功')
+          } else {
+            if (window.$message) window.$message.error(data.message || '操作失败')
+          }
+        }).catch(function(err) {
+          if (window.$message) window.$message.error(err.message || '请求失败')
+        })
+      }
     },
     openOpForm(btn, row) {
       if (!btn.novaClassName) return

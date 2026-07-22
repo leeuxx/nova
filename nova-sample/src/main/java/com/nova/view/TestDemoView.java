@@ -292,9 +292,12 @@ public class TestDemoView {
                     title = "发送短信",
                     type = Edit.Type.BUTTON,
                     buttonType = @ButtonType(
-                            handle = TestDemoService.class,
+                            //handle = TestDemoService.class,
+                            handleJs = "js/test.js",
+                            param = "test",
                             transmitParams = {
-                                    "name"
+                                    "name",
+                                    "sex"
                             },
                             id = "sms"
                     )

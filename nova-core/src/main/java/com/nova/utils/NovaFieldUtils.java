@@ -654,12 +654,13 @@ public class NovaFieldUtils {
             Edit edit = novaField.edit();
             if (edit.type() == Edit.Type.BUTTON) {
                 ButtonType buttonType = edit.buttonType();
+                Class<? extends ButtonHandle>[] handle = buttonType.handle();
                 ButtonInfo buttonInfo = new ButtonInfo()
                         .setId(buttonType.id())
                         .setColor(buttonType.color())
                         .setParam(buttonType.param())
                         .setTransmitParams(Arrays.asList(buttonType.transmitParams()))
-                        .setHandleClass(buttonType.handle()[0])
+                        .setHandleClass(handle.length > 0 ? handle[0] : null)
                         .setHandleJs(buttonType.handleJs());
                 buttonInfos.put(field, buttonInfo);
             }
