@@ -103,7 +103,8 @@ import java.time.LocalDateTime;
                         mode = RowOperation.Mode.SINGLE,
                         type = RowOperation.Type.TPL,
                         tpl = @RowOperation.Tpl(
-                                path = "tpl/test.html"
+                                path = "tpl/test.html",
+                                openWay = RowOperation.Tpl.OpenWay.DRAWER
                         ),
                         param = "tplParam"
                 )
