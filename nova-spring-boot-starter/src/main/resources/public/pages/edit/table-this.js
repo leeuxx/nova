@@ -128,7 +128,8 @@ window.NovaFormThis = {
     <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'" v-show="_vis"></div>
     <div v-else-if="f.type === 'BUTTON'" v-show="_vis" style="display:flex;flex-direction:column;gap:4px;justify-content:flex-end;align-items:flex-start">
       <n-button v-if="buttons[f.field]" :color="buttons[f.field].color" :id="buttons[f.field].id" class="form-btn"
-        @click="handleFormButton(f)">
+        :disabled="isReadonly(f)" :style="isReadonly(f) ? 'opacity:0.5;cursor:not-allowed' : undefined"
+        @click="isReadonly(f) ? undefined : handleFormButton(f)">
         {{ f.title }}
       </n-button>
     </div>
