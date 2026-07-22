@@ -1,12 +1,25 @@
 package com.nova.annotation.sub.nova.field.edit;
 
 import com.nova.annotation.config.Comment;
+import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.util.Map;
 
 public interface ButtonHandle {
 
     @Comment("按钮点击处理")
-    boolean buttonHandle(String param, Map<String, String> transmitParams);
+    Vo buttonHandle(String param, Map<String, String> transmitParams);
 
+    @Data
+    @Accessors(chain = true)
+    class Vo {
+
+        @Comment("成功/失败")
+        private Boolean status;
+
+        @Comment("提示信息")
+        private String message;
+
+    }
 }

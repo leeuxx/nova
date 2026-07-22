@@ -41,4 +41,8 @@ public interface NovaTableService {
 
     @Comment("获取树形结构数据")
     NovaTableTree.Vo tree(NovaTableTree novaTableTree);
+
+    @Comment("按钮组件点击")
+    NovaTableButton.Vo buttonClick(NovaTableButton novaTableButton);
+
 }

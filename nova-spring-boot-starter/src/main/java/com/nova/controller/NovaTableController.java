@@ -108,4 +108,12 @@ public class NovaTableController {
         return R.ok(tree);
     }
 
+    @Comment("按钮组件点击")
+    @PostMapping("buttonClick")
+    @NovaRouter
+    public R<NovaTableButton.Vo> buttonClick(@RequestBody @Validated NovaTableButton req) {
+        NovaTableButton.Vo vo = novaTableService.buttonClick(req);
+        return R.ok(vo);
+    }
+
 }

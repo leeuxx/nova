@@ -255,7 +255,8 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     }
 
     @Override
-    public boolean buttonHandle(String param, Map<String, String> transmitParam) {
-        return true;
+    public Vo buttonHandle(String param, Map<String, String> transmitParam) {
+        return new Vo().setStatus(true)
+                .setMessage("发送成功");
     }
 }

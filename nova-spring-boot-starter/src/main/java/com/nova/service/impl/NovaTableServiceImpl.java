@@ -2,6 +2,7 @@ package com.nova.service.impl;
 
 import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.field.Edit;
+import com.nova.annotation.sub.nova.field.edit.ButtonHandle;
 import com.nova.annotation.sub.nova.row.OperationHandler;
 import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.dto.*;
@@ -654,6 +655,25 @@ public class NovaTableServiceImpl implements NovaTableService {
         return new NovaTableTree.Vo()
                 .setRootList(rootMaps)
                 .setChildrenList(childrenMaps);
+    }
+
+    @Override
+    @SneakyThrows
+    public NovaTableButton.Vo buttonClick(NovaTableButton novaTableButton) {
+        Class<?> handleClass = Class.forName(novaTableButton.getHandleName());
+        ButtonHandle buttonHandle = (ButtonHandle) SpringBeanUtils.getBean(handleClass);
+        ButtonHandle.Vo vo = buttonHandle.buttonHandle(novaTableButton.getParam(), novaTableButton.getTransmitParams());
+        if (vo == null) {
+            vo = new ButtonHandle.Vo();
+        }
+        boolean status = vo.getStatus() != null && vo.getStatus();
+        String message = vo.getMessage();
+        if (message == null || message.isEmpty()) {
+            message = status ? "请求成功" : "请求失败";
+        }
+        return new NovaTableButton.Vo()
+                .setStatus(status)
+                .setMessage(message);
     }
 
 }

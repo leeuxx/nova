@@ -19,6 +19,7 @@ window.NovaFormThis = {
     tagMap:         { type: Object, default: function() { return {} } },
     attachmentMap:  { type: Object, default: function() { return {} } },
     buttons:        { type: Object, default: function() { return {} } },
+    novaName:       { type: String, default: '' },
     formMode:       { type: String, default: 'add' },
     formTab:        { type: String, default: 'form' }
   },
@@ -115,8 +116,21 @@ window.NovaFormThis = {
           if (val != null) transmit[key] = val
         }.bind(this))
       }
-      // TODO: handleJs / handleName 实现后在此分发
-      console.log('[FormButton] click:', field.title, { param: cfg.param || '', transmitParams: transmit, handleName: cfg.handleName || '' })
+      window.fetchApi.post('/nova/table/buttonClick', {
+        novaName: this.novaName,
+        handleName: cfg.handleName || '',
+        param: cfg.param || '',
+        transmitParams: transmit
+      }).then(function(resp) {
+        var data = resp.data || {}
+        if (data.status !== false) {
+          if (window.$message) window.$message.success(data.message || '操作成功')
+        } else {
+          if (window.$message) window.$message.error(data.message || '操作失败')
+        }
+      }).catch(function(err) {
+        if (window.$message) window.$message.error(err.message || '请求失败')
+      })
     },
   },
 
