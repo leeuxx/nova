@@ -16,10 +16,10 @@ public interface ButtonHandle {
     class Vo {
 
         @Comment("成功/失败")
-        private Boolean status;
+        private Boolean status = true;
 
         @Comment("提示信息")
-        private String message;
+        private String message = "请求成功";
 
     }
 }
