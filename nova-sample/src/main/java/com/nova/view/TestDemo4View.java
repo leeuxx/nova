@@ -112,4 +112,17 @@ public class TestDemo4View {
     )
     private LocalDateTime createTime;
 
+    @NovaField(
+            edit = @Edit(
+                    title = "新增查询",
+                    type = Edit.Type.BUTTON,
+                    buttonType = @ButtonType(
+                            handleJs = "js/test.js",
+                            param = "query",
+                            id = "query"
+                    )
+            )
+    )
+    private String button;
+
 }

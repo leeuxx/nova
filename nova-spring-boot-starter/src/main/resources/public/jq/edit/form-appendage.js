@@ -86,6 +86,7 @@ window.NovaTableJQ_app = (function () {
           dateMap: bd.date || {}, booleanMap: bd.booleanInfo || {},
           referenceMap: bd.reference || {}, tagMap: bd.tag || {},
           attachmentMap: bd.attachment || {},
+          buttons: bd.buttons || {},
           editLayout: (bd.layout && bd.layout.editLayout) || 'DEFAULT'
         }
         t2.appendageTabBuild = newBuild

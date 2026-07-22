@@ -88,4 +88,17 @@ public class TestDemo3View {
     )
     private LocalDateTime createTime;
 
+    @NovaField(
+            edit = @Edit(
+                    title = "点击验证",
+                    type = Edit.Type.BUTTON,
+                    buttonType = @ButtonType(
+                            handleJs = "js/test.js",
+                            param = "check",
+                            id = "check"
+                    )
+            )
+    )
+    private String button;
+
 }

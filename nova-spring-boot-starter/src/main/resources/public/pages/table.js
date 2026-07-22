@@ -1703,6 +1703,7 @@ const NovaTable = {
             referenceMap: d.reference || {},
             tagMap: d.tag || {},
             attachmentMap: d.attachment || {},
+            buttons: d.buttons || {},
             layout: d.layout || {}
           }
           // 初始化表单数据

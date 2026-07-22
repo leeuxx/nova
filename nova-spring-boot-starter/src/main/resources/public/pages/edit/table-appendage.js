@@ -64,6 +64,50 @@ window.NovaAppForm = {
     onFieldUpdate(field, value) {
       this.$emit('field-change', { field: field, value: value })
     },
+    handleFormButton(field) {
+      var buttons = this.buildData.buttons || {}
+      var cfg = buttons[field.field]
+      if (!cfg) return
+      var transmit = {}
+      if (cfg.transmitParams) {
+        cfg.transmitParams.forEach(function(key) {
+          var val = this.formData[key]
+          if (val != null) transmit[key] = val
+        }.bind(this))
+      }
+      var param = cfg.param || ''
+      var handleJs = cfg.handleJs || ''
+      var handleName = cfg.handleName || ''
+
+      if (handleJs) {
+        window.fetch(handleJs).then(function(resp) {
+          if (!resp.ok) throw new Error('加载 JS 失败: ' + handleJs)
+          return resp.text()
+        }).then(function(code) {
+          var $btn = cfg.id ? $(window.parent.document).find('#' + cfg.id) : null
+          var fn = new Function('param', 'transmitParams', '$btn', code)
+          fn(param, transmit, $btn)
+        }).catch(function(err) {
+          if (window.$message) window.$message.error(err.message || '请求失败')
+        })
+      } else if (handleName) {
+        window.fetchApi.post('/nova/table/buttonClick', {
+          novaName: this.appNovaName,
+          handleName: handleName,
+          param: param,
+          transmitParams: transmit
+        }).then(function(resp) {
+          var data = resp.data || {}
+          if (data.status !== false) {
+            if (window.$message) window.$message.success(data.message || '操作成功')
+          } else {
+            if (window.$message) window.$message.error(data.message || '操作失败')
+          }
+        }).catch(function(err) {
+          if (window.$message) window.$message.error(err.message || '请求失败')
+        })
+      }
+    },
     referenceDisplayLabel(field) {
       var displayVal = this.formData[field + '_display']
       if (displayVal !== null && displayVal !== undefined && displayVal !== '') return String(displayVal)
@@ -80,7 +124,14 @@ window.NovaAppForm = {
   <template v-for="f in (buildData.editFields || [])" :key="f.field">
     <n-divider v-if="f.type === 'DIVIDE' && buildData.editLayout !== 'FULL_LINE'" v-show="fieldVisible(f)" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
     <div v-else-if="f.type === 'EMPTY' && buildData.editLayout !== 'FULL_LINE'" v-show="fieldVisible(f)"></div>
-    <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && !(f.type === 'REFERENCE' && (buildData.referenceMap || {})[f.field] && (buildData.referenceMap || {})[f.field].referenceName === parentNovaName)"
+    <div v-else-if="f.type === 'BUTTON'" v-show="fieldVisible(f)" style="display:flex;flex-direction:column;gap:4px;padding-top:25px;align-items:flex-start">
+      <n-button v-if="(buildData.buttons || {})[f.field]" :color="(buildData.buttons || {})[f.field].color" :id="(buildData.buttons || {})[f.field].id" class="form-btn"
+        :disabled="isReadonly(f)" :style="isReadonly(f) ? 'opacity:0.5;cursor:not-allowed' : undefined"
+        @click="isReadonly(f) ? undefined : handleFormButton(f)">
+        {{ f.title }}
+      </n-button>
+    </div>
+    <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON' && !(f.type === 'REFERENCE' && (buildData.referenceMap || {})[f.field] && (buildData.referenceMap || {})[f.field].referenceName === parentNovaName)"
       v-show="fieldVisible(f)"
       :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
       <span class="edit-form-label">
