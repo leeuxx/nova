@@ -69,11 +69,11 @@ public @interface RowOperation {
         @Comment("模板文件路径")
         String path();
 
-        @Comment("弹出层宽度（%）")
-        String width() default "80%";
+        @Comment("弹出层宽度%（对话框有效，抽屉左、右有效）")
+        String width() default "";
 
-        @Comment("弹出层高度（%）")
-        String height() default "80%";
+        @Comment("弹出层高度%（对话框有效，抽屉上、下有效）")
+        String height() default "";
 
         @Comment("弹出层打开方式")
         OpenWay openWay() default OpenWay.MODAL;

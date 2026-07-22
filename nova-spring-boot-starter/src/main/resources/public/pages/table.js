@@ -285,6 +285,7 @@ const NovaTable = {
       tplDrawerShow:      false,
       tplUrl:             '',
       tplTitle:           '',
+      tplDrawerSize:      '50%',
       tplDrawerPlacement: 'right',
       // opForm tab 相关
       opFormTab:          'form',
@@ -1474,6 +1475,9 @@ const NovaTable = {
           self.tplUrl = url
           self.tplTitle = btn.title || ''
           self.tplDrawerPlacement = (tpl.drawerPlacement || 'RIGHT').toLowerCase()
+          // 左右抽屉取 width，上下抽屉取 height
+          var isVertical = self.tplDrawerPlacement === 'top' || self.tplDrawerPlacement === 'bottom'
+          self.tplDrawerSize = isVertical ? tpl.height : tpl.width
           self.tplDrawerShow = true
         } else {
           self.tplUrl = url
@@ -4022,7 +4026,7 @@ const NovaTable = {
       </n-modal>
 
       <!-- TPL 抽屉模式 -->
-      <n-drawer v-model:show="tplDrawerShow" :placement="tplDrawerPlacement" display-directive="if" style="width:50%">
+      <n-drawer v-model:show="tplDrawerShow" :placement="tplDrawerPlacement" display-directive="if" :style="tplDrawerPlacement === 'top' || tplDrawerPlacement === 'bottom' ? 'height:' + tplDrawerSize : 'width:' + tplDrawerSize">
         <n-drawer-content :title="tplTitle" :body-content-style="{padding:'0',overflow:'hidden',display:'flex',flexDirection:'column'}">
           <iframe v-if="tplUrl" :src="tplUrl" style="width:100%;height:100%;border:none;flex:1"></iframe>
         </n-drawer-content>

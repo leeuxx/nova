@@ -102,9 +102,8 @@ import java.time.LocalDateTime;
                         icon = "material-symbols:amp-stories-rounded",
                         mode = RowOperation.Mode.SINGLE,
                         type = RowOperation.Type.TPL,
-                        tpl =  @RowOperation.Tpl(
-                                path = "tpl/test.html",
-                                openWay = RowOperation.Tpl.OpenWay.DRAWER
+                        tpl = @RowOperation.Tpl(
+                                path = "tpl/test.html"
                         ),
                         param = "tplParam"
                 )

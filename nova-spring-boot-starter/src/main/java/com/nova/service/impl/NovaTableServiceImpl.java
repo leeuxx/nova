@@ -278,10 +278,17 @@ public class NovaTableServiceImpl implements NovaTableService {
             }
             if (rowOperation.type() == RowOperation.Type.TPL) {
                 RowOperation.Tpl tpl = rowOperation.tpl();
+                RowOperation.Tpl.OpenWay openWay = tpl.openWay();
+                String width = tpl.width().isEmpty()
+                        ? (openWay == RowOperation.Tpl.OpenWay.MODAL ? "80%" : "40%")
+                        : tpl.width();
+                String height = tpl.height().isEmpty()
+                        ? (openWay == RowOperation.Tpl.OpenWay.MODAL ? "80%" : "40%")
+                        : tpl.height();
                 rowOperationInfo.setTpl(new NovaTableBuild.Vo.RowOperationInfo.TplInfo()
                         .setPath(tpl.path())
-                        .setWidth(tpl.width())
-                        .setHeight(tpl.height())
+                        .setWidth(width)
+                        .setHeight(height)
                         .setOpenWay(tpl.openWay().name())
                         .setDrawerPlacement(tpl.drawerPlacement().name())
                 );

@@ -489,10 +489,10 @@ public class NovaTableBuild {
                 @Comment("模板文件路径")
                 private String path;
 
-                @Comment("弹出层宽度（%）")
+                @Comment("弹出层宽度%（对话框有效，抽屉左、右有效）")
                 private String width;
 
-                @Comment("弹出层高度（%）")
+                @Comment("弹出层高度%（对话框有效，抽屉上、下有效）")
                 private String height;
 
                 @Comment("弹出层打开方式")
