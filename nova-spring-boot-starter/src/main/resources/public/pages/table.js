@@ -3032,7 +3032,7 @@ const NovaTable = {
     <div v-if="viewMode">
       <div v-if="editFields.length === 0" style="text-align:center;padding:60px;color:#aaa;font-size:14px">加载中…</div>
       <div v-else style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0px 24px">
-        <template v-for="f in editFields.filter(f => f.type !== 'DIVIDE' && f.type !== 'EMPTY')" :key="f.field">
+        <template v-for="f in editFields.filter(f => f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON')" :key="f.field">
           <div :style="f.type === 'ATTACHMENT' ? 'grid-column: 1 / -1' : ''" style="padding:12px 0;border-bottom:1px dashed var(--n-border-color)">
             <div style="font-size:12px;color:var(--n-text-color-3);opacity:0.7;margin-bottom:6px;display:flex;align-items:center;gap:4px">
               <iconify-icon v-if="viewFieldIcon(f)" :icon="viewFieldIcon(f)" width="13" style="color:var(--n-text-color-3);flex-shrink:0"></iconify-icon>
