@@ -1502,7 +1502,7 @@ const NovaTable = {
       this.tplUrl = ''
       this.tplTitle = ''
     },
-    handleFormButton(field, buttons, formData) {
+    handleFormButton(field, buttons, formData, btnNovaName) {
       var cfg = (buttons || {})[field.field]
       if (!cfg) return
       var transmit = {}
@@ -1529,7 +1529,7 @@ const NovaTable = {
         })
       } else if (handleName) {
         window.fetchApi.post('/nova/table/buttonClick', {
-          novaName: this.opFormNovaName || this.novaName,
+          novaName: btnNovaName || this.opFormNovaName || this.novaName,
           handleName: handleName,
           param: param,
           transmitParams: transmit
@@ -3940,7 +3940,13 @@ const NovaTable = {
                 <n-divider v-if="f.type === 'DIVIDE' && (opFormAppBuild(tab.tapNovaName).layout || {}).editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
                 <div v-else-if="f.type === 'DIVIDE'" style="grid-column:1/-1;margin:0"><n-divider>{{ f.title }}</n-divider></div>
                 <div v-else-if="f.type === 'EMPTY' && (opFormAppBuild(tab.tapNovaName).layout || {}).editLayout !== 'FULL_LINE'"></div>
-                <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY'"
+                <div v-else-if="f.type === 'BUTTON'" style="display:flex;flex-direction:column;gap:4px;padding-top:25px;align-items:flex-start">
+                  <n-button v-if="(opFormAppBuild(tab.tapNovaName).buttons || {})[f.field]" :color="(opFormAppBuild(tab.tapNovaName).buttons || {})[f.field].color" :id="(opFormAppBuild(tab.tapNovaName).buttons || {})[f.field].id" class="form-btn"
+                    @click="handleFormButton(f, opFormAppBuild(tab.tapNovaName).buttons, opFormData, tab.tapNovaName)">
+                    {{ f.title }}
+                  </n-button>
+                </div>
+                <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON'"
                   :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
                   <span class="edit-form-label">
                     <span v-if="f.notNull" class="form-label-required">*</span>{{ f.title }}

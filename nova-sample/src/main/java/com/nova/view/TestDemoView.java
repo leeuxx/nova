@@ -29,9 +29,6 @@ import java.time.LocalDateTime;
         layout = @Layout(
                 editLayout = Layout.EditLayout.DEFAULT
         ),
-        tree = @TreeType(
-                searchField = "name"
-        ),
         dataProxy = TestDemoService.class,
         rowOperation = {
                 @RowOperation(
@@ -532,6 +529,22 @@ public class TestDemoView {
                 )
         )
         private LocalDateTime createTime;
+
+        @NovaField(
+                edit = @Edit(
+                        title = "倒计时",
+                        type = Edit.Type.BUTTON,
+                        buttonType = @ButtonType(
+                                handle = TestDemoService.class,
+                                param = "timeout",
+                                transmitParams = {
+                                        "name"
+                                },
+                                id = "timeout"
+                        )
+                )
+        )
+        private String button;
 
     }
 
