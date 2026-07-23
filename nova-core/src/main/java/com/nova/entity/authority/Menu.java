@@ -40,10 +40,8 @@ public class Menu {
         DIR,
         @Comment("nova视图")
         NOVA,
-        @Comment("自定义视图")
+        @Comment("自定义视图（支持本地文件和远程url）")
         TPL,
-        @Comment("自定义视图（远程链接）")
-        TPL_URL,
         @Comment("按钮")
         BUTTON
     }

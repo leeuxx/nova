@@ -81,6 +81,15 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setPid(1000L)
                 .setType(Menu.Type.TPL)
         );
+        add(new Menu()
+                .setId(YitIdHelper.nextId())
+                .setCode("httpTpl")
+                .setValue("https://www.baidu.com")
+                .setName("远程tpl")
+                .setIcon("material-symbols:add-to-drive-outline-rounded")
+                .setPid(1000L)
+                .setType(Menu.Type.TPL)
+        );
 
         add(new Menu()
                 .setId(3L)
