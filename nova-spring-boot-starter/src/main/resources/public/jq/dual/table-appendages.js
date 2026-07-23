@@ -26,7 +26,7 @@ window.NovaDualAppendagesJQ = (function () {
 
     // APPENDAGES 类型：key 用 storageField，value 用当前行对应字段值
     const appInfo = sub.fieldInfo || {}
-    const storageField = appInfo.storageField || 'id'
+    const storageField = appInfo.storageField
     const val = row[storageField]
     if (val == null) { hostVm.dualTableSourceFields = {}; return }
     hostVm.dualTableSourceFields = { [storageField]: String(val) }
@@ -56,7 +56,7 @@ window.NovaDualAppendagesJQ = (function () {
       for (var field in refMap) {
         var refInfo = refMap[field]
         if (refInfo.storageField && sourceKeys.indexOf(refInfo.storageField) !== -1) {
-          sourceRefFields.push({ field: field, type: 'REFERENCE', referenceField: refInfo.referenceField || 'id', value: embSourceFields[refInfo.storageField] })
+          sourceRefFields.push({ field: field, type: 'REFERENCE', referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
         }
       }
     }

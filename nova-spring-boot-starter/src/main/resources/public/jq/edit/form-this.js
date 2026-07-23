@@ -48,9 +48,9 @@ window.NovaTableJQ_form = (function () {
         source[f.field] = (val === null || val === undefined || val === '') ? null : Number(val)
       } else if (f.type === 'REFERENCE') {
         var refInfo = referenceMap[f.field] || {}
-        var sf = refInfo.storageField || 'id'
+        var sf = refInfo.storageField
         source[f.field] = (val && typeof val === 'object')
-          ? (val[sf] !== undefined && val[sf] !== null ? String(val[sf]) : null)
+          ? (sf && val[sf] !== undefined && val[sf] !== null ? String(val[sf]) : null)
           : (val !== null && val !== undefined && val !== '' ? String(val) : null)
         source[f.field + '_display'] = (val && typeof val === 'object' && refInfo.displayField)
           ? (val[refInfo.displayField] != null ? String(val[refInfo.displayField]) : '') : ''

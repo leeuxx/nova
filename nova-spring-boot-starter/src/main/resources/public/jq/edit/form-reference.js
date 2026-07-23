@@ -14,7 +14,7 @@ window.NovaTableJQ_ref = (function () {
       if ((referenceMap[field] || {}).referenceName === refNovaName) {
         var storageVal = formData && formData[field]
         if (!storageVal && rawDetailRow) {
-          var sf = (referenceMap[field] || {}).storageField || 'id'
+          var sf = (referenceMap[field] || {}).storageField
           var rawNested = rawDetailRow[field]
           if (rawNested && typeof rawNested === 'object') storageVal = rawNested[sf]
         }

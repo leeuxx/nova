@@ -350,7 +350,7 @@ window.NovaTableJQ = (function ($) {
       if (fieldDef.type === 'LINK') {
         var linkInfo2 = (target.linkMap && target.linkMap[fieldDef.field]) || {}
         var selectInfo = linkInfo2.selectInfo || {}
-        var sfKey = selectInfo.storageField || 'id'
+        var sfKey = selectInfo.storageField
         var refName = selectInfo.referenceName
         if (refName) {
           if (!linkConditions[refName]) linkConditions[refName] = {}
@@ -546,10 +546,10 @@ window.NovaTableJQ = (function ($) {
           if (dotIdx > -1) {
             propKey = col.field.slice(dotIdx + 1)
           } else if (col.type === 'REFERENCE') {
-            propKey = (referenceMap[refKey] && referenceMap[refKey].displayField) || 'name'
+            propKey = referenceMap[refKey] && referenceMap[refKey].displayField
           } else {
             var ai = appendageMap[refKey]
-            propKey = (ai && ai.displayField) || 'name'
+            propKey = ai && ai.displayField
           }
           var val = nestedObj[propKey]
           updated[col.field + '_display'] = (val !== null && val !== undefined) ? val : ''
@@ -922,9 +922,9 @@ window.NovaTableJQ = (function ($) {
         fd[f.field] = (val === null || val === undefined || val === '') ? null : Number(val)
       } else if (f.type === 'REFERENCE') {
         var refInfo = referenceMap[f.field] || {}
-        var sf = refInfo.storageField || 'id'
+        var sf = refInfo.storageField
         fd[f.field] = (val && typeof val === 'object')
-          ? (val[sf] !== undefined && val[sf] !== null ? String(val[sf]) : null)
+          ? (sf && val[sf] !== undefined && val[sf] !== null ? String(val[sf]) : null)
           : (val !== null && val !== undefined && val !== '' ? String(val) : null)
         fd[f.field + '_display'] = (val && typeof val === 'object' && refInfo.displayField)
           ? (val[refInfo.displayField] != null ? String(val[refInfo.displayField]) : '') : ''

@@ -688,7 +688,7 @@ const NovaTable = {
             const bInfo = vm.booleanMap && vm.booleanMap[col.field]
             if (bInfo && bInfo.type === 'SWITCH') {
               const novaName = vm.novaName
-              const novaIdField = vm.novaIdFieldName || 'id'
+              const novaIdField = vm.novaIdFieldName
               const editField = (vm.editFields || []).find(function(f) { return f.field === col.field })
               const disabled = !editField || (editField.readonly && editField.readonly.edit) || !window.__hasButton(vm.novaName, 'edit')
               const isDark = document.body.classList.contains('dark')
@@ -1806,9 +1806,9 @@ const NovaTable = {
           targetData[f.field] = (val === null || val === undefined || val === '') ? null : Number(val)
         } else if (f.type === 'REFERENCE') {
           var refInfo = rm[f.field] || {}
-          var sf = refInfo.storageField || 'id'
+          var sf = refInfo.storageField
           targetData[f.field] = (val && typeof val === 'object')
-            ? (val[sf] !== undefined && val[sf] !== null ? String(val[sf]) : null)
+            ? (sf && val[sf] !== undefined && val[sf] !== null ? String(val[sf]) : null)
             : (val !== null && val !== undefined && val !== '' ? String(val) : null)
           targetData[f.field + '_display'] = (val && typeof val === 'object' && refInfo.displayField)
             ? (val[refInfo.displayField] != null ? String(val[refInfo.displayField]) : '') : ''
@@ -2188,8 +2188,8 @@ const NovaTable = {
       const linkInfo = (picker.target !== 'opForm' && !picker.appNovaName && picker.isForFilter && picker.field.type === 'LINK') ? (this.linkMap && this.linkMap[picker.field.field]) : null
       const linkSelectInfo = linkInfo && linkInfo.selectInfo
       // APPENDAGE filter：key=storageField（主表字段），value=行里 referenceField 的值（附属对象存的主表外键）
-      const storageField = linkSelectInfo ? (linkSelectInfo.storageField || 'id') : (appInfo ? (appInfo.referenceField || 'id') : ((refInfo && refInfo.storageField) || 'id'))
-      const displayField = linkSelectInfo ? (linkSelectInfo.displayField || storageField) : (appInfo ? (appInfo.displayField || storageField) : ((refInfo && refInfo.displayField) || storageField))
+      const storageField = linkSelectInfo ? linkSelectInfo.storageField : (appInfo ? appInfo.referenceField : (refInfo && refInfo.storageField))
+      const displayField = linkSelectInfo ? linkSelectInfo.displayField : (appInfo ? appInfo.displayField : (refInfo && refInfo.displayField))
       const row = picker.selectedRow
 
       if (picker.appNovaName && picker.target !== 'opFormApp') {
@@ -2806,7 +2806,7 @@ const NovaTable = {
         const linkInfo = sub.fieldInfo || {}
         const op = linkInfo.operateInfo || {}
         const refField = op.referenceField
-        const storageField = op.storageField || 'id'
+        const storageField = op.storageField
         if (!refField) { this.dualTableSourceFields = {}; return }
         const val = row[storageField]
         if (val == null) { this.dualTableSourceFields = {}; return }
@@ -2823,7 +2823,7 @@ const NovaTable = {
       } else {
         // APPENDAGES 类型：取 fieldInfo.storageField，值为当前行对应字段值
         const appInfo = sub.fieldInfo || {}
-        const storageField = appInfo.storageField || 'id'
+        const storageField = appInfo.storageField
         const val = row[storageField]
         if (val == null) { this.dualTableSourceFields = {}; return }
         this.dualTableSourceFields = { [storageField]: String(val) }
@@ -2839,7 +2839,7 @@ const NovaTable = {
         for (var field in refMap) {
           var refInfo = refMap[field]
           if (refInfo.storageField && sourceKeys.indexOf(refInfo.storageField) !== -1) {
-            sourceRefFields.push({ field: field, type: 'REFERENCE', referenceField: refInfo.referenceField || 'id', value: embSourceFields[refInfo.storageField] })
+            sourceRefFields.push({ field: field, type: 'REFERENCE', referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
           }
         }
       }
@@ -3058,7 +3058,7 @@ const NovaTable = {
       for (const key in (this.referenceMap || {})) {
         const ri = this.referenceMap[key]
         if (ri && ri.referenceField && row[key] && typeof row[key] === 'object') {
-          const fkVal = row[key][ri.storageField || 'id']
+          const fkVal = row[key][ri.storageField]
           if (fkVal !== undefined) enrichedRow[ri.referenceField] = fkVal
         }
       }

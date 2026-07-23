@@ -10,7 +10,7 @@ window.NovaTableJQ_appendages = (function () {
     for (const k in appendageMap) {
       if (appendageMap[k].referenceName === tab.tapNovaName) {
         const appInfo = appendageMap[k]
-        const storageField = appInfo.storageField || 'id'
+        const storageField = appInfo.storageField
         const pkVal = hostVm.currentRow && hostVm.currentRow[storageField]
         if (!pkVal) return {}
         return { [storageField]: String(pkVal) }

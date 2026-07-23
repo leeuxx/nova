@@ -5,6 +5,7 @@ import com.nova.annotation.NovaField;
 import com.nova.annotation.config.NovaId;
 import com.nova.annotation.sub.nova.Drill;
 import com.nova.annotation.sub.nova.Layout;
+import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;

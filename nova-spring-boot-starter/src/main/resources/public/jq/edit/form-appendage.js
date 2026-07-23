@@ -25,9 +25,9 @@ window.NovaTableJQ_app = (function () {
         fd[f.field] = (val === null || val === undefined || val === '') ? null : Number(val)
       } else if (f.type === 'REFERENCE') {
         var refInfo = ((t.appendageTabBuild[appNovaName] || {}).referenceMap || {})[f.field] || {}
-        var rsf = refInfo.storageField || 'id'
+        var rsf = refInfo.storageField
         fd[f.field] = (val && typeof val === 'object')
-          ? (val[rsf] !== undefined && val[rsf] !== null ? String(val[rsf]) : null)
+          ? (rsf && val[rsf] !== undefined && val[rsf] !== null ? String(val[rsf]) : null)
           : (val !== null && val !== undefined && val !== '' ? String(val) : null)
         fd[f.field + '_display'] = (val && typeof val === 'object' && refInfo.displayField)
           ? (val[refInfo.displayField] != null ? String(val[refInfo.displayField]) : '') : ''
@@ -51,7 +51,7 @@ window.NovaTableJQ_app = (function () {
       if (appendageMap[k].referenceName === appNovaName) appField = k
     })
     if (!appField) return
-    var storageField = (appendageMap[appField].storageField) || 'id'
+    var storageField = appendageMap[appField].storageField
     var storageVal = target.formData && target.formData[storageField]
     var loaded = Object.assign({}, target.appendageDetailsLoaded)
     loaded[appNovaName] = true
