@@ -357,6 +357,8 @@ body.table-wrap-cell .n-data-table-td {
 body.dark { background: #151515 !important; }
 
 .dark .logo-text { color: #e0e0e0; }
+.sidebar-logo { height:28px; flex-shrink:0; transition: filter 0.3s; }
+.dark .sidebar-logo { filter: brightness(0) invert(1); }
 
 .dark .tab-bar {
   background: #1f1f1f !important;

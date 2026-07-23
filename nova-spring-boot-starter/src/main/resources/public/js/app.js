@@ -455,9 +455,7 @@ function mountApp(menuList, config, loginExpired) {
                   <n-layout-sider bordered :collapsed="collapsed" collapse-mode="width" :collapsed-width="64" :width="220" :show-trigger="togglePos === 'down' ? 'bar' : false" @update:collapsed="collapsed = $event">
                     <div style="height:50px;display:flex;align-items:center;justify-content:center">
                       <div style="display:flex;align-items:center;gap:8px">
-                        <div style="width:28px;height:28px;background:linear-gradient(135deg,#2563eb,#3b82f6);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                          <iconify-icon icon="material-symbols:bolt" style="color:#fff;font-size:18px"></iconify-icon>
-                        </div>
+                        <img src="logo.png" class="sidebar-logo" />
                         <span v-show="!collapsed" class="logo-text">Nova Admin</span>
                       </div>
                     </div>
