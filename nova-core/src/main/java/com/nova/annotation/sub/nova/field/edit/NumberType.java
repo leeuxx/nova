@@ -8,10 +8,10 @@ public @interface NumberType {
     Type type() default Type.INTEGER;
 
     @Comment("最大值")
-    long max() default Integer.MAX_VALUE;
+    long max() default Long.MAX_VALUE;
 
     @Comment("最小值")
-    long min() default -Integer.MAX_VALUE;
+    long min() default -Long.MAX_VALUE;
 
     @Comment("小数位数")
     int decimal() default 2;

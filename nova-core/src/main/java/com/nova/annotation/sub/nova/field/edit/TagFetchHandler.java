@@ -4,6 +4,6 @@ import java.util.List;
 
 public interface TagFetchHandler {
 
-    List<String> fetchTags(String[] params);
+    List<String> fetchTags(String param);
 
 }

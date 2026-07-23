@@ -183,6 +183,7 @@ public class NovaTableServiceImpl implements NovaTableService {
             NovaTableBuild.Vo.AttachmentType attachment = new NovaTableBuild.Vo.AttachmentType()
                     .setType(attachmentInfo.getType().name())
                     .setShowType(attachmentInfo.getShowType().name())
+                    .setTableShowType(attachmentInfo.getTableShowType().name())
                     .setMaxLimit(attachmentInfo.getMaxLimit())
                     .setMinSize(attachmentInfo.getMinSize())
                     .setMaxSize(attachmentInfo.getMaxSize())

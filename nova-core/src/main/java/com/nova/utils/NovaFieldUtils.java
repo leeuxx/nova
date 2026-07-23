@@ -345,10 +345,10 @@ public class NovaFieldUtils {
                 // 动态选择列表
                 Class<? extends TagFetchHandler>[] tagFetchHandlerClass = tagType.fetchHandler();
                 if (tagFetchHandlerClass.length > 0) {
-                    String[] strings = tagType.fetchHandlerParams();
+                    String param = tagType.param();
                     for (Class<? extends TagFetchHandler> handlerClass : tagFetchHandlerClass) {
                         TagFetchHandler tagFetchHandler = SpringBeanUtils.getBean(handlerClass);
-                        List<String> fetchTags = tagFetchHandler.fetchTags(strings);
+                        List<String> fetchTags = tagFetchHandler.fetchTags(param);
                         tags.addAll(fetchTags);
                     }
                 }
@@ -468,6 +468,7 @@ public class NovaFieldUtils {
                 AttachmentTypeInfo attachmentTypeInfo = new AttachmentTypeInfo()
                         .setType(edit.attachmentType().type())
                         .setShowType(edit.attachmentType().showType())
+                        .setTableShowType(edit.attachmentType().tableShowType())
                         .setMaxLimit(edit.attachmentType().maxLimit())
                         .setMinSize(edit.attachmentType().minSize())
                         .setMaxSize(edit.attachmentType().maxSize())
@@ -881,6 +882,9 @@ public class NovaFieldUtils {
 
         @Comment("附件显示类型")
         private AttachmentType.ShowType showType;
+
+        @Comment("附件在表格中显示类型")
+        private AttachmentType.TableShowType tableShowType;
 
         @Comment("最大上传数")
         private Integer maxLimit;

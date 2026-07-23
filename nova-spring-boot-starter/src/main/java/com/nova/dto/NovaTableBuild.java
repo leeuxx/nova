@@ -310,6 +310,9 @@ public class NovaTableBuild {
             @Comment("附件显示类型")
             private String showType;
 
+            @Comment("附件表格中显示类型")
+            private String tableShowType;
+
             @Comment("最大上传数")
             private Integer maxLimit;
 

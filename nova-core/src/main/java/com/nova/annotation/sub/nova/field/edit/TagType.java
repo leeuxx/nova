@@ -14,7 +14,7 @@ public @interface TagType {
     String[] tags() default {};
 
     @Comment("可从fetchHandler中获取")
-    String[] fetchHandlerParams() default {};
+    String param() default "";
 
     @Comment("动态标签列表")
     Class<? extends TagFetchHandler>[] fetchHandler() default {};
