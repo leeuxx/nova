@@ -367,6 +367,12 @@ const NovaTable = {
     isDark() {
       return window.__appDarkMode ? window.__appDarkMode.value : false
     },
+    canDblclickEdit() {
+      if (this.readonly || this.linkMode) return false
+      if (!this.rowDblclickEdit) return false
+      var w = window
+      return typeof w.__hasButton === 'function' && w.__hasButton(this.novaName || this.novaNameProp, 'edit')
+    },
     embSize() { return undefined },
     tapSearchOptions() {
       const f = this.tapSearchField
@@ -3639,7 +3645,7 @@ const NovaTable = {
             @update:checked-row-keys="handleCheck"
             :expanded-row-keys="expandedRowKeys"
             @update:expanded-row-keys="handleExpandedRowKeysUpdate"
-            :row-props="(pickerMode || pickerMulti) ? (row) => ({ style: 'cursor:pointer', onClick: (e) => { if (e.target.closest('.n-checkbox') || e.target.closest('.n-data-table-tree-row-expand-icon')) return; pickerMulti ? toggleCheckedRow(row) : selectRow(row) } }) : (dualTableViewActive ? (row) => ({ style: 'cursor:pointer', onClick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; onDualTableRowClick(row) } }) : (rowDblclickEdit ? (row) => ({ style: 'cursor:default', onDblclick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; handleEdit(row) } }) : undefined))"
+            :row-props="(pickerMode || pickerMulti) ? (row) => ({ style: 'cursor:pointer', onClick: (e) => { if (e.target.closest('.n-checkbox') || e.target.closest('.n-data-table-tree-row-expand-icon')) return; pickerMulti ? toggleCheckedRow(row) : selectRow(row) } }) : (dualTableViewActive ? (row) => ({ style: 'cursor:pointer', onClick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; onDualTableRowClick(row) } }) : (canDblclickEdit ? (row) => ({ style: 'cursor:default', onDblclick: (e) => { if (e.target.closest('.row-action-btn') || e.target.closest('.n-checkbox') || e.target.closest('button') || e.target.closest('.n-button')) return; handleEdit(row) } }) : undefined))"
             :row-class-name="tableRowClassName"
             :loading="loading"
             :remote="!isTree"
