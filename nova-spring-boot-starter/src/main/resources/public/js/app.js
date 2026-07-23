@@ -214,7 +214,7 @@ function mountApp(menuList, config, loginExpired) {
         const hasOther = openedTabs.value.length > 1
         const mi = (icon) => () => h(NIcon, { size: 14 }, { default: () => h('iconify-icon', { icon }) })
         return [
-          { label: '关闭', key: 'close', icon: mi('material-symbols:close') },
+          { label: '关闭', key: 'close', icon: mi('material-symbols:close'), disabled: !hasOther },
           { label: '重新加载', key: 'reload', icon: mi('material-symbols:refresh') },
           { type: 'divider', key: 'd1' },
           { label: '关闭左侧标签页', key: 'closeLeft', icon: mi('material-symbols:chevron-left'), disabled: !hasLeft },
