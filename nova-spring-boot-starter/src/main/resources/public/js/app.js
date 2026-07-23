@@ -201,7 +201,8 @@ function mountApp(menuList, config, loginExpired) {
       const expandedKeys = ref([])
 
       // ── 右键菜单 ──────────────────────────────────────────────────
-      const contextMenuShow = ref(false)
+      const contextMenuShow = ref(false)     // v-if 控制容器
+      const contextMenuInner = ref(false)    // :show 控制 n-dropdown 弹出
       const contextMenuX = ref(0)
       const contextMenuY = ref(0)
       const contextMenuTabKey = ref('')
@@ -316,7 +317,10 @@ function mountApp(menuList, config, loginExpired) {
         contextMenuX.value = rect.left
         contextMenuY.value = rect.bottom
         contextMenuTabKey.value = tabKey
+        contextMenuInner.value = false
         contextMenuShow.value = true
+        // 下一帧再显示，触发 n-dropdown 内置淡入动画
+        nextTick(() => { contextMenuInner.value = true })
       }
 
       const handleContextMenuSelect = (menuKey) => {
@@ -352,10 +356,16 @@ function mountApp(menuList, config, loginExpired) {
           closed.forEach(t => { tabVersions.value = { ...tabVersions.value, [t.key]: (tabVersions.value[t.key] || 0) + 1 } })
           if (activeTab.value !== tabKey) router.push(tabKey)
         }
-        contextMenuShow.value = false
+        hideContextMenu()
       }
 
-      // 菜单关闭：window resize 或点击菜单项后自动关闭
+      // 关闭菜单（带淡出动画）
+      const hideContextMenu = () => {
+        contextMenuInner.value = false
+        setTimeout(() => { contextMenuShow.value = false }, 200)
+      }
+
+      // 菜单关闭：window resize 时直接移除
       window.addEventListener('resize', function () { contextMenuShow.value = false })
 
       const routeKey = Vue.computed(() =>
@@ -420,7 +430,7 @@ function mountApp(menuList, config, loginExpired) {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
         menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isStandaloneRoute, menuSelectedKey,
         handleMenuSelect, handleTabClose, handleTabClick, userDropdown, handleUserMenuSelect,
-        contextMenuShow, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect,
+        contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
         barStyle, barReady, tabBarRef, userName, userAlias, userAvatar
       }
     },
@@ -549,13 +559,13 @@ function mountApp(menuList, config, loginExpired) {
         </n-message-provider>
 
         <!-- Tab 右键菜单 -->
-        <div v-if="contextMenuShow"
+        <div v-if="contextMenuShow" :key="contextMenuTabKey"
              :style="{ position:'fixed', left:contextMenuX+'px', top:contextMenuY+'px', width:0, height:0 }">
-          <n-dropdown trigger="manual" :show="true" :options="contextMenuOptions"
+          <n-dropdown trigger="manual" :show="contextMenuInner" :options="contextMenuOptions"
             placement="bottom-start"
             @select="handleContextMenuSelect"
-            @clickoutside="contextMenuShow = false">
-            <div style="width:1px;height:1px"></div>
+            @clickoutside="hideContextMenu">
+            <div style="width:1px;height:1px;pointer-events:none"></div>
           </n-dropdown>
         </div>
       </n-config-provider>
