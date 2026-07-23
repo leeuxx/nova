@@ -9,7 +9,7 @@ import java.util.List;
 public interface ChoiceFetchHandler {
 
     @Comment("获取下拉列表")
-    List<VLModel> fetch(String[] params);
+    List<VLModel> fetch(String param);
 
     @Data
     @Accessors(chain = true)
@@ -23,6 +23,9 @@ public interface ChoiceFetchHandler {
 
         @Comment("表格显示标签颜色（十六进制颜色代码）")
         private String color;
+
+        @Comment("上级关联值（级联选择）")
+        private String refValue;
 
     }
 

@@ -39,13 +39,13 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     private TestDemo3Service testDemo3Service;
 
     @Override
-    public List<VLModel> fetch(String[] params) {
+    public List<VLModel> fetch(String param) {
         return Arrays.asList(
-                new VLModel().setValue("1").setLabel("篮球"),
-                new VLModel().setValue("2").setLabel("羽毛球").setColor("#fe6767"),
-                new VLModel().setValue("3").setLabel("LOL"),
-                new VLModel().setValue("4").setLabel("大象"),
-                new VLModel().setValue("5").setLabel("编程")
+                new VLModel().setValue("1").setLabel("篮球").setRefValue("1"),
+                new VLModel().setValue("2").setLabel("羽毛球").setColor("#fe6767").setRefValue("2"),
+                new VLModel().setValue("3").setLabel("LOL").setRefValue("1"),
+                new VLModel().setValue("4").setLabel("大象").setRefValue("1"),
+                new VLModel().setValue("5").setLabel("编程").setRefValue("2")
         );
     }
 
@@ -240,7 +240,8 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
                         .setMsg("测试内容")
                         .setFile("https://cdn.ossfile.mxrvending.com/tyGoods/6902890238345.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890235156.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890234562.png")
                 )
-                .setHobby("2")
+                .setSex("1")
+                .setHobby("1")
                 .setFile("https://pic.rmb.bdstatic.com/bjh/bc1178073846/250713/6c653fba298a0dbb91dc600e620e1813.jpeg,https://cdn.ossfile.mxrvending.com/tyGoods/6902890249603.png")
                 .setCreateTime(LocalDateTime.now());
     }

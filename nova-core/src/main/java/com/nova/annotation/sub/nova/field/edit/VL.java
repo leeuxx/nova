@@ -12,4 +12,8 @@ public @interface VL {
 
     @Comment("表格显示标签颜色（十六进制颜色代码）")
     String color() default "";
+
+    @Comment("上级关联值（级联选择）")
+    String refValue() default "";
+
 }

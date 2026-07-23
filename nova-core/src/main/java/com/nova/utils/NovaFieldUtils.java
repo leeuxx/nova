@@ -283,7 +283,8 @@ public class NovaFieldUtils {
                 ChoiceType choiceType = edit.choiceType();
                 ChoiceInfo choiceInfo = new ChoiceInfo()
                         .setSelectType(choiceType.selectType())
-                        .setShowType(choiceType.showType());
+                        .setShowType(choiceType.showType())
+                        .setRefChoice(choiceType.refChoice());
                 // 静态选择列表
                 VL[] vls = choiceType.vl();
                 List<ChoiceInfo.ValueInfo> values = new ArrayList<>();
@@ -291,21 +292,23 @@ public class NovaFieldUtils {
                     ChoiceInfo.ValueInfo valueInfo = new ChoiceInfo.ValueInfo()
                             .setValue(vl.value())
                             .setLabel(vl.label())
-                            .setColor(vl.color());
+                            .setColor(vl.color())
+                            .setRefValue(vl.refValue());
                     values.add(valueInfo);
                 }
                 // 动态选择列表
                 Class<? extends ChoiceFetchHandler>[] choiceFetchHandlerClass = choiceType.fetchHandler();
                 if (choiceFetchHandlerClass.length > 0) {
-                    String[] fetchHandlerParams = choiceType.fetchHandlerParams();
+                    String param = choiceType.param();
                     for (Class<? extends ChoiceFetchHandler> handlerClass : choiceFetchHandlerClass) {
                         ChoiceFetchHandler choiceFetchHandler = SpringBeanUtils.getBean(handlerClass);
-                        List<ChoiceFetchHandler.VLModel> vlModelList = choiceFetchHandler.fetch(fetchHandlerParams);
+                        List<ChoiceFetchHandler.VLModel> vlModelList = choiceFetchHandler.fetch(param);
                         vlModelList.forEach(vlModel -> {
                             ChoiceInfo.ValueInfo valueInfo = new ChoiceInfo.ValueInfo()
                                     .setValue(vlModel.getValue())
                                     .setLabel(vlModel.getLabel())
-                                    .setColor(vlModel.getColor());
+                                    .setColor(vlModel.getColor())
+                                    .setRefValue(vlModel.getRefValue());
                             values.add(valueInfo);
                         });
                     }
@@ -791,6 +794,9 @@ public class NovaFieldUtils {
         @Comment("显示类型")
         private ChoiceType.ShowType showType;
 
+        @Comment("关联选择组件")
+        private String refChoice;
+
         @Comment("选择值")
         private List<ValueInfo> values;
 
@@ -806,6 +812,9 @@ public class NovaFieldUtils {
 
             @Comment("颜色信息")
             private String color;
+
+            @Comment("上级关联值（级联选择）")
+            private String refValue;
         }
     }
 

@@ -221,6 +221,9 @@ public class NovaTableBuild {
             @Comment("显示类型")
             private String showType;
 
+            @Comment("关联选择组件")
+            private String refChoice;
+
             @Comment("选择值")
             private List<Value> values;
 
@@ -236,6 +239,10 @@ public class NovaTableBuild {
 
                 @Comment("颜色信息")
                 private String color;
+
+                @Comment("上级关联值（级联选择）")
+                private String refValue;
+
             }
 
         }

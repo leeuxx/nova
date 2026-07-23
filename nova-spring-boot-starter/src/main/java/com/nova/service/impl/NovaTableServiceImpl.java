@@ -122,12 +122,14 @@ public class NovaTableServiceImpl implements NovaTableService {
                 NovaTableBuild.Vo.Choice.Value value = new NovaTableBuild.Vo.Choice.Value()
                         .setValue(fieldValue.getValue())
                         .setLabel(fieldValue.getLabel())
-                        .setColor(fieldValue.getColor());
+                        .setColor(fieldValue.getColor())
+                        .setRefValue(fieldValue.getRefValue());
                 buildValues.add(value);
             }
             choiceMap.put(field, new NovaTableBuild.Vo.Choice()
                     .setSelectType(choiceInfo.getSelectType().name())
                     .setShowType(choiceInfo.getShowType().name())
+                    .setRefChoice(choiceInfo.getRefChoice())
                     .setValues(buildValues)
             );
         });

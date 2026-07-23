@@ -5,7 +5,6 @@ import com.nova.annotation.NovaField;
 import com.nova.annotation.config.NovaId;
 import com.nova.annotation.sub.nova.Drill;
 import com.nova.annotation.sub.nova.Layout;
-import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
@@ -244,6 +243,14 @@ public class TestDemoView {
     private TestDemoView testDemoView;
 
     @NovaField(
+            views = @View(title = "手机号", width = "10%", desc = "+86"),
+            edit = @Edit(
+                    title = "手机号"
+            )
+    )
+    private String tel;
+
+    @NovaField(
             views = @View(title = "性别", width = "10%", sortable = true),
             edit = @Edit(
                     title = "性别",
@@ -261,14 +268,6 @@ public class TestDemoView {
     private String sex;
 
     @NovaField(
-            views = @View(title = "手机号", width = "10%", desc = "+86"),
-            edit = @Edit(
-                    title = "手机号"
-            )
-    )
-    private String tel;
-
-    @NovaField(
             views = @View(title = "爱好", width = "10%", sortable = true),
             edit = @Edit(
                     title = "爱好",
@@ -277,7 +276,8 @@ public class TestDemoView {
                     choiceType = @ChoiceType(
                             selectType = ChoiceType.SelectType.MULTI,
                             fetchHandler = TestDemoService.class,
-                            tapSearch = @TapSearch(value = true)
+                            tapSearch = @TapSearch(value = true),
+                            refChoice = "sex"
                     ),
                     search = @Search(vague = true)
             )
@@ -489,13 +489,31 @@ public class TestDemoView {
         private TestDemo3View testDemo3View;
 
         @NovaField(
+                views = @View(title = "性别", width = "10%", sortable = true),
+                edit = @Edit(
+                        title = "性别",
+                        notNull = true,
+                        type = Edit.Type.CHOICE,
+                        choiceType = @ChoiceType(
+                                vl = {
+                                        @VL(value = "1", label = "男", color = "#28f439"),
+                                        @VL(value = "2", label = "女", color = "#fe6767")
+                                }
+                        ),
+                        search = @Search(vague = true)
+                )
+        )
+        private String sex;
+
+        @NovaField(
                 edit = @Edit(
                         title = "爱好",
                         notNull = true,
                         type = Edit.Type.CHOICE,
                         choiceType = @ChoiceType(
                                 selectType = ChoiceType.SelectType.MULTI,
-                                fetchHandler = TestDemoService.class
+                                fetchHandler = TestDemoService.class,
+                                refChoice = "sex"
                         )
                 )
         )

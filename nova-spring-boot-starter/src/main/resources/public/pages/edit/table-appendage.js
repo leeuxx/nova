@@ -41,6 +41,11 @@ window.NovaAppForm = {
     fieldOptions(f) {
       var choice = (this.buildData.choiceMap || {})[f.field]
       if (!choice || !choice.values) return []
+      if (choice.refChoice) {
+        var parentVal = this.formData[choice.refChoice]
+        if (!parentVal || (Array.isArray(parentVal) && !parentVal.length)) return []
+        return choice.values.filter(function(v) { return Array.isArray(parentVal) ? parentVal.includes(v.refValue) : v.refValue === parentVal }).map(function(v) { return { label: v.label, value: v.value } })
+      }
       return choice.values.map(function(v) { return { label: v.label, value: v.value } })
     },
     tagOptions(field) {

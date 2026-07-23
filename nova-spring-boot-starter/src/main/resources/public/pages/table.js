@@ -149,6 +149,36 @@ window.evalShowExpr = evalShowExpr
     })
   }
 
+  // 工具函数：父级值变化时，自动选中子级第一个匹配选项，无匹配则清空
+  function clearCascadeChildren(formData, choiceMap, parentField) {
+    var parentVal = formData[parentField]
+    for (var key in choiceMap) {
+      var choice = choiceMap[key]
+      if (choice.refChoice === parentField) {
+        if (parentVal != null && parentVal !== '' && !(Array.isArray(parentVal) && !parentVal.length)) {
+          // 有父值 → 尝试自动选中第一个匹配的子选项
+          var matched = (choice.values || []).filter(function(v) {
+            return Array.isArray(parentVal) ? parentVal.includes(v.refValue) : v.refValue === parentVal
+          })
+          if (matched.length) {
+            var firstVal = matched[0].value
+            formData[key] = choice.selectType === 'MULTI' ? [firstVal] : firstVal
+          } else {
+            formData[key] = choice.selectType === 'MULTI' ? [] : null
+          }
+        } else {
+          // 父级为空 → 清空
+          formData[key] = choice.selectType === 'MULTI' ? [] : null
+        }
+        if (typeof formData[key + '_display'] !== 'undefined') {
+          formData[key + '_display'] = ''
+        }
+        // 递归处理孙级
+        clearCascadeChildren(formData, choiceMap, key)
+      }
+    }
+  }
+
   // ────────────────────────────────────────────────────────────────
 
 const NovaTable = {
@@ -1058,6 +1088,11 @@ const NovaTable = {
     fieldOptions(field) {
       const choice = this.choiceMap[field.field]
       if (!choice || !choice.values) return []
+      if (choice.refChoice) {
+        var parentVal = this.filterForm[choice.refChoice]
+        if (!parentVal || (Array.isArray(parentVal) && !parentVal.length)) return []
+        return choice.values.filter(v => Array.isArray(parentVal) ? parentVal.includes(v.refValue) : v.refValue === parentVal).map(v => ({ label: v.label, value: v.value }))
+      }
       return choice.values.map(v => ({ label: v.label, value: v.value }))
     },
     // editFieldOptions moved to NovaFormThis child component
@@ -1068,6 +1103,11 @@ const NovaTable = {
     opFieldOpts(f) {
       var choice = this.opFormChoiceMap[f.field]
       if (!choice || !choice.values) return []
+      if (choice.refChoice) {
+        var parentVal = this.opFormData[choice.refChoice]
+        if (!parentVal || (Array.isArray(parentVal) && !parentVal.length)) return []
+        return choice.values.filter(function(v) { return Array.isArray(parentVal) ? parentVal.includes(v.refValue) : v.refValue === parentVal }).map(function(v) { return { label: v.label, value: v.value } })
+      }
       return choice.values.map(function(v) { return { label: v.label, value: v.value } })
     },
     opDateType(field) {
@@ -1151,6 +1191,10 @@ const NovaTable = {
     },
     onAppFieldChange(appNovaName, { field, value }) {
       this.appSetFd(appNovaName, field, value)
+      // 级联选择：父级值变化时清除子级
+      var build = this.appendageTabBuild[appNovaName] || this.opFormAppTabBuild[appNovaName] || {}
+      var appFd = this.appendageFormData[appNovaName] || {}
+      clearCascadeChildren(appFd, build.choiceMap || {}, field)
     },
 
     evalShowExprSafe(expr, fd) {
@@ -2012,7 +2056,17 @@ const NovaTable = {
         var refInfo = this.referenceMap[field]
         if (refInfo && refInfo.referenceField) this.formData[refInfo.referenceField] = null
       }
+      // 级联选择：父级值变化时清除子级
+      clearCascadeChildren(this.formData, this.choiceMap, field)
       delete this.formErrors[field]
+    },
+    // 查询条件级联清除
+    onFilterChoiceUpdate(fieldKey) {
+      clearCascadeChildren(this.filterForm, this.choiceMap, fieldKey)
+    },
+    // opForm 级联清除
+    onOpChoiceUpdate(fieldKey) {
+      clearCascadeChildren(this.opFormData, this.opFormChoiceMap, fieldKey)
     },
 
     openReferenceModal(f) {
@@ -3179,6 +3233,7 @@ const NovaTable = {
               <span class="form-label" :title="field.title">{{ field.title }}</span>
               <n-select v-if="field.type === 'CHOICE' && choiceMap[field.field] && choiceMap[field.field].selectType === 'SINGLE' && !field.vague"
                 v-model:value="filterForm[field.field]"
+                @update:value="onFilterChoiceUpdate(field.field)"
                 :options="fieldOptions(field)"
                 :placeholder="'请选择' + field.title"
                 :size="embSize"
@@ -3186,6 +3241,7 @@ const NovaTable = {
               />
               <n-select v-else-if="field.type === 'CHOICE'"
                 v-model:value="filterForm[field.field]"
+                @update:value="onFilterChoiceUpdate(field.field)"
                 :options="fieldOptions(field)"
                 :placeholder="'请选择' + field.title"
                 :size="embSize"
@@ -3839,22 +3895,26 @@ const NovaTable = {
                 <!-- 字段渲染复用相同模式，读取 opForm* 状态 -->
                 <n-checkbox-group
                   v-if="f.type === 'CHOICE' && opFormChoiceMap[f.field] && opFormChoiceMap[f.field].showType === 'RADIO' && opFormChoiceMap[f.field].selectType === 'MULTI'"
-                  v-model:value="opFormData[f.field]">
+                  v-model:value="opFormData[f.field]"
+                  @update:value="onOpChoiceUpdate(f.field)">
                   <n-space><n-checkbox v-for="o in opFieldOpts(f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
                 </n-checkbox-group>
                 <n-radio-group
                   v-else-if="f.type === 'CHOICE' && opFormChoiceMap[f.field] && opFormChoiceMap[f.field].showType === 'RADIO'"
-                  v-model:value="opFormData[f.field]">
+                  v-model:value="opFormData[f.field]"
+                  @update:value="onOpChoiceUpdate(f.field)">
                   <n-space><n-radio v-for="o in opFieldOpts(f)" :key="o.value" :value="o.value" :label="o.label" /></n-space>
                 </n-radio-group>
                 <n-select
                   v-else-if="f.type === 'CHOICE' && opFormChoiceMap[f.field] && opFormChoiceMap[f.field].selectType === 'MULTI'"
                   v-model:value="opFormData[f.field]" :options="opFieldOpts(f)"
-                  :placeholder="'请选择' + f.title" multiple clearable />
+                  :placeholder="'请选择' + f.title" multiple clearable
+                  @update:value="onOpChoiceUpdate(f.field)" />
                 <n-select
                   v-else-if="f.type === 'CHOICE'"
                   v-model:value="opFormData[f.field]" :options="opFieldOpts(f)"
-                  :placeholder="'请选择' + f.title" clearable />
+                  :placeholder="'请选择' + f.title" clearable
+                  @update:value="onOpChoiceUpdate(f.field)" />
                 <n-select
                   v-else-if="f.type === 'BOOLEAN'"
                   v-model:value="opFormData[f.field]"

@@ -10,6 +10,9 @@ public @interface ChoiceType {
     @Comment("选择类型")
     SelectType selectType() default SelectType.SINGLE;
 
+    @Comment("关联选择组件（用于级联选择）")
+    String refChoice() default "";
+
     @Comment("静态选择列表")
     VL[] vl() default {};
 
@@ -17,7 +20,7 @@ public @interface ChoiceType {
     Class<? extends ChoiceFetchHandler>[] fetchHandler() default {};
 
     @Comment("可被fetchHandler接口获取到")
-    String[] fetchHandlerParams() default {};
+    String param() default "";
 
     @Comment("tap级搜索项（注：一个table页面只能有一个tap级搜索项！）")
     TapSearch tapSearch() default @TapSearch(showAll = false);
