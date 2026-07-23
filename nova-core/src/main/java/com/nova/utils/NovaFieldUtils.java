@@ -107,11 +107,11 @@ public class NovaFieldUtils {
             boolean isReference = (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE || type == Edit.Type.LINK_TARGET);
             boolean isAppendages = type == Edit.Type.APPENDAGES;
             boolean isLink = type == Edit.Type.LINK;
-            boolean isBoolean = type == Edit.Type.BOOLEAN;
+            boolean isButton = type == Edit.Type.BUTTON;
             boolean isDivide = type == Edit.Type.DIVIDE;
             boolean isEmpty = type == Edit.Type.EMPTY;
             for (View view : views) {
-                if (!view.show() || isAppendages || isLink || isBoolean || isDivide || isEmpty) {
+                if (!view.show() || isAppendages || isLink || isButton || isDivide || isEmpty) {
                     continue;
                 }
                 String fieldName = isReference ? field + "." + view.column() : field;
