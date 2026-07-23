@@ -373,6 +373,10 @@ function mountApp(menuList, config, loginExpired) {
       )
 
       const handleTabClick = (key) => router.push(key)
+      const goHome = () => {
+        window.location.hash = '#/home'
+        window.location.reload()
+      }
       const userDropdown   = [{ label: '个人中心', key: 'profile' }, { label: '退出登录', key: 'logout' }]
 
       // 用户信息（从 localStorage 读取）
@@ -429,7 +433,7 @@ function mountApp(menuList, config, loginExpired) {
       return {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
         menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isStandaloneRoute, menuSelectedKey,
-        handleMenuSelect, handleTabClose, handleTabClick, userDropdown, handleUserMenuSelect,
+        handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, handleUserMenuSelect,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
         barStyle, barReady, tabBarRef, userName, userAlias, userAvatar
       }
@@ -453,7 +457,7 @@ function mountApp(menuList, config, loginExpired) {
 
                   <!-- 侧边栏 -->
                   <n-layout-sider bordered :collapsed="collapsed" collapse-mode="width" :collapsed-width="64" :width="220" :show-trigger="togglePos === 'down' ? 'bar' : false" @update:collapsed="collapsed = $event">
-                    <div style="height:50px;display:flex;align-items:center;justify-content:center">
+                    <div style="height:50px;display:flex;align-items:center;justify-content:center;cursor:pointer" @click="goHome">
                       <div style="display:flex;align-items:center;gap:8px">
                         <img src="logo.png" class="sidebar-logo" />
                         <span v-show="!collapsed" class="logo-text">Nova Admin</span>
