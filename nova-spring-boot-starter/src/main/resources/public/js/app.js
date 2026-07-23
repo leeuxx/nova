@@ -340,7 +340,7 @@ function mountApp(menuList, config, loginExpired) {
                         <n-icon v-if="togglePos !== 'down'" size="20" style="cursor:pointer" @click="collapsed=!collapsed">
                           <iconify-icon icon="material-symbols:menu"></iconify-icon>
                         </n-icon>
-                        <n-breadcrumb separator="»">
+                        <n-breadcrumb separator=">">
                           <n-breadcrumb-item v-for="item in breadcrumbItems" :key="item.label">
                             <n-icon :size="14" style="margin-right:4px;vertical-align:middle" v-if="item.icon">
                               <iconify-icon :icon="item.icon"></iconify-icon>
