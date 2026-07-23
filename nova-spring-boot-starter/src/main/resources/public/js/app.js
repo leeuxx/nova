@@ -200,6 +200,28 @@ function mountApp(menuList, config, loginExpired) {
       const tabsKey    = ref(0)
       const expandedKeys = ref([])
 
+      // ── 右键菜单 ──────────────────────────────────────────────────
+      const contextMenuShow = ref(false)
+      const contextMenuX = ref(0)
+      const contextMenuY = ref(0)
+      const contextMenuTabKey = ref('')
+
+      const contextMenuOptions = computed(() => {
+        const idx = openedTabs.value.findIndex(t => t.key === contextMenuTabKey.value)
+        const hasLeft = idx > 0
+        const hasRight = idx >= 0 && idx < openedTabs.value.length - 1
+        const hasOther = openedTabs.value.length > 1
+        const mi = (icon) => () => h(NIcon, { size: 14 }, { default: () => h('iconify-icon', { icon }) })
+        return [
+          { label: '关闭', key: 'close', icon: mi('material-symbols:close') },
+          { label: '重新加载', key: 'reload', icon: mi('material-symbols:refresh') },
+          { type: 'divider', key: 'd1' },
+          { label: '关闭左侧标签页', key: 'closeLeft', icon: mi('material-symbols:chevron-left'), disabled: !hasLeft },
+          { label: '关闭右侧标签页', key: 'closeRight', icon: mi('material-symbols:chevron-right'), disabled: !hasRight },
+          { label: '关闭其他标签页', key: 'closeOther', icon: mi('material-symbols:close'), disabled: !hasOther },
+        ]
+      })
+
       const theme = computed(() => isDark.value ? darkTheme : null)
       // 是否为独立页面（登录/404 等，无布局）
       const isStandaloneRoute = computed(() => route.path === '/login' || route.path === '/404')
@@ -287,6 +309,55 @@ function mountApp(menuList, config, loginExpired) {
         }
       }
 
+      // ── Tab 右键菜单 ──────────────────────────────────────────────
+      const handleTabContextMenu = (e, tabKey) => {
+        e.preventDefault()
+        const rect = e.currentTarget.getBoundingClientRect()
+        contextMenuX.value = rect.left
+        contextMenuY.value = rect.bottom
+        contextMenuTabKey.value = tabKey
+        contextMenuShow.value = true
+      }
+
+      const handleContextMenuSelect = (menuKey) => {
+        const tabKey = contextMenuTabKey.value
+        if (!tabKey) return
+        const idx = openedTabs.value.findIndex(t => t.key === tabKey)
+        if (idx < 0) return
+
+        if (menuKey === 'close') {
+          handleTabClose(tabKey)
+        } else if (menuKey === 'reload') {
+          tabVersions.value = { ...tabVersions.value, [tabKey]: (tabVersions.value[tabKey] || 0) + 1 }
+        } else if (menuKey === 'closeLeft' && idx > 0) {
+          const remaining = openedTabs.value.slice(idx)
+          const closed = openedTabs.value.slice(0, idx)
+          openedTabs.value = remaining
+          closed.forEach(t => { tabVersions.value = { ...tabVersions.value, [t.key]: (tabVersions.value[t.key] || 0) + 1 } })
+          if (!remaining.find(t => t.key === activeTab.value)) {
+            router.push(remaining[remaining.length - 1].key)
+          }
+        } else if (menuKey === 'closeRight' && idx < openedTabs.value.length - 1) {
+          const remaining = openedTabs.value.slice(0, idx + 1)
+          const closed = openedTabs.value.slice(idx + 1)
+          openedTabs.value = remaining
+          closed.forEach(t => { tabVersions.value = { ...tabVersions.value, [t.key]: (tabVersions.value[t.key] || 0) + 1 } })
+          if (!remaining.find(t => t.key === activeTab.value)) {
+            router.push(remaining[remaining.length - 1].key)
+          }
+        } else if (menuKey === 'closeOther') {
+          const kept = openedTabs.value.filter(t => t.key === tabKey)
+          const closed = openedTabs.value.filter(t => t.key !== tabKey)
+          openedTabs.value = kept
+          closed.forEach(t => { tabVersions.value = { ...tabVersions.value, [t.key]: (tabVersions.value[t.key] || 0) + 1 } })
+          if (activeTab.value !== tabKey) router.push(tabKey)
+        }
+        contextMenuShow.value = false
+      }
+
+      // 菜单关闭：window resize 或点击菜单项后自动关闭
+      window.addEventListener('resize', function () { contextMenuShow.value = false })
+
       const routeKey = Vue.computed(() =>
         route.path + '_' + (tabVersions.value[route.path] || 0)
       )
@@ -349,6 +420,7 @@ function mountApp(menuList, config, loginExpired) {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
         menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isStandaloneRoute, menuSelectedKey,
         handleMenuSelect, handleTabClose, handleTabClick, userDropdown, handleUserMenuSelect,
+        contextMenuShow, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect,
         barStyle, barReady, tabBarRef, userName, userAlias, userAvatar
       }
     },
@@ -442,6 +514,7 @@ function mountApp(menuList, config, loginExpired) {
                         <n-tab
                           v-for="tab in openedTabs" :key="tab.key" :name="tab.key"
                           :closable="tab.closable && openedTabs.length > 1" @close.stop="handleTabClose(tab.key)"
+                          @contextmenu.prevent="handleTabContextMenu($event, tab.key)"
                           style="padding:6px 12px;font-size:13px"
                         >
                           <span style="display:inline-flex;align-items:center;gap:4px">
@@ -474,6 +547,17 @@ function mountApp(menuList, config, loginExpired) {
             </n-notification-provider>
           </n-dialog-provider>
         </n-message-provider>
+
+        <!-- Tab 右键菜单 -->
+        <div v-if="contextMenuShow"
+             :style="{ position:'fixed', left:contextMenuX+'px', top:contextMenuY+'px', width:0, height:0 }">
+          <n-dropdown trigger="manual" :show="true" :options="contextMenuOptions"
+            placement="bottom-start"
+            @select="handleContextMenuSelect"
+            @clickoutside="contextMenuShow = false">
+            <div style="width:1px;height:1px"></div>
+          </n-dropdown>
+        </div>
       </n-config-provider>
     `
   }
