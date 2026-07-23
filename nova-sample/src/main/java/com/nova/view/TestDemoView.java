@@ -417,7 +417,8 @@ public class TestDemoView {
                     attachmentType = @AttachmentType(
                             type = AttachmentType.Type.IMAGE,
                             showType = AttachmentType.ShowType.TOP,
-                            maxLimit = 7
+                            maxLimit = 7,
+                            tableShowType = AttachmentType.TableShowType.IMAGE
                     )
             )
     )
