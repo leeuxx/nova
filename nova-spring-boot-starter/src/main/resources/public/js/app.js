@@ -34,6 +34,22 @@ const LoginPage = window.LoginPage
 const NotFoundPage = window.NotFoundPage
 const HomePage = window.HomePage
 
+// ─── TPL 嵌入页组件 ───────────────────────────────────────────────
+const TplPage = {
+  name: 'TplPage',
+  computed: {
+    iframeUrl() {
+      const info = window.__tplMeta && window.__tplMeta[this.$route.params.code]
+      const url = info && info.url
+      if (!url) return ''
+      const token = localStorage.getItem('nova_token') || ''
+      const sep = url.includes('?') ? '&' : '?'
+      return url + sep + 'token=' + encodeURIComponent(token)
+    }
+  },
+  template: '<div style="height:calc(100vh - 130px);padding:16px;box-sizing:border-box"><iframe :src="iframeUrl" style="width:100%;height:100%;border:none;border-radius:4px"></iframe></div>'
+}
+
 // ─── 图标辅助 ────────────────────────────────────────────────────
 function iconNode(iconName) {
   return () => h(NIcon, { size: 18 }, {
@@ -56,6 +72,7 @@ function processMenus(list) {
     var key      = item.type === 'NOVA' ? '/nova/' + item.value : item.code
     var disabled = item.type === 'DIR'  ? false  // 目录：不禁用（可展开）
                  : item.type === 'NOVA'            ? false  // nova视图：可点击
+                 : item.type === 'TPL'             ? false  // TPL嵌入页：可点击
                  : true                                      // 其他：禁用
     nodeMap[item.id] = {
       label:    item.name,
@@ -105,7 +122,20 @@ function processMenus(list) {
     }
   })
 
-  return { menuTree: roots, routeMeta: routeMeta, bcIconMap: bcIconMap, defaultPath: defaultPath, parentKeyMap: parentKeyMap }
+  // 构建 TPL 菜单元数据（面包屑、图标）
+  var tplMeta = {}
+  list.forEach(function (item) {
+    if (item.type !== 'TPL' || !item.value) return
+    var breadcrumb = [item.name]
+    var cur = item
+    while (cur.pid && nodeMap[cur.pid]) {
+      cur = nodeMap[cur.pid]._raw
+      breadcrumb.unshift(cur.name)
+    }
+    tplMeta[item.code] = { title: item.name, icon: item.icon, breadcrumb: breadcrumb, url: item.value, name: item.name }
+  })
+
+  return { menuTree: roots, routeMeta: routeMeta, bcIconMap: bcIconMap, defaultPath: defaultPath, parentKeyMap: parentKeyMap, tplMeta: tplMeta }
 }
 
 // ─── themeOverrides ──────────────────────────────────────────────
@@ -136,6 +166,8 @@ function mountApp(menuList, config, loginExpired) {
   var bcIconMap   = processed.bcIconMap
   var defaultPath = processed.defaultPath
   var parentKeyMap = processed.parentKeyMap
+  var tplMeta      = processed.tplMeta || {}
+  window.__tplMeta = tplMeta
 
   // 初始化菜单 code 映射（供 build/data 接口添加 menuCode 请求头）
   window.__initMenuCodeMap(menuList)
@@ -181,21 +213,29 @@ function mountApp(menuList, config, loginExpired) {
       window.__appDarkMode = isDark
 
       // 监听路由变化，维护 tab 列表
-      watch(() => route.path, (path) => {
+      watch(() => route.fullPath, (fullPath) => {
+        const path = route.path
         if (path === '/' || path === '/login') return
         // noTab 路由（如首页）：仅切换显示，不生成 tab，不展开菜单
         if (route.meta && route.meta.noTab) {
           activeTab.value = path
           return
         }
-        const meta = routeMeta[path] || { title: path, icon: null }
-        if (!openedTabs.value.find(t => t.key === path)) {
-          openedTabs.value.push({ key: path, title: meta.title, icon: meta.icon, closable: true })
+        // TPL 嵌入页：path 已包含 code（如 /tpl/localTpl），直接用 path 做 tab key
+        const tplCode = route.params.code
+        const tabKey = path
+        const tplInfo = tplCode ? tplMeta[tplCode] : null
+        const meta = tplInfo
+          ? { title: tplInfo.title, icon: tplInfo.icon }
+          : (routeMeta[path] || { title: path, icon: null })
+        if (!openedTabs.value.find(t => t.key === tabKey)) {
+          openedTabs.value.push({ key: tabKey, title: meta.title, icon: meta.icon, closable: true })
         }
-        activeTab.value = path
-        // 自动展开当前路由的祖先菜单节点
+        activeTab.value = tabKey
+        // 自动展开当前路由的祖先菜单节点（支持 TPL）
         const ancestors = []
-        let cur = parentKeyMap[path]
+        const menuKey = tplCode || path
+        let cur = menuKey ? parentKeyMap[menuKey] : undefined
         while (cur) { ancestors.push(cur); cur = parentKeyMap[cur] }
         if (ancestors.length) {
           expandedKeys.value = [...new Set([...expandedKeys.value, ...ancestors])]
@@ -204,6 +244,13 @@ function mountApp(menuList, config, loginExpired) {
 
       // 面包屑
       const breadcrumbItems = computed(() => {
+        const tplCode = route.params.code
+        if (tplCode) {
+          const tpl = tplMeta[tplCode]
+          if (tpl && tpl.breadcrumb) {
+            return tpl.breadcrumb.map(label => ({ label, icon: bcIconMap[label] || null }))
+          }
+        }
         const meta = routeMeta[route.path]
         if (meta && meta.breadcrumb) {
           return meta.breadcrumb.map(label => ({ label, icon: bcIconMap[label] || null }))
@@ -211,7 +258,20 @@ function mountApp(menuList, config, loginExpired) {
         return []
       })
 
-      const handleMenuSelect = (key) => { if (key.startsWith('/')) router.push(key) }
+      // 菜单选中值：NOVA 用 path，TPL 用 code
+      const menuSelectedKey = Vue.computed(() => {
+        const tplCode = route.params.code
+        if (tplCode) return tplCode
+        return route.path
+      })
+
+      const handleMenuSelect = (key, item) => {
+        if (item && item._raw && item._raw.type === 'TPL' && item._raw.value) {
+          router.push('/tpl/' + item._raw.code)
+        } else if (key.startsWith('/')) {
+          router.push(key)
+        }
+      }
 
       const tabVersions = Vue.ref({})
 
@@ -287,7 +347,7 @@ function mountApp(menuList, config, loginExpired) {
 
       return {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
-        menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isStandaloneRoute,
+        menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isStandaloneRoute, menuSelectedKey,
         handleMenuSelect, handleTabClose, handleTabClick, userDropdown, handleUserMenuSelect,
         barStyle, barReady, tabBarRef, userName, userAlias, userAvatar
       }
@@ -320,7 +380,7 @@ function mountApp(menuList, config, loginExpired) {
                       </div>
                     </div>
                     <n-menu
-                      :value="activeTab"
+                      :value="menuSelectedKey"
                       :options="menuTree"
                       :collapsed="collapsed"
                       :collapsed-width="64"
@@ -426,8 +486,9 @@ function mountApp(menuList, config, loginExpired) {
       { path: '/login',               component: LoginPage, meta: { loginRequired: false } },
       { path: '/home',                component: HomePage, meta: { noTab: true } },
       { path: '/404',                 component: NotFoundPage, meta: { loginRequired: false } },
+      { path: '/tpl/:code',           component: TplPage },
+      { path: '/nova/:novaName',      component: window.NovaTable },
       { path: '/:pathMatch(.*)*',     redirect: '/404' },
-      { path: '/nova/:novaName',      component: window.NovaTable }
     ]
   })
 

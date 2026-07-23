@@ -42,6 +42,8 @@ public class Menu {
         NOVA,
         @Comment("自定义视图")
         TPL,
+        @Comment("自定义视图（远程链接）")
+        TPL_URL,
         @Comment("按钮")
         BUTTON
     }

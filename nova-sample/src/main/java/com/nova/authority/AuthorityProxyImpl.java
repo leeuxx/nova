@@ -66,7 +66,21 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setPid(100L)
                 .setType(Menu.Type.BUTTON)
         );
-
+        add(new Menu()
+                .setId(1000L)
+                .setCode("tpl")
+                .setName("自定义管理")
+                .setIcon("material-symbols:accessibility")
+        );
+        add(new Menu()
+                .setId(YitIdHelper.nextId())
+                .setCode("localTpl")
+                .setValue("tpl/test.html")
+                .setName("本地tpl")
+                .setIcon("material-symbols:account-child-invert")
+                .setPid(1000L)
+                .setType(Menu.Type.TPL)
+        );
 
         add(new Menu()
                 .setId(3L)
