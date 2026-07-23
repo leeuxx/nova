@@ -44,11 +44,11 @@ public @interface AttachmentType {
         TEXT,
         @Comment("图片")
         IMAGE,
+        @Comment("视频")
+        VIDEO,
         @Comment("二维码")
         QR_CODE,
-        @Comment("链接")
-        LINK,
-        @Comment("对话框弹窗")
+        @Comment("弹窗显示")
         DIALOG
     }
 }
