@@ -21,6 +21,30 @@ function darkenHex(hex, factor) {
   return '#' + [r,g,b].map(function(v){ return v.toString(16).padStart(2,'0') }).join('')
 }
 
+// ─── QrCodeCell 二维码组件（使用 qrcodejs 库）────────────────────
+var QrCodeCell = {
+  props: { text: String, size: { type: Number, default: 80 } },
+  mounted() {
+    if (window.QRCode && this.text) {
+      var s = this.size
+      this.qrcode = new window.QRCode(this.$refs.box, {
+        text: this.text,
+        width: s,
+        height: s,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: window.QRCode.CorrectLevel.L
+      })
+    }
+  },
+  beforeUnmount() {
+    if (this.qrcode) this.qrcode.clear()
+  },
+  render() {
+    return h('div', { ref: 'box', style: 'line-height:0;display:inline-block', onClick: (e) => this.$emit('click', e) })
+  }
+}
+
 // ─── showByExpr 表达式解析器 ────────────────────────────────────
 // 支持语法：field op value [&& / || ...] 以及括号分组
 // op: = != > >= < <= = null != null
@@ -183,7 +207,7 @@ window.evalShowExpr = evalShowExpr
 
 const NovaTable = {
   name: 'NovaTable',
-  components: { NovaFormThis: window.NovaFormThis },
+  components: { NovaFormThis: window.NovaFormThis, QrCodeCell: QrCodeCell },
 
   props: {
     pickerMode:         { type: Boolean, default: false },
@@ -341,6 +365,13 @@ const NovaTable = {
       previewIndex:     0,
       previewIsOpForm:  false,
       slideDirection:  'right',
+      // 表格附件预览弹窗
+      tableAttachPreviewShow: false,
+      tableAttachPreviewField: null,
+      tableAttachPreviewUrls: [],
+      tableAttachPreviewType: null,
+      tableAttachPreviewIndex: 0,
+      videoHoverIdx: -1,
       attachmentDropdownKey: null,
       refSelectOptions:  {},   // { [field]: [{label, value}] }
       refSelectLoading:  {},   // { [field]: bool }
@@ -768,6 +799,61 @@ const NovaTable = {
           }
         }
 
+        if (col.type === 'ATTACHMENT') {
+          colDef.render = (row) => {
+            const val = row[col.field]
+            if (val === null || val === undefined || val === '') return ''
+            const urls = String(val).split(',').map(s => s.trim()).filter(Boolean)
+            if (!urls.length) return ''
+            const cfg = vm.attachmentMap && vm.attachmentMap[col.field]
+            const tableShowType = cfg && cfg.tableShowType ? cfg.tableShowType : 'TEXT'
+            const isMulti = urls.length > 1
+            const open = function() { vm.openTableAttachPreview({ field: col.field, title: col.title }, urls, tableShowType) }
+            if (tableShowType === 'IMAGE') {
+              const badge = isMulti ? h('span', { style: 'flex-shrink:0;cursor:pointer;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px', onClick: open }, '+' + (urls.length - 1)) : null
+              return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
+                default: () => '点击查看详情',
+                trigger: () => h('span', { style: 'display:inline-flex;align-items:center;gap:4px;cursor:pointer', onClick: open }, [
+                  h('img', { src: urls[0], style: 'width:20px;height:20px;object-fit:cover;border-radius:2px;display:block' }),
+                  badge
+                ])
+              })
+            }
+            if (tableShowType === 'QR_CODE') {
+              const badge = isMulti ? h('span', { style: 'flex-shrink:0;cursor:pointer;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px', onClick: open }, '+' + (urls.length - 1)) : null
+              return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
+                default: () => '点击查看详情',
+                trigger: () => h('span', { style: 'display:inline-flex;align-items:center;gap:4px;cursor:pointer', onClick: open }, [
+                  h(QrCodeCell, { text: urls[0], size: 20 }),
+                  badge
+                ])
+              })
+            }
+            if (tableShowType === 'VIDEO') {
+              const badge = isMulti ? h('span', { style: 'flex-shrink:0;cursor:pointer;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px', onClick: open }, '+' + (urls.length - 1)) : null
+              return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
+                default: () => '点击查看详情',
+                trigger: () => h('span', { style: 'display:inline-flex;align-items:center;gap:4px;cursor:pointer', onClick: open }, [
+                  h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:3px;background:#f0f0f0;font-size:14px' }, [
+                    h('iconify-icon', { icon: 'mdi:play-circle-outline', style: 'color:#555' })
+                  ]),
+                  badge
+                ])
+              })
+            }
+            if (tableShowType === 'DIALOG') {
+              return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
+                default: () => '点击查看详情',
+                trigger: () => h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:3px;background:#f0f0f0;font-size:16px;cursor:pointer', onClick: open }, [
+                  h('iconify-icon', { icon: 'mdi:paperclip', style: 'color:#888' })
+                ])
+              })
+            }
+            // TEXT：默认文本
+            return val
+          }
+        }
+
         cols.push(colDef)
       })
 
@@ -976,6 +1062,18 @@ const NovaTable = {
         }
       },
       deep: true
+    },
+    tableAttachPreviewIndex(val, oldVal) {
+      if (val === oldVal) return
+      var self = this
+      Vue.nextTick(function() {
+        // 重置所有悬浮预览视频和遮罩
+        document.querySelectorAll('.vplay-overlay').forEach(function(el) { el.style.opacity = '0' })
+        document.querySelectorAll('.nova-video-preview').forEach(function(el) {
+          if (el.readyState >= 1) { el.pause(); el.currentTime = 0.1 }
+        })
+        if (self._pvTimer) { clearTimeout(self._pvTimer); self._pvTimer = null }
+      })
     }
   },
 
@@ -2064,6 +2162,48 @@ const NovaTable = {
     },
     clearAttachmentDropdown() {
       this.attachmentDropdownKey = null
+    },
+    // 打开表格附件预览弹窗
+    openTableAttachPreview(field, urls, type) {
+      this.tableAttachPreviewField = field
+      this.tableAttachPreviewUrls = urls
+      this.tableAttachPreviewType = type
+      this.tableAttachPreviewIndex = 0
+      this.tableAttachPreviewShow = true
+    },
+    closeTableAttachPreview() {
+      this.tableAttachPreviewShow = false
+      this.tableAttachPreviewField = null
+      this.tableAttachPreviewUrls = []
+      this.tableAttachPreviewType = null
+      this.tableAttachPreviewIndex = 0
+    },
+    // ── 视频悬浮预览 ──
+    onVideoPreviewLoaded(e, idx) {
+      var v = e.currentTarget
+      var ph = v.parentElement.querySelector('.vthumb-placeholder')
+      if (ph) { ph.style.opacity = '0'; setTimeout(function() { if (ph) ph.style.display = 'none' }, 300) }
+      if (v.readyState >= 1) v.currentTime = 0.1
+    },
+    startVideoPreview(e, idx) {
+      if (this._pvTimer) { clearTimeout(this._pvTimer); this._pvTimer = null }
+      var card = document.querySelector('[data-vidx="' + idx + '"]')
+      if (!card) return
+      card.style.transform = 'translateY(-2px)'
+      var pv = card.querySelector('.nova-video-preview')
+      if (pv && pv.readyState >= 1) { pv.currentTime = 0; pv.muted = true; pv.play().catch(function() {}) }
+      var overlay = card.querySelector('.vplay-overlay')
+      if (overlay) overlay.style.opacity = '1'
+    },
+    stopVideoPreview(e, idx) {
+      if (this._pvTimer) { clearTimeout(this._pvTimer); this._pvTimer = null }
+      var card = document.querySelector('[data-vidx="' + idx + '"]')
+      if (!card) return
+      card.style.transform = ''
+      var pv = card.querySelector('.nova-video-preview')
+      if (pv && pv.readyState >= 1) { pv.pause(); pv.currentTime = 0.1 }
+      var overlay = card.querySelector('.vplay-overlay')
+      if (overlay) overlay.style.opacity = '0'
     },
     onFormFieldChange({ field, value }) {
       this.formData[field] = value
@@ -4206,7 +4346,104 @@ const NovaTable = {
           />
         </div>
       </Teleport>
+
+      <!-- 表格附件预览弹窗（放到主 div 内，保持单根节点，避免 transition 死锁） -->
+    <n-modal v-model:show="tableAttachPreviewShow" preset="card" style="width:760px;margin-top:60px;padding:0">
+      <template #header>
+        <div class="gallery-header">
+          <span class="gallery-title">{{ tableAttachPreviewField ? (tableAttachPreviewField.title || '附件预览') : '附件预览' }}</span>
+          <span v-if="tableAttachPreviewUrls.length > 0" class="gallery-count">{{ (tableAttachPreviewIndex || 0) + 1 }} / {{ tableAttachPreviewUrls.length }}</span>
+        </div>
+      </template>
+      <!-- IMAGE / QR_CODE -->
+      <div v-if="(tableAttachPreviewType === 'IMAGE' || tableAttachPreviewType === 'QR_CODE') && tableAttachPreviewUrls.length > 0" class="gallery-wrap">
+        <div class="gallery-body">
+          <div class="gallery-sider">
+            <div class="gallery-thumb-list">
+              <div v-for="(url, idx) in tableAttachPreviewUrls" :key="idx" class="gallery-thumb-item" @click="tableAttachPreviewIndex = idx">
+                <img v-if="tableAttachPreviewType === 'IMAGE'" :src="url" class="gallery-thumb-img" :class="{active: (tableAttachPreviewIndex || 0) === idx}" />
+                <div v-else class="gallery-thumb-img" :class="{active: (tableAttachPreviewIndex || 0) === idx}" style="display:flex;align-items:center;justify-content:center"><QrCodeCell :text="url" :size="40" /></div>
+              </div>
+            </div>
+          </div>
+          <div class="gallery-stage">
+            <img v-if="tableAttachPreviewType === 'IMAGE'" :src="tableAttachPreviewUrls[tableAttachPreviewIndex || 0]" class="gallery-main-img" />
+            <div v-else style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">
+              <QrCodeCell :key="tableAttachPreviewIndex" :text="tableAttachPreviewUrls[tableAttachPreviewIndex || 0]" :size="200" />
+            </div>
+          </div>
+        </div>
+        <div class="gallery-url-wrap" :title="'点击复制: ' + tableAttachPreviewUrls[tableAttachPreviewIndex || 0]" @click="copyText(tableAttachPreviewUrls[tableAttachPreviewIndex || 0])">
+          <div class="gallery-url-label">{{ tableAttachPreviewType === 'QR_CODE' ? '二维码内容' : '图片地址' }}</div>
+          <div class="gallery-url-text">{{ tableAttachPreviewUrls[tableAttachPreviewIndex || 0] }}</div>
+        </div>
+      </div>
+      <!-- VIDEO -->
+      <div v-else-if="tableAttachPreviewType === 'VIDEO' && tableAttachPreviewUrls.length > 0" style="padding:16px;display:flex;flex-direction:column;height:100%;box-sizing:border-box">
+        <!-- 大圆角包裹块 -->
+        <div style="border-radius:12px;overflow:hidden;display:flex;flex-direction:column;height:100%;box-shadow:0 2px 12px rgba(0,0,0,0.12);border:1px solid var(--n-border-color)">
+          <!-- 播放器块 -->
+          <div style="background:#000;position:relative;height:340px;flex-shrink:0">
+            <video :src="tableAttachPreviewUrls[tableAttachPreviewIndex || 0]" controls style="position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:contain" />
+          </div>
+          <!-- 列表块 -->
+          <div style="background:var(--n-color);padding:14px 14px 14px 14px;flex-shrink:0">
+          <div style="margin-bottom:10px;font-size:13px;color:var(--n-text-color-2);display:flex;align-items:center;gap:6px">
+            <iconify-icon icon="mdi:playlist-music" style="font-size:16px;color:var(--n-text-color-3)"></iconify-icon>
+            播放列表
+            <span style="background:var(--n-border-color);color:var(--n-text-color-3);border-radius:10px;padding:0 6px;font-size:11px;font-weight:500">{{ tableAttachPreviewUrls.length }}</span>
+          </div>
+          <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin">
+            <div v-for="(url, idx) in tableAttachPreviewUrls" :key="idx"
+              @click="tableAttachPreviewIndex = idx"
+              :style="{
+                flexShrink: 0, width: '100px', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer',
+                position: 'relative', transition: 'all .2s',
+                border: (tableAttachPreviewIndex || 0) === idx ? '2px solid #2563eb' : '2px solid var(--n-border-color)',
+                background: 'var(--n-color)',
+                boxShadow: (tableAttachPreviewIndex || 0) === idx ? '0 2px 10px rgba(37,99,235,0.15)' : '0 1px 4px rgba(0,0,0,0.05)',
+                marginTop: '2px'
+              }"
+              @mouseenter="startVideoPreview($event, idx)"
+              @mouseleave="stopVideoPreview($event, idx)"
+              :data-vidx="idx">
+              <!-- 缩略图 -->
+              <div style="position:relative;aspect-ratio:16/9;background:#111;overflow:hidden">
+                <video class="nova-video-preview" muted playsinline preload="metadata"
+                  :src="url"
+                  style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none"
+                  @loadedmetadata="onVideoPreviewLoaded($event, idx)"></video>
+                <div class="vthumb-placeholder"
+                  style="position:absolute;inset:0;background:linear-gradient(135deg,#e8edf5,#d5dce8);display:flex;align-items:center;justify-content:center;transition:opacity .3s">
+                  <iconify-icon icon="mdi:video-outline" style="font-size:28px;color:#b0b8c8"></iconify-icon>
+                </div>
+                <div class="vplay-overlay"
+                  style="position:absolute;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;z-index:2">
+                  <span style="font-size:28px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.6)">▶</span>
+                </div>
+              </div>
+              <div :style="{
+                padding:'6px 8px',fontSize:'12px',color: (tableAttachPreviewIndex || 0) === idx ? '#2563eb' : 'var(--n-text-color-2)',
+                textAlign:'center',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',
+                borderTop:'1px solid var(--n-border-color)'
+              }">视频 {{ idx + 1 }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+    <!-- DIALOG / TEXT -->
+      <div v-else class="preview-file-list">
+        <template v-for="(url, idx) in tableAttachPreviewUrls" :key="idx">
+          <div class="preview-file-row">
+            <span class="preview-file-url">{{ url }}</span>
+            <n-button size="tiny" @click="copyText(url)">复制</n-button>
+          </div>
+        </template>
+        <div v-if="tableAttachPreviewUrls.length === 0" class="preview-empty">暂无文件</div>
+      </div>
+    </n-modal>
+  </div>
   `
 }
 

@@ -432,7 +432,8 @@ public class TestDemoView {
                     attachmentType = @AttachmentType(
                             type = AttachmentType.Type.BASE,
                             showType = AttachmentType.ShowType.TOP,
-                            maxLimit = 3
+                            maxLimit = 3,
+                            tableShowType = AttachmentType.TableShowType.VIDEO
                     )
             )
     )
