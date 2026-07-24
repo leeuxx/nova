@@ -4348,7 +4348,7 @@ const NovaTable = {
       </Teleport>
 
       <!-- 表格附件预览弹窗（放到主 div 内，保持单根节点，避免 transition 死锁） -->
-    <n-modal v-model:show="tableAttachPreviewShow" preset="card" style="width:760px;margin-top:60px;padding:0">
+    <n-modal v-model:show="tableAttachPreviewShow" preset="card" style="width:760px;margin-top:60px;padding:0" :z-index="9999">
       <template #header>
         <div class="gallery-header">
           <span class="gallery-title">{{ tableAttachPreviewField ? (tableAttachPreviewField.title || '附件预览') : '附件预览' }}</span>
