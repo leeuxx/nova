@@ -19,7 +19,9 @@ var NovaRefForm = {
       choiceMap: {},
       dateMap: {},
       booleanMap: {},
-      attachmentMap: {}
+      attachmentMap: {},
+      appendageMap: {},
+      appendageData: {}
     }
   },
 
@@ -43,6 +45,7 @@ var NovaRefForm = {
           self.dateMap       = resp.data.date       || {}
           self.booleanMap    = resp.data.booleanInfo || {}
           self.attachmentMap = resp.data.attachment  || {}
+          self.appendageMap  = resp.data.appendage   || {}
           console.log('[ref] build response nova=' + self.refNovaName, 'choiceKeys=', Object.keys(self.choiceMap))
         }
       })
@@ -60,13 +63,61 @@ var NovaRefForm = {
       }
       window.NovaTableJQ_ref.fetchRefDetails(this.refNovaName, fkValue, function(data) {
         self.viewData = data
+        self.$nextTick(function() { self._loadAppendageDetails() })
       })
     },
 
-    // 获取格式化后的文本值
+    // 懒加载所有 APPENDAGE 字段的详情
+    _loadAppendageDetails: function() {
+      var self = this
+      if (!this.viewData || !this.appendageMap) return
+      var loaded = {}
+      this.refColumns.forEach(function(col) {
+        if (col.type !== 'APPENDAGE') return
+        var dotIdx = col.field.indexOf('.')
+        var base = dotIdx > -1 ? col.field.slice(0, dotIdx) : col.field
+        if (loaded[base]) return
+        loaded[base] = true
+        var appInfo = self.appendageMap[base]
+        if (!appInfo || !appInfo.referenceName) return
+        var fkValue = appInfo.storageField ? self.viewData[appInfo.storageField] : null
+        if (!fkValue) return
+        window.fetchApi.post('/nova/table/details', {
+          novaName: appInfo.referenceName,
+          storageFieldValue: String(fkValue)
+        }).then(function(resp) {
+          if (!resp.data) return
+          var newData = Object.assign({}, self.appendageData)
+          newData[base] = resp.data
+          self.appendageData = newData
+        })
+      })
+    },
+
+    // 从行数据中取值，支持嵌套字段名（如 "manager.name"）
+    _getVal: function(col, row) {
+      var dotIdx = col.field.indexOf('.')
+      if (dotIdx > -1) {
+        var base = col.field.slice(0, dotIdx)
+        var prop = col.field.slice(dotIdx + 1)
+        // APPENDAGE：从独立加载的 appendageData 中取值
+        if (col.type === 'APPENDAGE') {
+          var appData = this.appendageData[base]
+          if (appData) return String(appData[prop] != null ? appData[prop] : '')
+          return ''
+        }
+        // REFERENCE 等：从行数据的嵌套对象中取值
+        var nested = row[base]
+        if (nested && typeof nested === 'object') return String(nested[prop] != null ? nested[prop] : '')
+        return ''
+      }
+      var v = row[col.field]
+      return v != null ? v : ''
+    },
+
     formatText: function(col, row) {
-      var val = row[col.field]
-      if (val === null || val === undefined) return ''
+      var val = this._getVal(col, row)
+      if (val === null || val === undefined || val === '') return ''
 
       // REFERENCE
       if (col.type === 'REFERENCE') {
