@@ -3428,6 +3428,7 @@ const NovaTable = {
                   :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
                   :show-button="false" :bordered="false" style="flex:1;min-width:0"
                 />
+                <span class="number-vague-icon"><iconify-icon icon="mdi:numeric" style="font-size:16px;display:block" /></span>
                 <span class="number-vague-sep">—</span>
                 <n-input-number
                   v-model:value="filterForm[field.field][1]"
