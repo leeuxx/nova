@@ -121,7 +121,8 @@ public class NovaFieldUtils {
                         .setDesc(view.desc())
                         .setWidth(view.width())
                         .setSortable(view.sortable())
-                        .setType(novaFieldInfo.getType());
+                        .setType(novaFieldInfo.getType())
+                        .setDefaultValue(view.defaultValue());
                 tableColumnInfos.add(tableColumnInfo);
             }
         });
@@ -718,6 +719,9 @@ public class NovaFieldUtils {
 
         @Comment("类型")
         private Edit.Type type;
+
+        @Comment("缺省值")
+        private String defaultValue;
 
     }
 

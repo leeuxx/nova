@@ -158,8 +158,8 @@ public class TestDemoView {
 
     @NovaField(
             views = {
-                    @View(title = "部门名称", column = "name", width = "10%"),
-                    @View(title = "部门说明", column = "msg", width = "10%")
+                    @View(title = "部门名称", column = "name", width = "10%", defaultValue = "-"),
+                    @View(title = "部门说明", column = "msg", width = "10%", defaultValue = "-")
             },
             edit = @Edit(
                     title = "部门信息",
@@ -269,7 +269,7 @@ public class TestDemoView {
     private String sex;
 
     @NovaField(
-            views = @View(title = "爱好", width = "10%", sortable = true),
+            views = @View(title = "爱好", width = "10%", sortable = true, defaultValue = "-"),
             edit = @Edit(
                     title = "爱好",
                     notNull = true,
@@ -356,7 +356,7 @@ public class TestDemoView {
     private String text;
 
     @NovaField(
-            views = @View(title = "状态", width = "10%"),
+            views = @View(title = "状态", width = "10%", defaultValue = "-"),
             edit = @Edit(
                     title = "状态",
                     type = Edit.Type.BOOLEAN,
@@ -370,7 +370,7 @@ public class TestDemoView {
     private Boolean status;
 
     @NovaField(
-            views = @View(title = "长度", width = "10%"),
+            views = @View(title = "长度", width = "10%", defaultValue = "-"),
             edit = @Edit(
                     title = "长度",
                     type = Edit.Type.NUMBER,
@@ -393,7 +393,7 @@ public class TestDemoView {
 
 
     @NovaField(
-            views = @View(title = "标签", width = "10%"),
+            views = @View(title = "标签", width = "10%", defaultValue = "-"),
             edit = @Edit(
                     title = "标签",
                     type = Edit.Type.TAG,

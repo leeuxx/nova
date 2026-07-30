@@ -131,6 +131,9 @@ public class NovaTableBuild {
             @Comment("类型")
             private String type;
 
+            @Comment("缺省值")
+            private String defaultValue;
+
         }
 
         @Data

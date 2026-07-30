@@ -770,14 +770,22 @@ const NovaTable = {
           colDef.key = col.field
           colDef.render = (row) => {
             const v = row[col.field + '_display']
-            return (v === null || v === undefined) ? '' : String(v)
+            if (v === null || v === undefined) return ''
+            const s = String(v)
+            if (!s) return ''
+            if (/<[a-z]+[\s>]/i.test(s)) return h('span', { innerHTML: s })
+            return s
           }
         }
 
         if (col.type === 'APPENDAGE') {
           colDef.render = (row) => {
             const v = row[col.field + '_display']
-            return (v === null || v === undefined) ? '' : String(v)
+            if (v === null || v === undefined) return ''
+            const s = String(v)
+            if (!s) return ''
+            if (/<[a-z]+[\s>]/i.test(s)) return h('span', { innerHTML: s })
+            return s
           }
         }
 
@@ -856,6 +864,52 @@ const NovaTable = {
 
         cols.push(colDef)
       })
+
+      // 兜底渲染：自动检测字符串是否含 HTML 标签
+      function getFieldValue(row, path) {
+        var parts = String(path).split('.')
+        var val = row
+        for (var i = 0; i < parts.length; i++) {
+          if (val === null || val === undefined) return undefined
+          val = val[parts[i]]
+        }
+        return val
+      }
+      cols.forEach(function(c) {
+        if (c.render) return
+        c.render = function(row) {
+          var v = getFieldValue(row, c.key)
+          if (v === null || v === undefined) return ''
+          var s = String(v)
+          if (!s) return ''
+          if (/<[a-z]+[\s>]/i.test(s)) {
+            return h('span', { innerHTML: s })
+          }
+          return s
+        }
+      })
+
+      // defaultValue：值为空时显示默认文本
+      ;(function() {
+        var dvMap = {}
+        vm.tableColumns.forEach(function(tc) { if (tc.defaultValue) dvMap[tc.field] = tc.defaultValue })
+        console.log('[dvMap]', dvMap)
+        if (Object.keys(dvMap).length) {
+          cols.forEach(function(c) {
+            var dv = dvMap[c.key]
+            if (!dv) return
+            var origRender = c.render
+            c.render = function(row) {
+              var v = getFieldValue(row, c.key)
+              console.log('[dv]', c.key, v, dv)
+              if (v === null || v === undefined || v === '') {
+                return h('span', { innerHTML: String(dv) })
+              }
+              return origRender ? origRender.apply(this, arguments) : String(v)
+            }
+          })
+        }
+      })()
 
       if (!vm.pickerMode && window.NovaTableButtons.hasRowActions(vm)) {
         cols.push({

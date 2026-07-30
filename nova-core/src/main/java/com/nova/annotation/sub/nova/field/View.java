@@ -22,4 +22,7 @@ public @interface View {
     @Comment("排序列")
     boolean sortable() default false;
 
+    @Comment("缺省值")
+    String defaultValue() default "";
+
 }

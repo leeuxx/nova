@@ -70,6 +70,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                     .setWidth(tableColumn.getWidth())
                     .setSortable(tableColumn.getSortable())
                     .setType(tableColumn.getType().name())
+                    .setDefaultValue(tableColumn.getDefaultValue())
             );
         }
         vo.setTableColumns(tableColumnList);

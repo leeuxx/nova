@@ -68,12 +68,17 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         }
         List<TestDemoView> testDemoViews = new ArrayList<>();
         for (TestDemo record : records) {
+            record.setTel(String.format("<a href='%s'>%s</a>", record.getTel(), record.getTel()));
+
             TestDemoView testDemoView = new TestDemoView();
             BeanUtils.copyProperties(record, testDemoView); // 源，目标
             for (TestDemo2 testDemo2 : testDemo2s) {
                 if (testDemo2.getId().equals(record.getDemo2Id())) {
                     TestDemo2View testDemo2View = new TestDemo2View();
                     BeanUtils.copyProperties(testDemo2, testDemo2View); // 源，目标
+
+                    testDemo2View.setName(String.format("<div style='color:red'>%s</div>", testDemo2View.getName()));
+
                     testDemoView.setTestDemo2View(testDemo2View);
                 }
             }
@@ -130,12 +135,17 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         }
         // 根节点处理
         for (TestDemo record : rootList) {
+            record.setTel(String.format("<a href='%s'>%s</a>", record.getTel(), record.getTel()));
+
             TestDemoView testDemoView = new TestDemoView();
             BeanUtils.copyProperties(record, testDemoView); // 源，目标
             for (TestDemo2 testDemo2 : testDemo2s) {
                 if (testDemo2.getId().equals(record.getDemo2Id())) {
                     TestDemo2View testDemo2View = new TestDemo2View();
                     BeanUtils.copyProperties(testDemo2, testDemo2View); // 源，目标
+
+                    testDemo2View.setName(String.format("<div style='color:red'>%s</div>", testDemo2View.getName()));
+
                     testDemoView.setTestDemo2View(testDemo2View);
                 }
             }
@@ -150,6 +160,8 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         }
         // 子节点处理
         for (TestDemo record : childrenList) {
+            record.setTel(String.format("<a href='%s'>%s</a>", record.getTel(), record.getTel()));
+
             TestDemoView testDemoView = new TestDemoView();
             BeanUtils.copyProperties(record, testDemoView); // 源，目标
             testDemoView.setTestDemoView(new TestDemoView()
@@ -159,6 +171,9 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
                 if (testDemo2.getId().equals(record.getDemo2Id())) {
                     TestDemo2View testDemo2View = new TestDemo2View();
                     BeanUtils.copyProperties(testDemo2, testDemo2View); // 源，目标
+
+                    testDemo2View.setName(String.format("<div style='color:red'>%s</div>", testDemo2View.getName()));
+
                     testDemoView.setTestDemo2View(testDemo2View);
                 }
             }
