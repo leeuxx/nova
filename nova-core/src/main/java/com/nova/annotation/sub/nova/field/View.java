@@ -1,6 +1,7 @@
 package com.nova.annotation.sub.nova.field;
 
 import com.nova.annotation.config.Comment;
+import com.nova.annotation.sub.nova.row.ExprBool;
 
 public @interface View {
 
@@ -17,7 +18,7 @@ public @interface View {
     String width() default "";
 
     @Comment("是否显示")
-    boolean show() default true;
+    ExprBool show() default @ExprBool;
 
     @Comment("排序列")
     boolean sortable() default false;

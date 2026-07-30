@@ -5,6 +5,7 @@ import com.nova.annotation.config.Comment;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
+import com.nova.annotation.sub.nova.row.ExprBool;
 import com.nova.config.NovaApplication;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -111,19 +112,34 @@ public class NovaFieldUtils {
             boolean isDivide = type == Edit.Type.DIVIDE;
             boolean isEmpty = type == Edit.Type.EMPTY;
             for (View view : views) {
-                if (!view.show() || isAppendages || isLink || isButton || isDivide || isEmpty) {
+                ExprBool exprBool = view.show();
+                boolean show = exprBool.value();
+                if (!show || isAppendages || isLink || isButton || isDivide || isEmpty) {
                     continue;
                 }
-                String fieldName = isReference ? field + "." + view.column() : field;
-                TableColumnInfo tableColumnInfo = new TableColumnInfo()
-                        .setField(fieldName)
-                        .setTitle(view.title())
-                        .setDesc(view.desc())
-                        .setWidth(view.width())
-                        .setSortable(view.sortable())
-                        .setType(novaFieldInfo.getType())
-                        .setDefaultValue(view.defaultValue());
-                tableColumnInfos.add(tableColumnInfo);
+                Class<? extends ExprBool.ExprHandler>[] handlers = exprBool.exprHandler();
+                if (handlers.length > 0) {
+                    String params = exprBool.params();
+                    for (Class<? extends ExprBool.ExprHandler> handlerClass : handlers) {
+                        ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlerClass);
+                        if (!handler.handler(params)) {
+                            show = false;
+                            break;
+                        }
+                    }
+                }
+                if (show) {
+                    String fieldName = isReference ? field + "." + view.column() : field;
+                    TableColumnInfo tableColumnInfo = new TableColumnInfo()
+                            .setField(fieldName)
+                            .setTitle(view.title())
+                            .setDesc(view.desc())
+                            .setWidth(view.width())
+                            .setSortable(view.sortable())
+                            .setType(novaFieldInfo.getType())
+                            .setDefaultValue(view.defaultValue());
+                    tableColumnInfos.add(tableColumnInfo);
+                }
             }
         });
         return tableColumnInfos;
