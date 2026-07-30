@@ -3426,9 +3426,8 @@ const NovaTable = {
                   :min="numberMap[field.field] && numberMap[field.field].min"
                   :max="numberMap[field.field] && numberMap[field.field].max"
                   :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
-                  :show-button="false" :bordered="false" style="flex:1;min-width:0"
+                  :show-button="false" :bordered="false" clearable style="flex:1;min-width:0"
                 />
-                <span class="number-vague-icon"><iconify-icon icon="mdi:numeric" style="font-size:16px;display:block" /></span>
                 <span class="number-vague-sep">—</span>
                 <n-input-number
                   v-model:value="filterForm[field.field][1]"
@@ -3436,9 +3435,8 @@ const NovaTable = {
                   :min="numberMap[field.field] && numberMap[field.field].min"
                   :max="numberMap[field.field] && numberMap[field.field].max"
                   :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
-                  :show-button="false" :bordered="false" style="flex:1;min-width:0"
+                  :show-button="false" :bordered="false" clearable style="flex:1;min-width:0"
                 />
-                <span class="number-vague-icon"><iconify-icon icon="mdi:numeric" style="font-size:16px;display:block" /></span>
               </div>
               <n-input-number v-else-if="field.type === 'NUMBER'"
                 v-model:value="filterForm[field.field]"

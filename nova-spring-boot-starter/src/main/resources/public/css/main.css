@@ -500,7 +500,6 @@ body.dark { background: #151515 !important; }
 .number-vague-field:hover  { border-color: #2080f0; }
 .number-vague-field:focus-within { border-color: #2080f0; box-shadow: 0 0 0 2px rgba(32,128,240,0.2); }
 .number-vague-sep          { flex-shrink: 0; color: #ccc; font-size: 12px; padding: 0 4px; line-height: 1; }
-.number-vague-icon         { flex-shrink: 0; display: flex; align-items: center; padding: 0 6px; color: #c2c2cc; }
 /* 去掉内部 n-input-number 的选中边框（容器自己用 focus-within 控制） */
 .number-vague-field .n-input-number .n-input {
   box-shadow: none !important;
@@ -516,7 +515,6 @@ body.dark { background: #151515 !important; }
 .dark .number-vague-field:hover  { border-color: #2080f0; }
 .dark .number-vague-field:focus-within { border-color: #2080f0; box-shadow: 0 0 0 2px rgba(37,99,235,0.35); }
 .dark .number-vague-sep          { color: #888; }
-.dark .number-vague-icon         { color: #888; }
 
 /* ─── 弹窗表单字段标签（title） ──────────────────────── */
 .edit-form-label       { font-size: 13px; color: #333; display: inline-flex; align-items: center; gap: 2px; }
