@@ -716,9 +716,11 @@ body.dark { background: #151515 !important; }
 .ref-descriptions-table {
   width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  border-radius: 6px;
+  overflow: hidden;
 }
 .ref-descriptions-table tr th,
 .ref-descriptions-table tr td {
