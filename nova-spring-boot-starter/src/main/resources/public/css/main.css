@@ -697,3 +697,107 @@ body.dark { background: #151515 !important; }
   border-radius: 1px;
 }
 
+/* ─── REFERENCE 引用详情 descriptions ──────────────── */
+.ref-descriptions-wrapper {
+  width: 100%;
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #bbb transparent;
+}
+.ref-descriptions-wrapper::-webkit-scrollbar { width: 6px; }
+.ref-descriptions-wrapper::-webkit-scrollbar-track { background: transparent; border-radius: 3px; }
+.ref-descriptions-wrapper::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+.ref-descriptions-wrapper::-webkit-scrollbar-thumb:hover { background: #999; }
+.dark .ref-descriptions-wrapper { scrollbar-color: #555 transparent; }
+.dark .ref-descriptions-wrapper::-webkit-scrollbar-track { background: transparent; }
+.dark .ref-descriptions-wrapper::-webkit-scrollbar-thumb { background: #555; }
+.dark .ref-descriptions-wrapper::-webkit-scrollbar-thumb:hover { background: #777; }
+.ref-descriptions-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+.ref-descriptions-table tr th,
+.ref-descriptions-table tr td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: left;
+}
+.ref-descriptions-table tr:last-child th,
+.ref-descriptions-table tr:last-child td {
+  border-bottom: none;
+}
+.ref-descriptions-table tr th {
+  width: 15%;
+  background: #fafafa;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-right: 1px solid #e0e0e0;
+}
+.ref-descriptions-table tr td {
+  width: 85%;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ref-descriptions-table tr td .ref-attach-wrap {
+  white-space: normal;
+}
+.dark .ref-descriptions-table {
+  border-color: #333;
+}
+.dark .ref-descriptions-table tr th,
+.dark .ref-descriptions-table tr td {
+  border-bottom-color: #333;
+  color: #e0e0e0;
+}
+.dark .ref-descriptions-table tr th {
+  background: #1a1a1a;
+  border-right-color: #333;
+}
+
+/* ─── BOOLEAN 彩色徽章 ─────────────────────────── */
+.ref-boolean-pill {
+  display: inline-block;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 22px;
+  font-weight: 500;
+  color: #fff;
+}
+.ref-boolean-true  { background: #18a058; }
+.ref-boolean-false { background: #d03050; }
+
+/* ─── CHOICE 标签 ─────────────────────────────── */
+.ref-choice-tag {
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+/* ─── ATTACHMENT 缩略图 ───────────────────────── */
+.ref-attach-wrap {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.ref-attach-thumb {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.ref-attach-thumb:hover { opacity: .8; }
+.dark .ref-attach-thumb { border-color: #333; }
+
