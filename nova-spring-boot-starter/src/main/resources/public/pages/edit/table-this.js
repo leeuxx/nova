@@ -2,7 +2,7 @@
 ;(function () {
 
 const { NInput, NSelect, NInputNumber, NDatePicker, NCheckboxGroup, NCheckbox,
-       NRadioGroup, NRadio, NSpace, NDivider, NTooltip, NTag } = naive
+       NRadioGroup, NRadio, NSpace, NDivider, NTooltip, NTag, NSwitch } = naive
 
 window.NovaFormThis = {
   name: 'NovaFormThis',
@@ -19,6 +19,7 @@ window.NovaFormThis = {
     tagMap:         { type: Object, default: function() { return {} } },
     attachmentMap:  { type: Object, default: function() { return {} } },
     buttons:        { type: Object, default: function() { return {} } },
+    booleanMap:     { type: Object, default: function() { return {} } },
     novaName:       { type: String, default: '' },
     formMode:       { type: String, default: 'add' },
     formTab:        { type: String, default: 'form' }
@@ -213,6 +214,14 @@ window.NovaFormThis = {
         :disabled="isReadonly(f)"
         clearable
         @update:value="onFieldUpdate(f.field, $event)" />
+      <div v-else-if="f.type === 'BOOLEAN' && (booleanMap[f.field] || {}).type === 'SWITCH'"
+        style="display:flex;align-items:center;gap:8px;padding-top:2px">
+        <n-switch
+          :value="formData[f.field] === 'true'"
+          :disabled="isReadonly(f)"
+          @update:value="(v) => onFieldUpdate(f.field, v ? 'true' : 'false')" />
+        <span style="font-size:13px;color:#666">{{ formData[f.field] === 'true' ? '是' : '否' }}</span>
+      </div>
       <n-select
         v-else-if="f.type === 'BOOLEAN'"
         :value="formData[f.field]"

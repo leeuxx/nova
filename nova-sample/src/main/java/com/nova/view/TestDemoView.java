@@ -361,7 +361,8 @@ public class TestDemoView {
                     title = "状态",
                     type = Edit.Type.BOOLEAN,
                     booleanType = @BooleanType(
-                            type = BooleanType.Type.SWITCH
+                            type = BooleanType.Type.SWITCH,
+                            tableType = BooleanType.Type.SWITCH
                     ),
                     search = @Search
             )
@@ -541,6 +542,15 @@ public class TestDemoView {
                 )
         )
         private String msg;
+
+        @NovaField(
+                edit = @Edit(
+                        title = "状态",
+                        type = Edit.Type.BOOLEAN,
+                        booleanType = @BooleanType
+                )
+        )
+        private Boolean status;
 
         @NovaField(
                 edit = @Edit(

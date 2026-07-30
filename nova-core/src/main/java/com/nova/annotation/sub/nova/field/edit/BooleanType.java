@@ -7,6 +7,9 @@ public @interface BooleanType {
     @Comment("类型")
     Type type() default Type.DEFAULT;
 
+    @Comment("在表格中类型")
+    Type tableType() default Type.DEFAULT;
+
     enum Type {
         @Comment("默认")
         DEFAULT,

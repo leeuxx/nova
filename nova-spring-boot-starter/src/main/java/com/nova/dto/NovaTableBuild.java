@@ -295,9 +295,11 @@ public class NovaTableBuild {
         @Accessors(chain = true)
         public static class BooleanInfo {
 
-            @Comment("布尔值类型")
+            @Comment("类型")
             private String type;
 
+            @Comment("表格中显示类型")
+            private String tableType;
         }
 
         @Data

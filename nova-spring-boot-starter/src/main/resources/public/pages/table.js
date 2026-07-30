@@ -717,7 +717,7 @@ const NovaTable = {
             if (val === null || val === undefined || val === '') return ''
             const isTrue = String(val).toLowerCase() === 'true'
             const bInfo = vm.booleanMap && vm.booleanMap[col.field]
-            if (bInfo && bInfo.type === 'SWITCH') {
+            if (bInfo && bInfo.tableType === 'SWITCH') {
               const novaName = vm.novaName
               const novaIdField = vm.novaIdFieldName
               const editField = (vm.editFields || []).find(function(f) { return f.field === col.field })
@@ -3849,6 +3849,7 @@ const NovaTable = {
               :tag-map="tagMap"
               :attachment-map="attachmentMap"
               :buttons="buttons"
+              :boolean-map="booleanMap"
               :nova-name="novaName"
               :form-mode="formMode"
               :form-tab="formTab"
@@ -4071,6 +4072,13 @@ const NovaTable = {
                   v-model:value="opFormData[f.field]" :options="opFieldOpts(f)"
                   :placeholder="'请选择' + f.title" clearable
                   @update:value="onOpChoiceUpdate(f.field)" />
+                <div v-else-if="f.type === 'BOOLEAN' && (opFormBooleanMap[f.field] || {}).type === 'SWITCH'"
+                  style="display:flex;align-items:center;gap:8px;padding-top:2px">
+                  <n-switch
+                    :value="opFormData[f.field] === 'true'"
+                    @update:value="(v) => opFormData[f.field] = v ? 'true' : 'false'" />
+                  <span style="font-size:13px;color:#666">{{ opFormData[f.field] === 'true' ? '是' : '否' }}</span>
+                </div>
                 <n-select
                   v-else-if="f.type === 'BOOLEAN'"
                   v-model:value="opFormData[f.field]"
@@ -4196,6 +4204,13 @@ const NovaTable = {
                     :placeholder="'请选择' + f.title"
                     :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
                     clearable @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
+                  <div v-else-if="f.type === 'BOOLEAN' && ((opFormAppBuild(tab.tapNovaName).booleanMap || {})[f.field] || {}).type === 'SWITCH'"
+                    style="display:flex;align-items:center;gap:8px;padding-top:2px">
+                    <n-switch
+                      :value="opFormAppData(tab.tapNovaName)[f.field] === 'true'"
+                      @update:value="(v) => opFormAppSetFd(tab.tapNovaName, f.field, v ? 'true' : 'false')" />
+                    <span style="font-size:13px;color:#666">{{ opFormAppData(tab.tapNovaName)[f.field] === 'true' ? '是' : '否' }}</span>
+                  </div>
                   <n-select
                     v-else-if="f.type === 'BOOLEAN'"
                     :value="opFormAppData(tab.tapNovaName)[f.field]" :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"

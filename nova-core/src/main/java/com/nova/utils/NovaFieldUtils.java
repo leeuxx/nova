@@ -440,7 +440,8 @@ public class NovaFieldUtils {
             if (edit.type() == Edit.Type.BOOLEAN) {
                 BooleanType booleanType = edit.booleanType();
                 BooleanInfo booleanInfo = new BooleanInfo()
-                        .setType(booleanType.type());
+                        .setType(booleanType.type())
+                        .setTableType(booleanType.tableType());
                 booleanInfos.put(field, booleanInfo);
             }
         });
@@ -868,8 +869,11 @@ public class NovaFieldUtils {
     @Accessors(chain = true)
     public static class BooleanInfo {
 
-        @Comment("布尔值类型")
+        @Comment("类型")
         private BooleanType.Type type;
+
+        @Comment("在表格中类型")
+        private BooleanType.Type tableType;
 
     }
 

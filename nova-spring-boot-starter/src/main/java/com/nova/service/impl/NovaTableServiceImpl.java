@@ -172,7 +172,8 @@ public class NovaTableServiceImpl implements NovaTableService {
         Map<String, NovaFieldUtils.BooleanInfo> booleanInfos = NovaFieldUtils.getBoolean(novaTableBuild.getNovaName());
         booleanInfos.forEach((field, booleanInfo) -> {
             NovaTableBuild.Vo.BooleanInfo booleanObj = new NovaTableBuild.Vo.BooleanInfo()
-                    .setType(booleanInfo.getType().name());
+                    .setType(booleanInfo.getType().name())
+                    .setTableType(booleanInfo.getTableType().name());
             booleanMap.put(field, booleanObj);
         });
         vo.setBooleanInfo(booleanMap);

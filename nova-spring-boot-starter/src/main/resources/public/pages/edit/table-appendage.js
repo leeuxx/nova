@@ -3,7 +3,7 @@
 ;(function () {
 
 const { NInput, NSelect, NInputNumber, NDatePicker, NCheckboxGroup, NCheckbox,
-       NRadioGroup, NRadio, NSpace, NDivider, NTooltip } = naive
+       NRadioGroup, NRadio, NSpace, NDivider, NTooltip, NSwitch } = naive
 
 window.NovaAppForm = {
   name: 'NovaAppForm',
@@ -160,6 +160,14 @@ window.NovaAppForm = {
         :value="formData[f.field]" :options="fieldOptions(f)"
         :placeholder="'请选择'+f.title" :status="formErrors[f.field]?'error':undefined"
         :disabled="isReadonly(f)" clearable @update:value="onFieldUpdate(f.field, $event)" />
+      <div v-else-if="f.type === 'BOOLEAN' && (buildData.booleanMap || {})[f.field] && (buildData.booleanMap || {})[f.field].type === 'SWITCH'"
+        style="display:flex;align-items:center;gap:8px;padding-top:2px">
+        <n-switch
+          :value="formData[f.field] === 'true'"
+          :disabled="isReadonly(f)"
+          @update:value="(v) => onFieldUpdate(f.field, v ? 'true' : 'false')" />
+        <span style="font-size:13px;color:#666">{{ formData[f.field] === 'true' ? '是' : '否' }}</span>
+      </div>
       <n-select v-else-if="f.type === 'BOOLEAN'"
         :value="formData[f.field]" :options="[{label:'\\u662f',value:'true'},{label:'\\u5426',value:'false'}]"
         :placeholder="'请选择'+f.title" :status="formErrors[f.field]?'error':undefined"
