@@ -159,7 +159,7 @@ public class TestDemoView {
     @NovaField(
             views = {
                     @View(title = "部门名称", column = "name", width = "10%", defaultValue = "-"),
-                    @View(title = "部门说明", column = "msg", width = "10%", defaultValue = "-")
+                    @View(title = "部门状态", column = "status", width = "10%", defaultValue = "-")
             },
             edit = @Edit(
                     title = "部门信息",

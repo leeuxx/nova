@@ -73,7 +73,7 @@ public class NovaFieldUtils {
                     .setVague(search.vague())
                     .setSort(search.sort());
             // 选择组件tap级搜索处理
-            if (edit.type() == Edit.Type.CHOICE) {
+            if (novaFieldInfo.getType() == Edit.Type.CHOICE) {
                 TapSearch tapSearchInfo = edit.choiceType().tapSearch();
                 if (tapSearch[0] == null && tapSearchInfo.value()) {
                     tapSearch[0] = tapSearchInfo;
@@ -103,8 +103,7 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             View[] views = novaField.views();
-            Edit edit = novaField.edit();
-            Edit.Type type = edit.type();
+            Edit.Type type = novaFieldInfo.getType();
             boolean isReference = (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE || type == Edit.Type.LINK_TARGET);
             boolean isAppendages = type == Edit.Type.APPENDAGES;
             boolean isLink = type == Edit.Type.LINK;
@@ -129,14 +128,21 @@ public class NovaFieldUtils {
                     }
                 }
                 if (show) {
-                    String fieldName = isReference ? field + "." + view.column() : field;
+                    Edit.Type findType = type;
+                    String fieldName = field;
+                    if (isReference) {
+                        NovaApplication.ScanNova referenceScanNova = scanNovas.get(novaFieldInfo.getFieldClass().getSimpleName());
+                        Map<String, NovaApplication.ScanNova.NovaFieldInfo> referenceNovaFields = referenceScanNova.getNovaFields();
+                        findType = referenceNovaFields.get(view.column()).getType();
+                        fieldName = field + "." + view.column();
+                    }
                     TableColumnInfo tableColumnInfo = new TableColumnInfo()
                             .setField(fieldName)
                             .setTitle(view.title())
                             .setDesc(view.desc())
                             .setWidth(view.width())
                             .setSortable(view.sortable())
-                            .setType(novaFieldInfo.getType())
+                            .setType(findType)
                             .setDefaultValue(view.defaultValue());
                     tableColumnInfos.add(tableColumnInfo);
                 }
@@ -166,7 +172,7 @@ public class NovaFieldUtils {
             // 自身详情tap
             if (edit.show()) {
                 // 排除附属对象、附属集合、集合引用
-                if (edit.type() != Edit.Type.APPENDAGE && edit.type() != Edit.Type.APPENDAGES && edit.type() != Edit.Type.LINK) {
+                if (novaFieldInfo.getType() != Edit.Type.APPENDAGE && novaFieldInfo.getType() != Edit.Type.APPENDAGES && novaFieldInfo.getType() != Edit.Type.LINK) {
                     Readonly readonly = edit.readonly();
                     EditInfo.ThisForm thisForm = new EditInfo.ThisForm()
                             .setField(field)
@@ -183,7 +189,7 @@ public class NovaFieldUtils {
                 }
             }
             // 附属对象tap
-            if (edit.type() == Edit.Type.APPENDAGE) {
+            if (novaFieldInfo.getType() == Edit.Type.APPENDAGE) {
                 AppendageType appendageType = edit.appendageType();
                 boolean tapShow = NovaUtils.exprBool(appendageType.tapShow(), appendageType.show());
                 if (tapShow) {
@@ -199,7 +205,7 @@ public class NovaFieldUtils {
                 }
             }
             // 附属集合tap
-            if (edit.type() == Edit.Type.APPENDAGES) {
+            if (novaFieldInfo.getType() == Edit.Type.APPENDAGES) {
                 AppendageType appendageType = edit.appendageType();
                 boolean tapShow = NovaUtils.exprBool(appendageType.tapShow(), appendageType.show());
                 if (tapShow) {
@@ -215,7 +221,7 @@ public class NovaFieldUtils {
                 }
             }
             // 集合引用tap
-            if (edit.type() == Edit.Type.LINK) {
+            if (novaFieldInfo.getType() == Edit.Type.LINK) {
                 LinkType linkType = edit.linkType();
                 boolean tapShow = NovaUtils.exprBool(linkType.tapShow(), linkType.show());
                 if (tapShow) {
@@ -231,7 +237,7 @@ public class NovaFieldUtils {
                 }
             }
             // 引用详情tap
-            if (edit.type() == Edit.Type.REFERENCE) {
+            if (novaFieldInfo.getType() == Edit.Type.REFERENCE) {
                 ReferenceType referenceType = edit.referenceType();
                 boolean tapShow = NovaUtils.exprBool(referenceType.tapShow(), referenceType.show());
                 if (tapShow) {
@@ -296,7 +302,7 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            if (edit.type() == Edit.Type.CHOICE) {
+            if (novaFieldInfo.getType() == Edit.Type.CHOICE) {
                 ChoiceType choiceType = edit.choiceType();
                 ChoiceInfo choiceInfo = new ChoiceInfo()
                         .setSelectType(choiceType.selectType())
@@ -354,7 +360,7 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            if (edit.type() == Edit.Type.TAG) {
+            if (novaFieldInfo.getType() == Edit.Type.TAG) {
                 TagType tagType = edit.tagType();
                 // 静态选择列表
                 String[] staticTags = tagType.tags();
@@ -396,7 +402,7 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            if (edit.type() == Edit.Type.DATE) {
+            if (novaFieldInfo.getType() == Edit.Type.DATE) {
                 DateType dateType = edit.dateType();
                 DateInfo dateInfo = new DateInfo()
                         .setType(dateType.type())
@@ -424,7 +430,7 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            if (edit.type() == Edit.Type.NUMBER) {
+            if (novaFieldInfo.getType() == Edit.Type.NUMBER) {
                 NumberType numberType = edit.numberType();
                 NumberInfo numberInfo = new NumberInfo()
                         .setType(numberType.type())
@@ -454,7 +460,7 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            if (edit.type() == Edit.Type.BOOLEAN) {
+            if (novaFieldInfo.getType() == Edit.Type.BOOLEAN) {
                 BooleanType booleanType = edit.booleanType();
                 BooleanInfo booleanInfo = new BooleanInfo()
                         .setType(booleanType.type())
@@ -482,7 +488,7 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            if (edit.type() == Edit.Type.ATTACHMENT) {
+            if (novaFieldInfo.getType() == Edit.Type.ATTACHMENT) {
                 AttachmentTypeInfo attachmentTypeInfo = new AttachmentTypeInfo()
                         .setType(edit.attachmentType().type())
                         .setShowType(edit.attachmentType().showType())
@@ -514,7 +520,7 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            if (edit.type() == Edit.Type.REFERENCE) {
+            if (novaFieldInfo.getType() == Edit.Type.REFERENCE) {
                 ReferenceType referenceType = edit.referenceType();
                 ReferenceTypeInfo referenceTypeInfo = new ReferenceTypeInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
@@ -546,14 +552,14 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            if (edit.type() == Edit.Type.APPENDAGE || edit.type() == Edit.Type.APPENDAGES) {
+            if (novaFieldInfo.getType() == Edit.Type.APPENDAGE || novaFieldInfo.getType() == Edit.Type.APPENDAGES) {
                 AppendageType appendageType = edit.appendageType();
                 AppendageTypeInfo appendageTypeInfo = new AppendageTypeInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
                         .setReferenceField(appendageType.referenceField())
                         .setStorageField(appendageType.storageField())
                         .setDisplayField(appendageType.displayField())
-                        .setDualTable(edit.type() == Edit.Type.APPENDAGES && NovaUtils.exprBool(appendageType.dualTable(), appendageType.show()))
+                        .setDualTable(novaFieldInfo.getType() == Edit.Type.APPENDAGES && NovaUtils.exprBool(appendageType.dualTable(), appendageType.show()))
                         .setDualTableTitle(edit.title());
                 appendageTypeInfos.put(field, appendageTypeInfo);
             }
@@ -578,7 +584,7 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            if (edit.type() == Edit.Type.LINK) {
+            if (novaFieldInfo.getType() == Edit.Type.LINK) {
                 LinkType linkType = edit.linkType();
                 LinkInfo linkInfo = new LinkInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
@@ -637,7 +643,7 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            if (edit.type() == Edit.Type.LINK_TARGET) {
+            if (novaFieldInfo.getType() == Edit.Type.LINK_TARGET) {
                 LinkTargetType linkTargetType = edit.linkTargetType();
                 if (linkTargetType.type() == LinkTargetType.Type.SELECT) {
                     linkTargetInfo.setLinkReferenceClass(novaFieldInfo.getFieldClass())
@@ -674,7 +680,7 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            if (edit.type() == Edit.Type.BUTTON) {
+            if (novaFieldInfo.getType() == Edit.Type.BUTTON) {
                 ButtonType buttonType = edit.buttonType();
                 Class<? extends ButtonHandle>[] handle = buttonType.handle();
                 ButtonInfo buttonInfo = new ButtonInfo()

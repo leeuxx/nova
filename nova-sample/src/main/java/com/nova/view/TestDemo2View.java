@@ -6,9 +6,7 @@ import com.nova.annotation.config.NovaId;
 import com.nova.annotation.sub.nova.Layout;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
-import com.nova.annotation.sub.nova.field.edit.DateType;
-import com.nova.annotation.sub.nova.field.edit.ReferenceType;
-import com.nova.annotation.sub.nova.field.edit.Search;
+import com.nova.annotation.sub.nova.field.edit.*;
 import com.nova.service.TestDemo2Service;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -72,6 +70,34 @@ public class TestDemo2View {
             )
     )
     private String msg;
+
+    @NovaField(
+            views = @View(title = "类型"),
+            edit = @Edit(
+                    title = "类型",
+                    type = Edit.Type.CHOICE,
+                    choiceType = @ChoiceType(
+                            vl = {
+                                    @VL(value = "1", label = "董事会直属", color = "#28f439"),
+                                    @VL(value = "2", label = "总经办直属", color = "#fe6767")
+                            }
+                    ),
+                    search = @Search,
+                    notNull = true
+            )
+    )
+    private Integer type;
+
+    @NovaField(
+            views = @View(title = "状态"),
+            edit = @Edit(
+                    title = "状态",
+                    type = Edit.Type.BOOLEAN,
+                    booleanType = @BooleanType,
+                    notNull = true
+            )
+    )
+    private Boolean status;
 
     @NovaField(
             views = @View(title = "创建时间"),

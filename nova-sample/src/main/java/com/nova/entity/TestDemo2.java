@@ -22,4 +22,8 @@ public class TestDemo2 {
 
     private LocalDateTime createTime;
 
+    private Boolean status;
+
+    private Integer type;
+
 }
