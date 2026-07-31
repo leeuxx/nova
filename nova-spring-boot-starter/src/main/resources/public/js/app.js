@@ -165,6 +165,11 @@ function hideBootLoading() {
   else finish()
 }
 
+// 首屏 boot loading 是否仍在 DOM 中（整页加载阶段）：此阶段表格不显示自身动画，由全屏动画覆盖；点菜单切 tab 时已移除，正常显示
+window.__bootLoadingInDom = function () {
+  return !!document.getElementById('__nova-boot-loading__')
+}
+
 // ─── 挂载入口：未登录直接挂载（显示登录页），有 token 才拉菜单 ──
 var _startToken = localStorage.getItem('nova_token')
 if (_startToken) {
@@ -393,7 +398,8 @@ function mountApp(menuList, config, loginExpired) {
 
       const handleTabClick = (key) => router.push(key)
       const goHome = () => {
-        window.location.hash = '#/home'
+        // replaceState 改 hash 不触发 SPA 导航，直接整页刷新，避免先闪主页元素再出动画
+        history.replaceState(null, '', '#/home')
         window.location.reload()
       }
       const userDropdown   = [{ label: '个人中心', key: 'profile' }, { label: '退出登录', key: 'logout' }]
@@ -413,8 +419,8 @@ function mountApp(menuList, config, loginExpired) {
               localStorage.removeItem('nova_user')
               localStorage.removeItem('nova_alias')
               localStorage.removeItem('nova_avatar')
-              // 跳到登录页并刷新
-              window.location.hash = '#/login'
+              // 跳到登录页并刷新（replaceState 改 hash 不触发 SPA 导航，避免先闪页面元素再出动画）
+              history.replaceState(null, '', '#/login')
               window.location.reload()
             })
           })

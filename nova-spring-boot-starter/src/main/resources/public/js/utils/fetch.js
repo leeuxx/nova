@@ -51,14 +51,15 @@ function errorHandle(resp) {
           localStorage.removeItem('nova_user')
           localStorage.removeItem('nova_alias')
           localStorage.removeItem('nova_avatar')
-          window.location.hash = '#/login'
+          // replaceState 改 hash 不触发 SPA 导航，避免跳登录页时先闪页面元素再出动画
+          history.replaceState(null, '', '#/login')
           window.location.reload()
       })
       return true
     }
     // 用户权限校验未通过
     if (resp.code === 521) {
-        window.location.hash = '#/404'
+        history.replaceState(null, '', '#/404')
         window.location.reload()
     }
     // 接口异常

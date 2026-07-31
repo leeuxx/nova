@@ -39,8 +39,8 @@ window.LoginPage = {
       if (!localStorage.getItem('nova_token')) return
       window.fetchApi.post('/nova/authority/checkToken').then((resp) => {
         if (resp.data === true) {
-          // token 有效，直接进入主页
-          window.location.hash = '#/home'
+          // token 有效，直接进入主页（replaceState 改 hash 不触发 SPA 导航，避免先闪主页元素再出动画）
+          history.replaceState(null, '', '#/home')
           window.location.reload()
         } else {
           // token 无效，清除本地
@@ -86,8 +86,8 @@ window.LoginPage = {
             localStorage.setItem('nova_alias', resp.data.alias || '')
             localStorage.setItem('nova_avatar', resp.data.avatar || '')
             if (window.$message) window.$message.success('登录成功，欢迎 ' + resp.data.name)
-            // 登录成功后重新加载页面以拉取菜单
-            window.location.hash = '#/home'
+            // 登录成功后重新加载页面以拉取菜单（replaceState 改 hash 不触发 SPA 导航，避免先闪主页元素再出动画）
+            history.replaceState(null, '', '#/home')
             window.location.reload()
           } else {
             if (window.$message) window.$message.error(resp.message || '登录失败，请检查账号密码')

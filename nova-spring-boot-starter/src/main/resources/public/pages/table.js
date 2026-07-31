@@ -362,7 +362,7 @@ const NovaTable = {
       pageSize:       10,
       pageSizes:      [10, 20, 50, 100],
       loading:          false,
-      buildLoading:       true,   // 主表 /build 构建中，显示 loading 覆盖层
+      buildLoading:       true,   // 主表 /build 构建中，显示 loading 覆盖层（首帧即遮住表格；整页加载阶段由 setBuildLoading 关闭，避免与首屏 loading 重叠）
       previewModalShow: false,
       previewField:     null,
       previewAppNovaName: null,

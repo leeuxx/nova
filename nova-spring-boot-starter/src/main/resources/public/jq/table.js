@@ -54,6 +54,11 @@ window.NovaTableJQ = (function ($) {
   function setBuildLoading(target, val) {
     if (!target) return
     if (val === true) {
+      // 整页加载阶段（首屏 boot loading 仍在 DOM）：不显示表格动画，由全屏动画覆盖；点菜单切 tab 时已移除，正常显示
+      if (window.__bootLoadingInDom ? window.__bootLoadingInDom() : false) {
+        target.buildLoading = false
+        return
+      }
       target._buildLoadingStart = Date.now()
       target.buildLoading = true
       return
