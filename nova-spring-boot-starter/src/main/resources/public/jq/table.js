@@ -48,21 +48,41 @@ window.NovaTableJQ = (function ($) {
     setTimeout(updateTableHeight, 80)
   }
 
+  // buildLoading 最短展示时长（ms）：接口再快也完整播放，避免闪烁
+  var BUILD_LOADING_MIN_MS = 500
+
+  function setBuildLoading(target, val) {
+    if (!target) return
+    if (val === true) {
+      target._buildLoadingStart = Date.now()
+      target.buildLoading = true
+      return
+    }
+    var remain = BUILD_LOADING_MIN_MS - (Date.now() - (target._buildLoadingStart || 0))
+    if (remain > 0) {
+      setTimeout(function () {
+        if (target && target.buildLoading === true) target.buildLoading = false
+      }, remain)
+    } else {
+      target.buildLoading = false
+    }
+  }
+
   // ── 动态构建查询条件 + 表头列 ─────────────────────────────────
   // vmKey: 可选，embedded 模式下为 '__emb_xxx'；embSourceFields: embedded 模式下预注入的外键条件；sourceNovaName: 父表 novaName
   function buildTable(novaName, vmKey, embSourceFields, sourceNovaName, deferDataLoad) {
     if (!novaName) return
     var key = vmKey || novaName
     var t0 = window.vmMap && window.vmMap[key]
-    if (t0) t0.buildLoading = true
+    if (t0) setBuildLoading(t0, true)
     window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function (resp) {
         var target = window.vmMap && window.vmMap[key]
         if (!target) return
         if (!resp.data) {
-          target.buildLoading = false
+          setBuildLoading(target, false)
           return
         }
-        target.buildLoading = false
+        setBuildLoading(target, false)
         target.choiceMap  = resp.data.choice  || {}
         target.tagMap     = resp.data.tag     || {}
         target.dateMap    = resp.data.date    || {}
@@ -308,7 +328,7 @@ window.NovaTableJQ = (function ($) {
         }
       }).catch(function () {
         var target = window.vmMap && window.vmMap[key]
-        if (target) target.buildLoading = false
+        if (target) setBuildLoading(target, false)
       })
   }
 
@@ -903,15 +923,15 @@ window.NovaTableJQ = (function ($) {
   function buildTableForKey(novaName, vmKey, sourceNovaName, sourceFields) {
     if (!novaName || !vmKey) return
     var t0 = window.vmMap && window.vmMap[vmKey]
-    if (t0) t0.buildLoading = true
+    if (t0) setBuildLoading(t0, true)
     window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function (resp) {
         var target = window.vmMap && window.vmMap[vmKey]
         if (!target) return
         if (!resp.data) {
-          target.buildLoading = false
+          setBuildLoading(target, false)
           return
         }
-        target.buildLoading = false
+        setBuildLoading(target, false)
         target._sourceNovaName = sourceNovaName || novaName
         target._sourceFields   = sourceFields || {}
         target.choiceMap     = resp.data.choice      || {}
@@ -993,7 +1013,7 @@ window.NovaTableJQ = (function ($) {
         loadData(vmKey)
       }).catch(function () {
         var target = window.vmMap && window.vmMap[vmKey]
-        if (target) target.buildLoading = false
+        if (target) setBuildLoading(target, false)
       })
   }
 
@@ -1036,16 +1056,16 @@ window.NovaTableJQ = (function ($) {
   function onViewMounted(novaName, vmKey, rawRow, parentNovaName) {
     if (!novaName || !vmKey) return
     var t0 = window.vmMap && window.vmMap[vmKey]
-    if (t0) t0.buildLoading = true
+    if (t0) setBuildLoading(t0, true)
     window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function(resp) {
       var target = window.vmMap && window.vmMap[vmKey]
       if (!target) return
       var d = resp.data
       if (!d) {
-        target.buildLoading = false
+        setBuildLoading(target, false)
         return
       }
-      target.buildLoading = false
+      setBuildLoading(target, false)
       target.choiceMap     = d.choice      || {}
       target.tagMap        = d.tag         || {}
       target.dateMap       = d.date        || {}
@@ -1063,7 +1083,7 @@ window.NovaTableJQ = (function ($) {
       fillViewFormData(target, rawRow)
     }).catch(function () {
       var target = window.vmMap && window.vmMap[vmKey]
-      if (target) target.buildLoading = false
+      if (target) setBuildLoading(target, false)
     })
   }
 

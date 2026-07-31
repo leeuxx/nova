@@ -146,6 +146,25 @@ const themeOverrides = {
   }
 }
 
+// 首屏加载动画最短播放时长（ms）：无论 getMenu 多快，动画都会完整播放这段时间再柔和淡出
+var BOOT_LOADING_MIN_MS = 500
+// 从脚本开始执行起计时（此时首屏 loading 已在 DOM 中显示）
+var _bootLoadingStart = Date.now()
+
+function hideBootLoading() {
+  var el = document.getElementById('__nova-boot-loading__')
+  if (!el) return
+  var finish = function () {
+    el.classList.add('hidden')
+    setTimeout(function () {
+      if (el.parentNode) el.parentNode.removeChild(el)
+    }, 600)
+  }
+  var remain = BOOT_LOADING_MIN_MS - (Date.now() - _bootLoadingStart)
+  if (remain > 0) setTimeout(finish, remain)
+  else finish()
+}
+
 // ─── 挂载入口：未登录直接挂载（显示登录页），有 token 才拉菜单 ──
 var _startToken = localStorage.getItem('nova_token')
 if (_startToken) {
@@ -578,7 +597,8 @@ function mountApp(menuList, config, loginExpired) {
   const router = createRouter({
     history: createWebHashHistory(),
     routes: [
-      { path: '/',                    redirect: '/login' },
+      // 已登录直接进首页，避免经过登录页触发的整页刷新（否则首屏 loading 会播两遍）
+      { path: '/',                    redirect: () => localStorage.getItem('nova_token') ? '/home' : '/login' },
       { path: '/login',               component: LoginPage, meta: { loginRequired: false } },
       { path: '/home',                component: HomePage, meta: { noTab: true } },
       { path: '/404',                 component: NotFoundPage, meta: { loginRequired: false } },
@@ -610,6 +630,8 @@ function mountApp(menuList, config, loginExpired) {
   // 暴露 router 供 LoginPage 等独立组件使用
   window.__novaRouter = router
   app.mount('#app')
+  // 挂载完成后淡出首屏 loading：此时主线程空闲，过渡动画不被打断
+  hideBootLoading()
 }
 
 })()

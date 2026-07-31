@@ -361,11 +361,18 @@ body.table-wrap-cell .n-data-table-td {
 .table-build-overlay {
   position: absolute;
   inset: 0;
+  min-height: calc(100vh - 110px);
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f5f7fa;
+  opacity: 1;
+  transition: opacity .3s ease-out;
+}
+.table-build-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 .dark .table-build-overlay {
   background: #1f1f1f;

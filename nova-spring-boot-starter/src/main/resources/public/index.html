@@ -9,6 +9,21 @@
   <link rel="stylesheet" href="css/login.css" />
   <link rel="stylesheet" href="css/404.css" />
   <link rel="stylesheet" href="css/home.css" />
+  <!-- 首屏加载动画样式（跳跃方块；ID 与 loading.js 一致，避免重复注入） -->
+  <style id="nova-loading-jump-css">
+    .nova-jump-box{display:flex;flex-direction:column;align-items:center}
+    .nova-jump-loader{height:48px;position:relative;width:48px}
+    .nova-jump-loader:before{animation:nova-jump-shadow .5s linear infinite;background:rgba(37,99,235,.5);background:hsl(var(--primary,221 83% 53%)/50%);border-radius:50%;height:5px;top:60px;width:48px}
+    .nova-jump-loader:after,.nova-jump-loader:before{content:"";left:0;position:absolute}
+    .nova-jump-loader:after{animation:nova-jump-ani .5s linear infinite;background:#2563eb;background:hsl(var(--primary,221 83% 53%));border-radius:4px;height:100%;top:0;width:100%}
+    .nova-jump-title{color:rgba(0,0,0,.85);font-size:28px;font-weight:600;margin-top:66px;text-align:center;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6}
+    .dark .nova-jump-title{color:#fff}
+    @keyframes nova-jump-ani{15%{border-bottom-right-radius:3px}25%{transform:translateY(9px) rotate(22.5deg)}50%{border-bottom-right-radius:40px;transform:translateY(18px) scaleY(.9) rotate(45deg)}75%{transform:translateY(9px) rotate(67.5deg)}to{transform:translateY(0) rotate(90deg)}}
+    @keyframes nova-jump-shadow{0%,to{transform:scale(1)}50%{transform:scaleX(1.2)}}
+    .nova-boot-loading{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#f5f7fa}
+    .nova-boot-loading.hidden{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .5s ease-out,visibility .5s ease-out}
+    .dark .nova-boot-loading{background:#151515}
+  </style>
 </head>
 <body>
   <!-- 主题前置：在任何 JS/CSS 渲染前同步写入 body.dark，避免刷新时白闪 -->
@@ -19,6 +34,14 @@
     } catch (e) {}
   </script>
   <div id="app"></div>
+
+  <!-- 首屏加载动画（getMenu 响应前显示）；关键样式内联，避免首次绘制时无样式闪烁导致文字从小变大 -->
+  <div id="__nova-boot-loading__" class="nova-boot-loading" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#f5f7fa">
+    <div class="nova-jump-box" style="display:flex;flex-direction:column;align-items:center">
+      <div class="nova-jump-loader"></div>
+      <div class="nova-jump-title" style="color:rgba(0,0,0,.85);font-size:28px;font-weight:600;margin-top:66px;text-align:center;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.6">Nova Admin</div>
+    </div>
+  </div>
 
   <!-- Vue 3 -->
   <script src="js/lib/vue.global.prod.js"></script>
@@ -38,6 +61,7 @@
   <!-- 通用工具函数 -->
   <script src="js/utils/dialog.js"></script>
   <script src="js/utils/fetch.js"></script>
+  <script src="js/utils/loading.js"></script>
   <!-- jQuery 业务逻辑（先加载，供 Vue 组件调用） -->
   <script src="jq/edit/form-this.js"></script>
   <script src="jq/edit/form-reference.js"></script>
