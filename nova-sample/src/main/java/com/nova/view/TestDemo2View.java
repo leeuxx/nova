@@ -93,7 +93,9 @@ public class TestDemo2View {
             edit = @Edit(
                     title = "状态",
                     type = Edit.Type.BOOLEAN,
-                    booleanType = @BooleanType,
+                    booleanType = @BooleanType(
+                            tableType = BooleanType.Type.SWITCH
+                    ),
                     notNull = true
             )
     )

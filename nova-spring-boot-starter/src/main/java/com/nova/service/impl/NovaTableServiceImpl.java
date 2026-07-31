@@ -28,6 +28,11 @@ public class NovaTableServiceImpl implements NovaTableService {
 
     @Override
     public NovaTableBuild.Vo build(NovaTableBuild novaTableBuild) {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         NovaTableBuild.Vo vo = new NovaTableBuild.Vo();
         // 获取novaId属性名称
         String novaIdFieldName = NovaFieldUtils.getNovaIdFieldName(novaTableBuild.getNovaName());
@@ -71,6 +76,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                     .setSortable(tableColumn.getSortable())
                     .setType(tableColumn.getType().name())
                     .setDefaultValue(tableColumn.getDefaultValue())
+                    .setRefNovaName(tableColumn.getRefNovaName())
             );
         }
         vo.setTableColumns(tableColumnList);

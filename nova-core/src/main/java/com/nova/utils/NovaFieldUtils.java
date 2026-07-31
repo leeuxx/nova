@@ -130,11 +130,18 @@ public class NovaFieldUtils {
                 if (show) {
                     Edit.Type findType = type;
                     String fieldName = field;
+                    String refNovaName = null;
                     if (isReference) {
                         NovaApplication.ScanNova referenceScanNova = scanNovas.get(novaFieldInfo.getFieldClass().getSimpleName());
                         Map<String, NovaApplication.ScanNova.NovaFieldInfo> referenceNovaFields = referenceScanNova.getNovaFields();
-                        findType = referenceNovaFields.get(view.column()).getType();
+                        NovaApplication.ScanNova.NovaFieldInfo referenceNovaFieldInfo = referenceNovaFields.get(view.column());
+                        findType = referenceNovaFieldInfo.getType();
                         fieldName = field + "." + view.column();
+                        if (findType == Edit.Type.NUMBER || findType == Edit.Type.CHOICE
+                                || findType == Edit.Type.TAG || findType == Edit.Type.DATE
+                                || findType == Edit.Type.BOOLEAN || findType == Edit.Type.ATTACHMENT) {
+                            refNovaName = novaFieldInfo.getFieldClass().getSimpleName();
+                        }
                     }
                     TableColumnInfo tableColumnInfo = new TableColumnInfo()
                             .setField(fieldName)
@@ -143,7 +150,8 @@ public class NovaFieldUtils {
                             .setWidth(view.width())
                             .setSortable(view.sortable())
                             .setType(findType)
-                            .setDefaultValue(view.defaultValue());
+                            .setDefaultValue(view.defaultValue())
+                            .setRefNovaName(refNovaName);
                     tableColumnInfos.add(tableColumnInfo);
                 }
             }
@@ -744,6 +752,9 @@ public class NovaFieldUtils {
 
         @Comment("缺省值")
         private String defaultValue;
+
+        @Comment("关联nova名")
+        private String refNovaName;
 
     }
 

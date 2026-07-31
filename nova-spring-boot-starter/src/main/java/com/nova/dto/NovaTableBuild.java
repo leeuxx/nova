@@ -134,6 +134,9 @@ public class NovaTableBuild {
             @Comment("缺省值")
             private String defaultValue;
 
+            @Comment("关联nova名")
+            private String refNovaName;
+
         }
 
         @Data

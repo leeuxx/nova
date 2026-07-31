@@ -104,6 +104,33 @@ window.NovaTableJQ = (function ($) {
         var states = {}
         cols.forEach(function (c) { if (c.sortable) states[c.field] = null })
         target.sortStates = states
+        // 嵌套字段（REFERENCE/APPENDAGE 引用子表属性）：收集去重的 refNovaName，
+        // 逐个 build 子表并缓存元数据（choice/date/booleanInfo/attachment 等），供渲染规则匹配
+        var refNames = []
+        cols.forEach(function (c) { if (c.refNovaName && refNames.indexOf(c.refNovaName) === -1) refNames.push(c.refNovaName) })
+        target.refBuildMeta = {}
+        target.refBuildMetaLoading = {}
+        refNames.forEach(function (name) {
+          target.refBuildMetaLoading[name] = true
+          window.fetchApi.post('/nova/table/build', { novaName: name }, window.__novaMenuCode(name)).then(function (r) {
+            var t = window.vmMap && window.vmMap[key]
+            if (!t) return
+            if (!r.data) {
+              var nl0 = Object.assign({}, t.refBuildMetaLoading)
+              nl0[name] = false
+              t.refBuildMetaLoading = nl0
+              return
+            }
+            var nm = Object.assign({}, t.refBuildMeta)
+            nm[name] = r.data
+            t.refBuildMeta = nm
+            var nl = Object.assign({}, t.refBuildMetaLoading)
+            nl[name] = false
+            t.refBuildMetaLoading = nl
+            // 元数据就绪后重新翻译数据，让嵌套 CHOICE 列按子表元数据翻译 label/颜色
+            translateData(key)
+          })
+        })
         var layout = resp.data.layout || {}
         if (layout.pageSize)  { target.pageSize = layout.pageSize; target.paginationConfig.pageSize = layout.pageSize }
         if (layout.pageSizes) {
@@ -475,30 +502,43 @@ window.NovaTableJQ = (function ($) {
 
   // ── 翻译 CHOICE 类型列 ────────────────────────────────────────
   // 翻译 CHOICE + REFERENCE + APPENDAGE，返回新数组，不修改原对象
-  function translateRecords(records, tableColumns, choiceMap, referenceMap, appendageMap) {
+  function translateRecords(records, tableColumns, choiceMap, referenceMap, appendageMap, refBuildMeta) {
     if (!records || records.length === 0) return records
     var result = records
     choiceMap = choiceMap || {}
     referenceMap = referenceMap || {}
     appendageMap = appendageMap || {}
+    refBuildMeta = refBuildMeta || {}
+
+    // 合并子表元数据中的 choice（refNovaName 嵌套字段，按 col.field 归入查找表）
+    var choiceMapFull = {}
+    for (var fk0 in choiceMap) if (choiceMap.hasOwnProperty(fk0)) choiceMapFull[fk0] = choiceMap[fk0]
+    ;(tableColumns || []).forEach(function (c) {
+      if (c.type !== 'CHOICE' || !c.refNovaName || !refBuildMeta[c.refNovaName]) return
+      var sm = refBuildMeta[c.refNovaName]
+      var di = c.field.indexOf('.')
+      var pk = di > -1 ? c.field.slice(di + 1) : c.field
+      var ci = (sm.choice || {})[pk]
+      if (ci) choiceMapFull[c.field] = ci
+    })
 
     // CHOICE 翻译
     var choiceCols = (tableColumns || []).filter(function (c) { return c.type === 'CHOICE' })
     if (choiceCols.length > 0) {
       // 构建 value→color 查找表
       var colorLookups = {}
-      for (var fk in choiceMap) {
-        if (choiceMap.hasOwnProperty(fk)) {
+      for (var fk in choiceMapFull) {
+        if (choiceMapFull.hasOwnProperty(fk)) {
           var cl = {}
-          ;(choiceMap[fk].values || []).forEach(function (v) { if (v.color) cl[v.value] = v.color })
+          ;(choiceMapFull[fk].values || []).forEach(function (v) { if (v.color) cl[v.value] = v.color })
           if (Object.keys(cl).length > 0) colorLookups[fk] = cl
         }
       }
       var localLookups = {}
-      for (var fkk in choiceMap) {
-        if (choiceMap.hasOwnProperty(fkk)) {
+      for (var fkk in choiceMapFull) {
+        if (choiceMapFull.hasOwnProperty(fkk)) {
           var lookup = {}
-          ;(choiceMap[fkk].values || []).forEach(function (v) { lookup[v.value] = v.label })
+          ;(choiceMapFull[fkk].values || []).forEach(function (v) { lookup[v.value] = v.label })
           localLookups[fkk] = lookup
         }
       }
@@ -508,8 +548,19 @@ window.NovaTableJQ = (function ($) {
         choiceCols.forEach(function (col) {
           var lk = localLookups[col.field]
           if (!lk) return
-          var isMulti = choiceMap[col.field] && choiceMap[col.field].selectType === 'MULTI'
-          var raw = (row[col.field] === null || row[col.field] === undefined) ? '' : String(row[col.field])
+          var isMulti = choiceMapFull[col.field] && choiceMapFull[col.field].selectType === 'MULTI'
+          // 嵌套字段（如 "testDemo2View.status"）：从行数据的嵌套对象中取值
+          var raw
+          var dotIdx = col.field.indexOf('.')
+          if (dotIdx > -1) {
+            var base = col.field.slice(0, dotIdx)
+            var propKey = col.field.slice(dotIdx + 1)
+            var nestedObj = row[base]
+            raw = (nestedObj && typeof nestedObj === 'object' && nestedObj[propKey] !== undefined && nestedObj[propKey] !== null)
+              ? String(nestedObj[propKey]) : ''
+          } else {
+            raw = (row[col.field] === null || row[col.field] === undefined) ? '' : String(row[col.field])
+          }
           if (!raw) return
           updated[col.field] = isMulti
             ? raw.split(',').map(function (v) { return lk[v.trim()] || v.trim() }).join(',')
@@ -571,7 +622,8 @@ window.NovaTableJQ = (function ($) {
       target.tableColumns,
       target.choiceMap,
       target.referenceMap,
-      target.appendageMap
+      target.appendageMap,
+      target.refBuildMeta
     )
   }
 
@@ -872,6 +924,31 @@ window.NovaTableJQ = (function ($) {
         var states = {}
         cols.forEach(function (c) { if (c.sortable) states[c.field] = null })
         target.sortStates = states
+        // 嵌套字段：收集去重的 refNovaName 并 build 子表缓存元数据（与主表一致）
+        var refNames = []
+        cols.forEach(function (c) { if (c.refNovaName && refNames.indexOf(c.refNovaName) === -1) refNames.push(c.refNovaName) })
+        target.refBuildMeta = {}
+        target.refBuildMetaLoading = {}
+        refNames.forEach(function (name) {
+          target.refBuildMetaLoading[name] = true
+          window.fetchApi.post('/nova/table/build', { novaName: name }, window.__novaMenuCode(name)).then(function (r) {
+            var t = window.vmMap && window.vmMap[vmKey]
+            if (!t) return
+            if (!r.data) {
+              var nl0 = Object.assign({}, t.refBuildMetaLoading)
+              nl0[name] = false
+              t.refBuildMetaLoading = nl0
+              return
+            }
+            var nm = Object.assign({}, t.refBuildMeta)
+            nm[name] = r.data
+            t.refBuildMeta = nm
+            var nl = Object.assign({}, t.refBuildMetaLoading)
+            nl[name] = false
+            t.refBuildMetaLoading = nl
+            translateData(vmKey)
+          })
+        })
         var layout = resp.data.layout || {}
         if (layout.pageSize)  { target.pageSize = layout.pageSize; target.paginationConfig.pageSize = layout.pageSize }
         if (layout.pageSizes) {
@@ -982,7 +1059,7 @@ window.NovaTableJQ = (function ($) {
         var rootList = data.rootList || []
         var childrenList = data.childrenList || []
         var records = rootList.concat(childrenList)
-        records = translateRecords(records, t.tableColumns, t.choiceMap, t.referenceMap, t.appendageMap)
+        records = translateRecords(records, t.tableColumns, t.choiceMap, t.referenceMap, t.appendageMap, t.refBuildMeta)
         t.rawTreeData = records
         buildTreeData(t, records)
         t.treeSearchKeyword = ''

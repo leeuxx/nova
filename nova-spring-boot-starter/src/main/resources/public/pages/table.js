@@ -234,6 +234,8 @@ const NovaTable = {
       booleanMap:     {},
       attachmentMap:  {},
       referenceMap:   {},
+      refBuildMeta:       {},   // 嵌套字段子表元数据缓存：refNovaName → /build 响应
+      refBuildMetaLoading: {}, // 嵌套字段子表元数据加载中标记
       refPickerField: null,
       refPickerRow:   null,
       refPickerData:  [],
@@ -653,6 +655,17 @@ const NovaTable = {
           ellipsis:  vm.cellOverflow === 'ellipsis' ? { tooltip: true } : false
         }
 
+        // 嵌套字段（REFERENCE/APPENDAGE 引用子表属性）：读取子表元数据（响应式），
+        // 元数据未就绪时由下方逻辑渲染 loading 占位；规则渲染与主表一致，仅换用子表映射
+        const dotIdx2 = col.field.indexOf('.')
+        const propKey = dotIdx2 > -1 ? col.field.slice(dotIdx2 + 1) : col.field
+        let subMeta = null
+        let subLoading = false
+        if (col.refNovaName) {
+          subMeta = vm.refBuildMeta && vm.refBuildMeta[col.refNovaName]
+          subLoading = !subMeta && !!(vm.refBuildMetaLoading && vm.refBuildMetaLoading[col.refNovaName])
+        }
+
         if (index === 0 && isTreeTable) {
           colDef.ellipsis = false
           colDef.cellProps = () => ({ style: { paddingLeft: 0 } })
@@ -697,7 +710,7 @@ const NovaTable = {
 
         if (col.type === 'TAG') {
           colDef.render = (row) => {
-            const val = row[col.field]
+            const val = getFieldValue(row, col.field)
             if (val === null || val === undefined || val === '') return ''
             const tags = String(val).split(',').map(t => t.trim()).filter(Boolean)
             const visible = tags.slice(0, 1)
@@ -713,17 +726,27 @@ const NovaTable = {
 
         if (col.type === 'BOOLEAN') {
           colDef.render = (row) => {
-            const val = row[col.field]
+            const val = getFieldValue(row, col.field)
             if (val === null || val === undefined || val === '') return ''
             const isTrue = String(val).toLowerCase() === 'true'
-            const bInfo = vm.booleanMap && vm.booleanMap[col.field]
+            // 嵌套字段使用子表元数据决定展示方式；SWITCH 渲染为只读开关（嵌套字段不支持行内更新子表）
+            const bInfo = col.refNovaName && subMeta
+              ? ((subMeta.booleanInfo || {})[propKey])
+              : (vm.booleanMap && vm.booleanMap[col.field])
             if (bInfo && bInfo.tableType === 'SWITCH') {
+              const isDark = document.body.classList.contains('dark')
+              const offBg = isDark ? '#444' : '#d9d9d9'
+              if (col.refNovaName) {
+                // 嵌套开关：禁用、不可点击
+                return h('span', { style: `display:inline-block;vertical-align:middle;width:44px;height:22px;border-radius:11px;background:${isTrue ? '#006be6' : offBg};position:relative;cursor:not-allowed;opacity:0.5;flex-shrink:0` }, [
+                  h('span', { style: `position:absolute;top:0;${isTrue ? 'left:0;right:20px' : 'right:0;left:20px'};bottom:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;user-select:none` }, isTrue ? '是' : '否'),
+                  h('span', { style: `position:absolute;top:3px;left:${isTrue ? '26px' : '3px'};width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)` })
+                ])
+              }
               const novaName = vm.novaName
               const novaIdField = vm.novaIdFieldName
               const editField = (vm.editFields || []).find(function(f) { return f.field === col.field })
               const disabled = !editField || (editField.readonly && editField.readonly.edit) || !window.__hasButton(vm.novaName, 'edit')
-              const isDark = document.body.classList.contains('dark')
-              const offBg = isDark ? '#444' : '#d9d9d9'
               const newVal = isTrue ? 'false' : 'true'
               const onClick = disabled ? undefined : () => {
                 window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: newVal, type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success('修改成功'); window.NovaTableJQ.loadData(novaName) })
@@ -740,10 +763,14 @@ const NovaTable = {
 
         if (col.type === 'CHOICE') {
           colDef.render = (row, rowIndex) => {
-            const text = row[col.field]
+            // 嵌套字段：translateRecords 已将 label 写入 col.field（扁平 key），优先取；否则解析嵌套原始值
+            const flatVal = row[col.field]
+            const text = (flatVal !== undefined && flatVal !== null) ? flatVal : getFieldValue(row, col.field)
             if (text === null || text === undefined || text === '') return text
             const colorData = row._colors && row._colors[col.field]
-            const choice = vm.choiceMap && vm.choiceMap[col.field]
+            const choice = col.refNovaName && subMeta
+              ? ((subMeta.choice || {})[propKey])
+              : (vm.choiceMap && vm.choiceMap[col.field])
             const isMulti = choice && choice.selectType === 'MULTI'
             const makeTag = (label, color) => {
               const bg = color ? color + '20' : 'rgba(128,128,128,0.1)'
@@ -791,9 +818,11 @@ const NovaTable = {
 
         if (col.type === 'DATE') {
           colDef.render = (row) => {
-            const ts = row[col.field]
+            const ts = getFieldValue(row, col.field)
             if (ts === null || ts === undefined || ts === '') return ''
-            const dateInfo = vm.dateMap && vm.dateMap[col.field]
+            const dateInfo = col.refNovaName && subMeta
+              ? ((subMeta.date || {})[propKey])
+              : (vm.dateMap && vm.dateMap[col.field])
             const type = dateInfo && dateInfo.type
             const d = new Date(ts)
             const p = n => String(n).padStart(2, '0')
@@ -809,11 +838,13 @@ const NovaTable = {
 
         if (col.type === 'ATTACHMENT') {
           colDef.render = (row) => {
-            const val = row[col.field]
+            const val = getFieldValue(row, col.field)
             if (val === null || val === undefined || val === '') return ''
             const urls = String(val).split(',').map(s => s.trim()).filter(Boolean)
             if (!urls.length) return ''
-            const cfg = vm.attachmentMap && vm.attachmentMap[col.field]
+            const cfg = col.refNovaName && subMeta
+              ? ((subMeta.attachment || {})[propKey])
+              : (vm.attachmentMap && vm.attachmentMap[col.field])
             const tableShowType = cfg && cfg.tableShowType ? cfg.tableShowType : 'TEXT'
             const isMulti = urls.length > 1
             const open = function() { vm.openTableAttachPreview({ field: col.field, title: col.title }, urls, tableShowType) }
@@ -859,6 +890,15 @@ const NovaTable = {
             }
             // TEXT：默认文本
             return val
+          }
+        }
+
+        // 嵌套字段子表元数据未就绪：显示 loading 占位，就绪后 columns() 会重新求值并替换为规则渲染
+        if (subLoading) {
+          colDef.render = function() {
+            return h('span', { style: 'display:inline-flex;align-items:center;color:#bbb' }, [
+              h('span', { style: 'width:10px;height:10px;border:1.5px solid #ccc;border-top-color:transparent;border-radius:50%;display:inline-block;animation:refSpin .7s linear infinite' })
+            ])
           }
         }
 
