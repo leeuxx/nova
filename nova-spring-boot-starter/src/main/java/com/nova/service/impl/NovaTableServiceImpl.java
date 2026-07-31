@@ -29,7 +29,7 @@ public class NovaTableServiceImpl implements NovaTableService {
     @Override
     public NovaTableBuild.Vo build(NovaTableBuild novaTableBuild) {
         try {
-            Thread.sleep(3000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

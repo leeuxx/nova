@@ -361,6 +361,7 @@ const NovaTable = {
       pageSize:       10,
       pageSizes:      [10, 20, 50, 100],
       loading:          false,
+      buildLoading:       true,   // 主表 /build 构建中，显示 loading 覆盖层
       previewModalShow: false,
       previewField:     null,
       previewAppNovaName: null,
@@ -3445,7 +3446,30 @@ const NovaTable = {
         </div>
       </n-modal>
     </div>
-    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:16px 8px 16px 16px' : 'padding:16px 8px 16px 16px')">
+    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="'position:relative;' + (pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:16px 8px 16px 16px' : 'padding:16px 8px 16px 16px'))">
+
+      <!-- 主表 /build 构建中：loading 覆盖层（覆盖搜索区+表格） -->
+      <div v-if="buildLoading" class="table-build-overlay">
+        <div class="table-build-loading">
+          <n-spin v-if="loadingStyle === 'spinner'" size="large" />
+          <div v-else-if="loadingStyle === 'wave'" class="custom-loading loading-wave" style="padding:0">
+            <span class="wave-bars">
+              <span class="bar b1"></span>
+              <span class="bar b2"></span>
+              <span class="bar b3"></span>
+              <span class="bar b4"></span>
+              <span class="bar b5"></span>
+            </span>
+          </div>
+          <div v-else class="custom-loading loading-dots" style="padding:0">
+            <span class="dots-wrap">
+              <span class="dot d1"></span>
+              <span class="dot d2"></span>
+              <span class="dot d3"></span>
+            </span>
+          </div>
+        </div>
+      </div>
 
       <!-- 树形表格搜索 -->
       <component v-if="isTree && !linkMode && treeSearchField" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">

@@ -357,6 +357,20 @@ body.table-wrap-cell .n-data-table-td {
   to { transform: rotate(360deg); }
 }
 
+/* ─── 主表 /build 加载覆盖层 ───────────────────────────── */
+.table-build-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+}
+.dark .table-build-overlay {
+  background: #1f1f1f;
+}
+
 /* ─── 暗色模式 ─────────────────────────────────────────── */
 .dark { background: #151515; }
 body.dark { background: #151515 !important; }

@@ -53,9 +53,16 @@ window.NovaTableJQ = (function ($) {
   function buildTable(novaName, vmKey, embSourceFields, sourceNovaName, deferDataLoad) {
     if (!novaName) return
     var key = vmKey || novaName
+    var t0 = window.vmMap && window.vmMap[key]
+    if (t0) t0.buildLoading = true
     window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function (resp) {
         var target = window.vmMap && window.vmMap[key]
-        if (!target || !resp.data) return
+        if (!target) return
+        if (!resp.data) {
+          target.buildLoading = false
+          return
+        }
+        target.buildLoading = false
         target.choiceMap  = resp.data.choice  || {}
         target.tagMap     = resp.data.tag     || {}
         target.dateMap    = resp.data.date    || {}
@@ -299,6 +306,9 @@ window.NovaTableJQ = (function ($) {
         if (!deferDataLoad && !(sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField && parentVm && parentVm.currentRow)) {
           loadData(key)
         }
+      }).catch(function () {
+        var target = window.vmMap && window.vmMap[key]
+        if (target) target.buildLoading = false
       })
   }
 
@@ -892,9 +902,16 @@ window.NovaTableJQ = (function ($) {
   // ── picker 专用 buildTable，用 vmKey 索引而非 novaName ─────────
   function buildTableForKey(novaName, vmKey, sourceNovaName, sourceFields) {
     if (!novaName || !vmKey) return
+    var t0 = window.vmMap && window.vmMap[vmKey]
+    if (t0) t0.buildLoading = true
     window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function (resp) {
         var target = window.vmMap && window.vmMap[vmKey]
         if (!target) return
+        if (!resp.data) {
+          target.buildLoading = false
+          return
+        }
+        target.buildLoading = false
         target._sourceNovaName = sourceNovaName || novaName
         target._sourceFields   = sourceFields || {}
         target.choiceMap     = resp.data.choice      || {}
@@ -974,6 +991,9 @@ window.NovaTableJQ = (function ($) {
           }
         }
         loadData(vmKey)
+      }).catch(function () {
+        var target = window.vmMap && window.vmMap[vmKey]
+        if (target) target.buildLoading = false
       })
   }
 
@@ -1015,10 +1035,17 @@ window.NovaTableJQ = (function ($) {
   // ── view 模式初始化：/build，直接填充 rawRow ────────────────────
   function onViewMounted(novaName, vmKey, rawRow, parentNovaName) {
     if (!novaName || !vmKey) return
+    var t0 = window.vmMap && window.vmMap[vmKey]
+    if (t0) t0.buildLoading = true
     window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function(resp) {
       var target = window.vmMap && window.vmMap[vmKey]
       if (!target) return
       var d = resp.data
+      if (!d) {
+        target.buildLoading = false
+        return
+      }
+      target.buildLoading = false
       target.choiceMap     = d.choice      || {}
       target.tagMap        = d.tag         || {}
       target.dateMap       = d.date        || {}
@@ -1034,6 +1061,9 @@ window.NovaTableJQ = (function ($) {
       target.formMode = 'edit'
       // 直接填充 viewRow 数据（referenceForm 已由 NovaRefForm 子组件自行加载）
       fillViewFormData(target, rawRow)
+    }).catch(function () {
+      var target = window.vmMap && window.vmMap[vmKey]
+      if (target) target.buildLoading = false
     })
   }
 
