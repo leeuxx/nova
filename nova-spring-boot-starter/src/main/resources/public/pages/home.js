@@ -5,6 +5,13 @@
 window.HomePage = {
   name: 'HomePage',
 
+  data() {
+    return {
+      // 品牌文字（index.json logoText，mountApp 时写入全局）
+      homeLogText: window.__novaLogText
+    }
+  },
+
   template: `
 <div class="home-wrap">
   <div class="home-header">
@@ -12,7 +19,7 @@ window.HomePage = {
       <iconify-icon icon="material-symbols:bolt" style="color:#fff;font-size:28px"></iconify-icon>
     </div>
     <div>
-      <h1 class="home-title">欢迎使用 Nova Admin</h1>
+      <h1 class="home-title">欢迎使用 {{ homeLogText }}</h1>
       <p class="home-subtitle">简洁高效的后台管理系统</p>
     </div>
   </div>

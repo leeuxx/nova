@@ -187,6 +187,13 @@ if (_startToken) {
 }
 
 function mountApp(menuList, config, loginExpired) {
+  // 品牌文字（index.json logoText）：供网页标题、左上角 logo、加载动画标题、home 页读取
+  var logoText = config.logoText
+  window.__novaLogText = logoText
+  document.title = logoText
+  // 加载动画标题：boot 尚未淡出时更新为配置文字
+  var btEl = document.querySelector('.nova-jump-title')
+  if (btEl) btEl.textContent = logoText
   var processed   = processMenus(menuList)
   var menuTree    = processed.menuTree
   var routeMeta   = processed.routeMeta
@@ -218,6 +225,8 @@ function mountApp(menuList, config, loginExpired) {
       const route  = useRoute()
 
       const collapsed  = ref(false)
+      // 左上角品牌文字（index.json logoText）
+      const logoText = ref(config.logoText)
       // 优先读取前端缓存的主题，未缓存时回退到配置默认值
       const savedTheme = localStorage.getItem('nova-theme')
       const isDark     = ref(savedTheme !== null ? savedTheme === 'night' : config.theme.default === 'night')
@@ -463,7 +472,7 @@ function mountApp(menuList, config, loginExpired) {
         menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isStandaloneRoute, menuSelectedKey,
         handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, handleUserMenuSelect,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
-        barStyle, barReady, tabBarRef, userName, userAlias, userAvatar
+        barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText
       }
     },
 
@@ -488,7 +497,7 @@ function mountApp(menuList, config, loginExpired) {
                     <div style="height:50px;display:flex;align-items:center;justify-content:center;cursor:pointer" @click="goHome">
                       <div style="display:flex;align-items:center;gap:8px">
                         <img src="logo.png" class="sidebar-logo" />
-                        <span v-show="!collapsed" class="logo-text">Nova Admin</span>
+                        <span v-show="!collapsed" class="logo-text">{{ logoText }}</span>
                       </div>
                     </div>
                     <n-menu

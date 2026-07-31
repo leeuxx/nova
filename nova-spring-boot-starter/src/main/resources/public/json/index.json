@@ -1,4 +1,5 @@
 {
+  "logoText": "Nova Admin",
   "menu": {
     "toggle": {
       "list": ["top", "down"],
