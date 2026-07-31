@@ -85,6 +85,18 @@ window.NovaTableJQ = (function ($) {
     }, 80)
   }
 
+  // 等待"整页 boot loading 移除 且 表格 buildLoading 遮罩关闭"后再执行回调：
+  // 动画期间（首屏全屏动画或切 tab 表格加载动画）保持主线程空闲，动画结束后数据已就绪立即渲染
+  function whenLoadingDone(target, cb) {
+    if (!(window.__bootLoadingInDom && window.__bootLoadingInDom()) && !target.buildLoading) { cb(); return }
+    var iv = setInterval(function () {
+      if (!(window.__bootLoadingInDom && window.__bootLoadingInDom()) && !target.buildLoading) {
+        clearInterval(iv)
+        cb()
+      }
+    }, 80)
+  }
+
   // ── 动态构建查询条件 + 表头列 ─────────────────────────────────
   // vmKey: 可选，embedded 模式下为 '__emb_xxx'；embSourceFields: embedded 模式下预注入的外键条件；sourceNovaName: 父表 novaName
   function buildTable(novaName, vmKey, embSourceFields, sourceNovaName, deferDataLoad) {
@@ -349,7 +361,7 @@ window.NovaTableJQ = (function ($) {
         }
         }
         // 元数据应用（列头/搜索表单）相对轻量，build 响应后立即执行让数据请求并行拉取；
-        // 重活（表格数据渲染）由 loadData 按 boot 状态延迟到动画结束，动画期间不掉帧、动画结束不留空表格
+        // 重活（表格数据渲染）由 loadData 按动画状态（首屏 boot 或切 tab 遮罩）延迟到动画结束，动画期间不掉帧、动画结束不留空表格
         applyNow()
       }).catch(function () {
         var target = window.vmMap && window.vmMap[key]
@@ -486,11 +498,11 @@ window.NovaTableJQ = (function ($) {
     window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, linkConditions: linkConditions, pageBean: pageBean, conditions: conditions }, window.__novaMenuCode(queryName)).then(function (resp) {
       var t = window.vmMap && window.vmMap[vmKey]
       if (!t) return
-      // 整页加载阶段（boot 仍在 DOM）：数据响应延迟到动画结束（boot 移除）后应用，
-      // 避免表格数据渲染占用主线程导致全屏动画掉帧；数据已提前并行拉取，动画结束立即渲染不留空表格
-      if (window.__bootLoadingInDom && window.__bootLoadingInDom()) {
+      // 动画期间（首屏 boot 或切 tab 表格加载动画）保持主线程空闲：
+      // 数据响应延迟到动画结束（boot 移除且遮罩关闭）后应用，数据已提前并行拉取，动画结束立即渲染不留空表格
+      if ((window.__bootLoadingInDom && window.__bootLoadingInDom()) || t.buildLoading) {
         t._pendingDataResp = resp
-        whenBootGone(function () {
+        whenLoadingDone(t, function () {
           var tt = window.vmMap && window.vmMap[vmKey]
           if (tt && tt._pendingDataResp) {
             var r = tt._pendingDataResp
