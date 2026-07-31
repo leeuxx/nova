@@ -73,6 +73,18 @@ window.NovaTableJQ = (function ($) {
     }
   }
 
+  // 等待首屏 boot loading 从 DOM 移除后再执行回调：整页加载阶段避免 build 接口处理
+  // 与表格渲染占用主线程，导致全屏 CSS 动画掉帧（纯静态页不卡，接口页卡就是这个原因）
+  function whenBootGone(cb) {
+    if (!(window.__bootLoadingInDom && window.__bootLoadingInDom())) { cb(); return }
+    var iv = setInterval(function () {
+      if (!(window.__bootLoadingInDom && window.__bootLoadingInDom())) {
+        clearInterval(iv)
+        cb()
+      }
+    }, 80)
+  }
+
   // ── 动态构建查询条件 + 表头列 ─────────────────────────────────
   // vmKey: 可选，embedded 模式下为 '__emb_xxx'；embSourceFields: embedded 模式下预注入的外键条件；sourceNovaName: 父表 novaName
   function buildTable(novaName, vmKey, embSourceFields, sourceNovaName, deferDataLoad) {
@@ -80,7 +92,8 @@ window.NovaTableJQ = (function ($) {
     var key = vmKey || novaName
     var t0 = window.vmMap && window.vmMap[key]
     if (t0) setBuildLoading(t0, true)
-    window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function (resp) {
+    var fire = function () {
+      window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function (resp) {
         var target = window.vmMap && window.vmMap[key]
         if (!target) return
         if (!resp.data) {
@@ -88,6 +101,9 @@ window.NovaTableJQ = (function ($) {
           return
         }
         setBuildLoading(target, false)
+        // 数据应用（设置响应式数据 + 渲染表格）是主线程重活：整页加载阶段延迟到 boot 移除后执行，
+        // 避免动画期间掉帧；网络请求已并行完成，数据就绪后立即渲染，不留空表格空窗
+        var applyNow = function () {
         target.choiceMap  = resp.data.choice  || {}
         target.tagMap     = resp.data.tag     || {}
         target.dateMap    = resp.data.date    || {}
@@ -331,10 +347,17 @@ window.NovaTableJQ = (function ($) {
         if (!deferDataLoad && !(sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField && parentVm && parentVm.currentRow)) {
           loadData(key)
         }
+        }
+        // 元数据应用（列头/搜索表单）相对轻量，build 响应后立即执行让数据请求并行拉取；
+        // 重活（表格数据渲染）由 loadData 按 boot 状态延迟到动画结束，动画期间不掉帧、动画结束不留空表格
+        applyNow()
       }).catch(function () {
         var target = window.vmMap && window.vmMap[key]
         if (target) setBuildLoading(target, false)
       })
+    }
+    // build 网络请求立即发出（并行，不占主线程）；响应后的数据应用延迟到 boot 移除后执行
+    fire()
   }
 
   // ── 懒加载 link sub-build（首次打开弹窗时调用）─────────────────
@@ -463,18 +486,39 @@ window.NovaTableJQ = (function ($) {
     window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, linkConditions: linkConditions, pageBean: pageBean, conditions: conditions }, window.__novaMenuCode(queryName)).then(function (resp) {
       var t = window.vmMap && window.vmMap[vmKey]
       if (!t) return
-        t.loading = false
-        t.expandedRowKeys = []
-        t.treeLoadingKeys = []
-        var records = resp.data.records || []
-        t.tableData                    = records
-        t.rawTableData                 = resp.data.records    || []
-        t.paginationConfig.itemCount   = resp.data.total      || 0
-        t.paginationConfig.page        = resp.data.current    || pageBean.current
-        t.paginationConfig.pageSize    = resp.data.size       || pageBean.size
-        if (resp.data.novaIdFieldName)     t.novaIdFieldName          = resp.data.novaIdFieldName
-        translateData(vmKey)
-      })
+      // 整页加载阶段（boot 仍在 DOM）：数据响应延迟到动画结束（boot 移除）后应用，
+      // 避免表格数据渲染占用主线程导致全屏动画掉帧；数据已提前并行拉取，动画结束立即渲染不留空表格
+      if (window.__bootLoadingInDom && window.__bootLoadingInDom()) {
+        t._pendingDataResp = resp
+        whenBootGone(function () {
+          var tt = window.vmMap && window.vmMap[vmKey]
+          if (tt && tt._pendingDataResp) {
+            var r = tt._pendingDataResp
+            tt._pendingDataResp = null
+            applyDataResp(vmKey, r, pageBean)
+          }
+        })
+        return
+      }
+      applyDataResp(vmKey, resp, pageBean)
+    })
+  }
+
+  // 应用表格数据响应：设置表格数据 + 翻译，触发 Vue 渲染
+  function applyDataResp(vmKey, resp, pageBean) {
+    var t = window.vmMap && window.vmMap[vmKey]
+    if (!t) return
+    t.loading = false
+    t.expandedRowKeys = []
+    t.treeLoadingKeys = []
+    var records = resp.data.records || []
+    t.tableData                    = records
+    t.rawTableData                 = resp.data.records    || []
+    t.paginationConfig.itemCount   = resp.data.total      || 0
+    t.paginationConfig.page        = resp.data.current    || pageBean.current
+    t.paginationConfig.pageSize    = resp.data.size       || pageBean.size
+    if (resp.data.novaIdFieldName)     t.novaIdFieldName          = resp.data.novaIdFieldName
+    translateData(vmKey)
   }
 
   // ── 构建排序参数 ──────────────────────────────────────────────
