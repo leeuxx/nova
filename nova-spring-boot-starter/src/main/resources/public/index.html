@@ -43,6 +43,14 @@
     </div>
   </div>
 
+  <!-- 无 token（登录页）不显示加载动画：页面解析阶段直接移除 boot -->
+  <script>
+    if (!localStorage.getItem('nova_token')) {
+      var _nb = document.getElementById('__nova-boot-loading__')
+      if (_nb && _nb.parentNode) _nb.parentNode.removeChild(_nb)
+    }
+  </script>
+
   <!-- Vue 3 -->
   <script src="js/lib/vue.global.prod.js"></script>
   <!-- Vue Router -->

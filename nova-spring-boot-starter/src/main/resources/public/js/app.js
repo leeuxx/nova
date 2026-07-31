@@ -151,7 +151,7 @@ var BOOT_LOADING_MIN_MS = 500
 // 从脚本开始执行起计时（此时首屏 loading 已在 DOM 中显示）
 var _bootLoadingStart = Date.now()
 
-function hideBootLoading() {
+function hideBootLoading(immediate) {
   var el = document.getElementById('__nova-boot-loading__')
   if (!el) return
   var finish = function () {
@@ -160,7 +160,8 @@ function hideBootLoading() {
       if (el.parentNode) el.parentNode.removeChild(el)
     }, 600)
   }
-  var remain = BOOT_LOADING_MIN_MS - (Date.now() - _bootLoadingStart)
+  // immediate=true（如登录页）：不做最短时长等待，立即开始淡出
+  var remain = (immediate ? 0 : BOOT_LOADING_MIN_MS) - (Date.now() - _bootLoadingStart)
   if (remain > 0) setTimeout(finish, remain)
   else finish()
 }
@@ -179,7 +180,9 @@ if (_startToken) {
     }).catch(function () { mountApp([], config) })
   })
 } else {
-  // 无 token：直接挂载空菜单，显示登录页
+  // 无 token：登录页直接显示，不需要加载动画，直接移除 boot（index.html 内联已移除，此处兜底）
+  var bootEl0 = document.getElementById('__nova-boot-loading__')
+  if (bootEl0 && bootEl0.parentNode) bootEl0.parentNode.removeChild(bootEl0)
   mountApp([], { theme: { default: 'daytime' }, menu: { toggle: { default: 'down' } } })
 }
 
