@@ -33,7 +33,7 @@ public @interface Nova {
     RowOperation[] rowOperation() default {};
 
     @Comment("树结构配置")
-    TreeType tree() default @TreeType(value = false);
+    TreeType tree() default @TreeType(value = false, searchField = "");
 
     @Comment("数据钻取")
     Drill[] drills() default {};
