@@ -467,7 +467,7 @@ const NovaTable = {
       return {
         flex: '0 0 50%',
         width: '50%',
-        padding: '16px 16px 16px 8px',
+        padding: '16px 16px 4px 8px',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden'
@@ -3495,7 +3495,7 @@ const NovaTable = {
         </div>
       </n-modal>
     </div>
-    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="'position:relative;' + (pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:16px 8px 16px 16px' : 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:16px 8px 16px 16px'))">
+    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="'position:relative;' + (pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:16px 8px 4px 16px' : 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:16px 8px 4px 16px'))">
 
       <!-- 主表 /build 构建中：loading 覆盖层（覆盖搜索区+表格），hidden 时淡出 -->
       <div class="table-build-overlay" :class="buildLoading ? '' : 'hidden'">
@@ -3786,7 +3786,7 @@ const NovaTable = {
       </component>
 
       <!-- 表格卡片 -->
-      <component :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (dualMode ? 'flex:1;min-height:0' : embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : (dualMode ? 'display:flex;flex-direction:column;overflow:hidden;flex:1' : 'flex:1;display:flex;flex-direction:column;overflow:hidden')">
+      <component :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (dualMode ? 'flex:1;min-height:0' : embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : (dualMode ? 'display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:8px' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:8px')">
         <div v-if="!pickerMode" class="table-card-header" :style="embeddedMode ? 'flex-shrink:0' : ''">
           <!-- 标题/tap + 操作按钮行 -->
             <n-tabs v-if="tapSearchField" type="line" :tabs-padding="0"

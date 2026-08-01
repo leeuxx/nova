@@ -93,7 +93,7 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   width: 50%;
   overflow: hidden;
   border-left: 1px solid var(--n-border-color);
-  padding: 16px 16px 16px 8px;
+  padding: 16px 16px 4px 8px;
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.25s ease,
@@ -175,6 +175,9 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   background: #ffffff;
   border-radius: 6px;
   margin-bottom: 16px;
+}
+.table-card {
+  margin-bottom: 4px;
 }
 .embedded-table {
   flex: 1;

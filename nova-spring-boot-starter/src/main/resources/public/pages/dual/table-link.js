@@ -159,14 +159,14 @@ window.DualLinkTable = {
     <!-- 树表格卡 -->
     <n-card :bordered="false" class="page-card table-card"
       style="flex:1;min-height:0;display:flex;flex-direction:column"
-      content-style="display:flex;flex-direction:column;overflow:hidden;flex:1">
+      content-style="display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:8px">
       <div class="table-card-header" style="flex-shrink:0;padding:0 16px">
         <span style="font-size:16px;font-weight:500">数据节点</span>
         <div style="display:flex;gap:8px">
           <n-button v-if="hasAddPermission" type="primary" @click="onSave">保 存</n-button>
         </div>
       </div>
-      <div class="link-tree-scroll" style="flex:1;overflow:auto;min-height:0;padding:0 12px 8px">
+      <div class="link-tree-scroll" style="flex:1;overflow:auto;min-height:0;padding:0 12px 4px">
         <n-tree v-if="!linkTreeFilteredData && linkTreeData"
           :default-expanded-keys="linkTreeDefaultExpandedKeys"
           :data="linkTreeData"
