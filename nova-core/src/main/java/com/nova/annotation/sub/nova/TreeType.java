@@ -8,7 +8,7 @@ public @interface TreeType {
     boolean value() default true;
 
     @Comment("搜索条件字段 & 树引用显示字段")
-    String searchField() default "";
+    String searchField();
 
     @Comment("父子勾选级联")
     boolean cascade() default true;

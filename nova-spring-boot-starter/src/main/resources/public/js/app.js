@@ -613,7 +613,7 @@ function mountApp(menuList, config, loginExpired) {
                   <n-layout content-style="display:flex;flex-direction:column;overflow:hidden">
 
                     <!-- 顶部 Header -->
-                    <n-layout-header bordered style="height:50px;padding:0 16px;display:flex;align-items:center;justify-content:space-between">
+                    <n-layout-header bordered style="height:50px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
                       <div style="display:flex;align-items:center;gap:12px">
                         <n-icon v-if="togglePos !== 'down'" size="20" style="cursor:pointer" @click="collapsed=!collapsed">
                           <iconify-icon icon="material-symbols:menu"></iconify-icon>
@@ -655,7 +655,7 @@ function mountApp(menuList, config, loginExpired) {
                     </n-layout-header>
 
                     <!-- Tab 栏 -->
-                    <div class="tab-bar tab-bar-wrap" style="padding:8px 16px 0;display:flex;align-items:flex-start;gap:4px" ref="tabBarRef">
+                    <div class="tab-bar tab-bar-wrap" style="padding:8px 16px 0;display:flex;align-items:flex-start;gap:4px;flex-shrink:0" ref="tabBarRef">
                       <n-tabs type="line" :key="tabsKey" :value="activeTab" :tabs-padding="0" @update:value="handleTabClick" style="flex:1;min-width:0">
                         <n-tab
                           v-for="tab in openedTabs" :key="tab.key" :name="tab.key"

@@ -3241,17 +3241,11 @@ const NovaTable = {
     _syncDualTableClass() {
       window.NovaDualAppendagesJQ.syncTableClass(this)
     },
-    // 双表视图：仅树模式用 JS 读左表高度赋给右面板，非树模式清除固定高度让 flex 拉伸
+    // 双表视图：右面板高度由 flex 拉伸决定（.page-content 高度固定），
+    // 不再用 JS 读左表 offsetHeight 设置固定像素（初始布局未稳定时读到错误值，导致树贴底）
     syncDualPanelHeight() {
-      if (!this.dualTableViewActive) return
       var rightPanel = document.querySelector('.dual-right-panel')
-      var leftPanel = document.querySelector('.page-content.dual-mode > div:first-child')
-      if (!rightPanel || !leftPanel) return
-      if (this.linkTreeData['__dual__']) {
-        rightPanel.style.height = leftPanel.offsetHeight + 'px'
-      } else {
-        rightPanel.style.height = ''
-      }
+      if (rightPanel) rightPanel.style.height = ''
     },
     _doRefSelectRequest(field, refField, query, page, append, onDone) {
       const refInfo = this.referenceMap[refField] || (this.appendageMap && this.appendageMap[refField]) || (this.linkMap && this.linkMap[refField]) || {}

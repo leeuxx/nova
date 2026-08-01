@@ -29,9 +29,6 @@ import java.time.LocalDateTime;
         layout = @Layout(
                 editLayout = Layout.EditLayout.DEFAULT
         ),
-        tree = @TreeType(
-                searchField = "name"
-        ),
         dataProxy = TestDemoService.class,
         rowOperation = {
                 @RowOperation(

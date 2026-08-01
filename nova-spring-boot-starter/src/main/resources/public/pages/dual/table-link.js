@@ -121,7 +121,7 @@ window.DualLinkTable = {
   },
 
   template: `
-<div style="display:flex;flex-direction:column;overflow:hidden;height:100%;position:relative">
+<div style="display:flex;flex-direction:column;overflow:hidden;flex:1;min-height:0;position:relative">
   <!-- 树模式：加载时保留 DOM，用遮罩覆盖避免闪 -->
   <template v-if="linkTreeData">
     <!-- 加载特效：浮在树上方，tree 数据重新加载用默认三种（与普通表数据加载一致） -->
@@ -159,7 +159,7 @@ window.DualLinkTable = {
     <!-- 树表格卡 -->
     <n-card :bordered="false" class="page-card table-card"
       style="flex:1;min-height:0;display:flex;flex-direction:column"
-      content-style="display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:8px">
+      content-style="display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:4px">
       <div class="table-card-header" style="flex-shrink:0;padding:0 16px">
         <span style="font-size:16px;font-weight:500">数据节点</span>
         <div style="display:flex;gap:8px">
