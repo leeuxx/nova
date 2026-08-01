@@ -2615,7 +2615,12 @@ const NovaTable = {
         return
       }
 
-      // 获取目标 Nova 的 build 配置（treeSearchField, treeParentField 等）
+      // 目标表 tree 配置已缓存（同子表内点击左表行复用，不重复 build）：直接加载树数据
+      if (build.linkTreeTargetConfig) {
+        this._startLinkTreeLoad(tapNovaName, stateKey, row, lt, targetNovaName)
+        return
+      }
+      // 首次：请求目标 Nova 的 build 配置（treeSearchField, treeParentField 等）
       window.fetchApi.post('/nova/table/build', { novaName: targetNovaName }, window.__novaMenuCode(targetNovaName)).then(function(buildResp) {
             if (buildResp.code !== 200) {
               self.linkTreeLoading[stateKey] = false
@@ -2664,151 +2669,168 @@ const NovaTable = {
               tableColumns: buildData.tableColumns || []
             }
             self.linkTabBuild[tapNovaName] = newBuild
-
-            // 从 linkMap 获取 referenceTransmitField 作为目标树透传字段
-            const srcFields = {}
-            const linkMap = self.linkMap || {}
-            for (const field in linkMap) {
-              if (linkMap[field] && linkMap[field].selectInfo.referenceName === targetNovaName) {
-                const transmit = linkMap[field].referenceTransmitField
-                if (transmit && transmit.length) {
-                  transmit.forEach(f => {
-                    const v = (row || self.currentRow) && (row || self.currentRow)[f]
-                    if (v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0))
-                      srcFields[f] = String(v)
-                  })
-                }
-                break
-              }
-            }
-
-            // 两个并行 tree 请求：目标表全量树 + 中间表已勾选 IDs
-            var treeRendered = false
-            var checkedReady = false
-            var sortedRoot = []
-            var nodeMap = {}
-            var defaultExpandKeys = []
-            var checkedKeys = new Set()
-
-            function renderTree() {
-              if (!treeRendered || !checkedReady) return
-              // 排序（轻量，不影响动画）
-              sortedRoot.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0) })
-              // 数据应用：触发 Vue 渲染 n-tree，占用主线程。动画期间（首屏 boot 或右表树加载动画）
-              // 延迟到动画结束后执行，避免树渲染导致动画掉帧；数据已提前就绪，动画结束立即渲染不留空白
-              var apply = function() {
-                self.linkTreeData[stateKey] = sortedRoot
-                self.linkTreeNodeMap[stateKey] = nodeMap
-                self.linkTreeCheckedKeys[stateKey] = checkedKeys
-                self.linkTreeDefaultExpandedKeys[stateKey] = defaultExpandKeys
-                self.linkTreeExpandedKeys[stateKey] = defaultExpandKeys
-                self.linkTreeLoading[stateKey] = false
-                self.updateLinkTreeDisplayKeys(stateKey)
-                // 树渲染后同步右面板高度
-                Vue.nextTick(function() { self.syncDualPanelHeight() })
-              }
-              // 首屏整页加载阶段：等全屏动画移除后再渲染
-              if (window.__bootLoadingInDom && window.__bootLoadingInDom()) {
-                window.NovaTableJQ.whenBootGone(apply)
-                return
-              }
-              // 切 tab/点行：保证右表树加载动画完整展示一小段时间（避免闪烁且主线程空闲），再渲染
-              var remain = window.NovaLoading.minDuration.linkTree - (Date.now() - (self._linkTreeLoadingStart || 0))
-              if (remain > 0) { setTimeout(apply, remain) } else { apply() }
-            }
-
-            // Step 2a: 目标表 tree（全量树结构）
-            window.fetchApi.post('/nova/table/tree', { novaName: targetNovaName, sourceNovaName: targetNovaName, sourceFields: srcFields }, window.__novaMenuCode(targetNovaName)).then(function(treeResp) {
-                if (treeResp.code !== 200) {
-                  self.linkTreeLoading[stateKey] = false
-                  if (window.$message) window.$message.error('加载树数据失败')
-                  return
-                }
-                const rootList = treeResp.data.rootList || []
-                const childrenList = treeResp.data.childrenList || []
-
-                rootList.forEach(function(node) {
-                  nodeMap[String(node[pkField])] = node
-                })
-                childrenList.forEach(function(node) {
-                  nodeMap[String(node[pkField])] = node
-                })
-
-                // 构建 parentMap（用于建树）
-                var getParentId = function(node) {
-                  var parent = node[treeParentField]
-                  if (parent == null || parent === '') return null
-                  if (typeof parent === 'object') {
-                    return parent[treeStorageField]
-                  }
-                  return parent
-                }
-                const parentMap = {}
-                childrenList.forEach(function(node) {
-                  const parentId = getParentId(node)
-                  const key = parentId != null ? String(parentId) : null
-                  if (!parentMap[key]) parentMap[key] = []
-                  parentMap[key].push(node)
-                })
-
-                function buildTree(nodes) {
-                  nodes.forEach(function(node) {
-                    const children = parentMap[String(node[pkField])] || []
-                    if (children.length > 0) {
-                      node.children = children.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0) })
-                      buildTree(children)
-                    }
-                  })
-                }
-                buildTree(rootList)
-                sortedRoot = rootList
-
-                // 根据 treeLevel 计算默认展开的节点
-                if (newBuild.linkTreeTargetConfig.treeLevel > 0) {
-                  var collectByLevel = function(nodes, depth) {
-                    if (depth >= newBuild.linkTreeTargetConfig.treeLevel) return
-                    nodes.forEach(function(node) {
-                      if (node[pkField] != null) defaultExpandKeys.push(node[pkField])
-                      if (node.children && node.children.length) {
-                        collectByLevel(node.children, depth + 1)
-                      }
-                    })
-                  }
-                  collectByLevel(rootList, 0)
-                }
-
-                treeRendered = true
-                renderTree()
-              }).catch(function() {
-                self.linkTreeLoading[stateKey] = false
-                if (window.$message) window.$message.error('加载树数据失败')
-              })
-
-            // Step 2b: 中间表 tree（获取已勾选的节点 ID，回显勾选）
-            var storageField = lt.thisStorageField
-            window.fetchApi.post('/nova/table/tree', { novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String((row || self.currentRow)[storageField]) }, window.__novaMenuCode(tapNovaName)).then(function(linkResp) {
-                if (linkResp.code === 200) {
-                  // 合并 rootList + childrenList 取所有节点
-                  var allRecords = (linkResp.data.rootList || []).concat(linkResp.data.childrenList || [])
-                  // 中间表里目标表关联字段
-                  allRecords.forEach(function(rec) {
-                    var val = rec[storageField]
-                    if (val != null) {
-                        checkedKeys.add(val)
-                    }
-                  })
-                }
-                checkedReady = true
-                renderTree()
-              }).catch(function() {
-                // 中间表 tree 失败：不回显勾选，树仍可正常显示
-                checkedReady = true
-                renderTree()
-              })
+            self._startLinkTreeLoad(tapNovaName, stateKey, row, lt, targetNovaName)
           }).catch(function() {
             self.linkTreeLoading[stateKey] = false
             if (window.$message) window.$message.error('获取目标表配置失败')
           })
+    },
+    // 目标表 tree 配置已就绪后，发起两个并行 tree 请求并渲染（点击左表行复用缓存配置，不重复 build）
+    _startLinkTreeLoad(tapNovaName, stateKey, row, lt, targetNovaName) {
+      const self = this
+      const build = this.linkTabBuild[tapNovaName] || {}
+      const config = build.linkTreeTargetConfig
+      if (!config) {
+        this.linkTreeLoading[stateKey] = false
+        return
+      }
+      const pkField = config.novaIdFieldName
+      const treeSearchField = config.treeSearchField
+      const treeCascade = config.treeCascade
+      const treeLevel = config.treeLevel
+      const treeParentField = config.treeParentField
+      const treeStorageField = config.treeStorageField
+
+      // 从 linkMap 获取 referenceTransmitField 作为目标树透传字段（依赖当前行，每次构建）
+      const srcFields = {}
+      const linkMap = self.linkMap || {}
+      for (const field in linkMap) {
+        if (linkMap[field] && linkMap[field].selectInfo.referenceName === targetNovaName) {
+          const transmit = linkMap[field].referenceTransmitField
+          if (transmit && transmit.length) {
+            transmit.forEach(f => {
+              const v = (row || self.currentRow) && (row || self.currentRow)[f]
+              if (v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0))
+                srcFields[f] = String(v)
+            })
+          }
+          break
+        }
+      }
+
+      // 两个并行 tree 请求：目标表全量树 + 中间表已勾选 IDs
+      var treeRendered = false
+      var checkedReady = false
+      var sortedRoot = []
+      var nodeMap = {}
+      var defaultExpandKeys = []
+      var checkedKeys = new Set()
+
+      function renderTree() {
+        if (!treeRendered || !checkedReady) return
+        // 排序（轻量，不影响动画）
+        sortedRoot.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0) })
+        // 数据应用：触发 Vue 渲染 n-tree，占用主线程。动画期间（首屏 boot 或右表树加载动画）
+        // 延迟到动画结束后执行，避免树渲染导致动画掉帧；数据已提前就绪，动画结束立即渲染不留空白
+        var apply = function() {
+          self.linkTreeData[stateKey] = sortedRoot
+          self.linkTreeNodeMap[stateKey] = nodeMap
+          self.linkTreeCheckedKeys[stateKey] = checkedKeys
+          self.linkTreeDefaultExpandedKeys[stateKey] = defaultExpandKeys
+          self.linkTreeExpandedKeys[stateKey] = defaultExpandKeys
+          self.linkTreeLoading[stateKey] = false
+          self.updateLinkTreeDisplayKeys(stateKey)
+          // 树渲染后同步右面板高度
+          Vue.nextTick(function() { self.syncDualPanelHeight() })
+        }
+        // 首屏整页加载阶段：等全屏动画移除后再渲染
+        if (window.__bootLoadingInDom && window.__bootLoadingInDom()) {
+          window.NovaTableJQ.whenBootGone(apply)
+          return
+        }
+        // 切 tab/点行：保证右表树加载动画完整展示一小段时间（避免闪烁且主线程空闲），再渲染
+        var remain = window.NovaLoading.minDuration.linkTree - (Date.now() - (self._linkTreeLoadingStart || 0))
+        if (remain > 0) { setTimeout(apply, remain) } else { apply() }
+      }
+
+      // Step 2a: 目标表 tree（全量树结构）
+      window.fetchApi.post('/nova/table/tree', { novaName: targetNovaName, sourceNovaName: targetNovaName, sourceFields: srcFields }, window.__novaMenuCode(targetNovaName)).then(function(treeResp) {
+          if (treeResp.code !== 200) {
+            self.linkTreeLoading[stateKey] = false
+            if (window.$message) window.$message.error('加载树数据失败')
+            return
+          }
+          const rootList = treeResp.data.rootList || []
+          const childrenList = treeResp.data.childrenList || []
+
+          rootList.forEach(function(node) {
+            nodeMap[String(node[pkField])] = node
+          })
+          childrenList.forEach(function(node) {
+            nodeMap[String(node[pkField])] = node
+          })
+
+          // 构建 parentMap（用于建树）
+          var getParentId = function(node) {
+            var parent = node[treeParentField]
+            if (parent == null || parent === '') return null
+            if (typeof parent === 'object') {
+              return parent[treeStorageField]
+            }
+            return parent
+          }
+          const parentMap = {}
+          childrenList.forEach(function(node) {
+            const parentId = getParentId(node)
+            const key = parentId != null ? String(parentId) : null
+            if (!parentMap[key]) parentMap[key] = []
+            parentMap[key].push(node)
+          })
+
+          function buildTree(nodes) {
+            nodes.forEach(function(node) {
+              const children = parentMap[String(node[pkField])] || []
+              if (children.length > 0) {
+                node.children = children.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0) })
+                buildTree(children)
+              }
+            })
+          }
+          buildTree(rootList)
+          sortedRoot = rootList
+
+          // 根据 treeLevel 计算默认展开的节点
+          if (treeLevel > 0) {
+            var collectByLevel = function(nodes, depth) {
+              if (depth >= treeLevel) return
+              nodes.forEach(function(node) {
+                if (node[pkField] != null) defaultExpandKeys.push(node[pkField])
+                if (node.children && node.children.length) {
+                  collectByLevel(node.children, depth + 1)
+                }
+              })
+            }
+            collectByLevel(rootList, 0)
+          }
+
+          treeRendered = true
+          renderTree()
+        }).catch(function() {
+          self.linkTreeLoading[stateKey] = false
+          if (window.$message) window.$message.error('加载树数据失败')
+        })
+
+      // Step 2b: 中间表 tree（获取已勾选的节点 ID，回显勾选）
+      var storageField = lt.thisStorageField
+      window.fetchApi.post('/nova/table/tree', { novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String((row || self.currentRow)[storageField]) }, window.__novaMenuCode(tapNovaName)).then(function(linkResp) {
+          if (linkResp.code === 200) {
+            // 合并 rootList + childrenList 取所有节点
+            var allRecords = (linkResp.data.rootList || []).concat(linkResp.data.childrenList || [])
+            // 中间表里目标表关联字段
+            allRecords.forEach(function(rec) {
+              var val = rec[storageField]
+              if (val != null) {
+                  checkedKeys.add(val)
+              }
+            })
+          }
+          checkedReady = true
+          renderTree()
+        }).catch(function() {
+          // 中间表 tree 失败：不回显勾选，树仍可正常显示
+          checkedReady = true
+          renderTree()
+        })
     },
     updateLinkTreeDisplayKeys(tapNovaName) {
       const fullSet = this.linkTreeCheckedKeys[tapNovaName] || new Set()
