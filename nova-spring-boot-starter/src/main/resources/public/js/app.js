@@ -485,21 +485,30 @@ function mountApp(menuList, config, loginExpired) {
         }
       }
 
-      // 提交个人中心更新：接口待接入，先本地更新右上角用户信息
+      // 提交个人中心更新：调用后端更新接口，成功后同步本地与右上角
       const submitProfile = () => {
         profileFormRef.value.validate((errors) => {
           if (errors) return
           profileSaving.value = true
-          // TODO: 调用更新用户信息接口，成功后以接口返回数据更新本地与右上角
-          localStorage.setItem('nova_user', profileForm.value.name)
-          localStorage.setItem('nova_alias', profileForm.value.alias || '')
-          localStorage.setItem('nova_avatar', profileForm.value.avatar || '')
-          userName.value = profileForm.value.name
-          userAlias.value = profileForm.value.alias || ''
-          userAvatar.value = profileForm.value.avatar || ''
-          profileSaving.value = false
-          if (window.$message) window.$message.success('更新成功')
-          showProfile.value = false
+          window.fetchApi.post('/nova/authority/editUser', {
+            name: profileForm.value.name,
+            alias: profileForm.value.alias || '',
+            avatar: profileForm.value.avatar || ''
+          }).then(function (resp) {
+            if (resp.code !== 200) return
+            localStorage.setItem('nova_user', profileForm.value.name)
+            localStorage.setItem('nova_alias', profileForm.value.alias || '')
+            localStorage.setItem('nova_avatar', profileForm.value.avatar || '')
+            userName.value = profileForm.value.name
+            userAlias.value = profileForm.value.alias || ''
+            userAvatar.value = profileForm.value.avatar || ''
+            if (window.$message) window.$message.success('更新成功')
+            showProfile.value = false
+          }).catch(function () {
+            if (window.$message) window.$message.error('更新失败')
+          }).finally(() => {
+            profileSaving.value = false
+          })
         })
       }
 

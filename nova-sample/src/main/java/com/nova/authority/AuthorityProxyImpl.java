@@ -199,4 +199,9 @@ public class AuthorityProxyImpl implements AuthorityProxy {
         Menu menu = menus.filter().eq(Menu::getCode, code).object();
         return menu != null;
     }
+
+    @Override
+    public void editUser(Login.User user) {
+        return;
+    }
 }

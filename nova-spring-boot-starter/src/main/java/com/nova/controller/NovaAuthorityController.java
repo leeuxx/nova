@@ -3,6 +3,7 @@ package com.nova.controller;
 import com.nova.annotation.NovaRouter;
 import com.nova.annotation.config.Comment;
 import com.nova.annotation.config.RestMappingController;
+import com.nova.entity.authority.EditUser;
 import com.nova.entity.authority.Login;
 import com.nova.entity.authority.Menu;
 import com.nova.service.authority.AuthorityProxy;
@@ -88,4 +89,15 @@ public class NovaAuthorityController {
         return R.ok(menus);  // 返回所有菜单，但隐藏的已标记为 false
     }
 
+    @Comment("修改用户信息")
+    @PostMapping("editUser")
+    @NovaRouter
+    public R editUser(@RequestBody @Validated EditUser editUser) {
+        authorityProxy.editUser(new Login.User()
+                .setName(editUser.getName())
+                .setAlias(editUser.getAlias())
+                .setAvatar(editUser.getAvatar())
+        );
+        return R.ok();
+    }
 }

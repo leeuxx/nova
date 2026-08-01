@@ -22,4 +22,8 @@ public interface AuthorityProxy {
 
     @Comment("菜单权限验证")
     boolean menuPermission(String token, String code);
+
+    @Comment("修改用户信息")
+    void editUser(Login.User user);
+
 }
