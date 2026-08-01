@@ -3495,7 +3495,7 @@ const NovaTable = {
         </div>
       </n-modal>
     </div>
-    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="'position:relative;' + (pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:16px 8px 16px 16px' : 'padding:16px 8px 16px 16px'))">
+    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="'position:relative;' + (pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:16px 8px 16px 16px' : 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:16px 8px 16px 16px'))">
 
       <!-- 主表 /build 构建中：loading 覆盖层（覆盖搜索区+表格），hidden 时淡出 -->
       <div class="table-build-overlay" :class="buildLoading ? '' : 'hidden'">
@@ -3531,7 +3531,7 @@ const NovaTable = {
         </div>
       </component>
       <!-- 普通表格筛选卡片 -->
-      <component v-else-if="!linkMode" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
+      <component v-else-if="!linkMode" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="'flex-shrink:0'">
         <div :class="['filter-grid', embeddedMode ? 'embedded' : '', (dualMode || dualTableViewActive) ? 'dual' : '']" :style="embeddedMode ? 'padding:8px 0' : ''">
           <template v-for="(field, index) in searchFields" :key="field.field">
             <div v-if="filterExpanded || index < ((dualMode || dualTableViewActive) ? 1 : 3)" style="display:flex;align-items:center;gap:8px;width:100%">
@@ -3786,7 +3786,7 @@ const NovaTable = {
       </component>
 
       <!-- 表格卡片 -->
-      <component :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (dualMode ? 'flex:1;min-height:0' : embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : '')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : (dualMode ? 'display:flex;flex-direction:column;overflow:hidden;flex:1' : undefined)">
+      <component :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (dualMode ? 'flex:1;min-height:0' : embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : (dualMode ? 'display:flex;flex-direction:column;overflow:hidden;flex:1' : 'flex:1;display:flex;flex-direction:column;overflow:hidden')">
         <div v-if="!pickerMode" class="table-card-header" :style="embeddedMode ? 'flex-shrink:0' : ''">
           <!-- 标题/tap + 操作按钮行 -->
             <n-tabs v-if="tapSearchField" type="line" :tabs-padding="0"
@@ -3932,7 +3932,7 @@ const NovaTable = {
             </n-popover>
           </div>
         </div>
-        <div id="table-wrapper" :style="(pickerMode || embeddedMode || dualMode || isTree) ? 'flex:1;min-height:0;overflow:hidden' : ''">
+        <div id="table-wrapper" :style="'flex:1;min-height:0;overflow:hidden'">
           <n-data-table
             :data="tableData"
             :columns="columns"

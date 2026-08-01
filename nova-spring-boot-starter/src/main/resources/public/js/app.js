@@ -610,7 +610,7 @@ function mountApp(menuList, config, loginExpired) {
                   </n-layout-sider>
 
                   <!-- 右侧主区域 -->
-                  <n-layout>
+                  <n-layout content-style="display:flex;flex-direction:column;overflow:hidden">
 
                     <!-- 顶部 Header -->
                     <n-layout-header bordered style="height:50px;padding:0 16px;display:flex;align-items:center;justify-content:space-between">
@@ -676,7 +676,7 @@ function mountApp(menuList, config, loginExpired) {
                     </div>
 
                     <!-- 内容区 -->
-                    <n-layout-content class="page-content">
+                    <n-layout-content class="page-content" style="flex:1 1 auto;min-height:0">
                       <router-view v-slot="{ Component }">
                         <transition name="page-fade" mode="out-in">
                           <keep-alive :max="20">
