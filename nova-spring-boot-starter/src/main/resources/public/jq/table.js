@@ -360,6 +360,10 @@ window.NovaTableJQ = (function ($) {
         // 元数据应用（列头/搜索表单）相对轻量，build 响应后立即执行让数据请求并行拉取；
         // 重活（表格数据渲染）由 loadData 按动画状态（首屏 boot 或切 tab 遮罩）延迟到动画结束，动画期间不掉帧、动画结束不留空表格
         applyNow()
+        // build 响应后容器布局变化（尤其树模式 isTree=true 时容器 height:100%、树搜索 filter-card 才渲染）：
+        // mounted/activated 的高度计算早于 build 响应（build 慢时用的是 isTree=false 的错误布局），必须重算，
+        // 否则树模式表格高度塌陷
+        if (window.Vue && window.Vue.nextTick) window.Vue.nextTick(function () { updateTableHeight() })
       }).catch(function () {
         var target = window.vmMap && window.vmMap[key]
         if (target) setBuildLoading(target, false)
@@ -1198,6 +1202,8 @@ window.NovaTableJQ = (function ($) {
     t.treeSearchKeyword = ''
     t.expandedRowKeys = computeExpandKeysByLevel(t.tableData, t.treeLevel || 0, t.novaIdFieldName)
     t.treeLoadingKeys = []
+    // 树数据渲染后重新计算表格高度（filter-card + 树行数变化，flex-height 表格依赖正确容器高度）
+    if (window.Vue && window.Vue.nextTick) window.Vue.nextTick(function () { updateTableHeight() })
   }
 
   // ── 根据 treeLevel 计算初始展开的节点 key ──────────────────
