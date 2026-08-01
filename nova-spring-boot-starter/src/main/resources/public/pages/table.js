@@ -2,6 +2,7 @@
 ;(function () {
 const { h } = Vue
 const { NPopconfirm, NSpace, NTooltip, NTag, NRadio, NDropdown } = naive
+const NovaImagePreview = window.NovaImagePreview
 
 // 解析列宽：百分比返回浮点数（0~100），像素返回负数表示固定像素
 function parseWidthPct(w) {
@@ -851,13 +852,13 @@ const NovaTable = {
             const isMulti = urls.length > 1
             const open = function() { vm.openTableAttachPreview({ field: col.field, title: col.title }, urls, tableShowType) }
             if (tableShowType === 'IMAGE') {
-              const badge = isMulti ? h('span', { style: 'flex-shrink:0;cursor:pointer;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px', onClick: open }, '+' + (urls.length - 1)) : null
-              return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
-                default: () => '点击查看详情',
-                trigger: () => h('span', { style: 'display:inline-flex;align-items:center;gap:4px;cursor:pointer', onClick: open }, [
-                  h('img', { src: urls[0], style: 'width:20px;height:20px;object-fit:cover;border-radius:2px;display:block' }),
-                  badge
-                ])
+              // 图片预览：封装组件（首图缩略图 + N 徽标 + 内建预览 + 可选右上角删除按钮）
+              return h(NovaImagePreview, {
+                srcList: urls,
+                width: 20,
+                height: 20,
+                objectFit: 'cover',
+                showDelete: false
               })
             }
             if (tableShowType === 'QR_CODE') {
