@@ -425,7 +425,7 @@ function mountApp(menuList, config, loginExpired) {
           type: 'render',
           key: 'user-header',
           render: () => h('div', {
-            style: 'display:flex;align-items:center;gap:12px;padding:4px 12px;width:200px;box-sizing:border-box'
+            style: 'display:flex;align-items:center;gap:12px;padding:4px 12px;width:150px;box-sizing:border-box'
           }, [
             h(NAvatar, {
               size: 40,
