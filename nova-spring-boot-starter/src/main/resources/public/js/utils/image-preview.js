@@ -63,14 +63,12 @@
       var multi = t.list.length > 1
       var renderToolbar = function (slot) {
         var nodes = slot.nodes
-        var parts = multi
-          ? [
-              nodes.prev,
-              h('span', { style: 'font-size:13px;color:#fff;min-width:40px;text-align:center' }, String(t.current + 1) + ' / ' + t.list.length),
-              nodes.next,
-              h('span', { style: 'width:1px;height:18px;background:rgba(255,255,255,.25);margin:0 2px' })
-            ]
-          : [ h('span', { style: 'font-size:13px;color:#fff;min-width:40px;text-align:center' }, '1 / 1') ]
+        var parts = [
+            nodes.prev,
+            h('span', { style: 'font-size:13px;color:#fff;min-width:40px;text-align:center' }, String(t.current + 1) + ' / ' + t.list.length),
+            nodes.next,
+            h('span', { style: 'width:1px;height:18px;background:rgba(255,255,255,.25);margin:0 2px' })
+          ]
         parts.push(nodes.rotateCounterclockwise, nodes.rotateClockwise, nodes.originalSize, nodes.zoomOut, nodes.zoomIn, nodes.download)
         if (t.showDelete) {
           parts.push(h('button', {
