@@ -21,18 +21,20 @@
       height: { type: [Number, String], default: 20 },
       objectFit: { type: String, default: 'cover' },
       borderRadius: { type: String, default: '2px' },
+      showAll: { type: Boolean, default: false },
+      showThumbs: { type: Boolean, default: true },
       showDelete: { type: Boolean, default: false }
     },
     emits: ['delete'],
     setup: function (props, ctx) {
       var emit = ctx.emit
       var list = ref((props.srcList || []).slice())
-      watch(function () { return props.srcList }, function (v) { list.value = (v || []).slice() })
+      watch(function () { return props.srcList }, function (v) { list.value = (v || []).slice() }, { deep: true })
 
       var previewShow = ref(false)
       var current = ref(0)
 
-      var openAt = function (i) { current.value = i; previewShow.value = true }
+      var open = function (i) { current.value = i; previewShow.value = true }
       var updateShow = function (s) { previewShow.value = s }
       var updateCurrent = function (i) { current.value = i }
       // 删除当前图：跳到下一张，删空则关闭
@@ -47,7 +49,7 @@
           current.value = list.value.length - 1
         }
       }
-      return { list: list, previewShow: previewShow, current: current, openAt: openAt, updateShow: updateShow, updateCurrent: updateCurrent, handleDelete: handleDelete }
+      return { list: list, previewShow: previewShow, current: current, open: open, updateShow: updateShow, updateCurrent: updateCurrent, handleDelete: handleDelete }
     },
     render: function () {
       var t = this
@@ -80,14 +82,29 @@
         parts.push(nodes.close)
         return h('div', { style: 'display:flex;align-items:center;gap:6px' }, parts)
       }
-      return h('span', { style: 'display:inline-flex;align-items:center;gap:4px' }, [
-        t.list.length ? h('span', { style: 'cursor:pointer', onClick: function () { t.openAt(0) } }, [
-          h('img', { src: t.list[0], style: imgStyle })
-        ]) : null,
-        multi ? h('span', {
-          style: 'flex-shrink:0;cursor:pointer;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px',
-          onClick: function () { t.openAt(0) }
-        }, '+' + (t.list.length - 1)) : null,
+      var thumbNodes = []
+      if (t.showThumbs) {
+        if (t.showAll) {
+          t.list.forEach(function (u, i) {
+            thumbNodes.push(h('span', { key: i, style: 'cursor:pointer', onClick: function () { t.open(i) } }, [
+              h('img', { src: u, style: imgStyle })
+            ]))
+          })
+        } else {
+          if (t.list.length) {
+            thumbNodes.push(h('span', { style: 'cursor:pointer', onClick: function () { t.open(0) } }, [
+              h('img', { src: t.list[0], style: imgStyle })
+            ]))
+          }
+          if (multi) {
+            thumbNodes.push(h('span', {
+              style: 'flex-shrink:0;cursor:pointer;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px',
+              onClick: function () { t.open(0) }
+            }, '+' + (t.list.length - 1)))
+          }
+        }
+      }
+      return h('span', { style: 'display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap' }, thumbNodes.concat([
         h(NImageGroup, {
           srcList: t.list,
           show: t.previewShow,
@@ -96,7 +113,7 @@
           'onUpdate:current': t.updateCurrent,
           renderToolbar: renderToolbar
         })
-      ])
+      ]))
     }
   })
 

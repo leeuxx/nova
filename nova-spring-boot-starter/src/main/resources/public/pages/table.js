@@ -208,7 +208,7 @@ window.evalShowExpr = evalShowExpr
 
 const NovaTable = {
   name: 'NovaTable',
-  components: { NovaFormThis: window.NovaFormThis, QrCodeCell: QrCodeCell },
+  components: { NovaFormThis: window.NovaFormThis, QrCodeCell: QrCodeCell, NovaImagePreview: NovaImagePreview },
 
   props: {
     pickerMode:         { type: Boolean, default: false },
@@ -2216,7 +2216,15 @@ const NovaTable = {
       this.previewAppNovaName = appNovaName || null
       this.previewIsOpForm = !!isOpForm
       this.previewIndex = 0
-      this.previewModalShow = true
+      // IMAGE 附件：直接弹出图片预览组件；其他类型用文件列表弹窗
+      if (this.previewAttachCfg.type === 'IMAGE') {
+        this.previewModalShow = false
+        this.$nextTick(function () {
+          if (this.$refs.novaImagePreviewRef) this.$refs.novaImagePreviewRef.open(0)
+        })
+      } else {
+        this.previewModalShow = true
+      }
     },
     copyText(text) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -4077,40 +4085,25 @@ const NovaTable = {
         </template>
       </n-modal>
 
-      <!-- 附件预览弹窗（viewMode 和普通模式共用） -->
+      <!-- 图片附件预览：点查看文件直接弹出全屏预览组件，不走列表弹窗 -->
+      <NovaImagePreview
+        ref="novaImagePreviewRef"
+        :src-list="previewFileList"
+        :width="64"
+        :height="64"
+        show-all
+        show-delete
+        :show-thumbs="false"
+        @delete="deleteFromPreview($event.index)" />
+
+      <!-- 附件文件列表弹窗（非图片类型） -->
       <n-modal v-model:show="previewModalShow" preset="card" style="width:760px;margin-top:60px;padding:0">
         <template #header>
           <div class="gallery-header">
             <span class="gallery-title">{{ previewField ? (previewField.title || '附件预览') : '附件预览' }}</span>
-            <span v-if="previewField && previewAttachCfg.type === 'IMAGE' && previewFileList.length > 0" class="gallery-count">
-              {{ previewIndex + 1 }} / {{ previewFileList.length }}
-            </span>
           </div>
         </template>
-        <div v-if="previewField && previewAttachCfg.type === 'IMAGE'" class="gallery-wrap">
-          <div class="gallery-body">
-            <div v-if="previewFileList.length > 0" class="gallery-sider">
-              <div class="gallery-thumb-list">
-                <div v-for="(url, idx) in previewFileList" :key="idx" class="gallery-thumb-item">
-                  <img :src="url" class="gallery-thumb-img" :class="{active: previewIndex === idx}"
-                    @click="slideDirection = previewIndex < idx ? 'right' : 'left'; previewIndex = idx" />
-                  <span class="gallery-thumb-del" @click.stop="deleteFromPreview(idx)">×</span>
-                </div>
-              </div>
-            </div>
-            <div class="gallery-stage">
-              <transition :name="'slide-' + slideDirection">
-                <img :key="previewIndex" :src="previewFileList[previewIndex]" class="gallery-main-img" />
-              </transition>
-            </div>
-          </div>
-          <div v-if="previewFileList.length > 0" class="gallery-url-wrap" :title="'点击复制: ' + previewFileList[previewIndex]" @click="copyText(previewFileList[previewIndex])">
-            <div class="gallery-url-label">图片地址</div>
-            <div class="gallery-url-text">{{ previewFileList[previewIndex] }}</div>
-          </div>
-          <div v-if="previewFileList.length === 0" class="gallery-empty">暂无图片</div>
-        </div>
-        <div v-else-if="previewField" class="preview-file-list">
+        <div v-if="previewField" class="preview-file-list">
           <template v-for="(url, idx) in previewFileList" :key="idx">
             <div class="preview-file-row">
               <span class="preview-file-url">{{ url }}</span>
