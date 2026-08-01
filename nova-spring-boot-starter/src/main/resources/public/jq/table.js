@@ -1164,22 +1164,43 @@ window.NovaTableJQ = (function ($) {
     window.fetchApi.post('/nova/table/tree', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, orders: buildOrderItems(target.sortStates) }, window.__novaMenuCode(queryName)).then(function(resp) {
       var t = window.vmMap && window.vmMap[vmKey]
       if (!t) return
-        t.loading = false
-          t.treeSearchHitKeys = new Set()
-        var data = resp.data || {}
-        var rootList = data.rootList || []
-        var childrenList = data.childrenList || []
-        var records = rootList.concat(childrenList)
-        records = translateRecords(records, t.tableColumns, t.choiceMap, t.referenceMap, t.appendageMap, t.refBuildMeta)
-        t.rawTreeData = records
-        buildTreeData(t, records)
-        t.treeSearchKeyword = ''
-        t.expandedRowKeys = computeExpandKeysByLevel(t.tableData, t.treeLevel || 0, t.novaIdFieldName)
-        t.treeLoadingKeys = []
-      }).catch(function() {
+      // 动画期间（首屏 boot 或切 tab 表格加载动画）保持主线程空闲：
+      // 树数据响应延迟到动画结束（boot 移除且遮罩关闭）后应用，与普通表 data 接口一致，动画期间不掉帧
+      if ((window.__bootLoadingInDom && window.__bootLoadingInDom()) || t.buildLoading) {
+        t._pendingTreeResp = resp
+        whenLoadingDone(t, function () {
+          var tt = window.vmMap && window.vmMap[vmKey]
+          if (tt && tt._pendingTreeResp) {
+            var r = tt._pendingTreeResp
+            tt._pendingTreeResp = null
+            applyTreeDataResp(vmKey, r)
+          }
+        })
+        return
+      }
+      applyTreeDataResp(vmKey, resp)
+    }).catch(function() {
         var t = window.vmMap && window.vmMap[vmKey]
         if (t) t.loading = false
       })
+  }
+
+  // ── 应用树表响应：翻译 + 构建树结构 + 计算展开 keys，触发 Vue 渲染 ──
+  function applyTreeDataResp(vmKey, resp) {
+    var t = window.vmMap && window.vmMap[vmKey]
+    if (!t) return
+    t.loading = false
+    t.treeSearchHitKeys = new Set()
+    var data = resp.data || {}
+    var rootList = data.rootList || []
+    var childrenList = data.childrenList || []
+    var records = rootList.concat(childrenList)
+    records = translateRecords(records, t.tableColumns, t.choiceMap, t.referenceMap, t.appendageMap, t.refBuildMeta)
+    t.rawTreeData = records
+    buildTreeData(t, records)
+    t.treeSearchKeyword = ''
+    t.expandedRowKeys = computeExpandKeysByLevel(t.tableData, t.treeLevel || 0, t.novaIdFieldName)
+    t.treeLoadingKeys = []
   }
 
   // ── 根据 treeLevel 计算初始展开的节点 key ──────────────────
