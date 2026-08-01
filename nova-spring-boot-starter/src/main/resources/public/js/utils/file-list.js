@@ -4,6 +4,12 @@
 // emits: delete({ index, url, list }) 删除后回调，父组件自行更新数据
 ;(function () {
   if (window.NovaFileList) return
+  // NListItem 的 main 区没有 min-width:0，超长 URL 会把它撑开顶出弹窗，这里强制收缩+裁剪让省略号生效
+  try {
+    var _ls = document.createElement('style')
+    _ls.textContent = '.n-list-item__main{flex:1;min-width:0;overflow:hidden}'
+    document.head.appendChild(_ls)
+  } catch (e) {}
   var Vue = window.Vue
   var naive = window.naive
   var defineComponent = Vue.defineComponent
@@ -69,7 +75,7 @@
             }
             return h(NListItem, { key: idx }, {
               prefix: function () { return h('iconify-icon', { icon: 'mdi:file-outline', style: 'font-size:18px;color:#888' }) },
-              default: function () { return h('div', { style: 'font-size:13px;color:var(--n-text-color-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap', title: url }, url) },
+              default: function () { return h('div', { style: 'font-size:13px;color:var(--n-text-color-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%', title: url }, url) },
               suffix: function () { return h('div', { style: 'display:flex;align-items:center;gap:8px;flex-shrink:0' }, suffix) }
             })
           })
