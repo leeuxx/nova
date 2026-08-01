@@ -208,7 +208,7 @@ window.evalShowExpr = evalShowExpr
 
 const NovaTable = {
   name: 'NovaTable',
-  components: { NovaFormThis: window.NovaFormThis, QrCodeCell: QrCodeCell, NovaImagePreview: NovaImagePreview },
+  components: { NovaFormThis: window.NovaFormThis, QrCodeCell: QrCodeCell, NovaImagePreview: NovaImagePreview, NovaFileList: window.NovaFileList },
 
   props: {
     pickerMode:         { type: Boolean, default: false },
@@ -2286,6 +2286,10 @@ const NovaTable = {
       this.tableAttachPreviewType = null
       this.tableAttachPreviewIndex = 0
     },
+    handleTableAttachDelete(e) {
+      this.tableAttachPreviewUrls.splice(e.index, 1)
+      if (this.tableAttachPreviewUrls.length === 0) this.tableAttachPreviewShow = false
+    },
     // ── 视频悬浮预览 ──
     onVideoPreviewLoaded(e, idx) {
       var v = e.currentTarget
@@ -3456,9 +3460,6 @@ const NovaTable = {
         <template #header>
           <div class="gallery-header">
             <span class="gallery-title">{{ previewField ? (previewField.title || '附件预览') : '附件预览' }}</span>
-            <span v-if="previewField && attachmentMap[previewField.field] && attachmentMap[previewField.field].type === 'IMAGE' && (formData[previewField.field] || []).length > 0" class="gallery-count">
-              {{ previewIndex + 1 }} / {{ (formData[previewField.field] || []).length }}
-            </span>
           </div>
         </template>
         <div v-if="previewField && attachmentMap[previewField.field] && attachmentMap[previewField.field].type === 'IMAGE'" class="gallery-wrap">
@@ -4106,17 +4107,11 @@ const NovaTable = {
             <span class="gallery-title">{{ previewField ? (previewField.title || '附件预览') : '附件预览' }}</span>
           </div>
         </template>
-        <div v-if="previewField" class="preview-file-list">
-          <template v-for="(url, idx) in previewFileList" :key="idx">
-            <div class="preview-file-row">
-              <span class="preview-file-url">{{ url }}</span>
-              <n-space>
-                <n-button size="tiny" @click="copyText(url)">复制</n-button>
-                <n-button type="error" size="tiny" @click="deleteFromPreview(idx)">删除</n-button>
-              </n-space>
-            </div>
-          </template>
-          <div v-if="previewFileList.length === 0" class="preview-empty">暂无文件</div>
+        <div v-if="previewField">
+          <NovaFileList
+            :file-list="previewFileList"
+            show-delete
+            @delete="deleteFromPreview($event.index)" />
         </div>
       </n-modal>
 
@@ -4500,7 +4495,6 @@ const NovaTable = {
       <template #header>
         <div class="gallery-header">
           <span class="gallery-title">{{ tableAttachPreviewField ? (tableAttachPreviewField.title || '附件预览') : '附件预览' }}</span>
-          <span v-if="tableAttachPreviewUrls.length > 0" class="gallery-count">{{ (tableAttachPreviewIndex || 0) + 1 }} / {{ tableAttachPreviewUrls.length }}</span>
         </div>
       </template>
       <!-- IMAGE / QR_CODE -->
@@ -4580,16 +4574,10 @@ const NovaTable = {
         </div>
       </div>
     </div>
-    <!-- DIALOG / TEXT -->
-      <div v-else class="preview-file-list">
-        <template v-for="(url, idx) in tableAttachPreviewUrls" :key="idx">
-          <div class="preview-file-row">
-            <span class="preview-file-url">{{ url }}</span>
-            <n-button size="tiny" @click="copyText(url)">复制</n-button>
-          </div>
-        </template>
-        <div v-if="tableAttachPreviewUrls.length === 0" class="preview-empty">暂无文件</div>
-      </div>
+    <!-- DIALOG / TEXT：文件 URL 列表（NovaFileList 组件，删除后本地移除，删空关闭弹窗） -->
+      <NovaFileList
+        v-else
+        :file-list="tableAttachPreviewUrls" />
     </n-modal>
   </div>
   `
