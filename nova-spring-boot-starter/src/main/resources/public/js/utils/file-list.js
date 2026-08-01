@@ -7,7 +7,7 @@
   // NListItem 的 main 区没有 min-width:0，超长 URL 会把它撑开顶出弹窗，这里强制收缩+裁剪让省略号生效
   try {
     var _ls = document.createElement('style')
-    _ls.textContent = '.n-list-item__main{flex:1;min-width:0;overflow:hidden}'
+    _ls.textContent = '.n-list-item__main{flex:1;min-width:0;overflow:hidden}.n-message-container{z-index:10000!important}'
     document.head.appendChild(_ls)
   } catch (e) {}
   var Vue = window.Vue
