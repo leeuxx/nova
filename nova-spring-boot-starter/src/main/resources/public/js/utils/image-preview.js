@@ -5,6 +5,12 @@
 // emits: delete({ index, url, list }) 删除后回调，父组件自行更新数据
 ;(function () {
   if (window.NovaImagePreview) return
+  // 图片预览容器 naive 默认 z-index 2000，低于引用选取弹窗(3000+)，会被遮挡，这里统一提升
+  try {
+    var _zStyle = document.createElement('style')
+    _zStyle.textContent = '.n-image-preview-container{z-index:4000!important}'
+    document.head.appendChild(_zStyle)
+  } catch (e) {}
   var Vue = window.Vue
   var naive = window.naive
   var defineComponent = Vue.defineComponent

@@ -853,12 +853,15 @@ const NovaTable = {
             const open = function() { vm.openTableAttachPreview({ field: col.field, title: col.title }, urls, tableShowType) }
             if (tableShowType === 'IMAGE') {
               // 图片预览：封装组件（首图缩略图 + N 徽标 + 内建预览 + 可选右上角删除按钮）
-              return h(NovaImagePreview, {
-                srcList: urls,
-                width: 20,
-                height: 20,
-                objectFit: 'cover',
-                showDelete: false
+              return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
+                default: () => '点击查看详情',
+                trigger: () => h(NovaImagePreview, {
+                  srcList: urls,
+                  width: 20,
+                  height: 20,
+                  objectFit: 'cover',
+                  showDelete: false
+                })
               })
             }
             if (tableShowType === 'QR_CODE') {
