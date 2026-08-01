@@ -2598,6 +2598,7 @@ const NovaTable = {
       const row = options && options.row
       if (this.linkTreeLoading[stateKey]) return
       this.linkTreeLoading[stateKey] = true
+      this._linkTreeLoadingStart = Date.now()
       this.linkTreeSearchKeyword[stateKey] = ''
 
       const self = this
@@ -2691,17 +2692,29 @@ const NovaTable = {
 
             function renderTree() {
               if (!treeRendered || !checkedReady) return
-              // 排序
+              // 排序（轻量，不影响动画）
               sortedRoot.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0) })
-              self.linkTreeData[stateKey] = sortedRoot
-              self.linkTreeNodeMap[stateKey] = nodeMap
-              self.linkTreeCheckedKeys[stateKey] = checkedKeys
-              self.linkTreeDefaultExpandedKeys[stateKey] = defaultExpandKeys
-              self.linkTreeExpandedKeys[stateKey] = defaultExpandKeys
-              self.linkTreeLoading[stateKey] = false
-              self.updateLinkTreeDisplayKeys(stateKey)
-              // 树渲染后同步右面板高度
-              Vue.nextTick(function() { self.syncDualPanelHeight() })
+              // 数据应用：触发 Vue 渲染 n-tree，占用主线程。动画期间（首屏 boot 或右表树加载动画）
+              // 延迟到动画结束后执行，避免树渲染导致动画掉帧；数据已提前就绪，动画结束立即渲染不留空白
+              var apply = function() {
+                self.linkTreeData[stateKey] = sortedRoot
+                self.linkTreeNodeMap[stateKey] = nodeMap
+                self.linkTreeCheckedKeys[stateKey] = checkedKeys
+                self.linkTreeDefaultExpandedKeys[stateKey] = defaultExpandKeys
+                self.linkTreeExpandedKeys[stateKey] = defaultExpandKeys
+                self.linkTreeLoading[stateKey] = false
+                self.updateLinkTreeDisplayKeys(stateKey)
+                // 树渲染后同步右面板高度
+                Vue.nextTick(function() { self.syncDualPanelHeight() })
+              }
+              // 首屏整页加载阶段：等全屏动画移除后再渲染
+              if (window.__bootLoadingInDom && window.__bootLoadingInDom()) {
+                window.NovaTableJQ.whenBootGone(apply)
+                return
+              }
+              // 切 tab/点行：保证右表树加载动画完整展示一小段时间（避免闪烁且主线程空闲），再渲染
+              var remain = window.NovaLoading.minDuration.linkTree - (Date.now() - (self._linkTreeLoadingStart || 0))
+              if (remain > 0) { setTimeout(apply, remain) } else { apply() }
             }
 
             // Step 2a: 目标表 tree（全量树结构）

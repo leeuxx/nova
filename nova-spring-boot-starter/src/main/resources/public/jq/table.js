@@ -48,9 +48,6 @@ window.NovaTableJQ = (function ($) {
     setTimeout(updateTableHeight, 80)
   }
 
-  // buildLoading 最短展示时长（ms）：接口再快也完整播放，避免闪烁
-  var BUILD_LOADING_MIN_MS = 500
-
   function setBuildLoading(target, val) {
     if (!target) return
     if (val === true) {
@@ -63,7 +60,7 @@ window.NovaTableJQ = (function ($) {
       target.buildLoading = true
       return
     }
-    var remain = BUILD_LOADING_MIN_MS - (Date.now() - (target._buildLoadingStart || 0))
+    var remain = window.NovaLoading.minDuration.build - (Date.now() - (target._buildLoadingStart || 0))
     if (remain > 0) {
       setTimeout(function () {
         if (target && target.buildLoading === true) target.buildLoading = false
@@ -1280,7 +1277,7 @@ window.NovaTableJQ = (function ($) {
     onPickerMounted, onViewMounted, onEmbeddedMounted,
     // loadAppendageDetails — 已移至 NovaTableJQ_app
     // handleLinkAdd — 已移至 NovaTableJQ_link
-    buildLinkTabs, loadTreeData
+    buildLinkTabs, loadTreeData, whenBootGone
   }
 
 })(jQuery)

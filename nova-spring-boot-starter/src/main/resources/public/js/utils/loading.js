@@ -28,6 +28,12 @@
   }
 
   window.NovaLoading = {
+    // 各场景加载动画最短展示时长（ms）：接口再快也完整播放，避免闪烁
+    minDuration: {
+      boot: 500,      // 首屏全屏加载动画
+      build: 500,     // 普通表格 buildLoading 遮罩
+      linkTree: 500   // LINK 树 / 双表右表树
+    },
     // 返回跳跃方块动画的 HTML，text 为自定义文本，空则不显示，配合 v-html 使用
     html: function (text) {
       ensureCss()

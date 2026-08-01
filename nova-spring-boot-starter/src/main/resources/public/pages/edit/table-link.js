@@ -30,6 +30,13 @@ window.NovaLinkForm = {
 
   emits: ['init', 'link-add', 'tree-check', 'tree-search', 'save-tree'],
 
+  data: function() {
+    return {
+      // LINK 树加载动画：与首屏/普通表一致的跳跃方块（NovaLoading.html）
+      novaLoadingHtml: (window.NovaLoading && window.NovaLoading.html) ? window.NovaLoading.html() : ''
+    }
+  },
+
   mounted() {
     this.$emit('init', this.linkNovaName)
   },
@@ -98,50 +105,18 @@ window.NovaLinkForm = {
   template: `
 <div v-if="visible"
   :style="'display:flex;flex-direction:column;overflow:hidden;' + (linkTreeData[linkNovaName] ? 'max-height:500px' : 'height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px'))">
-  <!-- 加载中：复用三种加载效果 -->
+  <!-- 加载中：跳跃方块动画 -->
   <div v-if="linkTreeLoading[linkNovaName] && !linkTabBuild[linkNovaName]"
     style="display:flex;align-items:center;justify-content:center;padding:60px">
-    <n-spin v-if="loadingStyle === 'spinner'" size="small" />
-    <div v-else-if="loadingStyle === 'wave'" class="custom-loading loading-wave" style="padding:0">
-      <span class="wave-bars">
-        <span class="bar b1"></span>
-        <span class="bar b2"></span>
-        <span class="bar b3"></span>
-        <span class="bar b4"></span>
-        <span class="bar b5"></span>
-      </span>
-    </div>
-    <div v-else-if="loadingStyle === 'dots'" class="custom-loading loading-dots" style="padding:0">
-      <span class="dots-wrap">
-        <span class="dot d1"></span>
-        <span class="dot d2"></span>
-        <span class="dot d3"></span>
-      </span>
-    </div>
+    <div v-html="novaLoadingHtml"></div>
   </div>
   <!-- 树模式（含加载遮罩）：build 返回后立即占据树区域，避免空白 -->
   <div v-else-if="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig"
     style="position:relative;display:flex;flex-direction:column;max-height:500px;min-height:200px">
-    <!-- 树数据加载遮罩 -->
+    <!-- 树数据加载遮罩：跳跃方块动画 -->
     <div v-if="linkTreeLoading[linkNovaName]"
       style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;pointer-events:none">
-      <n-spin v-if="loadingStyle === 'spinner'" size="small" />
-      <div v-else-if="loadingStyle === 'wave'" class="custom-loading loading-wave" style="padding:0">
-        <span class="wave-bars">
-          <span class="bar b1"></span>
-          <span class="bar b2"></span>
-          <span class="bar b3"></span>
-          <span class="bar b4"></span>
-          <span class="bar b5"></span>
-        </span>
-      </div>
-      <div v-else-if="loadingStyle === 'dots'" class="custom-loading loading-dots" style="padding:0">
-        <span class="dots-wrap">
-          <span class="dot d1"></span>
-          <span class="dot d2"></span>
-          <span class="dot d3"></span>
-        </span>
-      </div>
+      <div v-html="novaLoadingHtml"></div>
     </div>
     <template v-if="linkTreeData[linkNovaName]">
       <div v-if="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField" style="flex-shrink:0;padding:12px 0 8px 0">

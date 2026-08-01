@@ -32,7 +32,9 @@ window.DualLinkTable = {
   data: function() {
     return {
       _dualReloading: false,
-      _animateNext: false    // 切换子表时触发入场动画
+      _animateNext: false,    // 切换子表时触发入场动画
+      // 右表树加载动画：与首屏/普通表一致的跳跃方块（NovaLoading.html）
+      novaLoadingHtml: (window.NovaLoading && window.NovaLoading.html) ? window.NovaLoading.html() : ''
     }
   },
 
@@ -122,25 +124,9 @@ window.DualLinkTable = {
 <div style="display:flex;flex-direction:column;overflow:hidden;height:100%;position:relative">
   <!-- 树模式：加载时保留 DOM，用遮罩覆盖避免闪 -->
   <template v-if="linkTreeData">
-    <!-- 加载特效：浮在树上方，无背景色，跟随用户设置的 loadingStyle -->
+    <!-- 加载特效：浮在树上方，无背景色，与首屏/普通表一致的跳跃方块动画 -->
     <div v-if="linkTreeLoading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;pointer-events:none">
-      <n-spin v-if="loadingStyle === 'spinner'" size="small" />
-      <div v-else-if="loadingStyle === 'wave'" class="custom-loading loading-wave" style="padding:0">
-        <span class="wave-bars">
-          <span class="bar b1"></span>
-          <span class="bar b2"></span>
-          <span class="bar b3"></span>
-          <span class="bar b4"></span>
-          <span class="bar b5"></span>
-        </span>
-      </div>
-      <div v-else-if="loadingStyle === 'dots'" class="custom-loading loading-dots" style="padding:0">
-        <span class="dots-wrap">
-          <span class="dot d1"></span>
-          <span class="dot d2"></span>
-          <span class="dot d3"></span>
-        </span>
-      </div>
+      <div v-html="novaLoadingHtml"></div>
     </div>
     <!-- 搜索条件卡 -->
     <n-card v-if="linkTreeTargetConfig && linkTreeTargetConfig.treeSearchField"
@@ -200,25 +186,9 @@ window.DualLinkTable = {
     :source-fields-prop="sourceFields"
     @link-add="onLinkAdd"
   />
-  <!-- 首次加载（树还没数据）：复用三种加载效果 -->
+  <!-- 首次加载（树还没数据）：跳跃方块动画 -->
   <div v-else style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2">
-    <n-spin v-if="loadingStyle === 'spinner'" size="small" />
-    <div v-else-if="loadingStyle === 'wave'" class="custom-loading loading-wave" style="padding:0">
-      <span class="wave-bars">
-        <span class="bar b1"></span>
-        <span class="bar b2"></span>
-        <span class="bar b3"></span>
-        <span class="bar b4"></span>
-        <span class="bar b5"></span>
-      </span>
-    </div>
-    <div v-else-if="loadingStyle === 'dots'" class="custom-loading loading-dots" style="padding:0">
-      <span class="dots-wrap">
-        <span class="dot d1"></span>
-        <span class="dot d2"></span>
-        <span class="dot d3"></span>
-      </span>
-    </div>
+    <div v-html="novaLoadingHtml"></div>
   </div>
 </div>`
 }

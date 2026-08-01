@@ -146,8 +146,6 @@ const themeOverrides = {
   }
 }
 
-// 首屏加载动画最短播放时长（ms）：无论 getMenu 多快，动画都会完整播放这段时间再柔和淡出
-var BOOT_LOADING_MIN_MS = 500
 // 从脚本开始执行起计时（此时首屏 loading 已在 DOM 中显示）
 var _bootLoadingStart = Date.now()
 
@@ -161,7 +159,7 @@ function hideBootLoading(immediate) {
     }, 600)
   }
   // immediate=true（如登录页）：不做最短时长等待，立即开始淡出
-  var remain = (immediate ? 0 : BOOT_LOADING_MIN_MS) - (Date.now() - _bootLoadingStart)
+  var remain = (immediate ? 0 : window.NovaLoading.minDuration.boot) - (Date.now() - _bootLoadingStart)
   if (remain > 0) setTimeout(finish, remain)
   else finish()
 }
