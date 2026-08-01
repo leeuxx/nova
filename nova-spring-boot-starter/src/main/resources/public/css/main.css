@@ -30,6 +30,26 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 .user-info {
   height: 24px;
 }
+/* 右上角用户下拉头部：昵称（主）+ 名称（次），超长省略号截断 */
+.user-drop-header-alias,
+.user-drop-header-name {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.3;
+}
+.user-drop-header-alias {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.88);
+}
+.user-drop-header-name {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+}
+.dark .user-drop-header-alias { color: #fff; }
+.dark .user-drop-header-name { color: rgba(255, 255, 255, 0.6); }
 
 .tab-bar {
   background: #fff;

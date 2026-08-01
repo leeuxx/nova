@@ -23,7 +23,7 @@ const {
   NConfigProvider, NLayout, NLayoutSider, NLayoutHeader, NLayoutContent,
   NMenu, NIcon, NDropdown, NSpace, NTabs, NTab, NSpin, NSwitch,
   NBreadcrumb, NBreadcrumbItem, NBadge,
-  NMessageProvider, NDialogProvider, NNotificationProvider,
+  NMessageProvider, NDialogProvider, NNotificationProvider, NAvatar,
   useDialog, useMessage,
   darkTheme, zhCN, dateZhCN
 } = naive
@@ -241,12 +241,14 @@ function mountApp(menuList, config, loginExpired) {
       const contextMenuY = ref(0)
       const contextMenuTabKey = ref('')
 
+      // 下拉/右键菜单项图标辅助
+      const mi = (icon) => () => h(NIcon, { size: 14 }, { default: () => h('iconify-icon', { icon }) })
+
       const contextMenuOptions = computed(() => {
         const idx = openedTabs.value.findIndex(t => t.key === contextMenuTabKey.value)
         const hasLeft = idx > 0
         const hasRight = idx >= 0 && idx < openedTabs.value.length - 1
         const hasOther = openedTabs.value.length > 1
-        const mi = (icon) => () => h(NIcon, { size: 14 }, { default: () => h('iconify-icon', { icon }) })
         return [
           { label: '关闭', key: 'close', icon: mi('material-symbols:close'), disabled: !hasOther },
           { label: '重新加载', key: 'reload', icon: mi('material-symbols:refresh') },
@@ -412,15 +414,61 @@ function mountApp(menuList, config, loginExpired) {
         history.replaceState(null, '', '#/home')
         window.location.reload()
       }
-      const userDropdown   = [{ label: '个人中心', key: 'profile' }, { label: '退出登录', key: 'logout' }]
-
       // 用户信息（从 localStorage 读取）
       const userName   = ref(localStorage.getItem('nova_user') || '未登录')
       const userAlias  = ref(localStorage.getItem('nova_alias') || '')
       const userAvatar = ref(localStorage.getItem('nova_avatar') || '')
 
+      // 右上角用户下拉：第一列用户信息头（头像+名称/昵称），下面个人中心/退出登录带图标
+      const userDropdown = [
+        {
+          type: 'render',
+          key: 'user-header',
+          render: () => h('div', {
+            style: 'display:flex;align-items:center;gap:12px;padding:4px 12px;width:200px;box-sizing:border-box'
+          }, [
+            h(NAvatar, {
+              size: 40,
+              round: true,
+              style: 'flex-shrink:0',
+              ...(userAvatar.value ? { src: userAvatar.value } : {})
+            }, userAvatar.value ? {} : { default: () => h(NIcon, { size: 40 }, { default: () => h('iconify-icon', { icon: 'material-symbols:account-circle' }) }) }),
+            h('div', { style: 'display:flex;flex-direction:column;justify-content:center;min-width:0;flex:1' }, [
+              h('span', { class: 'user-drop-header-alias' }, userAlias.value || '-'),
+              h('span', { class: 'user-drop-header-name', style: 'margin-top:3px' }, userName.value)
+            ])
+          ])
+        },
+        { type: 'divider', key: 'd1' },
+        { label: '个人中心', key: 'profile', icon: mi('material-symbols:person-outline') },
+        { label: '退出登录', key: 'logout', icon: mi('material-symbols:logout') }
+      ]
+
+      // 个人中心弹窗状态
+      const showProfile = ref(false)
+      const profileSaving = ref(false)
+      const profileFormRef = ref(null)
+      const profileForm = ref({ token: '', avatar: '', name: '', alias: '' })
+      const avatarFileList = ref([])
+      const profileRules = {
+        name: { required: true, message: '请输入名称', trigger: ['blur', 'input'] }
+      }
+
       // 右上角用户菜单
       const handleUserMenuSelect = (key) => {
+        if (key === 'profile') {
+          // 反显当前用户信息（token 只读）
+          const ava = localStorage.getItem('nova_avatar') || ''
+          profileForm.value = {
+            token: localStorage.getItem('nova_token') || '',
+            avatar: ava,
+            name: localStorage.getItem('nova_user') || '',
+            alias: localStorage.getItem('nova_alias') || ''
+          }
+          // n-upload 按文件名后缀判断是否图片，反显需带图片扩展名才能显示缩略图
+          avatarFileList.value = ava ? [{ name: 'avatar.jpg', url: ava, status: 'finished' }] : []
+          showProfile.value = true
+        }
         if (key === 'logout') {
           window.msg.confirm('warning', '退出登录', '确定要退出登录吗？', () => {
             window.fetchApi.post('/nova/authority/logout').finally(() => {
@@ -436,6 +484,46 @@ function mountApp(menuList, config, loginExpired) {
           })
         }
       }
+
+      // 提交个人中心更新：接口待接入，先本地更新右上角用户信息
+      const submitProfile = () => {
+        profileFormRef.value.validate((errors) => {
+          if (errors) return
+          profileSaving.value = true
+          // TODO: 调用更新用户信息接口，成功后以接口返回数据更新本地与右上角
+          localStorage.setItem('nova_user', profileForm.value.name)
+          localStorage.setItem('nova_alias', profileForm.value.alias || '')
+          localStorage.setItem('nova_avatar', profileForm.value.avatar || '')
+          userName.value = profileForm.value.name
+          userAlias.value = profileForm.value.alias || ''
+          userAvatar.value = profileForm.value.avatar || ''
+          profileSaving.value = false
+          if (window.$message) window.$message.success('更新成功')
+          showProfile.value = false
+        })
+      }
+
+      // 头像图片上传（复用 /nova/attachment/upload 现成接口）
+      const handleAvatarUpload = ({ file, onFinish, onError }) => {
+        var formData = new FormData()
+        formData.append('novaName', 'user')
+        formData.append('files', file.file)
+        window.fetchApi.upload('/nova/attachment/upload', formData).then(function(resp) {
+          if (resp.data && resp.data.length) {
+            profileForm.value.avatar = resp.data[0]
+            if (window.$message) window.$message.success('上传成功')
+            onFinish()
+          } else {
+            if (window.$message) window.$message.error('上传失败')
+            onError()
+          }
+        }).catch(function() {
+          if (window.$message) window.$message.error('上传失败')
+          onError()
+        })
+      }
+      // 删除头像时清空必填值
+      const onAvatarRemove = () => { profileForm.value.avatar = '' }
 
       // 自定义下横线
       const barStyle = ref({ transform: 'translateX(0px)', width: '0px', opacity: 0 })
@@ -470,7 +558,9 @@ function mountApp(menuList, config, loginExpired) {
         menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isStandaloneRoute, menuSelectedKey,
         handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, handleUserMenuSelect,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
-        barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText
+        barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText,
+        showProfile, profileSaving, profileFormRef, profileForm, profileRules, submitProfile,
+        avatarFileList, handleAvatarUpload, onAvatarRemove
       }
     },
 
@@ -594,6 +684,37 @@ function mountApp(menuList, config, loginExpired) {
             </n-notification-provider>
           </n-dialog-provider>
         </n-message-provider>
+
+        <!-- 个人中心弹窗 -->
+        <n-modal v-model:show="showProfile" preset="card" title="个人中心" style="width:420px;margin-top:60px">
+          <n-form ref="profileFormRef" :model="profileForm" :rules="profileRules"
+            label-placement="left" label-width="70" style="margin-top:4px">
+            <n-form-item label="Token" path="token">
+              <n-input v-model:value="profileForm.token" disabled />
+            </n-form-item>
+            <n-form-item label="头像" path="avatar">
+              <n-upload
+                v-model:file-list="avatarFileList"
+                :max="1"
+                list-type="image-card"
+                accept="image/*"
+                :custom-request="handleAvatarUpload"
+                @remove="onAvatarRemove"
+              />
+            </n-form-item>
+            <n-form-item label="昵称" path="alias">
+              <n-input v-model:value="profileForm.alias" placeholder="请输入昵称" />
+            </n-form-item>
+            <n-form-item label="名称" path="name">
+              <n-input v-model:value="profileForm.name" placeholder="请输入名称" />
+            </n-form-item>
+          </n-form>
+          <template #footer>
+            <div style="display:flex;justify-content:center">
+              <n-button type="primary" :loading="profileSaving" @click="submitProfile">更新信息</n-button>
+            </div>
+          </template>
+        </n-modal>
 
         <!-- Tab 右键菜单 -->
         <div v-if="contextMenuShow" :key="contextMenuTabKey"
