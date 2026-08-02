@@ -1,0 +1,38 @@
+package com.nova.annotation.sub.nova.field.view;
+
+import com.nova.annotation.config.Comment;
+import lombok.Data;
+import lombok.experimental.Accessors;
+
+import java.util.List;
+
+public interface PopHandler {
+
+    @Comment("获取pop列表")
+    List<PopModel> getPopModel(String param, String value);
+
+    @Data
+    @Accessors(chain = true)
+    class PopModel {
+
+        @Comment("类型")
+        private Type type = Type.TEXT;
+
+        @Comment("名称")
+        private String name;
+
+        @Comment("值")
+        private String value;
+
+    }
+
+    enum Type {
+        @Comment("文本")
+        TEXT,
+        @Comment("布尔")
+        BOOLEAN,
+        @Comment("标签（使用,号分隔）")
+        TAG
+    }
+
+}

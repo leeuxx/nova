@@ -289,6 +289,11 @@ const NovaTable = {
       linkMap:        {},
       drills:         [],  // drill 配置数组：[{ dualTableTitle, linkNovaName, column, joinColumn }]
       linkTargetInfo: {},
+      popMap:         {},  // pop 弹窗配置：字段名 → { title, param, handleName }
+      popShow:        false,
+      popTitle:       '',
+      popLoading:     false,
+      popList:        [],  // [{ type, name, value }]
       linkTabBuild:     {},
       linkFormData:     {},
       linkPickerShow:            false,
@@ -921,6 +926,27 @@ const NovaTable = {
             return h('span', { style: 'display:inline-flex;align-items:center;color:#bbb' }, [
               h('span', { style: 'width:10px;height:10px;border:1.5px solid #ccc;border-top-color:transparent;border-radius:50%;display:inline-block;animation:refSpin .7s linear infinite' })
             ])
+          }
+        }
+
+        // pop 可点击文本：pops 按字段级匹配（嵌套列取外层字段前缀），点击传单元格显示文本
+        if (!subLoading) {
+          const popKey = String(col.field || '').split('.')[0]
+          const popCfg = vm.popMap[popKey]
+          if (popCfg) {
+            const baseRender = colDef.render
+            colDef.render = (row) => {
+              const inner = baseRender ? baseRender(row) : String(getFieldValue(row, col.field) ?? '')
+              if (inner === '' || inner === null || inner === undefined) return ''
+              return h('span', {
+                style: 'color:#2563eb;cursor:pointer;text-decoration:underline;text-underline-offset:2px',
+                title: popCfg.title || '',
+                onClick: (e) => {
+                  e.stopPropagation()
+                  vm.handlePopClick(popCfg, (e.currentTarget.textContent || '').trim())
+                }
+              }, [inner])
+            }
           }
         }
 
@@ -1748,6 +1774,31 @@ const NovaTable = {
       var action = function() { self.submitCustomBtn(btn, null) }
       if (btn.callHint && !skipConfirm) { window.msg.confirm('warning', '确认操作', btn.callHint, action) }
       else { action() }
+    },
+    handlePopClick(popCfg, value) {
+      if (!popCfg || !popCfg.handleName) return
+      if (!value) {
+        if (window.$message) window.$message.warning('无可点击内容')
+        return
+      }
+      var self = this
+      this.popTitle = popCfg.title || '详情'
+      this.popList = []
+      this.popShow = true
+      this.popLoading = true
+      window.fetchApi.post('/nova/table/pop', {
+        novaName: this.novaName,
+        handleName: popCfg.handleName,
+        value: value,
+        param: popCfg.param || ''
+      }).then(function(resp) {
+        self.popLoading = false
+        self.popList = resp.data || []
+      }).catch(function() {
+        self.popLoading = false
+        self.popList = []
+        if (window.$message) window.$message.error('弹窗加载失败')
+      })
     },
     openTpl(btn, row) {
       var self = this
@@ -4630,6 +4681,24 @@ const NovaTable = {
       <NovaFileList
         v-else
         :file-list="tableAttachPreviewUrls" />
+    </n-modal>
+
+    <!-- pop 弹窗：点击可 pop 列单元格后展示 getPopModel 返回的 name/value 列表 -->
+    <n-modal v-model:show="popShow" preset="card" :title="popTitle || '详情'" style="width:480px;margin-top:60px">
+      <div v-if="popLoading" style="padding:24px;text-align:center;color:#888">加载中...</div>
+      <template v-else>
+        <div v-if="popList.length === 0" style="padding:24px;text-align:center;color:#888">暂无数据</div>
+        <div v-else style="max-height:60vh;overflow:auto">
+          <div v-for="item in popList" :key="item.name" style="display:flex;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--n-border-color)">
+            <span style="flex-shrink:0;width:100px;color:#888">{{ item.name }}</span>
+            <span v-if="item.type === 'TAG'" style="display:inline-flex;flex-wrap:wrap;gap:4px">
+              <n-tag v-for="t in String(item.value || '').split(',').filter(Boolean)" :key="t" size="small" :bordered="false" type="info">{{ t }}</n-tag>
+            </span>
+            <span v-else-if="item.type === 'BOOLEAN'">{{ item.value === 'true' || item.value === true ? '是' : '否' }}</span>
+            <span v-else style="word-break:break-all">{{ item.value }}</span>
+          </div>
+        </div>
+      </template>
     </n-modal>
   </div>
   `

@@ -1,6 +1,8 @@
 package com.nova.annotation.sub.nova.field;
 
 import com.nova.annotation.config.Comment;
+import com.nova.annotation.sub.nova.field.view.Pop;
+import com.nova.annotation.sub.nova.field.view.PopHandler;
 import com.nova.annotation.sub.nova.row.ExprBool;
 
 public @interface View {
@@ -26,4 +28,6 @@ public @interface View {
     @Comment("缺省值")
     String defaultValue() default "";
 
+    @Comment("弹框内容")
+    Pop pop() default @Pop(show = false, title = "");
 }

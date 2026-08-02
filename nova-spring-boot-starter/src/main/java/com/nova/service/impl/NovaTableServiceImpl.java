@@ -3,6 +3,7 @@ package com.nova.service.impl;
 import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.edit.ButtonHandle;
+import com.nova.annotation.sub.nova.field.view.PopHandler;
 import com.nova.annotation.sub.nova.row.OperationHandler;
 import com.nova.annotation.sub.nova.row.RowOperation;
 import com.nova.dto.*;
@@ -330,6 +331,17 @@ public class NovaTableServiceImpl implements NovaTableService {
             buttons.put(field, button);
         });
         vo.setButtons(buttons);
+        // 获取弹窗信息
+        Map<String, NovaFieldUtils.PopInfo> popInfos = NovaFieldUtils.getPop(novaTableBuild.getNovaName());
+        Map<String, NovaTableBuild.Vo.Pop> pops = new LinkedHashMap<>();
+        popInfos.forEach((field, popInfo) -> {
+            NovaTableBuild.Vo.Pop pop = new NovaTableBuild.Vo.Pop()
+                    .setTitle(popInfo.getTitle())
+                    .setParam(popInfo.getParam())
+                    .setHandleName(popInfo.getHandleClass() != null ? popInfo.getHandleClass().getName() : null);
+            pops.put(field, pop);
+        });
+        vo.setPops(pops);
         return vo;
     }
 
@@ -681,6 +693,23 @@ public class NovaTableServiceImpl implements NovaTableService {
         return new NovaTableButton.Vo()
                 .setStatus(status)
                 .setMessage(message);
+    }
+
+    @Override
+    @SneakyThrows
+    public List<NovaTablePop.Vo> pop(NovaTablePop novaTablePop) {
+        Class<?> handleClass = Class.forName(novaTablePop.getHandleName());
+        PopHandler popHandler = (PopHandler) SpringBeanUtils.getBean(handleClass);
+        List<PopHandler.PopModel> popModels = popHandler.getPopModel(novaTablePop.getParam(), novaTablePop.getValue());
+        List<NovaTablePop.Vo> vos = new ArrayList<>();
+        popModels.forEach(popModel -> {
+            NovaTablePop.Vo vo = new NovaTablePop.Vo()
+                    .setType(popModel.getType().name())
+                    .setName(popModel.getName())
+                    .setValue(popModel.getValue());
+            vos.add(vo);
+        });
+        return vos;
     }
 
 }

@@ -77,6 +77,9 @@ public class NovaTableBuild {
         @Comment("按钮信息")
         private Map<String, Button> buttons;
 
+        @Comment("弹窗信息")
+        private Map<String, Pop> pops;
+
         @Data
         @Accessors(chain = true)
         public static class Search {
@@ -585,6 +588,21 @@ public class NovaTableBuild {
 
             @Comment("按钮点击处理的js文件")
             private String handleJs;
+
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class Pop {
+
+            @Comment("标题")
+            private String title;
+
+            @Comment("静态参数")
+            private String param;
+
+            @Comment("弹窗处理的后端完全类名")
+            private String handleName;
 
         }
     }

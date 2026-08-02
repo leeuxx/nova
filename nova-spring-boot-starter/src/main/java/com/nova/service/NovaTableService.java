@@ -45,4 +45,6 @@ public interface NovaTableService {
     @Comment("按钮组件点击")
     NovaTableButton.Vo buttonClick(NovaTableButton novaTableButton);
 
+    @Comment("弹窗点击")
+    List<NovaTablePop.Vo> pop(NovaTablePop novaTablePop);
 }

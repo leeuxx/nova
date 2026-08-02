@@ -5,6 +5,8 @@ import com.nova.annotation.config.Comment;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
+import com.nova.annotation.sub.nova.field.view.Pop;
+import com.nova.annotation.sub.nova.field.view.PopHandler;
 import com.nova.annotation.sub.nova.row.ExprBool;
 import com.nova.config.NovaApplication;
 import lombok.Data;
@@ -705,6 +707,38 @@ public class NovaFieldUtils {
         return buttonInfos;
     }
 
+    /**
+     * 获取弹窗参数信息
+     *
+     * @param className 类名
+     * @return 弹窗参数信息
+     */
+    public static Map<String, PopInfo> getPop(String className) {
+        Map<String, PopInfo> popInfoMaps = new LinkedHashMap<>();
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return popInfoMaps;
+        }
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
+            View[] views = novaField.views();
+            for (View view : views) {
+                Pop pop = view.pop();
+                if (pop.show()) {
+                    Class<? extends PopHandler>[] handle = pop.popHandler();
+                    PopInfo popInfo = new PopInfo()
+                            .setTitle(pop.title())
+                            .setParam(pop.param())
+                            .setHandleClass(handle.length > 0 ? handle[0] : null);
+                    popInfoMaps.put(field, popInfo);
+                }
+            }
+        });
+        return popInfoMaps;
+    }
+
     @Data
     @Accessors(chain = true)
     public static class SearchInfo {
@@ -1087,6 +1121,21 @@ public class NovaFieldUtils {
 
         @Comment("按钮点击处理js文件")
         private String handleJs;
+
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class PopInfo {
+
+        @Comment("标题")
+        private String title;
+
+        @Comment("静态参数")
+        private String param;
+
+        @Comment("弹窗处理类")
+        private Class<? extends PopHandler> handleClass;
 
     }
 

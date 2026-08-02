@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.List;
 import java.util.Map;
 
 @AllArgsConstructor
@@ -116,4 +117,11 @@ public class NovaTableController {
         return R.ok(vo);
     }
 
+    @Comment("弹窗点击")
+    @PostMapping("pop")
+    @NovaRouter
+    public R<List<NovaTablePop.Vo>> pop(@RequestBody @Validated NovaTablePop novaTablePop) {
+        List<NovaTablePop.Vo> vos = novaTableService.pop(novaTablePop);
+        return R.ok(vos);
+    }
 }

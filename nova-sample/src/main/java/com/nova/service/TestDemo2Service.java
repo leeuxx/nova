@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.nova.annotation.sub.nova.field.view.PopHandler;
 import com.nova.entity.TestDemo;
 import com.nova.entity.TestDemo2;
 import com.nova.entity.data.Details;
@@ -20,12 +21,13 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Lazy)
-public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> implements DataProxy<TestDemo2View> {
+public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> implements DataProxy<TestDemo2View>, PopHandler {
 
     private TestDemoService testDemoService;
 
@@ -92,5 +94,15 @@ public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> im
         return new PromptSearch.Vo()
                 .setTotal(iPage.getTotal())
                 .setRecords(list);
+    }
+
+    @Override
+    public List<PopModel> getPopModel(String param, String value) {
+        TestDemo testDemo = testDemoService.getById(value);
+        return Arrays.asList(
+                new PopModel().setName("用户ID").setValue(String.valueOf(testDemo.getId())),
+                new PopModel().setName("用户名").setValue(testDemo.getName()),
+                new PopModel().setName("用户昵称").setValue(testDemo.getNick())
+        );
     }
 }

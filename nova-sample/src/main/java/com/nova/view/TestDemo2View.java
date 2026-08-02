@@ -7,6 +7,7 @@ import com.nova.annotation.sub.nova.Layout;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
+import com.nova.annotation.sub.nova.field.view.Pop;
 import com.nova.service.TestDemo2Service;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -38,7 +39,19 @@ public class TestDemo2View {
 
     @NovaField(
             views = {
-                    @View(title = "用户名", column = "name")
+                    @View(
+                            title = "用户ID",
+                            column = "id",
+                            pop = @Pop(
+                                    title = "用户信息",
+                                    param = "1",
+                                    popHandler = TestDemo2Service.class
+                            )
+                    ),
+                    @View(
+                            title = "用户名",
+                            column = "name"
+                    )
             },
             edit = @Edit(
                     title = "用户信息",
