@@ -98,14 +98,29 @@ public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> im
 
     @Override
     public List<PopModel> getPopModel(String param, String value) {
-        TestDemo testDemo = testDemoService.getById(value);
-        return Arrays.asList(
-                new PopModel().setName("用户ID").setValue(String.valueOf(testDemo.getId())),
-                new PopModel().setName("用户名").setValue(testDemo.getName()),
-                new PopModel().setName("用户昵称").setValue(testDemo.getNick()),
-                new PopModel().setName("手机号码").setValue(testDemo.getTel()),
-                new PopModel().setName("状态").setValue(String.valueOf(testDemo.getStatus())).setType(Type.BOOLEAN),
-                new PopModel().setName("爱好").setValue(testDemo.getTags()).setType(Type.TAG)
-        );
+        if (param.equals("1")) {
+            TestDemo testDemo = testDemoService.getById(value);
+            return Arrays.asList(
+                    new PopModel().setName("用户ID").setValue(String.valueOf(testDemo.getId())),
+                    new PopModel().setName("用户名").setValue(testDemo.getName()),
+                    new PopModel().setName("用户昵称").setValue(testDemo.getNick()),
+                    new PopModel().setName("手机号码").setValue(testDemo.getTel()),
+                    new PopModel().setName("状态").setValue(String.valueOf(testDemo.getStatus())).setType(Type.BOOLEAN),
+                    new PopModel().setName("爱好").setValue(testDemo.getTags()).setType(Type.TAG)
+            );
+        }
+        if (param.equals("2")) {
+            return Arrays.asList(
+                    new PopModel().setName("测试ID").setValue("123"),
+                    new PopModel().setName("测试名称").setValue("王麻子")
+            );
+        }
+        if (param.equals("3")) {
+            return Arrays.asList(
+                    new PopModel().setName("单元格").setValue("123"),
+                    new PopModel().setName("显隐").setValue("true").setType(Type.BOOLEAN)
+            );
+        }
+        return null;
     }
 }

@@ -934,8 +934,14 @@ const NovaTable = {
         if (!subLoading) {
           const popCfg = vm.popMap[String(col.field || '')]
           if (popCfg) {
+            // 禁用 naive 的 ellipsis tooltip（避免与 popover 双弹层叠加），
+            // 改用自实现的 NTooltip 显示完整内容，并在 pop 打开时禁用该 tooltip
+            if (colDef.ellipsis && colDef.ellipsis.tooltip) {
+              colDef.ellipsis = { tooltip: false }
+            }
             const baseRender = colDef.render
             const NPopover = window.naive.NPopover
+            const NTooltip = window.naive.NTooltip
             const fieldKey = col.field
             colDef.render = (row) => {
               // REFERENCE 等嵌套列后端平铺为 "外层.column" key；兼容平铺 key 与嵌套对象两种数据形态
@@ -945,11 +951,12 @@ const NovaTable = {
               const triggerNode = baseRender ? baseRender(row) : text
               // 以 行主键@列field 唯一标识单元格，避免仅按列匹配导致整列弹窗同时打开
               const myKey = String(row[vm.novaIdFieldName] ?? '') + '@' + fieldKey
+              const popOpen = vm.popActiveKey === myKey
               return h(NPopover, {
                 trigger: 'click',
                 placement: 'bottom-start',
                 style: 'max-width:420px',
-                show: vm.popActiveKey === myKey,
+                show: popOpen,
                 onUpdateShow: (show) => {
                   if (show) {
                     vm.popActiveKey = myKey
@@ -959,10 +966,17 @@ const NovaTable = {
                   }
                 }
               }, {
-                trigger: () => h('span', {
-                  style: 'color:#2563eb;cursor:pointer',
-                  onClick: (e) => e.stopPropagation()
-                }, [triggerNode]),
+                trigger: () => h(NTooltip, {
+                  trigger: 'hover',
+                  placement: 'top',
+                  disabled: popOpen
+                }, {
+                  trigger: () => h('span', {
+                    style: 'color:#2563eb;cursor:pointer',
+                    onClick: (e) => e.stopPropagation()
+                  }, [triggerNode]),
+                  default: () => triggerNode
+                }),
                 default: () => vm.renderPopContent()
               })
             }

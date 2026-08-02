@@ -9,8 +9,10 @@ import com.nova.annotation.sub.nova.TreeType;
 import com.nova.annotation.sub.nova.field.Edit;
 import com.nova.annotation.sub.nova.field.View;
 import com.nova.annotation.sub.nova.field.edit.*;
+import com.nova.annotation.sub.nova.field.view.Pop;
 import com.nova.annotation.sub.nova.row.ExprBool;
 import com.nova.annotation.sub.nova.row.RowOperation;
+import com.nova.service.TestDemo2Service;
 import com.nova.service.TestDemoService;
 import com.nova.service.authority.RowAuthExpr;
 import com.nova.utils.VoidDataProxy;
@@ -148,7 +150,13 @@ public class TestDemoView {
     private String name;
 
     @NovaField(
-            views = @View(title = "用户昵称", width = "10%"),
+            views = @View(title = "用户昵称", width = "10%",
+                    pop = @Pop(
+                            title = "测试信息",
+                            param = "3",
+                            popHandler = TestDemo2Service.class
+                    )
+            ),
             edit = @Edit(
                     title = "用户昵称",
                     search = @Search(vague = true)

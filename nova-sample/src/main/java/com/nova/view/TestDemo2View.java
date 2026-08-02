@@ -85,7 +85,14 @@ public class TestDemo2View {
     private String msg;
 
     @NovaField(
-            views = @View(title = "类型"),
+            views = @View(
+                    title = "类型",
+                    pop = @Pop(
+                            title = "测试信息",
+                            param = "2",
+                            popHandler = TestDemo2Service.class
+                    )
+            ),
             edit = @Edit(
                     title = "类型",
                     type = Edit.Type.CHOICE,
