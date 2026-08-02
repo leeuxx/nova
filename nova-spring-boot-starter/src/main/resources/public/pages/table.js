@@ -972,9 +972,17 @@ const NovaTable = {
                   disabled: popOpen
                 }, {
                   trigger: () => h('span', {
-                    style: 'color:#2563eb;cursor:pointer',
-                    onClick: (e) => e.stopPropagation()
-                  }, [triggerNode]),
+                    style: 'position:relative;display:block;width:100%;overflow:hidden;cursor:pointer',
+                    onClick: (e) => e.stopPropagation(),
+                    onMouseenter: (e) => { const ic = e.currentTarget.querySelector('iconify-icon'); if (ic) ic.style.color = '#2563eb' },
+                    onMouseleave: (e) => { const ic = e.currentTarget.querySelector('iconify-icon'); if (ic) ic.style.color = '#9ca3af' }
+                  }, [
+                    h('span', { style: 'display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:18px' }, [triggerNode]),
+                    h('iconify-icon', {
+                      icon: 'material-symbols:info-outline',
+                      style: 'position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:14px;color:#9ca3af;transition:color .2s'
+                    })
+                  ]),
                   default: () => triggerNode
                 }),
                 default: () => vm.renderPopContent()

@@ -66,7 +66,14 @@ public class TestDemo2View {
     private TestDemoView testDemoView;
 
     @NovaField(
-            views = @View(title = "部门名称"),
+            views = @View(
+                    title = "部门名称",
+                    pop = @Pop(
+                            title = "实现方式",
+                            param = "3",
+                            popHandler = TestDemo2Service.class
+                    )
+            ),
             edit = @Edit(
                     title = "部门名称",
                     notNull = true,
