@@ -309,7 +309,11 @@ function mountApp(menuList, config, loginExpired) {
           ? { title: tplInfo.title, icon: tplInfo.icon }
           : (routeMeta[path] || { title: path, icon: null })
         if (!openedTabs.value.find(t => t.key === tabKey)) {
-          openedTabs.value.push({ key: tabKey, title: meta.title, icon: meta.icon, closable: true })
+          openedTabs.value.push({
+            key: tabKey, title: meta.title, icon: meta.icon, closable: true,
+            // 组件唯一名：配合 keep-alive include 精确控制缓存（关闭 tab 即移出 include → 实例被销毁）
+            cmpName: tplCode ? ('TplPage_' + tplCode) : (path.indexOf('/nova/') === 0 ? ('NovaPage_' + path.slice('/nova/'.length)) : undefined)
+          })
         }
         activeTab.value = tabKey
         // 自动展开当前路由的祖先菜单节点（支持 TPL）
@@ -428,6 +432,33 @@ function mountApp(menuList, config, loginExpired) {
       const routeKey = Vue.computed(() =>
         route.path + '_' + (tabVersions.value[route.path] || 0)
       )
+
+      // ── 页面组件包装：为每个表页/模板页生成唯一 name 的包装组件，
+      // 配合 keep-alive include 精确控制缓存——关闭 tab 后其 name 移出 include，实例被真正销毁
+      const novaPageWraps = {}
+      const tplPageWraps = {}
+      const pageComponent = Vue.computed(() => {
+        const p = route.path
+        if (p.indexOf('/nova/') === 0) {
+          const n = p.slice('/nova/'.length)
+          const key = 'NovaPage_' + n
+          if (!novaPageWraps[key]) {
+            novaPageWraps[key] = { name: key, render: () => h(window.NovaTable) }
+          }
+          return novaPageWraps[key]
+        }
+        if (p.indexOf('/tpl/') === 0) {
+          const code = route.params.code
+          const key = 'TplPage_' + code
+          if (!tplPageWraps[key]) {
+            tplPageWraps[key] = { name: key, render: () => h(TplPage) }
+          }
+          return tplPageWraps[key]
+        }
+        return undefined
+      })
+      // keep-alive 缓存白名单：仅当前打开的 tab（关闭后自动移出，实例销毁）
+      const cachedNames = Vue.computed(() => openedTabs.value.map(t => t.cmpName))
 
       const handleTabClick = (key) => router.push(key)
       const goHome = () => {
@@ -586,6 +617,7 @@ function mountApp(menuList, config, loginExpired) {
       return {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
         menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isStandaloneRoute, menuSelectedKey,
+        pageComponent, cachedNames,
         handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, handleUserMenuSelect,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
         barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText,
@@ -701,8 +733,8 @@ function mountApp(menuList, config, loginExpired) {
                     <n-layout-content class="page-content" style="flex:1 1 auto;min-height:0">
                       <router-view v-slot="{ Component }">
                         <transition name="page-fade" mode="out-in">
-                          <keep-alive :max="20">
-                            <component :is="Component" :key="routeKey" />
+                          <keep-alive :include="cachedNames" :max="20">
+                            <component :is="pageComponent || Component" :key="routeKey" />
                           </keep-alive>
                         </transition>
                       </router-view>

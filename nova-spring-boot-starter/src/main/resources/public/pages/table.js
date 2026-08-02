@@ -1248,6 +1248,20 @@ const NovaTable = {
 
   deactivated() {
     this._isActive = false
+    // 切 tab 缓存离开时同步关闭双表视图，避免切回时右面板残留
+    if (this.dualTableViewActive || this.dualTableClosing) {
+      this.dualTableViewActive = false
+      this.dualTableClosing = false
+      this.linkTreeData['__dual__'] = null
+      this.linkTreeCheckedKeys['__dual__'] = null
+      this.linkTreeLoading['__dual__'] = false
+      this.linkTreeFilteredData['__dual__'] = null
+      this.linkTreeDefaultExpandedKeys['__dual__'] = null
+      this.linkTreeExpandedKeys['__dual__'] = null
+      this.linkTreeDisplayKeys['__dual__'] = null
+      this.linkTreeSearchKeyword['__dual__'] = null
+      this._syncDualTableClass()
+    }
   },
 
   beforeUnmount() {
