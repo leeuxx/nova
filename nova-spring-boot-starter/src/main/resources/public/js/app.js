@@ -470,6 +470,8 @@ function mountApp(menuList, config, loginExpired) {
       const userName   = ref(localStorage.getItem('nova_user') || '未登录')
       const userAlias  = ref(localStorage.getItem('nova_alias') || '')
       const userAvatar = ref(localStorage.getItem('nova_avatar') || '')
+      // 未读消息数（占位演示：后续接入消息接口后替换）
+      const notificationCount = ref(3)
 
       // 右上角用户下拉：第一列用户信息头（头像+名称/昵称），下面个人中心/退出登录带图标
       const userDropdown = [
@@ -620,7 +622,7 @@ function mountApp(menuList, config, loginExpired) {
         pageComponent, cachedNames,
         handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, handleUserMenuSelect,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
-        barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText,
+        barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText, notificationCount,
         showProfile, profileSaving, profileFormRef, profileForm, profileRules, submitProfile,
         avatarFileList, handleAvatarUpload, onAvatarRemove
       }
@@ -683,8 +685,8 @@ function mountApp(menuList, config, loginExpired) {
                       </div>
                       <n-space align="center" :size="4">
                         <div class="header-action">
-                          <n-badge :value="3" :max="9">
-                            <n-icon size="20"><iconify-icon icon="material-symbols:notifications-outline"></iconify-icon></n-icon>
+                          <n-badge :value="notificationCount" :max="99" :show="notificationCount > 0">
+                            <n-icon size="20" :class="{ 'bell-ring': notificationCount > 0 }"><iconify-icon icon="mdi:bell-outline"></iconify-icon></n-icon>
                           </n-badge>
                         </div>
                         <div class="header-action theme-switch">

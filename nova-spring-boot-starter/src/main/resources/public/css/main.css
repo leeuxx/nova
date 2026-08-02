@@ -27,6 +27,25 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   height: 24px;
   gap: 6px;
 }
+/* 铃铛有消息时持续摇晃 */
+.bell-ring {
+  display: inline-block;
+  animation: bell-shake 1.2s ease-in-out infinite;
+  transform-origin: top center;
+}
+@keyframes bell-shake {
+  0%   { transform: rotate(0); }
+  10%  { transform: rotate(14deg); }
+  20%  { transform: rotate(-14deg); }
+  30%  { transform: rotate(10deg); }
+  40%  { transform: rotate(-10deg); }
+  50%  { transform: rotate(6deg); }
+  60%  { transform: rotate(-6deg); }
+  70%  { transform: rotate(3deg); }
+  80%  { transform: rotate(-3deg); }
+  90%  { transform: rotate(0); }
+  100% { transform: rotate(0); }
+}
 .user-info {
   height: 24px;
 }
