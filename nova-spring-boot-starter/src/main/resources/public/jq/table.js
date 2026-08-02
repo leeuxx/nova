@@ -54,6 +54,19 @@ window.NovaTableJQ = (function ($) {
       // 整页加载阶段（首屏 boot loading 仍在 DOM）：不显示表格动画，由全屏动画覆盖；点菜单切 tab 时已移除，正常显示
       if (window.__bootLoadingInDom ? window.__bootLoadingInDom() : false) {
         target.buildLoading = false
+        // boot 开始淡出（加 hidden 类）时若 build 仍未完成，提前恢复表格 loading 覆盖层，
+        // 与全屏动画淡出重叠衔接，避免等 boot 完全移除后出现空白等待
+        var iv = setInterval(function () {
+          var gone = !(window.__bootLoadingInDom && window.__bootLoadingInDom())
+          var fading = window.__bootFadingOut && window.__bootFadingOut()
+          if (gone || fading) {
+            clearInterval(iv)
+            if (target && target._buildPending) {
+              target.buildLoading = true
+              target._buildLoadingStart = Date.now()
+            }
+          }
+        }, 40)
         return
       }
       target._buildLoadingStart = Date.now()
@@ -100,12 +113,16 @@ window.NovaTableJQ = (function ($) {
     if (!novaName) return
     var key = vmKey || novaName
     var t0 = window.vmMap && window.vmMap[key]
-    if (t0) setBuildLoading(t0, true)
+    if (t0) {
+      t0._buildPending = true
+      setBuildLoading(t0, true)
+    }
     var fire = function () {
       window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function (resp) {
         var target = window.vmMap && window.vmMap[key]
         if (!target) return
         if (!resp.data) {
+          target._buildPending = false
           setBuildLoading(target, false)
           return
         }
@@ -360,6 +377,7 @@ window.NovaTableJQ = (function ($) {
         // 元数据应用（列头/搜索表单）相对轻量，build 响应后立即执行让数据请求并行拉取；
         // 重活（表格数据渲染）由 loadData 按动画状态（首屏 boot 或切 tab 遮罩）延迟到动画结束，动画期间不掉帧、动画结束不留空表格
         applyNow()
+        target._buildPending = false
         // build 响应后容器布局变化（尤其树模式 isTree=true 时容器 height:100%、树搜索 filter-card 才渲染）：
         // mounted/activated 的高度计算早于 build 响应（build 慢时用的是 isTree=false 的错误布局），必须重算，
         // 否则树模式表格高度塌陷
@@ -368,7 +386,10 @@ window.NovaTableJQ = (function ($) {
         if (window.__novaPageLoading) window.__novaPageLoading.finish()
       }).catch(function () {
         var target = window.vmMap && window.vmMap[key]
-        if (target) setBuildLoading(target, false)
+        if (target) {
+          target._buildPending = false
+          setBuildLoading(target, false)
+        }
         if (window.__novaPageLoading) window.__novaPageLoading.finish()
       })
     }

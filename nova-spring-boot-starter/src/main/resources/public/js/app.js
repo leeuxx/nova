@@ -168,6 +168,11 @@ function hideBootLoading(immediate) {
 window.__bootLoadingInDom = function () {
   return !!document.getElementById('__nova-boot-loading__')
 }
+// boot 是否已开始淡出（加 hidden 类）：表格 loading 可提前衔接，与全屏动画淡出重叠
+window.__bootFadingOut = function () {
+  var el = document.getElementById('__nova-boot-loading__')
+  return !!el && el.classList.contains('hidden')
+}
 
 // ─── 挂载入口：未登录直接挂载（显示登录页），有 token 才拉菜单 ──
 var _startToken = localStorage.getItem('nova_token')
