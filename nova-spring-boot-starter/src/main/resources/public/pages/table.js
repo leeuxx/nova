@@ -290,6 +290,7 @@ const NovaTable = {
       drills:         [],  // drill 配置数组：[{ dualTableTitle, linkNovaName, column, joinColumn }]
       linkTargetInfo: {},
       popMap:         {},  // pop 弹窗配置：字段名 → { title, param, handleName }
+      popActiveKey:   '',  // 当前打开 popover 的 "行主键@列field"，用于精确定位单行单元格
       popTitle:       '',
       popLoading:     false,
       popList:        [],  // [{ type, name, value }]
@@ -935,18 +936,27 @@ const NovaTable = {
           if (popCfg) {
             const baseRender = colDef.render
             const NPopover = window.naive.NPopover
+            const fieldKey = col.field
             colDef.render = (row) => {
               // REFERENCE 等嵌套列后端平铺为 "外层.column" key；兼容平铺 key 与嵌套对象两种数据形态
               const raw = row[col.field] !== undefined ? row[col.field] : getFieldValue(row, col.field)
               const text = String(raw ?? '').trim()
               if (text === '') return ''
               const triggerNode = baseRender ? baseRender(row) : text
+              // 以 行主键@列field 唯一标识单元格，避免仅按列匹配导致整列弹窗同时打开
+              const myKey = String(row[vm.novaIdFieldName] ?? '') + '@' + fieldKey
               return h(NPopover, {
                 trigger: 'click',
                 placement: 'bottom-start',
                 style: 'max-width:420px',
+                show: vm.popActiveKey === myKey,
                 onUpdateShow: (show) => {
-                  if (show) vm.handlePopClick(popCfg, text)
+                  if (show) {
+                    vm.popActiveKey = myKey
+                    vm.handlePopClick(popCfg, text)
+                  } else {
+                    vm.popActiveKey = ''
+                  }
                 }
               }, {
                 trigger: () => h('span', {
@@ -1811,6 +1821,7 @@ const NovaTable = {
     // popover 内容：title + getPopModel 返回的 name/value 列表（TAG 拆标签、BOOLEAN 转是/否）
     renderPopContent() {
       const naive = window.naive
+      const vm = this
       let body
       if (this.popLoading) {
         body = h('div', { style: 'padding:12px 0;text-align:center;color:#888' }, '加载中...')
@@ -1834,8 +1845,16 @@ const NovaTable = {
           ])
         }))
       }
-      return h('div', {}, [
-        this.popTitle ? h('div', { style: 'font-weight:600;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(128,128,128,.2)' }, this.popTitle) : null,
+      return h('div', { style: 'min-width:220px' }, [
+        h('div', { style: 'display:flex;align-items:center;justify-content:space-between;gap:16px;font-weight:600' }, [
+          h('span', {}, this.popTitle || '详情'),
+          h('span', {
+            title: '关闭',
+            style: 'cursor:pointer;color:#888;display:inline-flex;flex-shrink:0',
+            onClick: () => { vm.popActiveKey = '' }
+          }, [ h('iconify-icon', { icon: 'material-symbols:close', style: 'font-size:16px' }) ])
+        ]),
+        h('div', { style: 'margin:6px 0;border-bottom:1px solid rgba(128,128,128,.2)' }),
         body
       ])
     },
