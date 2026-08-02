@@ -444,7 +444,8 @@ public class NovaFieldUtils {
                         .setType(numberType.type())
                         .setMax(numberType.max())
                         .setMin(numberType.min())
-                        .setDecimal(numberType.decimal());
+                        .setDecimal(numberType.decimal())
+                        .setRoll(numberType.roll());
                 numberInfos.put(field, numberInfo);
             }
         });
@@ -899,6 +900,9 @@ public class NovaFieldUtils {
 
         @Comment("小数位数")
         private Integer decimal;
+
+        @Comment("滚动动画")
+        private Boolean roll;
 
     }
 

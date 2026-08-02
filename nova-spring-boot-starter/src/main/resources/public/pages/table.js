@@ -3,6 +3,7 @@
 const { h } = Vue
 const { NPopconfirm, NSpace, NTooltip, NTag, NRadio, NDropdown } = naive
 const NovaImagePreview = window.NovaImagePreview
+const NovaRollNumber   = window.NovaRollNumber
 
 // 解析列宽：百分比返回浮点数（0~100），像素返回负数表示固定像素
 function parseWidthPct(w) {
@@ -208,7 +209,7 @@ window.evalShowExpr = evalShowExpr
 
 const NovaTable = {
   name: 'NovaTable',
-  components: { NovaFormThis: window.NovaFormThis, QrCodeCell: QrCodeCell, NovaImagePreview: NovaImagePreview, NovaFileList: window.NovaFileList },
+  components: { NovaFormThis: window.NovaFormThis, QrCodeCell: QrCodeCell, NovaImagePreview: NovaImagePreview, NovaRollNumber: NovaRollNumber, NovaFileList: window.NovaFileList },
 
   props: {
     pickerMode:         { type: Boolean, default: false },
@@ -896,6 +897,21 @@ const NovaTable = {
             }
             // TEXT：默认文本
             return val
+          }
+        }
+
+        if (col.type === 'NUMBER') {
+          const numInfo = vm.numberMap[col.field] || {}
+          // roll=true：加载时滚动动画，挂载/值变化时从 0 递增到目标值
+          if (numInfo.roll) {
+            const decimals = numInfo.type === 'DECIMAL' ? (numInfo.decimal || 2) : 0
+            colDef.render = (row) => {
+              const val = getFieldValue(row, col.field)
+              if (val === null || val === undefined || val === '') return ''
+              const n = Number(val)
+              if (isNaN(n)) return String(val)
+              return h(NovaRollNumber, { value: n, decimals })
+            }
           }
         }
 

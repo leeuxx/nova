@@ -165,7 +165,8 @@ public class NovaTableServiceImpl implements NovaTableService {
                     .setType(numberInfo.getType().name())
                     .setMax(numberInfo.getMax())
                     .setMin(numberInfo.getMin())
-                    .setDecimal(numberInfo.getDecimal());
+                    .setDecimal(numberInfo.getDecimal())
+                    .setRoll(numberInfo.getRoll());
             numberMap.put(field, number);
         });
         vo.setNumber(numberMap);

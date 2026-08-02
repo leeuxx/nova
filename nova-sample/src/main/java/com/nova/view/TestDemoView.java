@@ -375,7 +375,8 @@ public class TestDemoView {
                     title = "长度",
                     type = Edit.Type.NUMBER,
                     numberType = @NumberType(
-                            type = NumberType.Type.DECIMAL
+                            type = NumberType.Type.DECIMAL,
+                            roll = true
                     ),
                     search = @Search(vague = true)
             )

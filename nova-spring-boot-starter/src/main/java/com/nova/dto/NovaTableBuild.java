@@ -295,6 +295,9 @@ public class NovaTableBuild {
             @Comment("小数位数")
             private Integer decimal;
 
+            @Comment("滚动动画")
+            private Boolean roll;
+
         }
 
         @Data

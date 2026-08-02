@@ -16,6 +16,9 @@ public @interface NumberType {
     @Comment("小数位数")
     int decimal() default 2;
 
+    @Comment("滚动动画")
+    boolean roll() default false;
+
     enum Type {
         @Comment("整型")
         INTEGER,
