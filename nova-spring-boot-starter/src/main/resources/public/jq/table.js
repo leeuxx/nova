@@ -364,9 +364,12 @@ window.NovaTableJQ = (function ($) {
         // mounted/activated 的高度计算早于 build 响应（build 慢时用的是 isTree=false 的错误布局），必须重算，
         // 否则树模式表格高度塌陷
         if (window.Vue && window.Vue.nextTick) window.Vue.nextTick(function () { updateTableHeight() })
+        // 表格页面 build 完成 → 结束顶部加载条（仅路由切换后生效，embedded 等无 start 则空操作）
+        if (window.__novaPageLoading) window.__novaPageLoading.finish()
       }).catch(function () {
         var target = window.vmMap && window.vmMap[key]
         if (target) setBuildLoading(target, false)
+        if (window.__novaPageLoading) window.__novaPageLoading.finish()
       })
     }
     // build 网络请求立即发出（并行，不占主线程）；响应后的数据应用延迟到 boot 移除后执行

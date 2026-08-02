@@ -24,7 +24,7 @@ const {
   NMenu, NIcon, NDropdown, NSpace, NTabs, NTab, NSpin, NSwitch,
   NBreadcrumb, NBreadcrumbItem, NBadge,
   NMessageProvider, NDialogProvider, NNotificationProvider, NAvatar,
-  useDialog, useMessage,
+  useDialog, useMessage, useLoadingBar,
   darkTheme, zhCN, dateZhCN
 } = naive
 
@@ -211,6 +211,22 @@ function mountApp(menuList, config, loginExpired) {
     setup() {
       window.$dialog  = useDialog()
       window.$message = useMessage()
+      // 页面顶部加载条：由真实接口触发 start/finish（首屏被全屏 boot 覆盖，不显示）
+      // finish 仅在 start 后生效，避免 embedded/弹窗等无路由切换场景误结束
+      var _lbStarted = false
+      window.$loadingBar = useLoadingBar()
+      window.__novaPageLoading = {
+        start: function () {
+          if (!window.$loadingBar) return
+          _lbStarted = true
+          window.$loadingBar.start()
+        },
+        finish: function () {
+          if (!window.$loadingBar || !_lbStarted) return
+          _lbStarted = false
+          window.$loadingBar.finish()
+        }
+      }
     },
     template: '<div style="display:none"></div>'
   }
@@ -575,6 +591,7 @@ function mountApp(menuList, config, loginExpired) {
 
     template: `
       <n-config-provider :theme="theme" :theme-overrides="themeOverrides" :locale="zhCN" :date-locale="dateZhCN">
+        <n-loading-bar-provider>
         <n-message-provider>
           <n-dialog-provider>
             <dialog-bridge />
@@ -693,6 +710,7 @@ function mountApp(menuList, config, loginExpired) {
             </n-notification-provider>
           </n-dialog-provider>
         </n-message-provider>
+        </n-loading-bar-provider>
 
         <!-- 个人中心弹窗 -->
         <n-modal v-model:show="showProfile" preset="card" title="个人中心" style="width:420px;margin-top:60px">
@@ -761,11 +779,21 @@ function mountApp(menuList, config, loginExpired) {
 
   // 路由守卫：未登录拦截
   router.beforeEach((to, from, next) => {
+    if (window.__novaPageLoading) window.__novaPageLoading.start()
     var token = localStorage.getItem('nova_token')
     if (to.path !== '/login' && to.path !== '/404' && !token) {
       next('/login')
     } else {
       next()
+    }
+  })
+
+  // 页面切换顶部加载条：表格页由 build 完成触发 finish；非表格页（home/TPL 等无 build）兜底结束
+  router.afterEach((to) => {
+    if (!to.path || to.path.indexOf('/nova/') !== 0) {
+      if (window.__novaPageLoading) {
+        setTimeout(function () { window.__novaPageLoading.finish() }, 300)
+      }
     }
   })
 

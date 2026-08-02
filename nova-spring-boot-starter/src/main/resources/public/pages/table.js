@@ -1179,6 +1179,7 @@ const NovaTable = {
 
   mounted() {
     this._isActive = true
+    this._isFirstActivate = true
     window.vmMap = window.vmMap || {}
     if (this.pickerMode) {
       this.novaName = this.novaNameProp || ''
@@ -1237,6 +1238,11 @@ const NovaTable = {
       window.vmMap[this.novaName] = this
       window.activeNovaName = this.novaName
     }
+    // 缓存 tab 回切：build 不重发，立即结束顶部加载条（首次进入由 build 完成触发）
+    if (window.__novaPageLoading && this._isFirstActivate === false) {
+      window.__novaPageLoading.finish()
+    }
+    this._isFirstActivate = false
     setTimeout(() => { if (window.NovaTableJQ) { window.NovaTableJQ.updateTableHeight(); window.NovaTableJQ.updateTableWidth() } }, 80)
   },
 
