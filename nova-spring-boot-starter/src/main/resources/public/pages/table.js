@@ -290,7 +290,6 @@ const NovaTable = {
       drills:         [],  // drill 配置数组：[{ dualTableTitle, linkNovaName, column, joinColumn }]
       linkTargetInfo: {},
       popMap:         {},  // pop 弹窗配置：字段名 → { title, param, handleName }
-      popShow:        false,
       popTitle:       '',
       popLoading:     false,
       popList:        [],  // [{ type, name, value }]
@@ -929,23 +928,33 @@ const NovaTable = {
           }
         }
 
-        // pop 可点击文本：pops 按字段级匹配（嵌套列取外层字段前缀），点击传单元格显示文本
+        // pop 可点击文本：pops 的 key 与列 field 直接匹配（含嵌套列如 testDemoView.id）。
+        // 点击时在单元格位置弹出带箭头的 popover（n-popover trigger 模式），展示 getPopModel 返回的 name/value 列表
         if (!subLoading) {
-          const popKey = String(col.field || '').split('.')[0]
-          const popCfg = vm.popMap[popKey]
+          const popCfg = vm.popMap[String(col.field || '')]
           if (popCfg) {
             const baseRender = colDef.render
+            const NPopover = window.naive.NPopover
             colDef.render = (row) => {
-              const inner = baseRender ? baseRender(row) : String(getFieldValue(row, col.field) ?? '')
-              if (inner === '' || inner === null || inner === undefined) return ''
-              return h('span', {
-                style: 'color:#2563eb;cursor:pointer;text-decoration:underline;text-underline-offset:2px',
-                title: popCfg.title || '',
-                onClick: (e) => {
-                  e.stopPropagation()
-                  vm.handlePopClick(popCfg, (e.currentTarget.textContent || '').trim())
+              // REFERENCE 等嵌套列后端平铺为 "外层.column" key；兼容平铺 key 与嵌套对象两种数据形态
+              const raw = row[col.field] !== undefined ? row[col.field] : getFieldValue(row, col.field)
+              const text = String(raw ?? '').trim()
+              if (text === '') return ''
+              const triggerNode = baseRender ? baseRender(row) : text
+              return h(NPopover, {
+                trigger: 'click',
+                placement: 'bottom-start',
+                style: 'max-width:420px',
+                onUpdateShow: (show) => {
+                  if (show) vm.handlePopClick(popCfg, text)
                 }
-              }, [inner])
+              }, {
+                trigger: () => h('span', {
+                  style: 'color:#2563eb;cursor:pointer',
+                  onClick: (e) => e.stopPropagation()
+                }, [triggerNode]),
+                default: () => vm.renderPopContent()
+              })
             }
           }
         }
@@ -1784,7 +1793,6 @@ const NovaTable = {
       var self = this
       this.popTitle = popCfg.title || '详情'
       this.popList = []
-      this.popShow = true
       this.popLoading = true
       window.fetchApi.post('/nova/table/pop', {
         novaName: this.novaName,
@@ -1799,6 +1807,37 @@ const NovaTable = {
         self.popList = []
         if (window.$message) window.$message.error('弹窗加载失败')
       })
+    },
+    // popover 内容：title + getPopModel 返回的 name/value 列表（TAG 拆标签、BOOLEAN 转是/否）
+    renderPopContent() {
+      const naive = window.naive
+      let body
+      if (this.popLoading) {
+        body = h('div', { style: 'padding:12px 0;text-align:center;color:#888' }, '加载中...')
+      } else if (!this.popList || this.popList.length === 0) {
+        body = h('div', { style: 'padding:12px 0;text-align:center;color:#888' }, '暂无数据')
+      } else {
+        body = h('div', { style: 'max-height:60vh;overflow:auto;min-width:220px' }, this.popList.map((item) => {
+          let valueNode
+          if (item.type === 'TAG') {
+            const tags = String(item.value || '').split(',').filter(Boolean)
+            valueNode = h('span', { style: 'display:inline-flex;flex-wrap:wrap;gap:4px' }, tags.map((t) => h(naive.NTag, { size: 'small', bordered: false }, { default: () => t })))
+          } else if (item.type === 'BOOLEAN') {
+            const isTrue = String(item.value) === 'true' || item.value === true
+            valueNode = h(naive.NTag, { size: 'small', bordered: false, type: isTrue ? 'success' : 'error' }, { default: () => (isTrue ? '是' : '否') })
+          } else {
+            valueNode = h('span', { style: 'word-break:break-all' }, String(item.value ?? ''))
+          }
+          return h('div', { style: 'display:flex;align-items:flex-start;padding:6px 0' }, [
+            h('span', { style: 'flex-shrink:0;width:84px;text-align:right;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis', title: item.name }, item.name + '：'),
+            valueNode
+          ])
+        }))
+      }
+      return h('div', {}, [
+        this.popTitle ? h('div', { style: 'font-weight:600;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(128,128,128,.2)' }, this.popTitle) : null,
+        body
+      ])
     },
     openTpl(btn, row) {
       var self = this
@@ -4683,23 +4722,6 @@ const NovaTable = {
         :file-list="tableAttachPreviewUrls" />
     </n-modal>
 
-    <!-- pop 弹窗：点击可 pop 列单元格后展示 getPopModel 返回的 name/value 列表 -->
-    <n-modal v-model:show="popShow" preset="card" :title="popTitle || '详情'" style="width:480px;margin-top:60px">
-      <div v-if="popLoading" style="padding:24px;text-align:center;color:#888">加载中...</div>
-      <template v-else>
-        <div v-if="popList.length === 0" style="padding:24px;text-align:center;color:#888">暂无数据</div>
-        <div v-else style="max-height:60vh;overflow:auto">
-          <div v-for="item in popList" :key="item.name" style="display:flex;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--n-border-color)">
-            <span style="flex-shrink:0;width:100px;color:#888">{{ item.name }}</span>
-            <span v-if="item.type === 'TAG'" style="display:inline-flex;flex-wrap:wrap;gap:4px">
-              <n-tag v-for="t in String(item.value || '').split(',').filter(Boolean)" :key="t" size="small" :bordered="false" type="info">{{ t }}</n-tag>
-            </span>
-            <span v-else-if="item.type === 'BOOLEAN'">{{ item.value === 'true' || item.value === true ? '是' : '否' }}</span>
-            <span v-else style="word-break:break-all">{{ item.value }}</span>
-          </div>
-        </div>
-      </template>
-    </n-modal>
   </div>
   `
 }

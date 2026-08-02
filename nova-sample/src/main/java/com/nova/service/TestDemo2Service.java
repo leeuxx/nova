@@ -102,7 +102,10 @@ public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> im
         return Arrays.asList(
                 new PopModel().setName("用户ID").setValue(String.valueOf(testDemo.getId())),
                 new PopModel().setName("用户名").setValue(testDemo.getName()),
-                new PopModel().setName("用户昵称").setValue(testDemo.getNick())
+                new PopModel().setName("用户昵称").setValue(testDemo.getNick()),
+                new PopModel().setName("手机号码").setValue(testDemo.getTel()),
+                new PopModel().setName("状态").setValue(String.valueOf(testDemo.getStatus())).setType(Type.BOOLEAN),
+                new PopModel().setName("爱好").setValue(testDemo.getTags()).setType(Type.TAG)
         );
     }
 }

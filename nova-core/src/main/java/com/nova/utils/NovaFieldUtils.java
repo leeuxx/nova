@@ -724,6 +724,8 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             View[] views = novaField.views();
+            Edit.Type type = novaFieldInfo.getType();
+            boolean isReference = (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE || type == Edit.Type.LINK_TARGET);
             for (View view : views) {
                 Pop pop = view.pop();
                 if (pop.show()) {
@@ -732,7 +734,11 @@ public class NovaFieldUtils {
                             .setTitle(pop.title())
                             .setParam(pop.param())
                             .setHandleClass(handle.length > 0 ? handle[0] : null);
-                    popInfoMaps.put(field, popInfo);
+                    String fieldName = field;
+                    if (isReference) {
+                        fieldName += "." + view.column();
+                    }
+                    popInfoMaps.put(fieldName, popInfo);
                 }
             }
         });
