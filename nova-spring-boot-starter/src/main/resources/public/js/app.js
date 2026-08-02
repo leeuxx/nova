@@ -782,9 +782,11 @@ function mountApp(menuList, config, loginExpired) {
     router.push('/login')
   }
 
-  // 路由守卫：未登录拦截
+  // 路由守卫：未登录拦截；独立页面（登录/404）不显示顶部加载条
   router.beforeEach((to, from, next) => {
-    if (window.__novaPageLoading) window.__novaPageLoading.start()
+    if (to.path !== '/login' && to.path !== '/404') {
+      if (window.__novaPageLoading) window.__novaPageLoading.start()
+    }
     var token = localStorage.getItem('nova_token')
     if (to.path !== '/login' && to.path !== '/404' && !token) {
       next('/login')
