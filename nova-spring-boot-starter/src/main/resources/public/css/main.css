@@ -630,6 +630,17 @@ body.dark { background: #151515 !important; }
 @keyframes slide-from-left  { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes slide-to-right   { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
 
+/* ─── 面包屑层级动画：同级目录复用不动画，变化的层级从右滑入 ───────────
+   --i 为层级序号：新建项按层级依次延迟进入；被 Vue 复用的项不重放动画 */
+.breadcrumb-slide-in {
+  animation: breadcrumb-slide-in .35s ease backwards;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+@keyframes breadcrumb-slide-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 /* ─── 相册标题栏 ───────────────────────────────────── */
 .gallery-header            { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 .gallery-title             { font-size: 15px; font-weight: 600; color: #333; }

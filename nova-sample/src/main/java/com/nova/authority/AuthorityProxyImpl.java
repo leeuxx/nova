@@ -90,6 +90,31 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                 .setPid(1000L)
                 .setType(Menu.Type.TPL)
         );
+        add(new Menu()
+                .setId(1001L)
+                .setCode("tplml")
+                .setName("下级目录")
+                .setIcon("material-symbols:add-to-drive-outline-rounded")
+                .setPid(1000L)
+        );
+        add(new Menu()
+                .setId(YitIdHelper.nextId())
+                .setCode("httpTpl2")
+                .setValue("https://www.baidu.com")
+                .setName("远程tpl2")
+                .setIcon("material-symbols:add-to-drive-outline-rounded")
+                .setPid(1001L)
+                .setType(Menu.Type.TPL)
+        );
+        add(new Menu()
+                .setId(YitIdHelper.nextId())
+                .setCode("httpTpl3")
+                .setValue("https://www.baidu.com")
+                .setName("远程tpl3")
+                .setIcon("material-symbols:add-to-drive-outline-rounded")
+                .setPid(1001L)
+                .setType(Menu.Type.TPL)
+        );
 
         add(new Menu()
                 .setId(3L)
