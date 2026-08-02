@@ -291,6 +291,7 @@ const NovaTable = {
       linkTargetInfo: {},
       popMap:         {},  // pop 弹窗配置：字段名 → { title, param, handleName }
       popActiveKey:   '',  // 当前打开 popover 的 "行主键@列field"，用于精确定位单行单元格
+      popTooltipShow: {},  // 每行 pop 列完整内容 tooltip 是否显示（仅文本溢出时 true）
       popTitle:       '',
       popLoading:     false,
       popList:        [],  // [{ type, name, value }]
@@ -950,7 +951,8 @@ const NovaTable = {
               if (text === '') return ''
               const triggerNode = baseRender ? baseRender(row) : text
               // 以 行主键@列field 唯一标识单元格，避免仅按列匹配导致整列弹窗同时打开
-              const myKey = String(row[vm.novaIdFieldName] ?? '') + '@' + fieldKey
+              const rowKey = String(row[vm.novaIdFieldName] ?? '')
+              const myKey = rowKey + '@' + fieldKey
               const popOpen = vm.popActiveKey === myKey
               return h(NPopover, {
                 trigger: 'click',
@@ -967,19 +969,27 @@ const NovaTable = {
                 }
               }, {
                 trigger: () => h(NTooltip, {
-                  trigger: 'hover',
+                  trigger: 'manual',
                   placement: 'top',
-                  disabled: popOpen
+                  show: vm.popTooltipShow[myKey] === true && !popOpen
                 }, {
                   trigger: () => h('span', {
                     style: 'position:relative;display:block;width:100%;overflow:hidden;cursor:pointer',
                     onClick: (e) => e.stopPropagation(),
-                    onMouseenter: (e) => { const ic = e.currentTarget.querySelector('iconify-icon'); if (ic) ic.style.color = '#2563eb' },
-                    onMouseleave: (e) => { const ic = e.currentTarget.querySelector('iconify-icon'); if (ic) ic.style.color = '#9ca3af' }
+                    onMouseenter: (e) => {
+                      const ic = e.currentTarget.querySelector('iconify-icon'); if (ic) ic.style.color = '#2563eb'
+                      // 仅文本溢出时显示完整内容 tooltip（按单元格 myKey 隔离）
+                      const textEl = e.currentTarget.querySelector('span')
+                      vm.popTooltipShow[myKey] = !!(textEl && textEl.scrollWidth > textEl.clientWidth)
+                    },
+                    onMouseleave: (e) => {
+                      const ic = e.currentTarget.querySelector('iconify-icon'); if (ic) ic.style.color = '#9ca3af'
+                      vm.popTooltipShow[myKey] = false
+                    }
                   }, [
                     h('span', { style: 'display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:18px' }, [triggerNode]),
                     h('iconify-icon', {
-                      icon: 'material-symbols:info-outline',
+                      icon: 'material-symbols:zoom-in',
                       style: 'position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:14px;color:#9ca3af;transition:color .2s'
                     })
                   ]),
