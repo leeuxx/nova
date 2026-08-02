@@ -31,6 +31,8 @@ window.NovaDualLinkJQ = (function () {
     hostVm.linkTreeLoading['__dual__'] = true
     var self = hostVm
     window.fetchApi.post('/nova/table/build', { novaName: tapNovaName }, window.__novaMenuCode(tapNovaName)).then(function(resp) {
+      // 请求期间已切换到其他子表：丢弃过期响应，避免 linkTreeLoading/linkTabBuild 被旧表状态错乱
+      if (hostVm.dualTableCurrentNova !== tapNovaName) return
       var bd = resp.data || {}
       var lt = bd.linkTarget || {}
       var ltEditFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])

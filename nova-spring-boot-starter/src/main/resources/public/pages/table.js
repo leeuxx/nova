@@ -2632,7 +2632,10 @@ const NovaTable = {
     loadLinkTreeData(tapNovaName, options) {
       const stateKey = (options && options.stateKey) || tapNovaName
       const row = options && options.row
-      if (this.linkTreeLoading[stateKey]) return
+      // 防重入：仅当同一 LINK 表仍在加载时才跳过；切换子表（nova 变化）必须重新加载，
+      // 否则旧表加载中残留的 linkTreeLoading 会挡住新表，右表无响应
+      if (this.linkTreeLoading[stateKey] && this._linkTreeLoadingNova === tapNovaName) return
+      this._linkTreeLoadingNova = tapNovaName
       this.linkTreeLoading[stateKey] = true
       this._linkTreeLoadingStart = Date.now()
       this.linkTreeSearchKeyword[stateKey] = ''
@@ -2658,6 +2661,8 @@ const NovaTable = {
       }
       // 首次：请求目标 Nova 的 build 配置（treeSearchField, treeParentField 等）
       window.fetchApi.post('/nova/table/build', { novaName: targetNovaName }, window.__novaMenuCode(targetNovaName)).then(function(buildResp) {
+            // 请求期间已切换到其他子表：丢弃过期响应，避免用旧表状态覆盖当前子表
+            if (self.dualTableCurrentNova !== tapNovaName) return
             if (buildResp.code !== 200) {
               self.linkTreeLoading[stateKey] = false
               if (window.$message) window.$message.error('获取目标表配置失败')
@@ -2759,6 +2764,9 @@ const NovaTable = {
         // 数据应用：触发 Vue 渲染 n-tree，占用主线程。动画期间（首屏 boot 或右表树加载动画）
         // 延迟到动画结束后执行，避免树渲染导致动画掉帧；数据已提前就绪，动画结束立即渲染不留空白
         var apply = function() {
+          // 请求期间已切换到其他子表：丢弃过期树数据。否则旧 LINK 的树会被误判为
+          // 当前子表的树（linkTreeData 有值走树分支），nova-table 不渲染、不触发 build，右表没反应
+          if (self.dualTableCurrentNova !== tapNovaName) return
           self.linkTreeData[stateKey] = sortedRoot
           self.linkTreeNodeMap[stateKey] = nodeMap
           self.linkTreeCheckedKeys[stateKey] = checkedKeys
@@ -3166,6 +3174,11 @@ const NovaTable = {
       this.novaName = novaName
       this._vmKey = '__dual_' + novaName + '_' + Date.now()
       window.vmMap[this._vmKey] = this
+      // reloadDual 显式接管了 build（下方 onEmbeddedMounted），清除 _dualReloadPending 标记。
+      // 该标记在切换 drill/appendage 子表时置位，reloadDual 复用实例不触发 mounted 而残留；
+      // 若残留 true，之后切换到 LINK 子表时内部 nova-table 新建挂载会误判
+      // "reloadDual 将接管"而跳过 build，导致右表没反应、不发 build 接口
+      window._dualReloadPending = false
       // 不传 deferDataLoad（默认 false），让 /build 响应回调中初始化好
       // _sourceRefFields 后自动调用 loadData，避免先于 /build 响应加载导致
       // 使用旧表元数据构造错误条件
