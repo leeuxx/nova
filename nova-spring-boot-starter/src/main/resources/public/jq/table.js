@@ -126,7 +126,13 @@ window.NovaTableJQ = (function ($) {
           setBuildLoading(target, false)
           return
         }
-        setBuildLoading(target, false)
+        if (target.dualMode) {
+          // dual 右表（drill/appendage）：build 完成后遮罩持续到数据渲染完成再关闭，
+          // 避免 buildLoading 关闭与 loadData 数据渲染之间的空窗露出空表格（闪一下）
+          target._buildLoadingHold = true
+        } else {
+          setBuildLoading(target, false)
+        }
         // 数据应用（设置响应式数据 + 渲染表格）是主线程重活：整页加载阶段延迟到 boot 移除后执行，
         // 避免动画期间掉帧；网络请求已并行完成，数据就绪后立即渲染，不留空表格空窗
         var applyNow = function () {
@@ -388,6 +394,7 @@ window.NovaTableJQ = (function ($) {
         var target = window.vmMap && window.vmMap[key]
         if (target) {
           target._buildPending = false
+          if (target._buildLoadingHold) target._buildLoadingHold = false
           setBuildLoading(target, false)
         }
         if (window.__novaPageLoading) window.__novaPageLoading.finish()
@@ -525,7 +532,8 @@ window.NovaTableJQ = (function ($) {
       if (!t) return
       // 动画期间（首屏 boot 或切 tab 表格加载动画）保持主线程空闲：
       // 数据响应延迟到动画结束（boot 移除且遮罩关闭）后应用，数据已提前并行拉取，动画结束立即渲染不留空表格
-      if ((window.__bootLoadingInDom && window.__bootLoadingInDom()) || t.buildLoading) {
+      // dual 右表 build 遮罩持续期间（_buildLoadingHold）不延迟：遮罩正是为衔接数据渲染而保持，数据就绪立即应用并关闭遮罩
+      if ((window.__bootLoadingInDom && window.__bootLoadingInDom()) || (t.buildLoading && !t._buildLoadingHold)) {
         t._pendingDataResp = resp
         whenLoadingDone(t, function () {
           var tt = window.vmMap && window.vmMap[vmKey]
@@ -538,6 +546,15 @@ window.NovaTableJQ = (function ($) {
         return
       }
       applyDataResp(vmKey, resp, pageBean)
+    }).catch(function () {
+      var t2 = window.vmMap && window.vmMap[vmKey]
+      if (t2) {
+        t2.loading = false
+        if (t2._buildLoadingHold) {
+          t2._buildLoadingHold = false
+          setBuildLoading(t2, false)
+        }
+      }
     })
   }
 
@@ -556,6 +573,11 @@ window.NovaTableJQ = (function ($) {
     t.paginationConfig.pageSize    = resp.data.size       || pageBean.size
     if (resp.data.novaIdFieldName)     t.novaIdFieldName          = resp.data.novaIdFieldName
     translateData(vmKey)
+    // dual 右表 build 遮罩持续标记：数据已渲染，关闭遮罩，无缝衔接不露空表格
+    if (t._buildLoadingHold) {
+      t._buildLoadingHold = false
+      setBuildLoading(t, false)
+    }
   }
 
   // ── 构建排序参数 ──────────────────────────────────────────────
@@ -1191,7 +1213,8 @@ window.NovaTableJQ = (function ($) {
       if (!t) return
       // 动画期间（首屏 boot 或切 tab 表格加载动画）保持主线程空闲：
       // 树数据响应延迟到动画结束（boot 移除且遮罩关闭）后应用，与普通表 data 接口一致，动画期间不掉帧
-      if ((window.__bootLoadingInDom && window.__bootLoadingInDom()) || t.buildLoading) {
+      // dual 右表 build 遮罩持续期间（_buildLoadingHold）不延迟：遮罩为衔接数据渲染而保持，数据就绪立即应用并关闭遮罩
+      if ((window.__bootLoadingInDom && window.__bootLoadingInDom()) || (t.buildLoading && !t._buildLoadingHold)) {
         t._pendingTreeResp = resp
         whenLoadingDone(t, function () {
           var tt = window.vmMap && window.vmMap[vmKey]
@@ -1206,7 +1229,13 @@ window.NovaTableJQ = (function ($) {
       applyTreeDataResp(vmKey, resp)
     }).catch(function() {
         var t = window.vmMap && window.vmMap[vmKey]
-        if (t) t.loading = false
+        if (t) {
+          t.loading = false
+          if (t._buildLoadingHold) {
+            t._buildLoadingHold = false
+            setBuildLoading(t, false)
+          }
+        }
       })
   }
 
@@ -1228,6 +1257,11 @@ window.NovaTableJQ = (function ($) {
     t.treeLoadingKeys = []
     // 树数据渲染后重新计算表格高度（filter-card + 树行数变化，flex-height 表格依赖正确容器高度）
     if (window.Vue && window.Vue.nextTick) window.Vue.nextTick(function () { updateTableHeight() })
+    // dual 右表 build 遮罩持续标记：树数据已渲染，关闭遮罩
+    if (t._buildLoadingHold) {
+      t._buildLoadingHold = false
+      setBuildLoading(t, false)
+    }
   }
 
   // ── 根据 treeLevel 计算初始展开的节点 key ──────────────────

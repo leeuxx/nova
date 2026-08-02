@@ -391,11 +391,14 @@ body.table-wrap-cell .n-data-table-td {
   justify-content: center;
   background: #f5f7fa;
   opacity: 1;
-  transition: opacity .3s ease-out;
+  /* 只淡出不淡入：buildLoading 变 true 时遮罩立即不透明盖住表格，
+     避免切换钻取目标表（复用实例 buildLoading false→true）时遮罩 300ms 淡入
+     期间半透明盖不住下方旧表数据，出现"表格先闪、动画才盖住" */
 }
 .table-build-overlay.hidden {
   opacity: 0;
   pointer-events: none;
+  transition: opacity .3s ease-out;
 }
 .dark .table-build-overlay {
   background: #1f1f1f;

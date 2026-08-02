@@ -3236,7 +3236,16 @@ const NovaTable = {
         // _dualReloading 阻止 sourceFieldsProp watcher 干扰，reloadDual 全权负责
         window._dualReloadPending = true
         var nt = this.$refs.dualTableRef
-        if (nt) nt._dualReloading = true
+        if (nt) {
+          nt._dualReloading = true
+          // 切换钻取目标表：reloadDual 在 $nextTick 里才把 buildLoading 置 true，
+          // 若不处理，切换瞬间旧表数据会先渲染出来（先表格后动画遮罩）。
+          // 这里同步清空旧数据并立即显示遮罩，让首帧就是"遮罩盖住空表格"
+          nt.tableData = []
+          nt.rawTableData = []
+          nt.buildLoading = true
+          nt._buildLoadingStart = Date.now()
+        }
         var self2 = this
         self2.$nextTick(function () {
           var nt2 = self2.$refs.dualTableRef
