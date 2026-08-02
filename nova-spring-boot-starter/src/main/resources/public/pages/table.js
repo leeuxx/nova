@@ -989,7 +989,7 @@ const NovaTable = {
                   }, [
                     h('span', { style: 'display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:18px' }, [triggerNode]),
                     h('iconify-icon', {
-                      icon: 'material-symbols:zoom-in',
+                      icon: 'material-symbols:visibility-outline',
                       style: 'position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:14px;color:#9ca3af;transition:color .2s'
                     })
                   ]),
