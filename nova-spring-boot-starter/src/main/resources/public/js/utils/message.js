@@ -44,8 +44,22 @@ window.NovaMessage = {
       this.count = this.messages.length
     },
 
-    toggleExpand(i) {
-      this.expandedMap[i] = !this.expandedMap[i]
+    toggleExpand(i, e) {
+      const expanding = !this.expandedMap[i]
+      this.expandedMap[i] = expanding
+      const card = e && e.currentTarget
+      const el = card ? card.querySelector('.msg-center-content') : null
+      if (!el) return
+      // 等 DOM 更新（展开态 display/line-clamp 生效）后先解除 max-height 读取真实高度，再设回触发过渡
+      this.$nextTick(() => {
+        if (expanding) {
+          el.style.maxHeight = 'none'
+          const h = el.scrollHeight
+          el.style.maxHeight = h + 'px'
+        } else {
+          el.style.maxHeight = '46px'
+        }
+      })
     },
 
     // 内容较长才需要展开/收起（粗略按字符数判断）
@@ -68,7 +82,7 @@ window.NovaMessage = {
           <div v-if="loading" class="msg-center-loading">加载中...</div>
           <div v-else-if="messages.length === 0" class="msg-center-empty">暂无消息</div>
           <transition-group v-else tag="div" name="msg" class="msg-center-list">
-            <div v-for="(msg, i) in messages" :key="msg._key" class="msg-center-item" :class="{ expanded: expandedMap[i] }" @click="toggleExpand(i)">
+            <div v-for="(msg, i) in messages" :key="msg._key" class="msg-center-item" :class="{ expanded: expandedMap[i] }" @click="toggleExpand(i, $event)">
               <n-button v-if="msg.close" class="msg-center-x" size="tiny" text @click.stop="removeMessage(i)">
                 <iconify-icon icon="material-symbols:close"></iconify-icon>
               </n-button>
