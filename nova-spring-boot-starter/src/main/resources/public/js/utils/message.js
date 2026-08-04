@@ -16,7 +16,10 @@ window.NovaMessage = {
 
   created() {
     this._seq = 0
-    this.fetchMessages()
+    // 未登录（登录页）时不请求消息接口
+    if (localStorage.getItem('nova_token')) {
+      this.fetchMessages()
+    }
   },
 
   methods: {
@@ -40,8 +43,17 @@ window.NovaMessage = {
     },
 
     removeMessage(i) {
-      this.messages.splice(i, 1)
-      this.count = this.messages.length
+      const msg = this.messages[i]
+      if (!msg) return
+      // 调用后端关闭接口，成功后再从列表移除（触发过渡动画）
+      window.fetchApi.post('/nova/message/closeMessages', { ids: [msg.id] })
+        .then(() => {
+          this.messages.splice(i, 1)
+          this.count = this.messages.length
+        })
+        .catch(() => {
+          if (window.$message) window.$message.error('关闭消息失败')
+        })
     },
 
     toggleExpand(i, e) {
@@ -60,12 +72,6 @@ window.NovaMessage = {
           el.style.maxHeight = '46px'
         }
       })
-    },
-
-    // 内容较长才需要展开/收起（粗略按字符数判断）
-    isLong(i) {
-      const msg = this.messages[i]
-      return !!(msg && String(msg.content || '').length > 60)
     }
   },
 
@@ -77,7 +83,7 @@ window.NovaMessage = {
         </n-icon>
       </n-badge>
 
-      <n-drawer v-model:show="showDrawer" placement="right" :width="400" class="msg-drawer">
+      <n-drawer v-model:show="showDrawer" placement="right" width="30%" class="msg-drawer">
         <n-drawer-content title="消息中心">
           <div v-if="loading" class="msg-center-loading">加载中...</div>
           <div v-else-if="messages.length === 0" class="msg-center-empty">暂无消息</div>
@@ -86,10 +92,13 @@ window.NovaMessage = {
               <n-button v-if="msg.close" class="msg-center-x" size="tiny" text @click.stop="removeMessage(i)">
                 <iconify-icon icon="material-symbols:close"></iconify-icon>
               </n-button>
-              <div v-if="msg.title" class="msg-center-title">{{ msg.title }}</div>
-              <div class="msg-center-content">{{ msg.content }}</div>
-              <div v-if="isLong(i)" class="msg-center-foot">
-                <span class="msg-center-hint">{{ expandedMap[i] ? '收起' : '展开' }}</span>
+              <div v-if="msg.title" class="msg-center-title">
+                <iconify-icon class="msg-ring" :class="{ 'bell-ring': msg.type === 'CRITICAL', 'ring-follow': msg.type === 'FOLLOW', 'ring-critical': msg.type === 'CRITICAL' }" icon="mdi:bell-ring-outline"></iconify-icon>
+                {{ msg.title }}
+              </div>
+              <div class="msg-center-content" :style="(!msg.title && msg.close) ? 'padding-right:14px' : ''">
+                <iconify-icon v-if="!msg.title" class="msg-ring" :class="{ 'bell-ring': msg.type === 'CRITICAL', 'ring-follow': msg.type === 'FOLLOW', 'ring-critical': msg.type === 'CRITICAL' }" icon="mdi:bell-ring-outline"></iconify-icon>
+                {{ msg.content }}
               </div>
             </div>
           </transition-group>

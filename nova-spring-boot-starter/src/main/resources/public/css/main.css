@@ -55,6 +55,15 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   transform: translateY(-1px);
 }
 .msg-center-title { font-weight: 600; margin-bottom: 6px; font-size: 14px; color: #333; padding-right: 24px; }
+.msg-ring {
+  display: inline-block;
+  vertical-align: -2px;
+  font-size: 14px;
+  margin-right: 4px;
+  color: inherit;
+}
+.msg-ring.ring-follow { color: #2563eb; }
+.msg-ring.ring-critical { color: #e5484d; }
 .msg-center-x {
   position: absolute;
   top: 8px;
@@ -78,8 +87,6 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   transition: max-height 0.35s ease;
 }
 .msg-center-item.expanded .msg-center-content { display: block; -webkit-line-clamp: unset; }
-.msg-center-foot { display: flex; justify-content: flex-end; align-items: center; margin-top: 8px; }
-.msg-center-hint { color: #999; font-size: 12px; }
 .msg-leave-active { transition: translate 0.35s ease, opacity 0.35s ease; }
 .msg-leave-to { translate: -80px 0; opacity: 0; }
 .dark .msg-center-item { background: #1e1e1e; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }

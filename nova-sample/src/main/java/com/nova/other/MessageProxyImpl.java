@@ -39,8 +39,22 @@ public class MessageProxyImpl implements MessageProxy {
                         "老周抬起头，露出一个标准的、像刚铺好的柏油路面一样平整无痕的微笑：\n" +
                         "“嗯，地面很软，躺着很舒服。”\n" +
                         "\n" +
-                        "新来的环卫工低头看了看脚下，路面平坦如常，几片梧桐叶静静躺着。他总觉得今天这条路，黑得格外油亮，格外……新鲜。").setClose(true),
-                new Message().setContent("更诡异的是，路中心那道两年前修补的裂缝，此刻竟像一张微张的嘴，发出“嘶——呼——”的声响。老周鬼使神差地蹲下身，把耳朵贴了上去。").setClose(false)
+                        "新来的环卫工低头看了看脚下，路面平坦如常，几片梧桐叶静静躺着。他总觉得今天这条路，黑得格外油亮，格外……新鲜。")
+                        .setId("1")
+                        .setType(Message.Type.CRITICAL)
+                        .setClose(true),
+                new Message().setContent("老周想跑，却发现自己的鞋底已经融化了，黏在温热的柏油路面上。另一个环卫工来接替另一个环卫工来接替")
+                        .setId("2")
+                        .setClose(true),
+                new Message().setContent("更诡异的是，路中心那道两年前修补的裂缝，此刻竟像一张微张的嘴，发出“嘶——呼——”的声响。老周鬼使神差地蹲下身，把耳朵贴了上去。")
+                        .setId("3")
+                        .setType(Message.Type.FOLLOW)
+                        .setClose(false)
         );
+    }
+
+    @Override
+    public void close(String token, List<String> ids) {
+        System.out.println(ids);
     }
 }
