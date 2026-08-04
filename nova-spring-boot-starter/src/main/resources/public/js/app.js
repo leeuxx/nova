@@ -248,7 +248,7 @@ function mountApp(menuList, config, loginExpired) {
       // 优先读取前端缓存的主题，未缓存时回退到配置默认值
       const savedTheme = localStorage.getItem('nova-theme')
       const isDark     = ref(savedTheme !== null ? savedTheme === 'night' : config.theme === 'night')
-      const togglePos = 'down'
+      const togglePos = 'up' // 侧边栏不显示伸缩 trigger，折叠统一由面包屑左侧按钮控制
       const openedTabs = ref([])
       const activeTab  = ref('')
       const tabsKey    = ref(0)
@@ -470,7 +470,11 @@ function mountApp(menuList, config, loginExpired) {
       const userAlias  = ref(localStorage.getItem('nova_alias') || '')
       const userAvatar = ref(localStorage.getItem('nova_avatar') || '')
 
-      // 右上角用户下拉：第一列用户信息头（头像+名称/昵称），下面个人中心/退出登录带图标
+      // 右上角用户下拉：用户信息头 + userTools(fold 类型) 自定义项 + 个人中心/退出登录
+      const userTools = (config.userTools || []).map(function (t, i) { return Object.assign({}, t, { _idx: i }) })
+      // button 类型：渲染为铃铛左侧图标按钮，name 有值时悬浮展示
+      const userToolButtons = userTools.filter(function (t) { return t.type === 'button' })
+      const foldTools = userTools.filter(function (t) { return t.type === 'fold' })
       const userDropdown = [
         {
           type: 'render',
@@ -491,6 +495,12 @@ function mountApp(menuList, config, loginExpired) {
           ])
         },
         { type: 'divider', key: 'd1' },
+        ...foldTools.map((t) => ({
+          label: t.name,
+          key: 'userTool_' + t._idx,
+          ...(t.icon ? { icon: mi(t.icon) } : {})
+        })),
+        ...(foldTools.length ? [{ type: 'divider', key: 'd2' }] : []),
         { label: '个人中心', key: 'profile', icon: mi('material-symbols:person-outline') },
         { label: '退出登录', key: 'logout', icon: mi('material-symbols:logout') }
       ]
@@ -507,6 +517,12 @@ function mountApp(menuList, config, loginExpired) {
 
       // 右上角用户菜单
       const handleUserMenuSelect = (key) => {
+        if (key.indexOf('userTool_') === 0) {
+          const idx = parseInt(key.slice('userTool_'.length), 10)
+          const tool = userTools[idx]
+          if (tool && typeof tool.click === 'function') tool.click()
+          return
+        }
         if (key === 'profile') {
           // 反显当前用户信息（token 只读）
           const ava = localStorage.getItem('nova_avatar') || ''
@@ -620,7 +636,7 @@ function mountApp(menuList, config, loginExpired) {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
         menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isStandaloneRoute, menuSelectedKey,
         pageComponent, cachedNames,
-        handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, handleUserMenuSelect,
+        handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, userToolButtons, handleUserMenuSelect,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
         barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText, logoImg,
         showProfile, profileSaving, profileFormRef, profileForm, profileRules, submitProfile,
@@ -684,6 +700,11 @@ function mountApp(menuList, config, loginExpired) {
                         </n-breadcrumb>
                       </div>
                       <n-space align="center" :size="4">
+                        <template v-for="btn in userToolButtons" :key="'ub' + btn._idx">
+                          <div class="header-action" style="cursor:pointer" :data-tip="btn.name || undefined" @click="btn.click">
+                            <n-icon size="20"><iconify-icon :icon="btn.icon"></iconify-icon></n-icon>
+                          </div>
+                        </template>
                         <nova-message />
                         <div class="header-action theme-switch">
                           <n-icon size="18"><iconify-icon icon="material-symbols:dark-mode-outline"></iconify-icon></n-icon>

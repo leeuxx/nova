@@ -23,6 +23,41 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 .header-action:hover {
   background-color: rgba(37, 99, 235, 0.1);
 }
+/* userTools(button) 悬浮提示：data-tip 非空时 hover 立即显示（比原生 title 灵敏） */
+.header-action[data-tip] { position: relative; }
+.header-action[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(17, 24, 39, 0.85);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  padding: 6px 9px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  animation: nova-tip-in 0.15s ease;
+}
+.header-action[data-tip]:hover::before {
+  content: "";
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: rgba(17, 24, 39, 0.85);
+  pointer-events: none;
+  z-index: 1000;
+}
+@keyframes nova-tip-in {
+  from { opacity: 0; transform: translate(-50%, -4px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
 .theme-switch {
   height: 24px;
   gap: 6px;

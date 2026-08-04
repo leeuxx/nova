@@ -10,7 +10,9 @@
     // logo 图片
     logo: 'logo.png',
     // 默认主题：daytime / night
-    theme: 'daytime'
+    theme: 'daytime',
+    // 右上角用户下拉自定义项：{ type（fold（下拉菜单内）/ button（铃铛左侧图标按钮，悬浮展示 name））, name, icon, click }
+    userTools: []
   }
 
   var userCfg = (window.nova.config) || {}
@@ -21,6 +23,7 @@
     desc: userCfg.desc || DEFAULTS.desc,
     copyrightTxt: userCfg.copyrightTxt || DEFAULTS.copyrightTxt,
     logo: userCfg.logo || DEFAULTS.logo,
-    theme: themes.indexOf(userCfg.theme) !== -1 ? userCfg.theme : DEFAULTS.theme
+    theme: themes.indexOf(userCfg.theme) !== -1 ? userCfg.theme : DEFAULTS.theme,
+    userTools: userCfg.userTools || DEFAULTS.userTools
   }
 })()
