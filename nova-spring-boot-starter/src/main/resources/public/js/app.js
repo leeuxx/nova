@@ -716,8 +716,8 @@ function mountApp(menuList, config, loginExpired) {
                             <n-icon size="20"><iconify-icon :icon="btn.icon"></iconify-icon></n-icon>
                           </div>
                         </template>
-                        <nova-message />
-                        <div class="header-action theme-switch">
+                        <nova-message data-tip="消息中心" />
+                        <div class="header-action theme-switch" data-tip="切换主题">
                           <n-icon size="18"><iconify-icon icon="material-symbols:dark-mode-outline"></iconify-icon></n-icon>
                           <n-switch v-model:value="isDark" />
                           <n-icon size="18"><iconify-icon icon="material-symbols:light-mode-outline"></iconify-icon></n-icon>
@@ -804,8 +804,8 @@ function mountApp(menuList, config, loginExpired) {
             </n-form-item>
           </n-form>
           <template #footer>
-            <div style="display:flex;justify-content:flex-end">
-              <n-button v-if="userEdit" type="primary" :loading="profileSaving" @click="submitProfile">更新信息</n-button>
+            <div style="display:flex;justify-content:center">
+              <n-button v-if="userEdit" type="primary" style="width:80%" :loading="profileSaving" @click="submitProfile">更新信息</n-button>
             </div>
           </template>
         </n-modal>
