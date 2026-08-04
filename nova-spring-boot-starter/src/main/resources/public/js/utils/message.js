@@ -111,7 +111,7 @@ window.NovaMessage = {
           <template #header>
             <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
               <span>消息中心</span>
-              <n-button v-if="clearableCount > 0" size="small" type="primary" @click="clearAll">一键清除</n-button>
+              <span v-if="clearableCount > 0" class="msg-clear-link" @click="clearAll">一键清除</span>
             </div>
           </template>
           <div v-if="loading" class="msg-center-loading">加载中...</div>
