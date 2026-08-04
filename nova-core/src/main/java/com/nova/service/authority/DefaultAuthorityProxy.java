@@ -1,0 +1,43 @@
+package com.nova.service.authority;
+
+import com.nova.entity.authority.Login;
+import com.nova.entity.authority.Menu;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+@ConditionalOnMissingBean(value = AuthorityProxy.class, ignored = DefaultAuthorityProxy.class)
+public class DefaultAuthorityProxy implements  AuthorityProxy {
+
+    @Override
+    public boolean checkToken(String token) {
+        return false;
+    }
+
+    @Override
+    public Login.User login(Login login) {
+        throw new RuntimeException("权限模块未配置");
+    }
+
+    @Override
+    public void logout(String token) {
+        throw new RuntimeException("权限模块未配置");
+    }
+
+    @Override
+    public List<Menu> getMenu(String token) {
+        throw new RuntimeException("权限模块未配置");
+    }
+
+    @Override
+    public boolean menuPermission(String token, String code) {
+        return false;
+    }
+
+    @Override
+    public void editUser(Login.User user) {
+        throw new RuntimeException("权限模块未配置");
+    }
+}

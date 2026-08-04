@@ -1506,7 +1506,7 @@ const NovaTable = {
         if (!self.opFormAppFormData[appNovaName][field]) self.opFormAppFormData[appNovaName][field] = []
         ;(resp.data || []).forEach(function(url) { self.opFormAppFormData[appNovaName][field].push(url) })
         if (window.$message) window.$message.success('上传成功')
-      }).catch(function() { if (window.$message) window.$message.error('上传请求失败') })
+      }).catch(function() {})
     },
     // ── appendageForm helpers ───────────────────────────────────
     appBuild(n)        { return this.appendageTabBuild[n] || {} },
@@ -2344,7 +2344,7 @@ const NovaTable = {
         if (!self.opFormData[field]) self.opFormData[field] = []
         ;(resp.data || []).forEach(function(url) { self.opFormData[field].push(url) })
         if (window.$message) window.$message.success('上传成功')
-      }).catch(function() { if (window.$message) window.$message.error('上传请求失败') })
+      }).catch(function() {})
     },
     handleFormSubmit()  { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleFormSubmit(this._vmKey); else window.NovaTableJQ.handleFormSubmit() },
     handleAttachmentChange(f, event, appNovaName) {
@@ -2389,7 +2389,7 @@ const NovaTable = {
         }
         if (window.$message) window.$message.success('上传成功')
         vm.openPreview(f, appNovaName || null)
-      }).catch(() => { if (window.$message) window.$message.error('上传请求失败') })
+      }).catch(() => {})
     },
     openPreview(f, appNovaName, isOpForm) {
       this.previewField = f

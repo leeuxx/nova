@@ -93,7 +93,6 @@ window.LoginPage = {
             if (window.$message) window.$message.error(resp.message || '登录失败，请检查账号密码')
           }
         }).catch(() => {
-          if (window.$message) window.$message.error('网络错误，请稍后重试')
         }).finally(() => {
           this.loading = false
         })
