@@ -149,19 +149,29 @@ const themeOverrides = {
 // 从脚本开始执行起计时（此时首屏 loading 已在 DOM 中显示）
 var _bootLoadingStart = Date.now()
 
-function hideBootLoading(immediate) {
+function hideBootLoading(immediate, onDone) {
   var el = document.getElementById('__nova-boot-loading__')
-  if (!el) return
+  if (!el) { if (onDone) onDone(); return }
   var finish = function () {
     el.classList.add('hidden')
     setTimeout(function () {
       if (el.parentNode) el.parentNode.removeChild(el)
+      if (onDone) onDone()
     }, 600)
   }
   // immediate=true（如登录页）：不做最短时长等待，立即开始淡出
   var remain = (immediate ? 0 : window.NovaLoading.minDuration.boot) - (Date.now() - _bootLoadingStart)
   if (remain > 0) setTimeout(finish, remain)
   else finish()
+}
+
+// 生命周期回调：首屏 loading 完全淡出后触发 window.nova.event.startup(当前路由路径)
+function triggerStartup() {
+  var evt = window.nova.event
+  if (!evt || typeof evt.startup !== 'function') return
+  var router = window.__novaRouter
+  var path = router && router.currentRoute ? router.currentRoute.value.fullPath : location.pathname + location.hash
+  evt.startup(path)
 }
 
 // 首屏 boot loading 是否仍在 DOM 中（整页加载阶段）：此阶段表格不显示自身动画，由全屏动画覆盖；点菜单切 tab 时已移除，正常显示
@@ -864,8 +874,8 @@ function mountApp(menuList, config, loginExpired) {
   // 暴露 router 供 LoginPage 等独立组件使用
   window.__novaRouter = router
   app.mount('#app')
-  // 挂载完成后淡出首屏 loading：此时主线程空闲，过渡动画不被打断
-  hideBootLoading()
+  // 挂载完成后淡出首屏 loading：此时主线程空闲，过渡动画不被打断；淡出完成后触发 startup 生命周期
+  hideBootLoading(false, triggerStartup)
 }
 
 })()

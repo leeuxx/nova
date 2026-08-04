@@ -18,6 +18,7 @@
   var userCfg = (window.nova.config) || {}
   var themes = ['daytime', 'night']
 
+  // 配置项
   window.nova.config = {
     name: userCfg.name || DEFAULTS.name,
     desc: userCfg.desc || DEFAULTS.desc,
@@ -26,4 +27,7 @@
     theme: themes.indexOf(userCfg.theme) !== -1 ? userCfg.theme : DEFAULTS.theme,
     userTools: userCfg.userTools || DEFAULTS.userTools
   }
+
+  // 生命周期回调 { startup(route) 页面加载完成后回调 }
+  window.nova.event = window.nova.event || {}
 })()

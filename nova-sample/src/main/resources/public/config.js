@@ -32,14 +32,9 @@ window.nova.config = {
   ]
 }
 
+// 生命周期回调：页面加载完成后触发（首屏 loading 淡出后），url 为当前路由路径（如 /home）
 window.nova.event = {
-    startup: function () {
-
-    },
-    login: function(user) {
-
-    },
-    logout: function(user){
-
-    }
+  startup: function (route) {
+    console.log('Nova startup--------------------:', route)
+  }
 }
