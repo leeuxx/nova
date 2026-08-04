@@ -12,6 +12,7 @@ window.RegisterPage = {
       registerTitle: cfg.name,
       loginDesc:     cfg.desc,
       copyrightTxt:  cfg.copyrightTxt,
+      logoImg: cfg.logo,
       formData: {
         username: '',
         password: '',
@@ -78,7 +79,7 @@ window.RegisterPage = {
   },
 
   template: `
-<div class="login-container" style="align-items:center;padding:0 80px;">
+<div class="login-container">
   <!-- 动态光晕背景 -->
   <div class="blur-orb orb-1"></div>
   <div class="blur-orb orb-2"></div>
@@ -86,14 +87,17 @@ window.RegisterPage = {
   <div class="blur-orb orb-4"></div>
   <div class="blur-orb orb-5"></div>
 
-  <!-- 注册卡片 -->
-  <div style="width:400px;max-width:90vw;position:relative;z-index:1">
-    <div style="text-align:center;margin-bottom:40px">
-      <h1 class="login-title">{{ registerTitle }}</h1>
-      <p class="login-subtitle">{{ loginDesc }}</p>
-    </div>
+  <!-- 品牌区 -->
+  <div class="login-brand">
+    <img v-if="logoImg" :src="logoImg" class="login-logo" alt="logo" />
+    <h1 class="login-title">{{ registerTitle }}</h1>
+    <p class="login-subtitle">{{ loginDesc }}</p>
+  </div>
 
-    <n-card class="login-card" :bordered="false" content-style="min-height:500px;padding:40px 32px 60px;display:flex;flex-direction:column;justify-content:center;position:relative;">
+  <!-- 右栏表单区 -->
+  <div class="login-form-area">
+    <div style="width:400px;max-width:90vw">
+      <n-card class="login-card" :bordered="false" content-style="min-height:500px;padding:40px 32px 60px;display:flex;flex-direction:column;justify-content:center;position:relative;">
       <n-form
         ref="formRef"
         :model="formData"
@@ -181,12 +185,11 @@ window.RegisterPage = {
         </n-form-item>
       </n-form>
     </n-card>
-
-    <!-- 底部版权信息 -->
-    <div style="text-align:center;margin-top:24px;color:#94a3b8;font-size:12px">
-      {{ copyrightTxt }}
     </div>
   </div>
+
+  <!-- 版权信息 -->
+  <div class="login-copyright">{{ copyrightTxt }}</div>
 </div>
 `
 }

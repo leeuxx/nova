@@ -19,6 +19,7 @@ window.LoginPage = {
       loginDesc:     cfg.desc,
       copyrightTxt:  cfg.copyrightTxt,
       registerEnabled: cfg.user.register,
+      logoImg: cfg.logo,
       formData: {
         username: '',
         password: ''
@@ -128,12 +129,16 @@ window.LoginPage = {
   <div class="blur-orb orb-4"></div>
   <div class="blur-orb orb-5"></div>
 
-  <!-- 登录卡片 -->
-  <div style="width:400px;max-width:90vw;position:relative;z-index:1">
-    <div style="text-align:center;margin-bottom:40px">
-      <h1 class="login-title">{{ loginTitle }}</h1>
-      <p class="login-subtitle">{{ loginDesc }}</p>
-    </div>
+  <!-- 品牌区 -->
+  <div class="login-brand">
+    <img v-if="logoImg" :src="logoImg" class="login-logo" alt="logo" />
+    <h1 class="login-title">{{ loginTitle }}</h1>
+    <p class="login-subtitle">{{ loginDesc }}</p>
+  </div>
+
+  <!-- 右栏表单区 -->
+  <div class="login-form-area">
+    <div style="width:400px;max-width:90vw">
 
     <n-card class="login-card" :bordered="false" content-style="min-height:380px;padding:48px 32px 48px;display:flex;flex-direction:column;justify-content:center;position:relative;">
       <n-form
@@ -202,12 +207,11 @@ window.LoginPage = {
         </n-form-item>
       </n-form>
     </n-card>
-
-    <!-- 底部版权信息 -->
-    <div style="text-align:center;margin-top:24px;color:#94a3b8;font-size:12px">
-      {{ copyrightTxt }}
     </div>
   </div>
+
+  <!-- 版权信息 -->
+  <div class="login-copyright">{{ copyrightTxt }}</div>
 </div>
 `
 }

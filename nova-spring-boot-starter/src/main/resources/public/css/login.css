@@ -113,15 +113,69 @@
   display: none !important;
 }
 
-/* ─── 登录/404 公共容器 ───────────────────────── */
+/* ─── 登录/注册 公共容器（上下两格布局） ─────────────────────── */
+/* 上格 25%：品牌区（logo + 标题 + 简介，居中） */
+/* 下格 75%：表单卡片（靠上居中） */
 .login-container {
   height: 100vh;
   overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 25% 1fr;
+  position: relative;
+}
+.login-brand {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 14px;
+  padding: 0 40px;
+  z-index: 1;
+}
+.login-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+/* 下格：表单卡片（水平居中，靠上） */
+.login-form-area {
+  grid-column: 1;
+  grid-row: 2;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   position: relative;
-  padding: 120px 80px 0;
+  z-index: 1;
+}
+/* 版权信息横向居中固定底部 */
+.login-copyright {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #94a3b8;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1;
+}
+.dark .login-copyright {
+  color: #666;
+}
+/* 窄屏：隐藏品牌区，表单占满 */
+@media (max-width: 900px) {
+  .login-container {
+    grid-template-rows: auto 1fr;
+  }
+  .login-brand {
+    display: none;
+  }
 }
 /* ─── 暗色模式 ─────────────────────────────────── */
 .dark .login-container {
@@ -131,13 +185,15 @@
   font-size: 32px;
   font-weight: 600;
   color: #1e293b;
-  margin: 0 0 12px 0;
+  margin: 0;
   letter-spacing: 1px;
 }
 .dark .login-title {
   color: #e8e8e8;
 }
 .login-subtitle {
+  flex-basis: 100%;
+  text-align: center;
   font-size: 14px;
   color: #94a3b8;
   margin: 0;
