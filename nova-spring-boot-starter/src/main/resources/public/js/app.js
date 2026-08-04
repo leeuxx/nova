@@ -480,11 +480,11 @@ function mountApp(menuList, config, loginExpired) {
       const userAlias  = ref(localStorage.getItem('nova_alias') || '')
       const userAvatar = ref(localStorage.getItem('nova_avatar') || '')
 
-      // 右上角用户下拉：用户信息头 + userTools(fold 类型) 自定义项 + 个人中心/退出登录
-      const userTools = (config.userTools || []).map(function (t, i) { return Object.assign({}, t, { _idx: i }) })
+      // 右上角用户下拉：用户信息头 + tools(fold 类型) 自定义项 + 个人中心/退出登录
+      const tools = (config.tools || []).map(function (t, i) { return Object.assign({}, t, { _idx: i }) })
       // button 类型：渲染为铃铛左侧图标按钮，name 有值时悬浮展示
-      const userToolButtons = userTools.filter(function (t) { return t.type === 'button' })
-      const foldTools = userTools.filter(function (t) { return t.type === 'fold' })
+      const userToolButtons = tools.filter(function (t) { return t.type === 'button' })
+      const foldTools = tools.filter(function (t) { return t.type === 'fold' })
       const userDropdown = [
         {
           type: 'render',
@@ -529,7 +529,7 @@ function mountApp(menuList, config, loginExpired) {
       const handleUserMenuSelect = (key) => {
         if (key.indexOf('userTool_') === 0) {
           const idx = parseInt(key.slice('userTool_'.length), 10)
-          const tool = userTools[idx]
+          const tool = tools[idx]
           if (tool && typeof tool.click === 'function') tool.click()
           return
         }
@@ -650,6 +650,7 @@ function mountApp(menuList, config, loginExpired) {
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
         barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText, logoImg,
         showProfile, profileSaving, profileFormRef, profileForm, profileRules, submitProfile,
+        userEdit: config.user.edit,
         avatarFileList, handleAvatarUpload, onAvatarRemove
       }
     },
@@ -804,7 +805,7 @@ function mountApp(menuList, config, loginExpired) {
           </n-form>
           <template #footer>
             <div style="display:flex;justify-content:flex-end">
-              <n-button type="primary" :loading="profileSaving" @click="submitProfile">更新信息</n-button>
+              <n-button v-if="userEdit" type="primary" :loading="profileSaving" @click="submitProfile">更新信息</n-button>
             </div>
           </template>
         </n-modal>

@@ -4,7 +4,11 @@ window.nova.config = {
   copyrightTxt: '© 2026 Nova UI Admin. All Rights Reserved.',
   logo: 'logo.png',
   theme: 'daytime',
-  userTools: [
+  user: {
+    register: true,
+    edit: true
+  },
+  tools: [
     {
       type: 'fold',
       name: 'Nova 官网',

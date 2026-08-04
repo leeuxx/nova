@@ -11,12 +11,21 @@
     logo: 'logo.png',
     // 默认主题：daytime / night
     theme: 'daytime',
+    // 用户行为配置
+    user: {
+        // 是否允许注册
+        register: false,
+        // 是否允许修改
+        edit: false
+    },
     // 右上角用户下拉自定义项：{ type（fold（下拉菜单内）/ button（铃铛左侧图标按钮，悬浮展示 name））, name, icon, click }
-    userTools: []
+    tools: []
   }
 
   var userCfg = (window.nova.config) || {}
   var themes = ['daytime', 'night']
+  // 应用未写 user 配置时兜底，避免 userCfg.user.xxx 抛错
+  var userCfgUser = userCfg.user || {}
 
   // 配置项
   window.nova.config = {
@@ -25,7 +34,11 @@
     copyrightTxt: userCfg.copyrightTxt || DEFAULTS.copyrightTxt,
     logo: userCfg.logo || DEFAULTS.logo,
     theme: themes.indexOf(userCfg.theme) !== -1 ? userCfg.theme : DEFAULTS.theme,
-    userTools: userCfg.userTools || DEFAULTS.userTools
+    user: {
+        register: userCfgUser.register || DEFAULTS.user.register,
+        edit: userCfgUser.edit || DEFAULTS.user.edit
+    },
+    tools: userCfg.tools || DEFAULTS.tools
   }
 
   // 生命周期回调 { startup(route) 页面加载完成后回调 }

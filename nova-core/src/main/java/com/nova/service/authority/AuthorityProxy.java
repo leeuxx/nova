@@ -24,6 +24,10 @@ public interface AuthorityProxy {
     boolean menuPermission(String token, String code);
 
     @Comment("修改用户信息")
-    void editUser(Login.User user);
+    default void editUser(Login.User user) {
+    }
 
+    @Comment("注册")
+    default void register() {
+    }
 }
