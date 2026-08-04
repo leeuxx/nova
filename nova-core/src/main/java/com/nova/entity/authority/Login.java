@@ -21,6 +21,9 @@ public class Login {
         @Comment("token,必填")
         private String token;
 
+        @Comment("id,必填")
+        private String id;
+
         @Comment("名称,必填")
         private String name;
 

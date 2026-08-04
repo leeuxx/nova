@@ -51,6 +51,7 @@ function errorHandle(resp) {
           localStorage.removeItem('nova_user')
           localStorage.removeItem('nova_alias')
           localStorage.removeItem('nova_avatar')
+          localStorage.removeItem('nova_id')
           // replaceState 改 hash 不触发 SPA 导航，避免跳登录页时先闪页面元素再出动画
           history.replaceState(null, '', '#/login')
           window.location.reload()

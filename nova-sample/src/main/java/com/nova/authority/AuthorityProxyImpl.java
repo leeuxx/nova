@@ -204,6 +204,7 @@ public class AuthorityProxyImpl implements AuthorityProxy {
         map.put(token, login.getUsername());
         return new Login.User()
                 .setToken(token)
+                .setId("1")
                 .setName("张三")
                 .setAlias("财务人员")
                 .setAvatar("https://avatars.githubusercontent.com/u/10251080?s=200&v=4");

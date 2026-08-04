@@ -56,6 +56,7 @@ window.LoginPage = {
       localStorage.removeItem('nova_user')
       localStorage.removeItem('nova_alias')
       localStorage.removeItem('nova_avatar')
+      localStorage.removeItem('nova_id')
     },
 
     // 页面加载时读取记住的账号
@@ -85,6 +86,7 @@ window.LoginPage = {
             localStorage.setItem('nova_user', resp.data.name)
             localStorage.setItem('nova_alias', resp.data.alias || '')
             localStorage.setItem('nova_avatar', resp.data.avatar || '')
+            localStorage.setItem('nova_id', resp.data.id || '')
             if (window.$message) window.$message.success('登录成功，欢迎 ' + resp.data.name)
             // 登录成功后重新加载页面以拉取菜单（replaceState 改 hash 不触发 SPA 导航，避免先闪主页元素再出动画）
             history.replaceState(null, '', '#/home')

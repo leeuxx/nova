@@ -470,6 +470,7 @@ function mountApp(menuList, config, loginExpired) {
       const userName   = ref(localStorage.getItem('nova_user') || '未登录')
       const userAlias  = ref(localStorage.getItem('nova_alias') || '')
       const userAvatar = ref(localStorage.getItem('nova_avatar') || '')
+      const userId     = ref(localStorage.getItem('nova_id') || '')
       // 未读消息数（占位演示：后续接入消息接口后替换）
       const notificationCount = ref(3)
 
@@ -531,6 +532,7 @@ function mountApp(menuList, config, loginExpired) {
               localStorage.removeItem('nova_user')
               localStorage.removeItem('nova_alias')
               localStorage.removeItem('nova_avatar')
+              localStorage.removeItem('nova_id')
               // 跳到登录页并刷新（replaceState 改 hash 不触发 SPA 导航，避免先闪页面元素再出动画）
               history.replaceState(null, '', '#/login')
               window.location.reload()
@@ -622,7 +624,7 @@ function mountApp(menuList, config, loginExpired) {
         pageComponent, cachedNames,
         handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, handleUserMenuSelect,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
-        barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText, notificationCount,
+        barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, userId, logoText, notificationCount,
         showProfile, profileSaving, profileFormRef, profileForm, profileRules, submitProfile,
         avatarFileList, handleAvatarUpload, onAvatarRemove
       }
@@ -776,7 +778,7 @@ function mountApp(menuList, config, loginExpired) {
             </n-form-item>
           </n-form>
           <template #footer>
-            <div style="display:flex;justify-content:center">
+            <div style="display:flex;justify-content:flex-end">
               <n-button type="primary" :loading="profileSaving" @click="submitProfile">更新信息</n-button>
             </div>
           </template>
