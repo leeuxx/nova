@@ -95,6 +95,17 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 .dark .msg-center-x { color: #666; }
 .dark .msg-center-x:hover { color: #ddd; }
 .dark .msg-center-content { color: #aaa; }
+/* 覆盖全局按钮规则，保证项目蓝 + hover 特效（避免被 .dark .n-button 盖灰） */
+.msg-drawer .n-button--primary-type,
+.msg-drawer .n-button--primary-type:hover,
+.msg-drawer .n-button--primary-type:active,
+.msg-drawer .n-button--primary-type:focus {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #fff !important;
+}
+.msg-drawer .n-button--primary-type:hover { background: #3b82f6 !important; }
+.msg-drawer .n-button--primary-type:active { background: #1d4ed8 !important; }
 /* 铃铛有消息时持续摇晃 */
 .bell-ring {
   display: inline-block;

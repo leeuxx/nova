@@ -54,7 +54,7 @@ public class MessageProxyImpl implements MessageProxy {
     }
 
     @Override
-    public void close(String token, List<String> ids) {
+    public void closeMessages(String token, List<String> ids) {
         System.out.println(ids);
     }
 }

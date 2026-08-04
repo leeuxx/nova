@@ -41,7 +41,7 @@ public class NovaMessageController {
     @PostMapping("closeMessages")
     @NovaRouter
     public R<Object> closeMessages(@RequestBody @Validated NovaMessageClose messageClose) {
-        messageProxy.close(AuthorityUtils.getToken(), messageClose.getIds());
+        messageProxy.closeMessages(AuthorityUtils.getToken(), messageClose.getIds());
         return R.ok(null);
     }
 

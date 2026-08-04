@@ -11,5 +11,5 @@ public interface MessageProxy {
     List<Message> getMessages(String token);
 
     @Comment("关闭消息")
-    void close(String token, List<String> ids);
+    void closeMessages(String token, List<String> ids);
 }

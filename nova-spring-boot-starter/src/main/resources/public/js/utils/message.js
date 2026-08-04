@@ -14,6 +14,12 @@ window.NovaMessage = {
     }
   },
 
+  computed: {
+    clearableCount() {
+      return this.messages.filter((m) => m.close).length
+    }
+  },
+
   created() {
     this._seq = 0
     // 未登录（登录页）时不请求消息接口
@@ -56,6 +62,23 @@ window.NovaMessage = {
         })
     },
 
+    clearAll() {
+      // 只关闭有 x 按钮（close=true）的消息
+      const ids = this.messages.filter((m) => m.close).map((m) => m.id)
+      if (ids.length === 0) {
+        if (window.$message) window.$message.info('没有可关闭的消息')
+        return
+      }
+      window.fetchApi.post('/nova/message/closeMessages', { ids })
+        .then(() => {
+          this.messages = this.messages.filter((m) => !m.close)
+          this.count = this.messages.length
+        })
+        .catch(() => {
+          if (window.$message) window.$message.error('清除失败')
+        })
+    },
+
     toggleExpand(i, e) {
       const expanding = !this.expandedMap[i]
       this.expandedMap[i] = expanding
@@ -84,7 +107,13 @@ window.NovaMessage = {
       </n-badge>
 
       <n-drawer v-model:show="showDrawer" placement="right" width="30%" class="msg-drawer">
-        <n-drawer-content title="消息中心">
+        <n-drawer-content>
+          <template #header>
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+              <span>消息中心</span>
+              <n-button v-if="clearableCount > 0" size="small" type="primary" @click="clearAll">一键清除</n-button>
+            </div>
+          </template>
           <div v-if="loading" class="msg-center-loading">加载中...</div>
           <div v-else-if="messages.length === 0" class="msg-center-empty">暂无消息</div>
           <transition-group v-else tag="div" name="msg" class="msg-center-list">
