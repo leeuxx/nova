@@ -31,3 +31,15 @@ window.nova.config = {
     }
   ]
 }
+
+window.nova.event = {
+    startup: function () {
+
+    },
+    login: function(user) {
+
+    },
+    logout: function(user){
+
+    }
+}
