@@ -899,8 +899,11 @@ window.NovaTableJQ = (function ($) {
     if (!target) return
     var novaIdField = target.novaIdFieldName
     var keys = target.checkedRowKeys.map(function (k) { return String(k) })
-    window.msg.confirm('warning', '确认删除', '确定删除选中的 ' + keys.length + ' 条数据吗？', function () {
-      doDelete(target.novaName, novaIdField, keys, vmKey)
+    window.modal.confirm('确定删除选中的 ' + keys.length + ' 条数据吗？', {
+      title: '确认删除',
+      onConfirm: function () {
+        doDelete(target.novaName, novaIdField, keys, vmKey)
+      }
     })
   }
 

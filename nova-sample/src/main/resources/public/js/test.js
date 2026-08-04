@@ -15,3 +15,7 @@ var timer = setInterval(function () {
         $btn.text(countdown + 's')
     }
 }, 1000)
+
+window.modal.error("四种信息弹窗的按钮没配 props，走 Naive UI 默认样式，所以和 confirm（primary 蓝、medium 大小）不一致。给弹窗补上相同的 positiveButtonProps。", {
+    title: "标题",
+})

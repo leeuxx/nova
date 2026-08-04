@@ -95,7 +95,7 @@ function buildRowActions(vm, row) {
           if (btn.type === 'TPL') { vm.openTpl(btn, row); return }
           vm.submitCustomBtn(btn, row)
         }
-        if (btn.callHint) { window.msg.confirm('warning', '确认操作', btn.callHint, action) }
+        if (btn.callHint) { window.modal.confirm(btn.callHint, { title: '确认操作', onConfirm: action }) }
         else { action() }
       }
     }, {

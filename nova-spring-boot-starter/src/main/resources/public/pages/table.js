@@ -1823,7 +1823,7 @@ const NovaTable = {
       }
       var self = this
       var action = function() { self.submitCustomBtn(btn, null) }
-      if (btn.callHint && !skipConfirm) { window.msg.confirm('warning', '确认操作', btn.callHint, action) }
+      if (btn.callHint && !skipConfirm) { window.modal.confirm(btn.callHint, { title: '确认操作', onConfirm: action }) }
       else { action() }
     },
     handlePopClick(popCfg, value) {

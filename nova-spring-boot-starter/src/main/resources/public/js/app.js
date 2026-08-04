@@ -522,17 +522,20 @@ function mountApp(menuList, config, loginExpired) {
           showProfile.value = true
         }
         if (key === 'logout') {
-          window.msg.confirm('warning', '退出登录', '确定要退出登录吗？', () => {
-            window.fetchApi.post('/nova/authority/logout').finally(() => {
-              // 清空本地登录态
-              localStorage.removeItem('nova_token')
-              localStorage.removeItem('nova_user')
-              localStorage.removeItem('nova_alias')
-              localStorage.removeItem('nova_avatar')
-              // 跳到登录页并刷新（replaceState 改 hash 不触发 SPA 导航，避免先闪页面元素再出动画）
-              history.replaceState(null, '', '#/login')
-              window.location.reload()
-            })
+          window.modal.confirm('确定要退出登录吗？', {
+            title: '退出登录',
+            onConfirm: () => {
+              window.fetchApi.post('/nova/authority/logout').finally(() => {
+                // 清空本地登录态
+                localStorage.removeItem('nova_token')
+                localStorage.removeItem('nova_user')
+                localStorage.removeItem('nova_alias')
+                localStorage.removeItem('nova_avatar')
+                // 跳到登录页并刷新（replaceState 改 hash 不触发 SPA 导航，避免先闪页面元素再出动画）
+                history.replaceState(null, '', '#/login')
+                window.location.reload()
+              })
+            }
           })
         }
       }

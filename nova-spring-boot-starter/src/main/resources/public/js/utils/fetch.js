@@ -46,7 +46,9 @@ window.fetchApi = {
 function errorHandle(resp) {
     // token无效，清空本地并跳登录页
     if (resp.code === 520) {
-      window.msg.confirm('warning', '系统提示', '登录状态已过期，您可以继续留在该页面，或者重新登录', () => {
+      window.modal.confirm('登录状态已过期，您可以继续留在该页面，或者重新登录', {
+        title: '系统提示',
+        onConfirm: () => {
           localStorage.removeItem('nova_token')
           localStorage.removeItem('nova_user')
           localStorage.removeItem('nova_alias')
@@ -54,6 +56,7 @@ function errorHandle(resp) {
           // replaceState 改 hash 不触发 SPA 导航，避免跳登录页时先闪页面元素再出动画
           history.replaceState(null, '', '#/login')
           window.location.reload()
+        }
       })
       return true
     }
