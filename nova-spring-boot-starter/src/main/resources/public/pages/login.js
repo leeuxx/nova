@@ -11,9 +11,13 @@ window.LoginPage = {
   },
 
   data() {
+    const cfg = window.nova.config
     return {
       loading: false,
       rememberMe: false,
+      loginTitle:    cfg.name,
+      loginDesc:     cfg.desc,
+      copyrightTxt:  cfg.copyrightTxt,
       formData: {
         username: '',
         password: ''
@@ -118,8 +122,8 @@ window.LoginPage = {
   <!-- 登录卡片 -->
   <div style="width:400px;max-width:90vw;position:relative;z-index:1">
     <div style="text-align:center;margin-bottom:40px">
-      <h1 class="login-title">Nova Admin</h1>
-      <p class="login-subtitle">简洁高效的后台管理系统</p>
+      <h1 class="login-title">{{ loginTitle }}</h1>
+      <p class="login-subtitle">{{ loginDesc }}</p>
     </div>
 
     <n-card class="login-card" :bordered="false" content-style="min-height:380px;padding:48px 32px;display:flex;flex-direction:column;justify-content:center;">
@@ -183,7 +187,7 @@ window.LoginPage = {
 
     <!-- 底部版权信息 -->
     <div style="text-align:center;margin-top:24px;color:#94a3b8;font-size:12px">
-      © 2026 Nova Admin. All Rights Reserved.
+      {{ copyrightTxt }}
     </div>
   </div>
 </div>

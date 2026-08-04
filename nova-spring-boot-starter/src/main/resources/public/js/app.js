@@ -177,21 +177,19 @@ window.__bootFadingOut = function () {
 // ─── 挂载入口：未登录直接挂载（显示登录页），有 token 才拉菜单 ──
 var _startToken = localStorage.getItem('nova_token')
 if (_startToken) {
-  window.loadJSON('json/index.json', function (config) {
-    window.fetchApi.post('/nova/authority/getMenu', {}).then(function (resp) {
-      mountApp(resp.data || [], config)
-    }).catch(function () { mountApp([], config) })
-  })
+  window.fetchApi.post('/nova/authority/getMenu', {}).then(function (resp) {
+    mountApp(resp.data || [], window.nova.config)
+  }).catch(function () { mountApp([], window.nova.config) })
 } else {
   // 无 token：登录页直接显示，不需要加载动画，直接移除 boot（index.html 内联已移除，此处兜底）
   var bootEl0 = document.getElementById('__nova-boot-loading__')
   if (bootEl0 && bootEl0.parentNode) bootEl0.parentNode.removeChild(bootEl0)
-  mountApp([], { theme: { default: 'daytime' }, menu: { toggle: { default: 'down' } } })
+  mountApp([], window.nova.config)
 }
 
 function mountApp(menuList, config, loginExpired) {
-  // 品牌文字（index.json logoText）：供网页标题、左上角 logo、加载动画标题、home 页读取
-  var logoText = config.logoText
+  // 系统名称（config.js name）：供网页标题、左上角 logo、加载动画标题、home 页读取
+  var logoText = config.name
   window.__novaLogText = logoText
   document.title = logoText
   // 加载动画标题：boot 尚未淡出时更新为配置文字
@@ -244,12 +242,13 @@ function mountApp(menuList, config, loginExpired) {
       const route  = useRoute()
 
       const collapsed  = ref(false)
-      // 左上角品牌文字（index.json logoText）
-      const logoText = ref(config.logoText)
+      // 左上角品牌文字（config.js name）
+      const logoText = ref(config.name)
+      const logoImg = config.logo
       // 优先读取前端缓存的主题，未缓存时回退到配置默认值
       const savedTheme = localStorage.getItem('nova-theme')
-      const isDark     = ref(savedTheme !== null ? savedTheme === 'night' : config.theme.default === 'night')
-      const togglePos = config.menu.toggle.default
+      const isDark     = ref(savedTheme !== null ? savedTheme === 'night' : config.theme === 'night')
+      const togglePos = 'down'
       const openedTabs = ref([])
       const activeTab  = ref('')
       const tabsKey    = ref(0)
@@ -623,7 +622,7 @@ function mountApp(menuList, config, loginExpired) {
         pageComponent, cachedNames,
         handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, handleUserMenuSelect,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
-        barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText,
+        barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText, logoImg,
         showProfile, profileSaving, profileFormRef, profileForm, profileRules, submitProfile,
         avatarFileList, handleAvatarUpload, onAvatarRemove
       }
@@ -650,7 +649,7 @@ function mountApp(menuList, config, loginExpired) {
                   <n-layout-sider bordered :collapsed="collapsed" collapse-mode="width" :collapsed-width="64" :width="220" :show-trigger="togglePos === 'down' ? 'bar' : false" @update:collapsed="collapsed = $event">
                     <div style="height:50px;display:flex;align-items:center;justify-content:center;cursor:pointer" @click="goHome">
                       <div style="display:flex;align-items:center;gap:8px">
-                        <img src="logo.png" class="sidebar-logo" />
+                        <img :src="logoImg" class="sidebar-logo" />
                         <span v-show="!collapsed" class="logo-text">{{ logoText }}</span>
                       </div>
                     </div>

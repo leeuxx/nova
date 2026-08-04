@@ -66,6 +66,11 @@
   <!-- QRCode -->
   <script src="js/lib/qrcode.min.js"></script>
 
+  <!-- 全站参数配置（开发手写）+ 默认值填充 -->
+  <!-- window.nova 兜底声明：config.js 直接写 window.nova.config，须先建对象 -->
+  <script>window.nova = window.nova || {}</script>
+  <script src="config.js"></script>
+  <script src="js/utils/config-loader.js"></script>
   <!-- 通用工具函数 -->
   <script src="js/utils/dialog.js"></script>
   <script src="js/utils/fetch.js"></script>
