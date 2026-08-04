@@ -18,6 +18,7 @@ window.LoginPage = {
       loginTitle:    cfg.name,
       loginDesc:     cfg.desc,
       copyrightTxt:  cfg.copyrightTxt,
+      registerEnabled: cfg.user.register,
       formData: {
         username: '',
         password: ''
@@ -107,6 +108,14 @@ window.LoginPage = {
       if (e.key === 'Enter') {
         this.handleLogin()
       }
+    },
+
+    goRegister() {
+      if (this.registerEnabled) {
+        this.$router.push('/register')
+      } else {
+        if (window.$message) window.$message.warning('未开放注册')
+      }
     }
   },
 
@@ -126,7 +135,7 @@ window.LoginPage = {
       <p class="login-subtitle">{{ loginDesc }}</p>
     </div>
 
-    <n-card class="login-card" :bordered="false" content-style="min-height:380px;padding:48px 32px;display:flex;flex-direction:column;justify-content:center;">
+    <n-card class="login-card" :bordered="false" content-style="min-height:380px;padding:48px 32px 48px;display:flex;flex-direction:column;justify-content:center;position:relative;">
       <n-form
         ref="formRef"
         :model="formData"
@@ -134,6 +143,7 @@ window.LoginPage = {
         label-placement="left"
         :label-width="60"
         size="large"
+        style="position:relative"
       >
         <n-form-item label="账号" path="username">
           <n-input
@@ -181,6 +191,14 @@ window.LoginPage = {
           >
             登 录
           </n-button>
+        </n-form-item>
+
+        <!-- 注册入口：始终显示，点击时按 register 配置判断是否跳转 -->
+        <n-form-item :show-label="false" style="position:absolute;top:100%;left:0;right:0;margin:0">
+          <div style="width:100%;text-align:center;font-size:13px;margin-top:10px">
+            <span style="color:#94a3b8">还没有账号？</span>
+            <span class="login-remember-text" style="color:#2563eb" @click="goRegister">立即注册</span>
+          </div>
         </n-form-item>
       </n-form>
     </n-card>

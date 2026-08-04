@@ -3,6 +3,7 @@ package com.nova.service.authority;
 import com.nova.annotation.config.Comment;
 import com.nova.entity.authority.Login;
 import com.nova.entity.authority.Menu;
+import com.nova.entity.authority.Register;
 
 import java.util.List;
 
@@ -28,6 +29,7 @@ public interface AuthorityProxy {
     }
 
     @Comment("注册")
-    default void register() {
+    default Login.User register(Register register) {
+        return null;
     }
 }

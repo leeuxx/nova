@@ -3,6 +3,7 @@ package com.nova.other;
 import com.github.yitter.idgen.YitIdHelper;
 import com.nova.entity.authority.Login;
 import com.nova.entity.authority.Menu;
+import com.nova.entity.authority.Register;
 import com.nova.service.authority.AuthorityProxy;
 import com.nova.utils.collections.list.JArrayList;
 import com.nova.utils.collections.list.JList;
@@ -228,5 +229,16 @@ public class AuthorityProxyImpl implements AuthorityProxy {
     @Override
     public void editUser(Login.User user) {
         return;
+    }
+
+    @Override
+    public Login.User register(Register register) {
+        String token = String.valueOf(YitIdHelper.nextId());
+        map.put(token, register.getUsername());
+        return new Login.User()
+                .setToken(token)
+                .setName("李四")
+                .setAlias("人事部主任")
+                .setAvatar("https://img0.baidu.com/it/u=2135555536,3638276976&fm=253&app=138&f=JPEG?w=500&h=500");
     }
 }

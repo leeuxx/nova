@@ -2,6 +2,7 @@ package com.nova.service.authority;
 
 import com.nova.entity.authority.Login;
 import com.nova.entity.authority.Menu;
+import com.nova.entity.authority.Register;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
@@ -9,7 +10,7 @@ import java.util.List;
 
 @Component
 @ConditionalOnMissingBean(value = AuthorityProxy.class, ignored = DefaultAuthorityProxy.class)
-public class DefaultAuthorityProxy implements  AuthorityProxy {
+public class DefaultAuthorityProxy implements AuthorityProxy {
 
     @Override
     public boolean checkToken(String token) {
@@ -38,6 +39,11 @@ public class DefaultAuthorityProxy implements  AuthorityProxy {
 
     @Override
     public void editUser(Login.User user) {
+        throw new RuntimeException("权限模块未配置");
+    }
+
+    @Override
+    public Login.User register(Register register) {
         throw new RuntimeException("权限模块未配置");
     }
 }

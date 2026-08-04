@@ -164,3 +164,38 @@
 .dark .login-remember-text {
   color: #999;
 }
+
+/* ─── 登录/注册切换左右切入动画 ───────────────────────── */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-left-enter-active,
+.slide-left-leave-active,
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.3s ease;
+}
+/* 去注册：新页从右滑入 */
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(100%);
+}
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-100%);
+}
+/* 回登录：新页从左滑入 */
+.slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(-100%);
+}
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(100%);
+}

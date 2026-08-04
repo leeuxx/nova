@@ -30,6 +30,8 @@ const {
 
 // 登录页面组件
 const LoginPage = window.LoginPage
+// 注册页面组件
+const RegisterPage = window.RegisterPage
 // 404 页面组件
 const NotFoundPage = window.NotFoundPage
 const HomePage = window.HomePage
@@ -290,8 +292,15 @@ function mountApp(menuList, config, loginExpired) {
       })
 
       const theme = computed(() => isDark.value ? darkTheme : null)
-      // 是否为独立页面（登录/404 等，无布局）
-      const isStandaloneRoute = computed(() => route.path === '/login' || route.path === '/404')
+      // 是否为独立页面（登录/注册/404 等，无布局）
+      const isStandaloneRoute = computed(() => route.path === '/login' || route.path === '/register' || route.path === '/404')
+
+      // 独立页面（登录/注册）切换的左右切入方向：去注册向右滑入，回登录向左滑入
+      const pageTransitionName = computed(() => {
+        if (route.path === '/register') return 'slide-left'
+        if (route.path === '/login') return 'slide-right'
+        return 'fade'
+      })
 
       watch(isDark, (val) => {
         document.body.classList.toggle('dark', val)
@@ -644,7 +653,7 @@ function mountApp(menuList, config, loginExpired) {
 
       return {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
-        menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isStandaloneRoute, menuSelectedKey,
+        menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isStandaloneRoute, pageTransitionName, menuSelectedKey, route,
         pageComponent, cachedNames,
         handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, userToolButtons, handleUserMenuSelect,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
@@ -663,13 +672,15 @@ function mountApp(menuList, config, loginExpired) {
             <dialog-bridge />
             <n-notification-provider>
 
-              <!-- 独立页面（登录/404 等）：无侧边栏/头部/tab 布局 -->
-              <router-view v-if="isStandaloneRoute" v-slot="{ Component }">
-                <component :is="Component" />
-              </router-view>
+              <!-- 独立页面（登录/注册/404 等）：无侧边栏/头部/tab 布局 -->
+              <transition :name="pageTransitionName" mode="out-in">
+                <router-view v-if="isStandaloneRoute" v-slot="{ Component }">
+                  <component :is="Component" :key="route.path" />
+                </router-view>
+              </transition>
 
               <!-- 主布局：带侧边栏/头部/tab -->
-              <div v-else>
+              <div v-if="!isStandaloneRoute">
                 <n-layout has-sider style="height:100vh">
 
                   <!-- 侧边栏 -->
@@ -831,6 +842,7 @@ function mountApp(menuList, config, loginExpired) {
       // 已登录直接进首页，避免经过登录页触发的整页刷新（否则首屏 loading 会播两遍）
       { path: '/',                    redirect: () => localStorage.getItem('nova_token') ? '/home' : '/login' },
       { path: '/login',               component: LoginPage, meta: { loginRequired: false } },
+      { path: '/register',            component: RegisterPage, meta: { loginRequired: false } },
       { path: '/home',                component: HomePage, meta: { noTab: true } },
       { path: '/404',                 component: NotFoundPage, meta: { loginRequired: false } },
       { path: '/tpl/:code',           component: TplPage },
@@ -844,13 +856,18 @@ function mountApp(menuList, config, loginExpired) {
     router.push('/login')
   }
 
-  // 路由守卫：未登录拦截；独立页面（登录/404）不显示顶部加载条
+  // 路由守卫：未登录拦截；独立页面（登录/注册/404）不显示顶部加载条
   router.beforeEach((to, from, next) => {
-    if (to.path !== '/login' && to.path !== '/404') {
+    // 未开放注册时，直接访问注册页强制跳回登录页
+    if (to.path === '/register' && window.nova.config.user.register === false) {
+      next('/login')
+      return
+    }
+    if (to.path !== '/login' && to.path !== '/register' && to.path !== '/404') {
       if (window.__novaPageLoading) window.__novaPageLoading.start()
     }
     var token = localStorage.getItem('nova_token')
-    if (to.path !== '/login' && to.path !== '/404' && !token) {
+    if (to.path !== '/login' && to.path !== '/register' && to.path !== '/404' && !token) {
       next('/login')
     } else {
       next()

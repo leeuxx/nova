@@ -6,6 +6,7 @@ import com.nova.annotation.config.RestMappingController;
 import com.nova.entity.authority.EditUser;
 import com.nova.entity.authority.Login;
 import com.nova.entity.authority.Menu;
+import com.nova.entity.authority.Register;
 import com.nova.service.authority.AuthorityProxy;
 import com.nova.utils.AuthorityUtils;
 import com.nova.utils.R;
@@ -100,4 +101,12 @@ public class NovaAuthorityController {
         );
         return R.ok();
     }
+
+    @Comment("注册")
+    @PostMapping("register")
+    public R<Login.User> register(@RequestBody @Validated Register register) {
+        Login.User user = authorityProxy.register(register);
+        return R.ok(user);
+    }
+
 }
