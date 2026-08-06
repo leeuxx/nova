@@ -66,7 +66,7 @@ public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> im
 
     @Override
     public TestDemo2View details(Details details) {
-        TestDemo2 testDemo2 = getById(details.getStorageFieldValue());
+        TestDemo2 testDemo2 = getById(details.getValue());
         TestDemo testDemo = testDemoService.getById(testDemo2.getDemoId());
         TestDemo2View testDemo2View = new TestDemo2View();
         BeanUtils.copyProperties(testDemo2, testDemo2View); // 源，目标
@@ -87,8 +87,8 @@ public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> im
         List<PromptSearch.Vo.Record> list = new ArrayList<>();
         for (TestDemo2 testDemo2 : records) {
             PromptSearch.Vo.Record record = new PromptSearch.Vo.Record()
-                    .setStorageField(testDemo2.getId().toString())
-                    .setDisplayField(testDemo2.getName());
+                    .setId(testDemo2.getId().toString())
+                    .setName(testDemo2.getName());
             list.add(record);
         }
         return new PromptSearch.Vo()

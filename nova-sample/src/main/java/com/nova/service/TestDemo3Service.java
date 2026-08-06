@@ -67,7 +67,7 @@ public class TestDemo3Service extends ServiceImpl<TestDemo3Mapper, TestDemo3> im
     @Override
     public TestDemo3View details(Details details) {
         TestDemo3 testDemo3 = getOne(new LambdaQueryWrapper<TestDemo3>()
-                .eq(TestDemo3::getDemoId, details.getStorageFieldValue())
+                .eq(TestDemo3::getDemoId, details.getValue())
         );
         TestDemo3View testDemo3View = new TestDemo3View();
         if (testDemo3 != null) {
@@ -85,8 +85,8 @@ public class TestDemo3Service extends ServiceImpl<TestDemo3Mapper, TestDemo3> im
         List<PromptSearch.Vo.Record> list = new ArrayList<>();
         for (TestDemo3 testDemo3 : records) {
             PromptSearch.Vo.Record record = new PromptSearch.Vo.Record()
-                    .setStorageField(testDemo3.getDemoId().toString())
-                    .setDisplayField(testDemo3.getName());
+                    .setId(testDemo3.getDemoId().toString())
+                    .setName(testDemo3.getName());
             list.add(record);
         }
         return new PromptSearch.Vo()

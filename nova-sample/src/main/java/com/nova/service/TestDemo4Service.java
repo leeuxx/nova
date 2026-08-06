@@ -67,7 +67,7 @@ public class TestDemo4Service extends ServiceImpl<TestDemo4Mapper, TestDemo4> im
 
     @Override
     public TestDemo4View details(Details details) {
-        TestDemo4 testDemo4 = getById(details.getStorageFieldValue());
+        TestDemo4 testDemo4 = getById(details.getValue());
         TestDemo4View testDemo4View = new TestDemo4View();
         if (testDemo4 != null) {
             BeanUtils.copyProperties(testDemo4, testDemo4View); // 源，目标
@@ -84,8 +84,8 @@ public class TestDemo4Service extends ServiceImpl<TestDemo4Mapper, TestDemo4> im
         List<PromptSearch.Vo.Record> list = new ArrayList<>();
         for (TestDemo4 testDemo4 : records) {
             PromptSearch.Vo.Record record = new PromptSearch.Vo.Record()
-                    .setStorageField(testDemo4.getDemoId().toString())
-                    .setDisplayField(testDemo4.getName());
+                    .setId(testDemo4.getDemoId().toString())
+                    .setName(testDemo4.getName());
             list.add(record);
         }
         return new PromptSearch.Vo()

@@ -21,7 +21,7 @@ public class Tree {
     @Comment("排序")
     private List<OrderItemBean> orders = new ArrayList<>();
 
-    @Comment("操作类存储属性值")
+    @Comment("操作类关联值")
     private String operateValue;
 
     @Data

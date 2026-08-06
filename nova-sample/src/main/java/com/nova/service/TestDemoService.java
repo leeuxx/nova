@@ -96,7 +96,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
 
     @Override
     public TestDemoView details(Details details) {
-        TestDemo testDemo = getById(details.getStorageFieldValue());
+        TestDemo testDemo = getById(details.getValue());
         TestDemoView testDemoView = new TestDemoView();
         BeanUtils.copyProperties(testDemo, testDemoView); // 源，目标
         if (testDemo.getParentId() != null) {

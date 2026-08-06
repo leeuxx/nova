@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
                 editLayout = Layout.EditLayout.DEFAULT
         ),
         tree = @TreeType(
+                value = false,
                 label = "name"
         ),
         dataProxy = TestDemoService.class,

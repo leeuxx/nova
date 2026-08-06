@@ -41,10 +41,10 @@ public class PromptSearch {
         public static class Record {
 
             @Comment("存储列")
-            private String storageField;
+            private String id;
 
             @Comment("展示列")
-            private String displayField;
+            private String name;
 
         }
     }

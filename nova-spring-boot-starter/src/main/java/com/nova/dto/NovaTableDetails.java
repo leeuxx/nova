@@ -11,7 +11,7 @@ public class NovaTableDetails {
     @Comment("来源nova名称")
     private String novaName;
 
-    @Comment("存储值, 参考storageField属性")
+    @Comment("来源值")
     private String storageFieldValue;
 
 }

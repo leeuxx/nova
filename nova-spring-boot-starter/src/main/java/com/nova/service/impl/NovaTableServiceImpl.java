@@ -393,7 +393,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         DataProxy<?> dataProxy = DataProxyUtils.getDataProxy(novaName);
         return DataProxyUtils.toMapWithTimestamp(dataProxy.details(new Details()
                 .setNovaName(novaName)
-                .setStorageFieldValue(storageFieldValue)
+                .setValue(storageFieldValue)
         ));
     }
 
@@ -415,8 +415,8 @@ public class NovaTableServiceImpl implements NovaTableService {
         List<NovaTablePromptSearch.Vo> vos = new ArrayList<>();
         for (PromptSearch.Vo.Record record : records) {
             NovaTablePromptSearch.Vo vo = new NovaTablePromptSearch.Vo()
-                    .setStorageField(record.getStorageField())
-                    .setDisplayField(record.getDisplayField());
+                    .setStorageField(record.getId())
+                    .setDisplayField(record.getName());
             vos.add(vo);
         }
         pageBean.setTotal(promptSearchVo.getTotal()).setRecords(vos);

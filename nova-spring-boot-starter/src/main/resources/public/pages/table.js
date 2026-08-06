@@ -2818,8 +2818,8 @@ const NovaTable = {
       }
       // 首次：请求目标 Nova 的 build 配置（treeSearchField, treeParentField 等）
       window.fetchApi.post('/nova/table/build', { novaName: targetNovaName }, window.__novaMenuCode(targetNovaName)).then(function(buildResp) {
-            // 请求期间已切换到其他子表：丢弃过期响应，避免用旧表状态覆盖当前子表
-            if (self.dualTableCurrentNova !== tapNovaName) return
+            // 请求期间已切换到其他子表：丢弃过期响应，避免用旧表状态覆盖当前子表（仅双表视图；编辑弹窗无子表切换概念）
+            if (stateKey === '__dual__' && self.dualTableCurrentNova !== tapNovaName) return
             if (buildResp.code !== 200) {
               self.linkTreeLoading[stateKey] = false
               if (window.$message) window.$message.error('获取目标表配置失败')
@@ -2922,8 +2922,8 @@ const NovaTable = {
         // 延迟到动画结束后执行，避免树渲染导致动画掉帧；数据已提前就绪，动画结束立即渲染不留空白
         var apply = function() {
           // 请求期间已切换到其他子表：丢弃过期树数据。否则旧 LINK 的树会被误判为
-          // 当前子表的树（linkTreeData 有值走树分支），nova-table 不渲染、不触发 build，右表没反应
-          if (self.dualTableCurrentNova !== tapNovaName) return
+          // 当前子表的树（linkTreeData 有值走树分支），nova-table 不渲染、不触发 build，右表没反应（仅双表视图生效）
+          if (stateKey === '__dual__' && self.dualTableCurrentNova !== tapNovaName) return
           self.linkTreeData[stateKey] = sortedRoot
           self.linkTreeNodeMap[stateKey] = nodeMap
           self.linkTreeCheckedKeys[stateKey] = checkedKeys
