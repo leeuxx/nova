@@ -87,7 +87,10 @@ public class NovaQueryUtils {
     private static <T> void applyCondition(QueryWrapper<T> wrapper, String novaName, String field,
                                            String column, String value, String type, boolean vague,
                                            NovaFieldUtils.DateInfo dateInfo) {
-        if (Edit.Type.DATE.name().equals(type)) {
+        if (Edit.Type.LINK.name().equals(type)) {
+            // LINK 跨表条件：key 为 search 下的 LINK 字段名，需据此反查中间表/关联表过滤当前表（反向过滤实现预留），当前表直接过滤无意义
+            return;
+        } else if (Edit.Type.DATE.name().equals(type)) {
             String dateType = dateInfo != null ? dateInfo.getType().name() : "DATETIME";
             if (vague && value != null && value.contains(",")) {
                 String[] parts = value.split(",", 2);

@@ -226,7 +226,7 @@ public class TestDemoView {
                                     "name"
                             }
                     ),
-                    search = @Search(vague = true)
+                    search = @Search
             )
     )
     private TestDemoRefView testDemoRefView;

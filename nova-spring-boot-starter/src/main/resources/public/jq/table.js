@@ -457,7 +457,6 @@ window.NovaTableJQ = (function ($) {
     var conditions = {}
     var sourceFields = Object.assign({}, target._sourceFields || {})
     var sourceNovaName = target._sourceNovaName || queryName
-    var linkConditions = {}
     var form = target.filterForm || {}
     var searchFields = target.searchFields || []
     searchFields.forEach(function (fieldDef) {
@@ -476,16 +475,9 @@ window.NovaTableJQ = (function ($) {
       } else {
         strVal = Array.isArray(val) ? val.join(',') : String(val)
       }
-      // LINK 字段：值移入 linkConditions，不放入 conditions
+      // LINK 字段：作为跨表条件放入 conditions，用 type=LINK 标记；key 即 search 下的字段名，后端据此反查关联表
       if (fieldDef.type === 'LINK') {
-        var linkInfo2 = (target.linkMap && target.linkMap[fieldDef.field]) || {}
-        var selectInfo = linkInfo2.selectInfo || {}
-        var sfKey = selectInfo.storageField
-        var refName = selectInfo.referenceName
-        if (refName) {
-          if (!linkConditions[refName]) linkConditions[refName] = {}
-          linkConditions[refName][sfKey] = strVal
-        }
+        conditions[fieldDef.field] = { value: strVal, type: 'LINK', vague: fieldDef.vague || false }
         return
       }
       // REFERENCE 字段：使用 referenceField 作为实际查询字段
@@ -528,7 +520,7 @@ window.NovaTableJQ = (function ($) {
     if (Object.keys(conditions).length === 0 && target._embConditions && Object.keys(target._embConditions).length > 0) {
       Object.assign(conditions, target._embConditions)
     }
-    window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, linkConditions: linkConditions, pageBean: pageBean, conditions: conditions }, window.__novaMenuCode(queryName)).then(function (resp) {
+    window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, pageBean: pageBean, conditions: conditions }, window.__novaMenuCode(queryName)).then(function (resp) {
       var t = window.vmMap && window.vmMap[vmKey]
       if (!t) return
       // 动画期间（首屏 boot 或切 tab 表格加载动画）保持主线程空闲：

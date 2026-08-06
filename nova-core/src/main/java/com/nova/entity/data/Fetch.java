@@ -31,9 +31,6 @@ public class Fetch {
     @Comment("来源上下文信息")
     private Map<String, String> context;
 
-    @Comment("LINK组件查询条件")
-    private Map<String, Map<String, String>> linkConditions;
-
     @Data
     @Accessors(chain = true)
     public static class Search {

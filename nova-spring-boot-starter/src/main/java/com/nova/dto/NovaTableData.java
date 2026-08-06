@@ -31,9 +31,6 @@ public class NovaTableData {
     @Comment("来源上下文属性集合")
     private Map<String, String> sourceFields;
 
-    @Comment("LINK组件查询条件")
-    private Map<String, Map<String, String>> linkConditions;
-
     @Data
     @Accessors(chain = true)
     public static class Search {

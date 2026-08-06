@@ -372,8 +372,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                 .setConditions(requestConditions)
                 .setOrders(requestOrders)
                 .setNovaName(novaTableData.getSourceNovaName())
-                .setContext(novaTableData.getSourceFields())
-                .setLinkConditions(novaTableData.getLinkConditions());
+                .setContext(novaTableData.getSourceFields());
         // 调用代理，获取实体列表
         DataProxy<?> dataProxy = DataProxyUtils.getDataProxy(novaName);
         Fetch.Vo<?> fetch = dataProxy.fetch(queryRequest);
