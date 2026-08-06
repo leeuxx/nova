@@ -59,7 +59,7 @@ public class TestDemo4View {
                     title = "用户信息",
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(
-                            referenceField = "demoId"
+                            ref = "demoId"
                     )
             )
     )

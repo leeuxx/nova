@@ -37,7 +37,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         TreeType treeType = NovaUtils.tree(novaTableBuild.getNovaName());
         NovaTableBuild.Vo.TreeInfo treeInfo = new NovaTableBuild.Vo.TreeInfo()
                 .setValue(Objects.requireNonNull(treeType).value())
-                .setSearchField(treeType.searchField())
+                .setSearchField(treeType.label())
                 .setCascade(treeType.cascade())
                 .setLevel(treeType.level());
         vo.setTree(treeInfo);
@@ -202,10 +202,10 @@ public class NovaTableServiceImpl implements NovaTableService {
         references.forEach((field, referenceInfo) -> {
             NovaTableBuild.Vo.ReferenceType reference = new NovaTableBuild.Vo.ReferenceType()
                     .setReferenceName(referenceInfo.getReferenceClass().getSimpleName())
-                    .setReferenceField(referenceInfo.getReferenceField())
-                    .setStorageField(referenceInfo.getStorageField())
-                    .setDisplayField(referenceInfo.getDisplayField())
-                    .setReferenceTransmitField(referenceInfo.getReferenceTransmitField())
+                    .setReferenceField(referenceInfo.getRef())
+                    .setStorageField(referenceInfo.getBy())
+                    .setDisplayField(referenceInfo.getByName())
+                    .setReferenceTransmitField(referenceInfo.getContext())
                     .setIsThisObj(referenceInfo.getIsThisObj());
             referenceMap.put(field, reference);
         });
@@ -219,9 +219,9 @@ public class NovaTableServiceImpl implements NovaTableService {
             NovaTableBuild.Vo.AppendageType appendage = new NovaTableBuild.Vo.AppendageType()
                     .setNovaIdFieldName(appendageNovaIdFieldName)
                     .setReferenceName(simpleName)
-                    .setReferenceField(appendageInfo.getReferenceField())
-                    .setStorageField(appendageInfo.getStorageField())
-                    .setDisplayField(appendageInfo.getDisplayField())
+                    .setReferenceField(appendageInfo.getRef())
+                    .setStorageField(appendageInfo.getBy())
+                    .setDisplayField(appendageInfo.getRefName())
                     .setDualTable(appendageInfo.getDualTable())
                     .setDualTableTitle(appendageInfo.getDualTableTitle());
             appendageMap.put(field, appendage);
@@ -235,20 +235,20 @@ public class NovaTableServiceImpl implements NovaTableService {
             NovaFieldUtils.LinkInfo.Info operateInfo = linkInfo.getOperateInfo();
             NovaTableBuild.Vo.Link link = new NovaTableBuild.Vo.Link()
                     .setReferenceName(linkInfo.getReferenceClass().getSimpleName())
-                    .setReferenceTransmitField(linkInfo.getReferenceTransmitField())
+                    .setReferenceTransmitField(linkInfo.getContext())
                     .setDualTable(linkInfo.getDualTable())
                     .setDualTableTitle(linkInfo.getDualTableTitle())
                     .setOperateInfo(new NovaTableBuild.Vo.Link.Info()
                             .setReferenceName(operateInfo.getReferenceClass().getSimpleName())
-                            .setReferenceField(operateInfo.getReferenceField())
-                            .setStorageField(operateInfo.getStorageField())
-                            .setDisplayField(operateInfo.getDisplayField())
+                            .setReferenceField(operateInfo.getRef())
+                            .setStorageField(operateInfo.getBy())
+                            .setDisplayField(operateInfo.getByName())
                     )
                     .setSelectInfo(new NovaTableBuild.Vo.Link.Info()
                             .setReferenceName(selectInfo.getReferenceClass().getSimpleName())
-                            .setReferenceField(selectInfo.getReferenceField())
-                            .setStorageField(selectInfo.getStorageField())
-                            .setDisplayField(selectInfo.getDisplayField())
+                            .setReferenceField(selectInfo.getRef())
+                            .setStorageField(selectInfo.getBy())
+                            .setDisplayField(selectInfo.getByName())
                     );
             linkMap.put(field, link);
         });
@@ -372,7 +372,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                 .setConditions(requestConditions)
                 .setOrders(requestOrders)
                 .setNovaName(novaTableData.getSourceNovaName())
-                .setSourceFields(novaTableData.getSourceFields())
+                .setContext(novaTableData.getSourceFields())
                 .setLinkConditions(novaTableData.getLinkConditions());
         // 调用代理，获取实体列表
         DataProxy<?> dataProxy = DataProxyUtils.getDataProxy(novaName);
@@ -405,7 +405,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                 .setSize(pageBean.getSize())
                 .setNovaName(novaTablePromptSearch.getNovaName())
                 .setPrompt(novaTablePromptSearch.getPrompt())
-                .setSourceFields(novaTablePromptSearch.getSourceFields())
+                .setContext(novaTablePromptSearch.getSourceFields())
         );
 
         if (promptSearchVo == null) {
@@ -660,7 +660,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         }
         Tree.Vo<?> tree = ((DataProxy) DataProxyUtils.getDataProxy(novaTableTree.getNovaName())).tree(new Tree()
                 .setNovaName(novaTableTree.getSourceNovaName())
-                .setSourceFields(novaTableTree.getSourceFields())
+                .setContext(novaTableTree.getSourceFields())
                 .setOrders(requestOrders)
                 .setOperateValue(novaTableTree.getOperateValue())
         );

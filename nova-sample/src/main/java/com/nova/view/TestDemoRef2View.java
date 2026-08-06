@@ -38,7 +38,7 @@ public class TestDemoRef2View {
                     title = "用户信息",
                     type = Edit.Type.LINK_TARGET,
                     linkTargetType = @LinkTargetType(
-                            referenceField = "demoId",
+                            ref = "demoId",
                             type = LinkTargetType.Type.OPERATE
                     )
             )
@@ -53,7 +53,7 @@ public class TestDemoRef2View {
                     title = "引用用户信息",
                     type = Edit.Type.LINK_TARGET,
                     linkTargetType = @LinkTargetType(
-                            referenceField = "demoId2",
+                            ref = "demoId2",
                             type = LinkTargetType.Type.SELECT
                     )
             )

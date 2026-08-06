@@ -535,10 +535,10 @@ public class NovaFieldUtils {
                 ReferenceType referenceType = edit.referenceType();
                 ReferenceTypeInfo referenceTypeInfo = new ReferenceTypeInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
-                        .setReferenceField(referenceType.referenceField())
-                        .setStorageField(referenceType.storageField())
-                        .setDisplayField(referenceType.displayField())
-                        .setReferenceTransmitField(Arrays.asList(referenceType.referenceTransmitField()))
+                        .setRef(referenceType.ref())
+                        .setBy(referenceType.by())
+                        .setByName(referenceType.byName())
+                        .setContext(Arrays.asList(referenceType.context()))
                         .setIsThisObj(novaFieldInfo.getFieldClass().getSimpleName().equals(className));
                 referenceTypeInfos.put(field, referenceTypeInfo);
             }
@@ -567,9 +567,9 @@ public class NovaFieldUtils {
                 AppendageType appendageType = edit.appendageType();
                 AppendageTypeInfo appendageTypeInfo = new AppendageTypeInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
-                        .setReferenceField(appendageType.referenceField())
-                        .setStorageField(appendageType.storageField())
-                        .setDisplayField(appendageType.displayField())
+                        .setRef(appendageType.ref())
+                        .setBy(appendageType.by())
+                        .setRefName(appendageType.refName())
                         .setDualTable(novaFieldInfo.getType() == Edit.Type.APPENDAGES && NovaUtils.exprBool(appendageType.dualTable(), appendageType.show()))
                         .setDualTableTitle(edit.title());
                 appendageTypeInfos.put(field, appendageTypeInfo);
@@ -599,7 +599,7 @@ public class NovaFieldUtils {
                 LinkType linkType = edit.linkType();
                 LinkInfo linkInfo = new LinkInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
-                        .setReferenceTransmitField(Arrays.asList(linkType.referenceTransmitField()))
+                        .setContext(Arrays.asList(linkType.context()))
                         .setDualTable(NovaUtils.exprBool(linkType.dualTable(), linkType.show()))
                         .setDualTableTitle(edit.title());
                 linkInfos.put(field, linkInfo);
@@ -615,21 +615,16 @@ public class NovaFieldUtils {
                         continue;
                     }
                     LinkTargetType linkTargetType = novaField2.edit().linkTargetType();
+                    LinkInfo.Info info = new LinkInfo.Info()
+                            .setReferenceClass(field2.getType())
+                            .setRef(linkTargetType.ref())
+                            .setBy(linkTargetType.by())
+                            .setByName(linkTargetType.byName());
                     if (linkTargetType.type() == LinkTargetType.Type.OPERATE) {
-                        linkInfo.setOperateInfo(new LinkInfo.Info()
-                                .setReferenceClass(field2.getType())
-                                .setReferenceField(linkTargetType.referenceField())
-                                .setStorageField(linkTargetType.storageField())
-                                .setDisplayField(linkTargetType.displayField())
-                        );
+                        linkInfo.setOperateInfo(info);
                     }
                     if (linkTargetType.type() == LinkTargetType.Type.SELECT) {
-                        linkInfo.setSelectInfo(new LinkInfo.Info()
-                                .setReferenceClass(field2.getType())
-                                .setReferenceField(linkTargetType.referenceField())
-                                .setStorageField(linkTargetType.storageField())
-                                .setDisplayField(linkTargetType.displayField())
-                        );
+                        linkInfo.setSelectInfo(info);
                     }
                 }
             }
@@ -659,15 +654,15 @@ public class NovaFieldUtils {
                 if (linkTargetType.type() == LinkTargetType.Type.SELECT) {
                     linkTargetInfo.setLinkReferenceClass(novaFieldInfo.getFieldClass())
                             .setLinkFieldName(novaFieldInfo.getFieldName())
-                            .setLinkReferenceField(linkTargetType.referenceField())
-                            .setLinkStorageField(linkTargetType.storageField());
+                            .setLinkReferenceField(linkTargetType.ref())
+                            .setLinkStorageField(linkTargetType.by());
                     NovaApplication.ScanNova linkTargetScanNova = scanNovas.get(novaFieldInfo.getFieldClass().getSimpleName());
                     linkTargetInfo.setLinkTree(linkTargetScanNova.getNova().tree().value());
                 } else {
                     linkTargetInfo.setThisReferenceClass(novaFieldInfo.getFieldClass())
                             .setThisFieldName(novaFieldInfo.getFieldName())
-                            .setThisReferenceField(linkTargetType.referenceField())
-                            .setThisStorageField(linkTargetType.storageField());
+                            .setThisReferenceField(linkTargetType.ref())
+                            .setThisStorageField(linkTargetType.by());
                 }
             }
         });
@@ -992,17 +987,17 @@ public class NovaFieldUtils {
         @Comment("关联类")
         private Class<?> referenceClass;
 
-        @Comment("引用类值属性名，默认id")
-        private String referenceField;
+        @Comment("当前类关联字段")
+        private String ref;
 
-        @Comment("引用类显示属性名")
-        private String storageField;
+        @Comment("目标类匹配字段")
+        private String by;
 
-        @Comment("引用类显示属性名")
-        private String displayField;
+        @Comment("目标类展示字段")
+        private String byName;
 
-        @Comment("当前类获取引用类数据时，额外向引用类 DataProxy.fetch 传递的当前类表单上下文信息")
-        private List<String> referenceTransmitField;
+        @Comment("当前类获取引用类数据时，额外传递的当前类表单上下文信息")
+        private List<String> context;
 
         @Comment("是否为当前nova本身对象（树渲染有用）")
         private Boolean isThisObj;
@@ -1016,14 +1011,14 @@ public class NovaFieldUtils {
         @Comment("关联类")
         private Class<?> referenceClass;
 
-        @Comment("附属类存储当前类的关联属性名")
-        private String referenceField;
+        @Comment("附属类关联字段")
+        private String ref;
 
-        @Comment("当前类属性名")
-        private String storageField;
+        @Comment("当前类匹配字段")
+        private String by;
 
-        @Comment("附属类显示属性名")
-        private String displayField;
+        @Comment("附属类展示字段")
+        private String refName;
 
         @Comment("是否支持双表视图")
         private Boolean dualTable;
@@ -1040,8 +1035,8 @@ public class NovaFieldUtils {
         @Comment("关联类")
         private Class<?> referenceClass;
 
-        @Comment("中间类获取目标引用类数据时（弹窗选取），额外透传向引用类 DataProxy.fetch 传递的当前类表单上下文信息")
-        private List<String> referenceTransmitField;
+        @Comment("中间类获取目标类数据时（弹窗选取），额外传递的当前类表单上下文信息")
+        private List<String> context;
 
         @Comment("中间类操作引用类信息")
         private Info operateInfo;
@@ -1062,14 +1057,14 @@ public class NovaFieldUtils {
             @Comment("关联类")
             private Class<?> referenceClass;
 
-            @Comment("中间类存储引用类关联属性名")
-            private String referenceField;
+            @Comment("当前类关联字段")
+            private String ref;
 
-            @Comment("引用类值属性名，既对应引用类的哪个属性")
-            private String storageField;
+            @Comment("目标类匹配字段")
+            private String by;
 
-            @Comment("引用类值显示属性名，替代 storageField 展示")
-            private String displayField;
+            @Comment("目标类展示字段")
+            private String byName;
         }
     }
 

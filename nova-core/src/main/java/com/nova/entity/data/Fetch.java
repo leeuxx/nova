@@ -28,8 +28,8 @@ public class Fetch {
     @Comment("来源nova名称")
     private String novaName;
 
-    @Comment("来源上下文属性集合")
-    private Map<String, String> sourceFields;
+    @Comment("来源上下文信息")
+    private Map<String, String> context;
 
     @Comment("LINK组件查询条件")
     private Map<String, Map<String, String>> linkConditions;

@@ -8,13 +8,13 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class Menu {
 
-    @Comment("id")
+    @Comment("id,必填")
     private Long id;
 
-    @Comment("编码")
+    @Comment("编码,必填")
     private String code;
 
-    @Comment("名称")
+    @Comment("名称,必填")
     private String name;
 
     @Comment("值")

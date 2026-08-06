@@ -5,14 +5,14 @@ import com.nova.annotation.sub.nova.row.ExprBool;
 
 public @interface AppendageType {
 
-    @Comment("附属类存储当前类的关联属性名，例如 userId")
-    String referenceField();
+    @Comment("附属类关联字段")
+    String ref();
 
-    @Comment("当前类属性名，默认id，即附属类的 referenceField 对应当前类的哪个属性（通常为主键）")
-    String storageField() default "id";
+    @Comment("当前类匹配字段")
+    String by() default "id";
 
-    @Comment("附属类显示属性名，替代 storageField 展示，默认 name")
-    String displayField() default "name";
+    @Comment("附属类展示字段")
+    String refName() default "name";
 
     @Comment("tap页显示")
     boolean tapShow() default true;

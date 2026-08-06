@@ -48,16 +48,16 @@ public @interface Edit {
     AttachmentType attachmentType() default @AttachmentType;
 
     @Comment("对象引用组件配置")
-    ReferenceType referenceType() default @ReferenceType(referenceField = "");
+    ReferenceType referenceType() default @ReferenceType(ref = "");
 
     @Comment("附属对象组件配置")
-    AppendageType appendageType() default @AppendageType(referenceField = "");
+    AppendageType appendageType() default @AppendageType(ref = "");
 
     @Comment("集合引用组件配置")
     LinkType linkType() default @LinkType;
 
     @Comment("集合引用目标组件配置")
-    LinkTargetType linkTargetType() default @LinkTargetType(referenceField = "");
+    LinkTargetType linkTargetType() default @LinkTargetType(ref = "");
 
     @Comment("按钮组件配置")
     ButtonType buttonType() default @ButtonType;

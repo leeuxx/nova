@@ -103,7 +103,7 @@ public class DataProxyUtils {
         // 通过无参构造创建引用对象实例
         Object refInstance = refClass.getDeclaredConstructor().newInstance();
         // 获取引用对象中实际存储数据的字段（如id字段）
-        Field storageF = refClass.getDeclaredField(refInfo.getStorageField());
+        Field storageF = refClass.getDeclaredField(refInfo.getBy());
         storageF.setAccessible(true);
         // 将字符串值转换为存储字段所需的类型并设置到引用对象
         storageF.set(refInstance, convertValue(value, storageF.getType()));

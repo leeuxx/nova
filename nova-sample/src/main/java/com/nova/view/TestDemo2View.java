@@ -57,7 +57,7 @@ public class TestDemo2View {
                     title = "用户信息",
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(
-                            referenceField = "demoId",
+                            ref = "demoId",
                             tapShow = true
                     ),
                     search = @Search

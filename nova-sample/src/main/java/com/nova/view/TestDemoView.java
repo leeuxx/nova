@@ -31,6 +31,9 @@ import java.time.LocalDateTime;
         layout = @Layout(
                 editLayout = Layout.EditLayout.DEFAULT
         ),
+        tree = @TreeType(
+                label = "name"
+        ),
         dataProxy = TestDemoService.class,
         rowOperation = {
                 @RowOperation(
@@ -173,8 +176,11 @@ public class TestDemoView {
                     title = "部门信息",
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(
-                            referenceField = "demo2Id",
-                            tapShow = true
+                            ref = "demo2Id",
+                            tapShow = true,
+                            context = {
+                                    "name"
+                            }
                     ),
                     search = @Search(vague = true),
                     notNull = true
@@ -191,7 +197,7 @@ public class TestDemoView {
                     title = "岗位信息",
                     type = Edit.Type.APPENDAGE,
                     appendageType = @AppendageType(
-                            referenceField = "demoId"
+                            ref = "demoId"
                     ),
                     search = @Search(vague = true)
             )
@@ -203,7 +209,7 @@ public class TestDemoView {
                     title = "薪资信息",
                     type = Edit.Type.APPENDAGES,
                     appendageType = @AppendageType(
-                            referenceField = "demoId"
+                            ref = "demoId"
                     ),
                     search = @Search
             )
@@ -215,7 +221,7 @@ public class TestDemoView {
                     title = "引用薪资",
                     type = Edit.Type.LINK,
                     linkType = @LinkType(
-                            referenceTransmitField = {
+                            context = {
                                     "name"
                             }
                     ),
@@ -229,7 +235,7 @@ public class TestDemoView {
                     title = "用户树节点",
                     type = Edit.Type.LINK,
                     linkType = @LinkType(
-                            referenceTransmitField = {
+                            context = {
                                     "nick"
                             }
                     ),
@@ -243,7 +249,7 @@ public class TestDemoView {
                     title = "上级信息",
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(
-                            referenceField = "testDemoView",
+                            ref = "testDemoView",
                             tapShow = true
                     ),
                     search = @Search
@@ -483,7 +489,7 @@ public class TestDemoView {
                         title = "部门信息",
                         type = Edit.Type.REFERENCE,
                         referenceType = @ReferenceType(
-                                referenceField = ""
+                                ref = ""
                         ),
                         notNull = true
                 )
@@ -495,7 +501,7 @@ public class TestDemoView {
                         title = "岗位信息",
                         type = Edit.Type.APPENDAGE,
                         appendageType = @AppendageType(
-                                referenceField = ""
+                                ref = ""
                         )
                 )
         )

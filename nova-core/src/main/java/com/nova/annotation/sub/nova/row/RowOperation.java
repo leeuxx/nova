@@ -13,7 +13,7 @@ public @interface RowOperation {
     @Comment("调用提示,空则不提示")
     String callHint() default "";
 
-    @Comment("标题颜色,单行且不折叠时按钮文字的颜色")
+    @Comment("操作列按钮且不折叠时文字的颜色")
     String color() default "";
 
     @Comment("图标")
@@ -28,22 +28,22 @@ public @interface RowOperation {
     @Comment("分组名,折叠时把同分组按钮进行二级菜单归类")
     String group() default "";
 
-    @Comment("行级按钮控制可用与禁用（前端,每行数据一次）")
+    @Comment("操作列按钮控制可用与禁用（前端,每行数据一次）")
     String ifExpr() default "";
 
-    @Comment("所有按钮控制显示与隐藏（后端,仅该按钮一次）")
+    @Comment("控制按钮显示与隐藏（后端,仅该按钮一次）")
     ExprBool show() default @ExprBool;
 
     @Comment("该配置可在operationHandler和tpl模版中获取")
     String param() default "";
 
-    @Comment("type=NOVA时可用，按钮提交时，需要填写的表单信息")
+    @Comment("type=NOVA时可用,引用一个Nova类做为参数表单,按钮提交附带该表单参数")
     Class<?> novaClass() default void.class;
 
-    @Comment("type=NOVA时可用，操作按钮点击后，后台处理逻辑")
+    @Comment("type=NOVA时可用,操作按钮点击后台处理类")
     Class<? extends OperationHandler> operationHandler() default OperationHandler.class;
 
-    @Comment("type=TPL时可用，自定义模板配置")
+    @Comment("type=TPL时可用,自定义模板配置")
     Tpl tpl() default @Tpl(path = "");
 
     enum Mode {
