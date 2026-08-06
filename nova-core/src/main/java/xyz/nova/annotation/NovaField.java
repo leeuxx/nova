@@ -1,0 +1,20 @@
+package xyz.nova.annotation;
+
+import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.sub.nova.field.Edit;
+import xyz.nova.annotation.sub.nova.field.View;
+
+import java.lang.annotation.*;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+@Documented
+public @interface NovaField {
+
+    @Comment("表格列配置")
+    View[] views() default {};
+
+    @Comment("编辑组件配置")
+    Edit edit() default @Edit(title = "");
+
+}

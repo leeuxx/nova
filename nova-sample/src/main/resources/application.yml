@@ -32,18 +32,3 @@ server:
     context-path: /
   error:
     include-message: always
-
-# 日志配置
-logging:
-  level:
-    com.nova: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
-
-# Nova 框架配置
-nova:
-  enabled: true
-  scan-packages: com.nova.sample.entity
-  auto-create-table: true
-  theme: default
-  page-title: Nova 示例系统

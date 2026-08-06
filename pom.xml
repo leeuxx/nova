@@ -12,7 +12,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.nova</groupId>
+    <groupId>xyz.nova</groupId>
     <artifactId>nova</artifactId>
     <version>1.0</version>
     <packaging>pom</packaging>
@@ -47,12 +47,12 @@
         <dependencies>
             <!-- 内部模块版本管理 -->
             <dependency>
-                <groupId>com.nova</groupId>
+                <groupId>xyz.nova</groupId>
                 <artifactId>nova-core</artifactId>
                 <version>${nova.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.nova</groupId>
+                <groupId>xyz.nova</groupId>
                 <artifactId>nova-spring-boot-starter</artifactId>
                 <version>${nova.version}</version>
             </dependency>

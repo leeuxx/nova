@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.nova</groupId>
+        <groupId>xyz.nova</groupId>
         <artifactId>nova</artifactId>
         <version>1.0</version>
     </parent>
@@ -18,7 +18,7 @@
     <dependencies>
         <!-- 依赖 core 模块 -->
         <dependency>
-            <groupId>com.nova</groupId>
+            <groupId>xyz.nova</groupId>
             <artifactId>nova-core</artifactId>
         </dependency>
     </dependencies>
