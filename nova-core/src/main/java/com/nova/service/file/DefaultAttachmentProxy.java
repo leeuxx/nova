@@ -1,5 +1,6 @@
 package com.nova.service.file;
 
+import com.nova.error.NovaException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +12,6 @@ public class DefaultAttachmentProxy implements AttachmentProxy {
 
     @Override
     public String upLoad(String novaName, InputStream inputStream) {
-        throw new RuntimeException("附件上传未配置");
+        throw new NovaException("附件上传未配置");
     }
 }

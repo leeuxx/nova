@@ -3,6 +3,7 @@ package com.nova.service.authority;
 import com.nova.entity.authority.Login;
 import com.nova.entity.authority.Menu;
 import com.nova.entity.authority.Register;
+import com.nova.error.NovaException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
@@ -19,17 +20,17 @@ public class DefaultAuthorityProxy implements AuthorityProxy {
 
     @Override
     public Login.User login(Login login) {
-        throw new RuntimeException("权限模块未配置");
+        throw new NovaException("权限模块未配置");
     }
 
     @Override
     public void logout(String token) {
-        throw new RuntimeException("权限模块未配置");
+        throw new NovaException("权限模块未配置");
     }
 
     @Override
     public List<Menu> getMenu(String token) {
-        throw new RuntimeException("权限模块未配置");
+        throw new NovaException("权限模块未配置");
     }
 
     @Override
@@ -39,11 +40,11 @@ public class DefaultAuthorityProxy implements AuthorityProxy {
 
     @Override
     public void editUser(Login.User user) {
-        throw new RuntimeException("权限模块未配置");
+        throw new NovaException("权限模块未配置");
     }
 
     @Override
     public Login.User register(Register register) {
-        throw new RuntimeException("权限模块未配置");
+        throw new NovaException("权限模块未配置");
     }
 }

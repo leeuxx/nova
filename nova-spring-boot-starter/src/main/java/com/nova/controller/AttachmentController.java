@@ -4,6 +4,7 @@ import com.nova.annotation.NovaRouter;
 import com.nova.annotation.config.Comment;
 import com.nova.annotation.config.RestMappingController;
 import com.nova.dto.AttachmentUpload;
+import com.nova.error.NovaException;
 import com.nova.service.file.AttachmentProxy;
 import com.nova.utils.R;
 import lombok.AllArgsConstructor;
@@ -44,7 +45,7 @@ public class AttachmentController {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         if (paths.isEmpty()) {
-            throw new RuntimeException("文件上传失败");
+            throw new NovaException("文件上传失败");
         }
         return R.ok(paths);
     }
