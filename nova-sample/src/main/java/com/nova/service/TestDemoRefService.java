@@ -5,10 +5,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yitter.idgen.YitIdHelper;
-import com.nova.entity.data.Fetch;
 import com.nova.entity.TestDemo;
 import com.nova.entity.TestDemo4;
 import com.nova.entity.TestDemoRef;
+import com.nova.entity.data.Fetch;
 import com.nova.mapper.TestDemoRefMapper;
 import com.nova.service.data.DataProxy;
 import com.nova.utils.Beans;
@@ -36,7 +36,15 @@ public class TestDemoRefService extends ServiceImpl<TestDemoRefMapper, TestDemoR
 
     @Override
     public void add(List<TestDemoRefView> testDemoRefViews) {
-        throw new UnsupportedOperationException("测试异常");
+        for (TestDemoRefView testDemoRefView : testDemoRefViews) {
+            TestDemoView testDemoView = testDemoRefView.getTestDemoView();
+            TestDemo4View testDemo4View = testDemoRefView.getTestDemo4View();
+            TestDemoRef testDemoRef = new TestDemoRef()
+                    .setId(YitIdHelper.nextId())
+                    .setDemoId(testDemoView.getId())
+                    .setDemo4Id(testDemo4View.getId());
+            save(testDemoRef);
+        }
     }
 
     @Override

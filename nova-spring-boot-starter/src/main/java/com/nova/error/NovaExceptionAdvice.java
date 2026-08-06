@@ -1,5 +1,6 @@
 package com.nova.error;
 
+import com.nova.constant.NovaConst;
 import com.nova.utils.R;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @Slf4j
 @AllArgsConstructor
-@RestControllerAdvice
+@RestControllerAdvice(NovaConst.CONTROLLER_PACKAGE)
 public class NovaExceptionAdvice {
 
     /**
@@ -28,4 +29,5 @@ public class NovaExceptionAdvice {
         log.error("", e);
         return R.fail(e.getMessage());
     }
+
 }
