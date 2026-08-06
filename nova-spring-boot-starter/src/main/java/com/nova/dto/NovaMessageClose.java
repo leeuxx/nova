@@ -1,7 +1,6 @@
 package com.nova.dto;
 
 import com.nova.annotation.config.Comment;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -11,8 +10,7 @@ import java.util.List;
 @Accessors(chain = true)
 public class NovaMessageClose {
 
-    @Comment("消息id")
-    @NotEmpty(message = "ids不能为空")
+    @Comment("消息id,必填")
     private List<String> ids;
 
 }

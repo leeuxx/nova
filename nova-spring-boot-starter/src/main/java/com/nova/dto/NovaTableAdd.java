@@ -2,8 +2,6 @@ package com.nova.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nova.annotation.config.Comment;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -14,12 +12,10 @@ import java.util.Map;
 @Accessors(chain = true)
 public class NovaTableAdd {
 
-    @Comment("nova名称")
-    @NotBlank(message = "novaName不能为空")
+    @Comment("nova名称,必填")
     private String novaName;
 
-    @Comment("表单信息")
-    @NotEmpty(message = "formInfo不能为空")
+    @Comment("表单信息,必填")
     private List<FormInfo> formInfo;
 
     @Comment("附属对象表单信息")

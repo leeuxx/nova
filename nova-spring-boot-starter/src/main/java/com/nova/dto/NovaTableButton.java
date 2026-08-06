@@ -1,7 +1,6 @@
 package com.nova.dto;
 
 import com.nova.annotation.config.Comment;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -11,12 +10,10 @@ import java.util.Map;
 @Accessors(chain = true)
 public class NovaTableButton {
 
-    @Comment("nova名称")
-    @NotBlank(message = "novaName不能为空")
+    @Comment("nova名称,必填")
     private String novaName;
 
-    @Comment("处理类完全类名")
-    @NotBlank(message = "handleName不能为空")
+    @Comment("处理类完全类名,必填")
     private String handleName;
 
     @Comment("静态参数")

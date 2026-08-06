@@ -2,8 +2,6 @@ package com.nova.dto;
 
 import com.nova.annotation.config.Comment;
 import com.nova.dto.page.PageBean;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -13,16 +11,13 @@ import java.util.Map;
 @Accessors(chain = true)
 public class NovaTableData {
 
-    @Comment("nova名称")
-    @NotBlank(message = "novaName不能为空")
+    @Comment("nova名称,必填")
     private String novaName;
 
-    @Comment("来源nova名称")
-    @NotBlank(message = "sourceNovaName不能为空")
+    @Comment("来源nova名称,必填")
     private String sourceNovaName;
 
-    @Comment("分页信息")
-    @NotNull(message = "pageBean不能为空")
+    @Comment("分页信息,必填")
     private PageBean<Map<String, Object>> pageBean;
 
     @Comment("查询条件")

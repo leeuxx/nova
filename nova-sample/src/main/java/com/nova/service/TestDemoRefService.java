@@ -36,15 +36,7 @@ public class TestDemoRefService extends ServiceImpl<TestDemoRefMapper, TestDemoR
 
     @Override
     public void add(List<TestDemoRefView> testDemoRefViews) {
-        for (TestDemoRefView testDemoRefView : testDemoRefViews) {
-            TestDemoView testDemoView = testDemoRefView.getTestDemoView();
-            TestDemo4View testDemo4View = testDemoRefView.getTestDemo4View();
-            TestDemoRef testDemoRef = new TestDemoRef()
-                    .setId(YitIdHelper.nextId())
-                    .setDemoId(testDemoView.getId())
-                    .setDemo4Id(testDemo4View.getId());
-            save(testDemoRef);
-        }
+        throw new UnsupportedOperationException("测试异常");
     }
 
     @Override

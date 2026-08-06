@@ -2,8 +2,6 @@ package com.nova.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nova.annotation.config.Comment;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -13,16 +11,13 @@ import java.util.List;
 @Accessors(chain = true)
 public class NovaTableDelete {
 
-    @Comment("nova名称")
-    @NotBlank(message = "novaName不能为空")
+    @Comment("nova名称,必填")
     private String novaName;
 
-    @Comment("novaId属性名")
-    @NotBlank(message = "novaIdFieldName不能为空")
+    @Comment("novaId属性名,必填")
     private String novaIdFieldName;
 
-    @Comment("novaId值列表")
-    @NotEmpty(message = "novaIdValues不能为空")
+    @Comment("novaId值列表,必填")
     private List<String> novaIdValues;
 
     @Data

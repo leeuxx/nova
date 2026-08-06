@@ -1,7 +1,6 @@
 package com.nova.dto;
 
 import com.nova.annotation.config.Comment;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -11,8 +10,7 @@ import java.util.List;
 @Accessors(chain = true)
 public class NovaTableRowOperationLoad {
 
-    @Comment("nova名称")
-    @NotBlank(message = "novaName不能为空")
+    @Comment("nova名称,必填")
     private String novaName;
 
     @Comment("选择的数据novaId集合")
