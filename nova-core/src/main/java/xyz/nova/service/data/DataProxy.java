@@ -51,5 +51,4 @@ public interface DataProxy<MODEL> {
         throw new NovaException("DataProxy.promptSearch未实现");
     }
 
-
 }
