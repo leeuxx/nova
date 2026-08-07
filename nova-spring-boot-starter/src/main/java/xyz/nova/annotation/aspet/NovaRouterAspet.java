@@ -7,6 +7,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 import xyz.nova.annotation.NovaRouter;
+import xyz.nova.controller.NovaTableController;
 import xyz.nova.dto.NovaTableBuild;
 import xyz.nova.service.authority.AuthorityProxy;
 import xyz.nova.utils.AuthorityUtils;
@@ -38,7 +39,7 @@ public class NovaRouterAspet {
                 // 判断是否为build接口
                 MethodSignature signature = (MethodSignature) joinPoint.getSignature();
                 Method method = signature.getMethod();
-                boolean isBuild = "build".equals(method.getName()) && "xyz.nova.controller.NovaTableController".equals(method.getDeclaringClass().getName());
+                boolean isBuild = "build".equals(method.getName()) && NovaTableController.class.getName().equals(method.getDeclaringClass().getName());
                 // 非build接口直接返回权限校验失败
                 if (!isBuild) {
                     return R.fail(521, "用户权限校验未通过", null);
