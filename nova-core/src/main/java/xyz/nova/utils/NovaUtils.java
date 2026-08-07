@@ -1,5 +1,7 @@
 package xyz.nova.utils;
 
+import lombok.Data;
+import lombok.experimental.Accessors;
 import xyz.nova.annotation.Nova;
 import xyz.nova.annotation.config.Comment;
 import xyz.nova.annotation.sub.nova.Drill;
@@ -8,8 +10,6 @@ import xyz.nova.annotation.sub.nova.TreeType;
 import xyz.nova.annotation.sub.nova.row.ExprBool;
 import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.config.NovaApplication;
-import lombok.Data;
-import lombok.experimental.Accessors;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -130,6 +130,19 @@ public class NovaUtils {
             }
         }
         return drillInfos;
+    }
+
+    /**
+     * 获取权限验证
+     * @param className 类名
+     * @return 是否需要权限验证
+     */
+    public static Boolean getPower(String className) {
+        NovaApplication.ScanNova scanNova = NovaApplication.getScanNovas().get(className);
+        if (scanNova == null) {
+            return true;
+        }
+        return scanNova.getNova().power();
     }
 
     public static boolean exprBool(boolean show, ExprBool exprBool) {

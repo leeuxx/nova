@@ -4,3 +4,4 @@ xyz.nova.service.file.DefaultAttachmentProxy
 xyz.nova.service.message.DefaultMessageProxy
 xyz.nova.utils.SpringBeanUtils
 xyz.nova.utils.VoidDataProxy
+xyz.nova.service.DefaultOperationHandler

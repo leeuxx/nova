@@ -1810,7 +1810,7 @@ const NovaTable = {
           } else {
             if (window.NovaTableJQ) window.NovaTableJQ.loadData(self.vmKey || self.novaName)
           }
-        }).catch(function() { if (window.$message) window.$message.error('请求失败') })
+        }).catch(function(err) { if (!err || !err.code) { if (window.$message) window.$message.error('请求失败') } })
     },
     handleCustomBtnClick(btn, skipConfirm) {
       if (btn.type === 'NOVA' && btn.novaClassName) {
@@ -1976,7 +1976,7 @@ const NovaTable = {
             if (window.$message) window.$message.error(data.message || '操作失败')
           }
         }).catch(function(err) {
-          if (window.$message) window.$message.error(err.message || '请求失败')
+          if (!err || !err.code) { if (window.$message) window.$message.error('请求失败') }
         })
       }
     },
@@ -2030,9 +2030,9 @@ const NovaTable = {
           self.opFormShow = true
           // 加载表单初始值（handler.novaFormValue 返回的数据）
           self.loadOpFormInitialValues()
-        }).catch(function() {
+        }).catch(function(err) {
           self.opFormLoading = false
-          if (window.$message) window.$message.error('请求失败')
+          if (!err || !err.code) { if (window.$message) window.$message.error('请求失败') }
         })
     },
     closeOpForm() {
@@ -2306,7 +2306,7 @@ const NovaTable = {
           } else {
             if (window.NovaTableJQ) window.NovaTableJQ.loadData(self.vmKey || self.novaName)
           }
-        }).catch(function() { if (window.$message) window.$message.error('请求失败') })
+        }).catch(function(err) { if (!err || !err.code) { if (window.$message) window.$message.error('请求失败') } })
     },
     handleOpAttachmentChange(f, event) {
       var files = Array.from(event.target.files || [])

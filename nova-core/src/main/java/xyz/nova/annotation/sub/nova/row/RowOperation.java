@@ -1,6 +1,7 @@
 package xyz.nova.annotation.sub.nova.row;
 
 import xyz.nova.annotation.config.Comment;
+import xyz.nova.service.DefaultOperationHandler;
 
 public @interface RowOperation {
 
@@ -41,7 +42,7 @@ public @interface RowOperation {
     Class<?> novaClass() default void.class;
 
     @Comment("type=NOVA时可用,操作按钮点击后台处理类")
-    Class<? extends OperationHandler> operationHandler() default OperationHandler.class;
+    Class<? extends OperationHandler> operationHandler() default DefaultOperationHandler.class;
 
     @Comment("type=TPL时可用,自定义模板配置")
     Tpl tpl() default @Tpl(path = "");

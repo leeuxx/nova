@@ -38,4 +38,6 @@ public @interface Nova {
     @Comment("数据钻取")
     Drill[] drills() default {};
 
+    @Comment("权限验证")
+    boolean power() default true;
 }

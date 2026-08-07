@@ -109,7 +109,7 @@ window.NovaAppForm = {
             if (window.$message) window.$message.error(data.message || '操作失败')
           }
         }).catch(function(err) {
-          if (window.$message) window.$message.error(err.message || '请求失败')
+          if (!err || !err.code) { if (window.$message) window.$message.error('请求失败') }
         })
       }
     },
