@@ -21,6 +21,13 @@
             <groupId>xyz.nova</groupId>
             <artifactId>nova-core</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>io.gitee.laoshirenggo</groupId>
+            <artifactId>spring-factories</artifactId>
+            <version>1.5</version>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
 </project>
