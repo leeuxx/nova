@@ -1,4 +1,4 @@
-package xyz.nova.annotation.aspet;
+package xyz.nova.annotation.aspect;
 
 import lombok.AllArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -7,7 +7,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 import xyz.nova.annotation.NovaRouter;
-import xyz.nova.controller.NovaTableController;
+import xyz.nova.config.NovaBootMetadata;
 import xyz.nova.dto.NovaTableBuild;
 import xyz.nova.service.authority.AuthorityProxy;
 import xyz.nova.utils.AuthorityUtils;
@@ -20,7 +20,7 @@ import java.util.Arrays;
 @Aspect
 @Component
 @AllArgsConstructor
-public class NovaRouterAspet {
+public class NovaRouterAspect {
 
     private AuthorityProxy authorityProxy;
 
@@ -36,15 +36,16 @@ public class NovaRouterAspet {
         if (verifyType == NovaRouter.VerifyType.LOGIN_MENU) {
             String menuCode = AuthorityUtils.getMenuCode();
             if (menuCode == null || menuCode.isEmpty() || !authorityProxy.menuPermission(token, menuCode)) {
-                // 判断是否为build接口
+                // 判断是否是菜单权限检查接口
                 MethodSignature signature = (MethodSignature) joinPoint.getSignature();
                 Method method = signature.getMethod();
-                boolean isBuild = "build".equals(method.getName()) && NovaTableController.class.getName().equals(method.getDeclaringClass().getName());
-                // 非build接口直接返回权限校验失败
-                if (!isBuild) {
+                String fullMethodName = method.getDeclaringClass().getName() + "." + method.getName();
+                boolean isSpecialMenu = NovaBootMetadata.getRouterMenusMethods().contains(fullMethodName);
+                // 不是直接返回权限校验失败
+                if (!isSpecialMenu) {
                     return R.fail(521, "用户权限校验未通过", null);
                 }
-                // build接口使用Nova权限校验
+                // 是则查看Nova权限校验属性
                 String novaName = Arrays.stream(joinPoint.getArgs())
                         .filter(arg -> arg instanceof NovaTableBuild)
                         .map(arg -> ((NovaTableBuild) arg).getNovaName())
