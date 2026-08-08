@@ -3,7 +3,7 @@ package xyz.nova.utils;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import xyz.nova.annotation.Nova;
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.sub.nova.Drill;
 import xyz.nova.annotation.sub.nova.Layout;
 import xyz.nova.annotation.sub.nova.TreeType;

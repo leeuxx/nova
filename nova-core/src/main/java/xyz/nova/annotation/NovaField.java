@@ -1,6 +1,6 @@
 package xyz.nova.annotation;
 
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.View;
 

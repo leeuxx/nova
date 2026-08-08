@@ -1,6 +1,6 @@
 package xyz.nova.dto.page;
 
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 import lombok.Data;
 import lombok.experimental.Accessors;
 

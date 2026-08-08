@@ -1,6 +1,6 @@
 package xyz.nova.service.authority;
 
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.sub.nova.row.ExprBool;
 import xyz.nova.utils.AuthorityUtils;
 import lombok.AllArgsConstructor;

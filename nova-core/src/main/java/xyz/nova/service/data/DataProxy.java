@@ -1,6 +1,6 @@
 package xyz.nova.service.data;
 
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Fetch;
 import xyz.nova.entity.data.PromptSearch;

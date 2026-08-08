@@ -1,5 +1,6 @@
 package xyz.nova.annotation.config;
 
+import xyz.nova.annotation.comment.Comment;
 import xyz.nova.config.NovaApplication;
 import org.springframework.context.annotation.Import;
 

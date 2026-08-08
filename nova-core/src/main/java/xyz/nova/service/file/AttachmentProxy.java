@@ -1,6 +1,6 @@
 package xyz.nova.service.file;
 
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 
 import java.io.InputStream;
 

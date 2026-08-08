@@ -1,6 +1,6 @@
 package xyz.nova.service;
 
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 import xyz.nova.dto.NovaTplOpen;
 
 public interface NovaTplService {

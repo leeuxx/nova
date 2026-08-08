@@ -1,6 +1,6 @@
 package xyz.nova.annotation;
 
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.sub.nova.Drill;
 import xyz.nova.service.data.DataProxy;
 import xyz.nova.annotation.sub.nova.Layout;

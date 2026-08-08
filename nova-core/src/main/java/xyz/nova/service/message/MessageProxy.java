@@ -1,6 +1,6 @@
 package xyz.nova.service.message;
 
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 import xyz.nova.entity.message.Message;
 
 import java.util.List;

@@ -2,7 +2,7 @@ package xyz.nova.config;
 
 import xyz.nova.annotation.Nova;
 import xyz.nova.annotation.NovaField;
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.config.NovaId;
 import xyz.nova.annotation.config.NovaScan;
 import xyz.nova.service.data.DataProxy;

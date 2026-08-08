@@ -1,6 +1,6 @@
 package xyz.nova.annotation.sub.nova.row;
 
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 import xyz.nova.service.DefaultOperationHandler;
 
 public @interface RowOperation {
@@ -67,7 +67,9 @@ public @interface RowOperation {
 
     @interface Tpl {
 
-        @Comment("模板文件路径")
+        @Comment("模板文件路径; 打开时会拼参数：?token=x&novaName=x&novaIds=x&param=x")
+        @Comment("1. 支持相对路径（基于public目录，如public/tpl/test.html 填 tpl/test.html）")
+        @Comment("2. 支持远程url")
         String path();
 
         @Comment("弹出层宽度%（对话框有效，抽屉左、右有效）")

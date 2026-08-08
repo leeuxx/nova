@@ -1,6 +1,6 @@
 package xyz.nova.service.authority;
 
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 import xyz.nova.entity.authority.Login;
 import xyz.nova.entity.authority.Menu;
 import xyz.nova.entity.authority.Register;

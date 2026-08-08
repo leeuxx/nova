@@ -1,7 +1,7 @@
 package xyz.nova.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 import lombok.Data;
 import lombok.experimental.Accessors;
 

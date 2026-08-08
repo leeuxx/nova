@@ -1,7 +1,7 @@
 package xyz.nova.controller;
 
 import xyz.nova.annotation.NovaRouter;
-import xyz.nova.annotation.config.Comment;
+import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.config.RestMappingController;
 import xyz.nova.dto.NovaMessageClose;
 import xyz.nova.entity.message.Message;
