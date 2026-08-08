@@ -120,10 +120,10 @@ public class NovaFieldUtils {
                 }
                 Class<? extends ExprBool.ExprHandler>[] handlers = exprBool.exprHandler();
                 if (handlers.length > 0) {
-                    String params = exprBool.params();
+                    String param = exprBool.param();
                     for (Class<? extends ExprBool.ExprHandler> handlerClass : handlers) {
                         ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlerClass);
-                        if (!handler.handler(params)) {
+                        if (!handler.handler(param)) {
                             show = false;
                             break;
                         }

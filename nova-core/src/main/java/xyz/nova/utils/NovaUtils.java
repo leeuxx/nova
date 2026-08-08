@@ -89,10 +89,10 @@ public class NovaUtils {
                 result.add(operation);
                 continue;
             }
-            String params = exprBool.params();
+            String param = exprBool.param();
             for (Class<? extends ExprBool.ExprHandler> handlerClass : handlers) {
                 ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlerClass);
-                if (handler.handler(params)) {
+                if (handler.handler(param)) {
                     result.add(operation);
                     break;
                 }
@@ -151,10 +151,10 @@ public class NovaUtils {
         }
         Class<? extends ExprBool.ExprHandler>[] exprHandlers = exprBool.exprHandler();
         if (exprHandlers.length > 0) {
-            String params = exprBool.params();
+            String param = exprBool.param();
             for (Class<? extends ExprBool.ExprHandler> exprHandler : exprHandlers) {
                 ExprBool.ExprHandler service = SpringBeanUtils.getBean(exprHandler);
-                return service.handler(params);
+                return service.handler(param);
             }
             return false;
         } else {

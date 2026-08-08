@@ -48,7 +48,7 @@ import java.time.LocalDateTime;
                         param = "1",
                         show = @ExprBool(
                                 exprHandler = RowAuthExpr.class,
-                                params = "sendCmd"
+                                param = "sendCmd"
                         )
                 ),
                 @RowOperation(
