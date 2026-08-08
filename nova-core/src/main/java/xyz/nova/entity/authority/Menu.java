@@ -48,7 +48,7 @@ public class Menu {
         @Comment("1.支持相对路径（基于public目录，如public/tpl/test.html 填 tpl/test.html）")
         @Comment("2.支持远程url")
         TPL,
-        @Comment("按钮")
+        @Comment("按钮（仅声明权限，实际页面渲染需要使用 @RowOperation）")
         BUTTON
     }
 
