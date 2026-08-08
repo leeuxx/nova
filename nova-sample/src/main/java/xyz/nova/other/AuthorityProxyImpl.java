@@ -175,22 +175,6 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                         .setDelete(true)
                 )
         );
-        add(new Menu()
-                .setId(10L)
-                .setCode("testRow")
-                .setValue("TestRow")
-                .setName("测试行")
-                .setPid(3L)
-                .setType(Menu.Type.NOVA)
-        );
-        add(new Menu()
-                .setId(YitIdHelper.nextId())
-                .setCode("demos")
-                .setValue("demos")
-                .setName("测试按钮")
-                .setPid(10L)
-                .setType(Menu.Type.BUTTON)
-        );
     }};
 
     @Override

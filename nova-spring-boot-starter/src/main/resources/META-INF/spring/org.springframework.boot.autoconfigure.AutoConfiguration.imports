@@ -7,4 +7,3 @@ xyz.nova.controller.NovaTplController
 xyz.nova.error.NovaExceptionAdvice
 xyz.nova.service.impl.NovaTableServiceImpl
 xyz.nova.service.impl.NovaTplServiceImpl
-xyz.nova.config.NovaBootMetadata

@@ -1,21 +1,19 @@
 package xyz.nova.annotation.aspect;
 
+import cn.hutool.json.JSONUtil;
 import lombok.AllArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 import xyz.nova.annotation.NovaRouter;
-import xyz.nova.config.NovaBootMetadata;
-import xyz.nova.dto.NovaTableBuild;
 import xyz.nova.service.authority.AuthorityProxy;
 import xyz.nova.utils.AuthorityUtils;
 import xyz.nova.utils.NovaUtils;
 import xyz.nova.utils.R;
 
-import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Objects;
 
 @Aspect
 @Component
@@ -35,20 +33,12 @@ public class NovaRouterAspect {
         NovaRouter.VerifyType verifyType = novaRouter.verifyType();
         if (verifyType == NovaRouter.VerifyType.LOGIN_MENU) {
             String menuCode = AuthorityUtils.getMenuCode();
+            // 无菜单编码 || 菜单权限验证未通过 则降级验证Nova权限校验属性
             if (menuCode == null || menuCode.isEmpty() || !authorityProxy.menuPermission(token, menuCode)) {
-                // 判断是否是菜单权限检查接口
-                MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-                Method method = signature.getMethod();
-                String fullMethodName = method.getDeclaringClass().getName() + "." + method.getName();
-                boolean isSpecialMenu = NovaBootMetadata.getRouterMenusMethods().contains(fullMethodName);
-                // 不是直接返回权限校验失败
-                if (!isSpecialMenu) {
-                    return R.fail(521, "用户权限校验未通过", null);
-                }
-                // 是则查看Nova权限校验属性
                 String novaName = Arrays.stream(joinPoint.getArgs())
-                        .filter(arg -> arg instanceof NovaTableBuild)
-                        .map(arg -> ((NovaTableBuild) arg).getNovaName())
+                        .filter(Objects::nonNull)
+                        .map(arg -> JSONUtil.parseObj(arg).getStr("novaName"))
+                        .filter(Objects::nonNull)
                         .findFirst()
                         .orElse(null);
                 if (NovaUtils.getPower(novaName)) {

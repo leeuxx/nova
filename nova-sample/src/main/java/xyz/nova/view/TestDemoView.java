@@ -464,7 +464,8 @@ public class TestDemoView {
             layout = @Layout(
                     editLayout = Layout.EditLayout.FULL_LINE
             ),
-            dataProxy = VoidDataProxy.class
+            dataProxy = VoidDataProxy.class,
+            power = false
     )
     public static class TestRow {
 
