@@ -17,7 +17,11 @@ public class Menu {
     @Comment("名称,必填")
     private String name;
 
-    @Comment("值")
+    @Comment("值，根据type类型指定不同的值")
+    @Comment("Type.DIR = 空")
+    @Comment("Type.NOVA = Nova类名")
+    @Comment("Type.TPL = 自定义视图路径")
+    @Comment("Type.BUTTON = 空或其他扩展值")
     private String value;
 
     @Comment("图标")
