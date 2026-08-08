@@ -11,11 +11,8 @@ public @interface Drill {
     @Comment("下钻目标配置")
     Link link();
 
-    @Comment("是否显示")
-    boolean show() default true;
-
-    @Comment("控制显示与隐藏,使用此方式必须把show设置为true（后端控制,多用于访问权限）")
-    ExprBool showBy() default @ExprBool;
+    @Comment("控制显示与隐藏")
+    ExprBool show() default @ExprBool;
 
     @interface Link {
 

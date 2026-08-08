@@ -116,17 +116,15 @@ public class NovaUtils {
         Nova nova = scanNova.getNova();
         Drill[] drills = nova.drills();
         for (Drill drill : drills) {
-            if (drill.show()) {
-                boolean show = exprBool(true, drill.showBy());
-                if (show) {
-                    Drill.Link link = drill.link();
-                    DrillInfo drillInfo = new DrillInfo()
-                            .setDualTableTitle(drill.title())
-                            .setLinkNova(link.linkNova())
-                            .setColumn(link.column())
-                            .setJoinColumn(link.joinColumn());
-                    drillInfos.add(drillInfo);
-                }
+            boolean show = exprBool(true, drill.show());
+            if (show) {
+                Drill.Link link = drill.link();
+                DrillInfo drillInfo = new DrillInfo()
+                        .setDualTableTitle(drill.title())
+                        .setLinkNova(link.linkNova())
+                        .setColumn(link.column())
+                        .setJoinColumn(link.joinColumn());
+                drillInfos.add(drillInfo);
             }
         }
         return drillInfos;
