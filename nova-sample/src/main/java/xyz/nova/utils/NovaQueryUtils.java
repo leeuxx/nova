@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.edit.ChoiceType;
 import xyz.nova.entity.data.Fetch;
@@ -22,6 +23,7 @@ import java.util.Map;
 /**
  * MyBatis-Plus 查询构造工具
  */
+@Slf4j
 public class NovaQueryUtils {
 
     /**
@@ -85,60 +87,93 @@ public class NovaQueryUtils {
         return wrapper.lambda();
     }
 
-    private static <T> void applyCondition(QueryWrapper<T> wrapper, String novaName, String field,
-                                           String column, String value, String type, boolean vague,
-                                           NovaFieldUtils.DateInfo dateInfo) {
-        if (Edit.Type.LINK.name().equals(type)) {
-            // LINK 跨表条件：key 为 search 下的 LINK 字段名，需据此反查中间表/关联表过滤当前表（反向过滤实现预留），当前表直接过滤无意义
+    private static <T> void applyCondition(QueryWrapper<T> wrapper, String novaName, String field, String column, String value, String type, boolean vague, NovaFieldUtils.DateInfo dateInfo) {
+        // 统一前置判空
+        if (value == null || value.isEmpty()) {
             return;
-        } else if (Edit.Type.DATE.name().equals(type)) {
-            String dateType = dateInfo != null ? dateInfo.getType().name() : "DATETIME";
-            if (vague && value != null && value.contains(",")) {
-                String[] parts = value.split(",", 2);
-                wrapper.ge(column, msToStr(parts[0], dateType)).le(column, msToStr(parts[1], dateType));
-            } else if (value != null && !value.isEmpty()) {
-                wrapper.eq(column, msToStr(value, dateType));
+        }
+        // LINK 跨表条件：当前表直接过滤无意义
+        if (Edit.Type.LINK.name().equals(type)) {
+            return;
+        }
+        // 文本类型（INPUT / TEXTAREA）, 支持模糊查询
+        if (Edit.Type.INPUT.name().equals(type) || Edit.Type.TEXTAREA.name().equals(type)) {
+            if (vague) {
+                wrapper.like(column, value);
+            } else {
+                wrapper.eq(column, value);
             }
-        } else if (Edit.Type.CHOICE.name().equals(type)) {
+            return;
+        }
+        // 引用类型（REFERENCE / APPENDAGE / APPENDAGES）, 精确匹配
+        if (Edit.Type.REFERENCE.name().equals(type) || Edit.Type.APPENDAGE.name().equals(type) || Edit.Type.APPENDAGES.name().equals(type)) {
+            wrapper.eq(column, value);
+            return;
+        }
+        // 数字类型（NUMBER）
+        if (Edit.Type.NUMBER.name().equals(type)) {
+            if (vague && value.contains(",")) {
+                String[] parts = value.split(",", 2);
+                String lo = parts[0].trim(), hi = parts[1].trim();
+                if (!lo.isEmpty()) wrapper.ge(column, new BigDecimal(lo));
+                if (!hi.isEmpty()) wrapper.le(column, new BigDecimal(hi));
+            } else {
+                wrapper.eq(column, new BigDecimal(value));
+            }
+            return;
+        }
+        // 选择类型（CHOICE）
+        if (Edit.Type.CHOICE.name().equals(type)) {
             ChoiceType.SelectType selectType = NovaFieldUtils.getChoiceSelectType(novaName, field);
             if (selectType == ChoiceType.SelectType.MULTI) {
-                List<String> vals = value != null && !value.isEmpty() ? Arrays.asList(value.split(",")) : List.of();
-                if (!vals.isEmpty()) wrapper.and(w -> {
+                List<String> vals = Arrays.asList(value.split(","));
+                if (!vals.isEmpty()) {
+                    wrapper.and(w -> {
+                        for (int i = 0; i < vals.size(); i++) {
+                            String v = vals.get(i).trim();
+                            if (i == 0) w.apply("FIND_IN_SET({0}, " + column + ") > 0", v);
+                            else w.or().apply("FIND_IN_SET({0}, " + column + ") > 0", v);
+                        }
+                    });
+                }
+            } else if (vague && value.contains(",")) {
+                wrapper.in(column, Arrays.asList(value.split(",")));
+            } else {
+                wrapper.eq(column, value);
+            }
+        }
+        // 标签类型（TAG）
+        if (Edit.Type.TAG.name().equals(type)) {
+            List<String> vals = Arrays.asList(value.split(","));
+            if (!vals.isEmpty()) {
+                wrapper.and(w -> {
                     for (int i = 0; i < vals.size(); i++) {
                         String v = vals.get(i).trim();
                         if (i == 0) w.apply("FIND_IN_SET({0}, " + column + ") > 0", v);
                         else w.or().apply("FIND_IN_SET({0}, " + column + ") > 0", v);
                     }
                 });
-            } else if (vague && value != null && value.contains(",")) {
-                wrapper.in(column, Arrays.asList(value.split(",")));
-            } else if (value != null && !value.isEmpty()) {
-                wrapper.eq(column, value);
             }
-        } else if (Edit.Type.NUMBER.name().equals(type)) {
-            if (vague && value != null && value.contains(",")) {
-                String[] parts = value.split(",", 2);
-                String lo = parts[0].trim(), hi = parts[1].trim();
-                if (!lo.isEmpty()) wrapper.ge(column, new BigDecimal(lo));
-                if (!hi.isEmpty()) wrapper.le(column, new BigDecimal(hi));
-            } else if (value != null && !value.isEmpty()) {
-                wrapper.eq(column, new BigDecimal(value));
-            }
-        } else if (Edit.Type.TAG.name().equals(type)) {
-            List<String> vals = value != null && !value.isEmpty() ? Arrays.asList(value.split(",")) : List.of();
-            if (!vals.isEmpty()) wrapper.and(w -> {
-                for (int i = 0; i < vals.size(); i++) {
-                    String v = vals.get(i).trim();
-                    if (i == 0) w.apply("FIND_IN_SET({0}, " + column + ") > 0", v);
-                    else w.or().apply("FIND_IN_SET({0}, " + column + ") > 0", v);
-                }
-            });
-        } else if (Edit.Type.BOOLEAN.name().equals(type)) {
-            if (value != null && !value.isEmpty()) wrapper.eq(column, Boolean.parseBoolean(value));
-        } else {
-            if (vague && value != null && !value.isEmpty()) wrapper.like(column, value);
-            else if (value != null && !value.isEmpty()) wrapper.eq(column, value);
         }
+        // 日期类型（DATE）
+        if (Edit.Type.DATE.name().equals(type)) {
+            String dateType = dateInfo != null ? dateInfo.getType().name() : "DATETIME";
+            if (vague && value.contains(",")) {
+                String[] parts = value.split(",", 2);
+                wrapper.ge(column, msToStr(parts[0], dateType))
+                        .le(column, msToStr(parts[1], dateType));
+            } else {
+                wrapper.eq(column, msToStr(value, dateType));
+            }
+            return;
+        }
+        // 布尔类型（BOOLEAN）
+        if (Edit.Type.BOOLEAN.name().equals(type)) {
+            wrapper.eq(column, Boolean.parseBoolean(value));
+            return;
+        }
+        log.warn("不自动匹配的组件类型：{}", type);
+        // 其他未知类型：静默忽略
     }
 
     private static String msToStr(String ms, String dateType) {
