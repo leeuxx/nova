@@ -23,12 +23,14 @@ public class Fetch {
     private List<OrderItemBean> orders = new ArrayList<>();
 
     @Comment("查询条件")
+    @Comment("key:属性名, value:查询条件详情")
     private Map<String, Search> conditions;
 
     @Comment("来源nova名称")
     private String novaName;
 
     @Comment("来源上下文信息")
+    @Comment("key:上下文属性名, value:上下文属性值")
     private Map<String, String> context;
 
     @Data

@@ -24,6 +24,7 @@ public class PromptSearch {
     private String novaName;
 
     @Comment("来源上下文信息")
+    @Comment("key:上下文属性名, value:上下文属性值")
     private Map<String, String> context;
 
     @Data

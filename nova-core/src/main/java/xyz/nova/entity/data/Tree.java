@@ -12,14 +12,15 @@ import java.util.Map;
 @Accessors(chain = true)
 public class Tree {
 
+    @Comment("排序")
+    private List<OrderItemBean> orders = new ArrayList<>();
+
     @Comment("来源nova名称")
     private String novaName;
 
     @Comment("来源上下文信息")
+    @Comment("key:上下文属性名, value:上下文属性值")
     private Map<String, String> context;
-
-    @Comment("排序")
-    private List<OrderItemBean> orders = new ArrayList<>();
 
     @Comment("操作类关联值")
     private String operateValue;
