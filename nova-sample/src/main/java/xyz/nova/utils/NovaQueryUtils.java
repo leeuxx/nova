@@ -155,7 +155,10 @@ public class NovaQueryUtils {
     @Data
     @Accessors(chain = true)
     public static class Result<T> {
+
         private Page<T> page;
+
         private LambdaQueryWrapper<T> wrapper;
+
     }
 }
