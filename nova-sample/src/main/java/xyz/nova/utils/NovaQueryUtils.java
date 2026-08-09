@@ -3,12 +3,13 @@ package xyz.nova.utils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.Data;
+import lombok.experimental.Accessors;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.edit.ChoiceType;
 import xyz.nova.entity.data.Fetch;
+import xyz.nova.entity.data.OrderItemBean;
 import xyz.nova.entity.data.Tree;
-import lombok.Data;
-import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -43,7 +44,7 @@ public class NovaQueryUtils {
                     dateMap.get(field)
             ));
         }
-        List<Fetch.OrderItemBean> orders = fetch.getOrders();
+        List<OrderItemBean> orders = fetch.getOrders();
         if (orders != null && !orders.isEmpty()) {
             orders.forEach(o -> {
                 if (o.isAsc()) wrapper.orderByAsc(o.getColumn());
@@ -69,7 +70,7 @@ public class NovaQueryUtils {
     public static <T> LambdaQueryWrapper<T> buildWrapper(Class<?> viewClass, Tree tree) {
         String novaName = viewClass.getSimpleName();
         QueryWrapper<T> wrapper = new QueryWrapper<>();
-        List<Tree.OrderItemBean> orders = tree.getOrders();
+        List<OrderItemBean> orders = tree.getOrders();
         if (orders != null && !orders.isEmpty()) {
             orders.forEach(o -> {
                 if (o.isAsc()) wrapper.orderByAsc(o.getColumn());

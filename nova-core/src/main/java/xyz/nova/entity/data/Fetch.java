@@ -1,10 +1,9 @@
 package xyz.nova.entity.data;
 
-import xyz.nova.annotation.comment.Comment;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import xyz.nova.annotation.comment.Comment;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +19,7 @@ public class Fetch {
     private long size = 10;
 
     @Comment("排序")
-    private List<OrderItemBean> orders = new ArrayList<>();
+    private List<OrderItemBean> orders;
 
     @Comment("查询条件")
     @Comment("key:属性名, value:查询条件详情")
@@ -46,17 +45,6 @@ public class Fetch {
         @Comment("是否高级查询")
         private Boolean vague;
 
-    }
-
-    @Data
-    @Accessors(chain = true)
-    public static class OrderItemBean {
-
-        @Comment("需要进行排序的字段")
-        private String column;
-
-        @Comment("是否正序排列，默认 true")
-        private boolean asc = true;
     }
 
     @Data

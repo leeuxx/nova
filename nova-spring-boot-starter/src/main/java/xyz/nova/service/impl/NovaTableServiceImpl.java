@@ -1,23 +1,20 @@
 package xyz.nova.service.impl;
 
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import xyz.nova.annotation.sub.nova.TreeType;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.edit.ButtonHandle;
 import xyz.nova.annotation.sub.nova.field.view.PopHandler;
 import xyz.nova.annotation.sub.nova.row.OperationHandler;
 import xyz.nova.annotation.sub.nova.row.RowOperation;
+import xyz.nova.dto.*;
 import xyz.nova.dto.page.PageBean;
-import xyz.nova.entity.data.Details;
-import xyz.nova.entity.data.Fetch;
-import xyz.nova.entity.data.PromptSearch;
-import xyz.nova.entity.data.Tree;
+import xyz.nova.entity.data.*;
 import xyz.nova.service.NovaTableService;
 import xyz.nova.service.data.DataProxy;
-import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import xyz.nova.dto.*;
 import xyz.nova.utils.*;
 
 import java.util.*;
@@ -350,7 +347,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         String novaName = novaTableData.getNovaName();
         PageBean<Map<String, Object>> pageBean = novaTableData.getPageBean();
         Map<String, NovaTableData.Search> conditions = novaTableData.getConditions();
-        List<PageBean.OrderItemBean> orders = pageBean.getOrders();
+        List<OrderItemBean> orders = pageBean.getOrders();
         // 搜索条件
         Map<String, Fetch.Search> requestConditions = new LinkedHashMap<>();
         if (conditions != null) {
@@ -359,10 +356,10 @@ public class NovaTableServiceImpl implements NovaTableService {
             ));
         }
         // 排序
-        List<Fetch.OrderItemBean> requestOrders = new ArrayList<>();
+        List<OrderItemBean> requestOrders = new ArrayList<>();
         if (orders != null && !orders.isEmpty()) {
             orders.forEach(o -> requestOrders.add(
-                    new Fetch.OrderItemBean().setColumn(MixUtils.camelToSnake(o.getColumn())).setAsc(o.isAsc())
+                    new OrderItemBean().setColumn(MixUtils.camelToSnake(o.getColumn())).setAsc(o.isAsc())
             ));
         }
         // 构造请求
@@ -650,11 +647,11 @@ public class NovaTableServiceImpl implements NovaTableService {
     @Override
     public NovaTableTree.Vo tree(NovaTableTree novaTableTree) {
         // 排序
-        List<NovaTableTree.OrderItemBean> orders = novaTableTree.getOrders();
-        List<Tree.OrderItemBean> requestOrders = new ArrayList<>();
+        List<OrderItemBean> orders = novaTableTree.getOrders();
+        List<OrderItemBean> requestOrders = new ArrayList<>();
         if (orders != null && !orders.isEmpty()) {
             orders.forEach(o -> requestOrders.add(
-                    new Tree.OrderItemBean().setColumn(MixUtils.camelToSnake(o.getColumn())).setAsc(o.isAsc())
+                    new OrderItemBean().setColumn(MixUtils.camelToSnake(o.getColumn())).setAsc(o.isAsc())
             ));
         }
         Tree.Vo<?> tree = ((DataProxy) DataProxyUtils.getDataProxy(novaTableTree.getNovaName())).tree(new Tree()

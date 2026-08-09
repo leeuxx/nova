@@ -1,10 +1,9 @@
 package xyz.nova.entity.data;
 
-import xyz.nova.annotation.comment.Comment;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import xyz.nova.annotation.comment.Comment;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +12,7 @@ import java.util.Map;
 public class Tree {
 
     @Comment("排序")
-    private List<OrderItemBean> orders = new ArrayList<>();
+    private List<OrderItemBean> orders;
 
     @Comment("来源nova名称")
     private String novaName;
@@ -24,17 +23,6 @@ public class Tree {
 
     @Comment("操作类关联值")
     private String operateValue;
-
-    @Data
-    @Accessors(chain = true)
-    public static class OrderItemBean {
-
-        @Comment("需要进行排序的字段")
-        private String column;
-
-        @Comment("是否正序排列，默认 true")
-        private boolean asc = true;
-    }
 
     @Data
     @Accessors(chain = true)
