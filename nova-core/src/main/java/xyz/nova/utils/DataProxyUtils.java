@@ -256,7 +256,7 @@ public class DataProxyUtils {
             }
             targetField.setAccessible(true);
             try {
-                targetField.set(searchObj, convertConditionValue(targetField, value.trim()));
+                targetField.set(searchObj, convertConditionValue(targetField, value));
             } catch (IllegalAccessException e) {
                 throw new NovaException("查询条件类属性赋值失败: " + condKey);
             }
@@ -279,7 +279,7 @@ public class DataProxyUtils {
             if (array.size() != 1) {
                 throw new NovaException("标量字段收到多个查询值: " + field.getName());
             }
-            return array.get(0) == null ? null : convertConditionScalar(String.valueOf(array.get(0)), field.getType());
+            return JSONUtil.isNull(array.get(0)) ? null : convertConditionScalar(String.valueOf(array.get(0)), field.getType());
         }
         Class<?> itemType = null;
         Type genericType = field.getGenericType();
@@ -293,7 +293,7 @@ public class DataProxyUtils {
         }
         List<Object> list = new ArrayList<>(array.size());
         for (Object element : array) {
-            list.add(element == null ? null : convertConditionScalar(String.valueOf(element), itemType));
+            list.add(JSONUtil.isNull(element) ? null : convertConditionScalar(String.valueOf(element), itemType));
         }
         return list;
     }
