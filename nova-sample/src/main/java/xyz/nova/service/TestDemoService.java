@@ -53,7 +53,8 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     public Fetch.Vo<TestDemoView> fetch(Fetch fetch) {
         NovaQueryUtils.Result<TestDemo> testDemoResult = NovaQueryUtils.buildWrapper(TestDemoView.class, fetch);
         Page<TestDemo> page = testDemoResult.getPage();
-        LambdaQueryWrapper<TestDemo> wrapper = testDemoResult.getWrapper().isNull(TestDemo::getParentId);
+        LambdaQueryWrapper<TestDemo> wrapper = testDemoResult.getWrapper();
+        //wrapper.isNull(TestDemo::getParentId);
         IPage<TestDemo> iPage = page(page, wrapper);
         List<TestDemo> records = iPage.getRecords();
         List<Long> demo2IdList = records.stream().map(TestDemo::getDemo2Id).filter(Objects::nonNull).toList();

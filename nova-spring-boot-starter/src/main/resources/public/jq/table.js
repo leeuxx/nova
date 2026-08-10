@@ -244,7 +244,7 @@ window.NovaTableJQ = (function ($) {
         for (var rfKey in refMap) {
           var rf = refMap[rfKey] || {}
           if (rf.isThisObj === true) {
-            target.treeParentField = rf.referenceField || ''
+            target.treeParentField = rfKey
             target.treeStorageField = rf.storageField || ''
             break
           }
@@ -1061,7 +1061,7 @@ window.NovaTableJQ = (function ($) {
         for (var rfKey in refMap2) {
           var rf = refMap2[rfKey] || {}
           if (rf.isThisObj === true) {
-            target.treeParentField = rf.referenceField || ''
+            target.treeParentField = rfKey
             target.treeStorageField = rf.storageField || ''
             break
           }

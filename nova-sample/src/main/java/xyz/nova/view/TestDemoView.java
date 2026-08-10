@@ -250,7 +250,7 @@ public class TestDemoView {
                     title = "上级信息",
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(
-                            ref = "testDemoView",
+                            ref = "parentId",
                             tapShow = true
                     ),
                     search = @Search

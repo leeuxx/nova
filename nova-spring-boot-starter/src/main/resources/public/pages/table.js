@@ -2839,7 +2839,7 @@ const NovaTable = {
             for (var rfKey in refMap) {
               var rf = refMap[rfKey] || {}
               if (rf.isThisObj === true) {
-                treeParentField = rf.referenceField || ''
+                treeParentField = rfKey
                 treeStorageField = rf.storageField || ''
                 break
               }
