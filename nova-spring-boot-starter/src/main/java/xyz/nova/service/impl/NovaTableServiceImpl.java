@@ -349,11 +349,9 @@ public class NovaTableServiceImpl implements NovaTableService {
         Map<String, NovaTableData.Search> conditions = novaTableData.getConditions();
         List<OrderItemBean> orders = pageBean.getOrders();
         // 搜索条件
-        Map<String, Fetch.Search> requestConditions = new LinkedHashMap<>();
+        Map<String, String> requestConditions = new LinkedHashMap<>();
         if (conditions != null) {
-            conditions.forEach((field, search) -> requestConditions.put(field,
-                    new Fetch.Search().setValue(search.getValue()).setVague(search.getVague())
-            ));
+            conditions.forEach((field, search) -> requestConditions.put(field, search.getValue()));
         }
         // 排序
         List<OrderItemBean> requestOrders = new ArrayList<>();
@@ -366,7 +364,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         Fetch queryRequest = new Fetch()
                 .setCurrent(pageBean.getCurrent())
                 .setSize(pageBean.getSize())
-                .setConditions(requestConditions)
+                .setCondition(DataProxyUtils.mapToSearchObj(novaName, requestConditions))
                 .setOrders(requestOrders)
                 .setNovaName(novaTableData.getSourceNovaName())
                 .setContext(novaTableData.getSourceFields());

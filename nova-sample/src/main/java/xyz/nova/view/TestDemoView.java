@@ -18,6 +18,7 @@ import xyz.nova.service.authority.RowAuthExpr;
 import xyz.nova.utils.VoidDataProxy;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import xyz.nova.view.query.TestDemoQuery;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,6 +37,7 @@ import java.time.LocalDateTime;
                 label = "name"
         ),
         dataProxy = TestDemoService.class,
+        searchClass = TestDemoQuery.class,
         rowOperation = {
                 @RowOperation(
                         title = "下发指令",

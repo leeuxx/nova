@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +37,7 @@ public class NovaQueryUtils {
     public static <T> Result<T> buildWrapper(Class<?> viewClass, Fetch fetch) {
         String novaName = viewClass.getSimpleName();
         QueryWrapper<T> wrapper = new QueryWrapper<>();
-        Map<String, Fetch.Search> conditions = fetch.getConditions();
+        Map<String, String> conditions = new LinkedHashMap<>();
         if (conditions != null) {
             Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
             NovaApplication.ScanNova scanNova = scanNovas.get(novaName);
@@ -45,13 +46,18 @@ public class NovaQueryUtils {
             }
             Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
             Map<String, NovaFieldUtils.DateInfo> dateMap = NovaFieldUtils.getDate(novaName);
-            conditions.forEach((field, search) -> {
-                NovaApplication.ScanNova.NovaFieldInfo novaFieldInfo = novaFields.get(field);
-                applyCondition(wrapper, novaName, field,
-                        MixUtils.camelToSnake(field),
-                        search.getValue(), novaFieldInfo == null ? null : novaFieldInfo.getType(),
-                        Boolean.TRUE.equals(search.getVague()),
-                        dateMap.get(field));
+            conditions.forEach((key, value) -> {
+                NovaApplication.ScanNova.NovaFieldInfo novaFieldInfo = novaFields.get(key);
+                boolean vague = false;
+                Edit.Type type = null;
+                if (novaFieldInfo != null) {
+                    vague = novaFieldInfo.getNovaField().edit().search().vague();
+                    type = novaFieldInfo.getType();
+                }
+                applyCondition(wrapper, novaName, key,
+                        MixUtils.camelToSnake(key),
+                        value, type, vague,
+                        dateMap.get(key));
             });
         }
         List<OrderItemBean> orders = fetch.getOrders();

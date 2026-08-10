@@ -1,13 +1,20 @@
 package xyz.nova.utils;
 
-import xyz.nova.annotation.NovaField;
-import xyz.nova.service.data.DataProxy;
-import xyz.nova.annotation.sub.nova.field.edit.LinkTargetType;
-import xyz.nova.config.NovaApplication;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONUtil;
 import lombok.SneakyThrows;
 import org.springframework.core.convert.ConversionService;
+import xyz.nova.annotation.NovaField;
+import xyz.nova.annotation.sub.nova.field.Edit;
+import xyz.nova.annotation.sub.nova.field.edit.LinkTargetType;
+import xyz.nova.annotation.sub.nova.field.edit.Search;
+import xyz.nova.config.NovaApplication;
+import xyz.nova.error.NovaException;
+import xyz.nova.service.data.DataProxy;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -192,4 +199,123 @@ public class DataProxyUtils {
         }
         return result;
     }
+
+    /**
+     * 查询条件转换为查询条件构造类
+     *
+     * @param novaName   Nova类名
+     * @param conditions 查询条件
+     * @return 查询条件构造对象
+     */
+    public static Object mapToSearchObj(String novaName, Map<String, String> conditions) {
+        if (conditions == null || conditions.isEmpty()) {
+            return null;
+        }
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(novaName);
+        if (scanNova == null) {
+            return null;
+        }
+        Class<?> searchClass = scanNova.getNova().searchClass();
+        if (searchClass == void.class) {
+            return null;
+        }
+        Object searchObj;
+        try {
+            searchObj = searchClass.getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new NovaException("查询条件类实例化失败: " + searchClass.getName());
+        }
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        for (Map.Entry<String, NovaApplication.ScanNova.NovaFieldInfo> entry : novaFields.entrySet()) {
+            NovaApplication.ScanNova.NovaFieldInfo novaFieldInfo = entry.getValue();
+            NovaField novaField = novaFieldInfo.getNovaField();
+            Edit edit = novaField.edit();
+            Search search = edit.search();
+            if (!search.value()) {
+                continue;
+            }
+            Edit.Type type = novaFieldInfo.getType();
+            // 查询条件键：REFERENCE 组件使用 ref 值作为键，APPENDAGE/APPENDAGES 使用主表 by 值作为键（附属对象存主表外键，前端以主表 by 为 key 发送）
+            String condKey = entry.getKey();
+            if (Edit.Type.REFERENCE.equals(type)) {
+                condKey = edit.referenceType().ref();
+            } else if (Edit.Type.APPENDAGE.equals(type) || Edit.Type.APPENDAGES.equals(type)) {
+                condKey = edit.appendageType().by();
+            }
+            String value = conditions.get(condKey);
+            if (value == null || value.isBlank()) {
+                continue;
+            }
+            Field targetField;
+            try {
+                targetField = searchClass.getDeclaredField(condKey);
+            } catch (NoSuchFieldException e) {
+                // 查询条件类未声明该字段，则不入查询实体（LINK/APPENDAGE 等跨表条件由开发决定是否建模）
+                continue;
+            }
+            targetField.setAccessible(true);
+            try {
+                targetField.set(searchObj, convertConditionValue(targetField, value.trim()));
+            } catch (IllegalAccessException e) {
+                throw new NovaException("查询条件类属性赋值失败: " + condKey);
+            }
+        }
+        return searchObj;
+    }
+
+    /**
+     * 将查询条件值（JSON 数组字符串）按字段声明类型转换为对象属性值
+     * List 属性逐元素转换，标量属性仅接受单个元素，多元素时报错
+     */
+    private static Object convertConditionValue(Field field, String value) {
+        JSONArray array;
+        try {
+            array = JSONUtil.parseArray(value);
+        } catch (Exception e) {
+            throw new NovaException("查询条件值不是合法的数组字符串: " + value);
+        }
+        if (!List.class.isAssignableFrom(field.getType())) {
+            if (array.size() != 1) {
+                throw new NovaException("标量字段收到多个查询值: " + field.getName());
+            }
+            return array.get(0) == null ? null : convertConditionScalar(String.valueOf(array.get(0)), field.getType());
+        }
+        Class<?> itemType = null;
+        Type genericType = field.getGenericType();
+        if (genericType instanceof ParameterizedType parameterizedType
+                && parameterizedType.getActualTypeArguments().length == 1
+                && parameterizedType.getActualTypeArguments()[0] instanceof Class<?> clz) {
+            itemType = clz;
+        }
+        if (itemType == null) {
+            throw new NovaException("查询条件类字段缺少泛型参数: " + field.getName());
+        }
+        List<Object> list = new ArrayList<>(array.size());
+        for (Object element : array) {
+            list.add(element == null ? null : convertConditionScalar(String.valueOf(element), itemType));
+        }
+        return list;
+    }
+
+    /**
+     * 将字符串转为标量类型，日期类型为 ms 时间戳字符串，其余交给 Spring ConversionService
+     */
+    private static Object convertConditionScalar(String value, Class<?> type) {
+        if (type == LocalDateTime.class) {
+            return Instant.ofEpochMilli(Long.parseLong(value)).atZone(ZoneId.systemDefault()).toLocalDateTime();
+        }
+        if (type == LocalDate.class) {
+            return Instant.ofEpochMilli(Long.parseLong(value)).atZone(ZoneId.systemDefault()).toLocalDate();
+        }
+        if (type == Date.class) {
+            return new Date(Long.parseLong(value));
+        }
+        ConversionService cs = SpringBeanUtils.getBean(ConversionService.class);
+        if (cs.canConvert(String.class, type)) {
+            return cs.convert(value, type);
+        }
+        throw new NovaException("无法转换查询条件值: " + value + " -> " + type.getName());
+    }
+
 }

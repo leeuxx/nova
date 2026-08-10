@@ -421,17 +421,19 @@ window.NovaTableJQ = (function ($) {
       if (val === null || val === undefined || val === '') return
       if (Array.isArray(val) && val.every(function(v){ return v === null || v === undefined })) return
       if (Array.isArray(val) && val.length === 0) return
-      var strVal
+      var arr
       if (fieldDef.type === 'NUMBER' && fieldDef.vague) {
-        var lo = (val[0] === null || val[0] === undefined) ? '' : String(val[0])
-        var hi = (val[1] === null || val[1] === undefined) ? '' : String(val[1])
-        if (!lo && !hi) return
-        strVal = lo + ',' + hi
-      } else if (fieldDef.type === 'DATE') {
-        strVal = Array.isArray(val) ? val.join(',') : String(val)
+        var lo = (val[0] === null || val[0] === undefined) ? null : String(val[0])
+        var hi = (val[1] === null || val[1] === undefined) ? null : String(val[1])
+        if (lo === null && hi === null) return
+        arr = [lo, hi]
+      } else if (Array.isArray(val)) {
+        arr = val.map(function(v){ return v === null || v === undefined ? null : String(v) })
       } else {
-        strVal = Array.isArray(val) ? val.join(',') : String(val)
+        arr = [String(val)]
       }
+      // 条件值统一为 JSON 数组字符串，后端据此还原标量或 List；元素先转 String（避免数字转科学计数法），空段保留为 null
+      var strVal = JSON.stringify(arr)
       // LINK 字段：作为跨表条件放入 conditions；key 即 search 下的字段名，后端据此反查关联表
       if (fieldDef.type === 'LINK') {
         conditions[fieldDef.field] = { value: strVal, vague: fieldDef.vague || false }
@@ -448,10 +450,16 @@ window.NovaTableJQ = (function ($) {
         var appInfo = (target.appendageMap && target.appendageMap[fieldDef.field]) || {}
         actualField = appInfo.storageField || fieldDef.field
       }
-      conditions[actualField] = {
-        value: strVal,
-        ext: (target.choiceMap && target.choiceMap[fieldDef.field] && target.choiceMap[fieldDef.field].selectType) || '',
-        vague: fieldDef.vague || false
+      // 反向映射字段（APPENDAGE/APPENDAGES 的 by、REFERENCE 的 ref）可能落到同一键：已存在则数组合并
+      var existingCond = conditions[actualField]
+      if (existingCond) {
+        existingCond.value = JSON.stringify(JSON.parse(existingCond.value).concat(arr))
+      } else {
+        conditions[actualField] = {
+          value: strVal,
+          ext: (target.choiceMap && target.choiceMap[fieldDef.field] && target.choiceMap[fieldDef.field].selectType) || '',
+          vague: fieldDef.vague || false
+        }
       }
     })
     var pageBean = {
@@ -463,13 +471,13 @@ window.NovaTableJQ = (function ($) {
     // tapSearch 字段：注入 tab 选中值到 conditions
     var tsf = target.tapSearchField
     if (tsf && target.tapSearchValue != null) {
-      conditions[tsf.field] = { value: String(target.tapSearchValue), ext: 'SINGLE', vague: false }
+      conditions[tsf.field] = { value: JSON.stringify([String(target.tapSearchValue)]), ext: 'SINGLE', vague: false }
     }
     // embedded 模式：把 _sourceRefFields 中的 referenceField 注入 conditions
     var sourceRefFields = target._sourceRefFields || []
     sourceRefFields.forEach(function(rf) {
       if (rf.referenceField && rf.value != null && rf.value !== '') {
-        conditions[rf.referenceField] = { value: String(rf.value), ext: '', vague: false }
+        conditions[rf.referenceField] = { value: JSON.stringify([String(rf.value)]), ext: '', vague: false }
       }
     })
     window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, pageBean: pageBean, conditions: conditions }, window.__novaMenuCode(queryName)).then(function (resp) {

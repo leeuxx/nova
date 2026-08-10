@@ -22,8 +22,7 @@ public class Fetch {
     private List<OrderItemBean> orders;
 
     @Comment("查询条件")
-    @Comment("key:属性名, value:查询条件详情")
-    private Map<String, Search> conditions;
+    private Object condition;
 
     @Comment("来源nova名称")
     private String novaName;
@@ -31,18 +30,6 @@ public class Fetch {
     @Comment("来源上下文信息")
     @Comment("key:上下文属性名, value:上下文属性值")
     private Map<String, String> context;
-
-    @Data
-    @Accessors(chain = true)
-    public static class Search {
-
-        @Comment("属性值")
-        private String value;
-
-        @Comment("是否高级查询")
-        private Boolean vague;
-
-    }
 
     @Data
     @Accessors(chain = true)
