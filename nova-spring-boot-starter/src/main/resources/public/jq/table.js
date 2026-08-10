@@ -256,12 +256,10 @@ window.NovaTableJQ = (function ($) {
           target.paginationConfig.showNext = true
           target.paginationConfig.showPageSize = true
         }
-        // 从主表 currentRow 直接构建 conditions（兜底：_sourceRefFields 为空时使用）
-        // 注意：这里只是先准备 _sourceFields 和 _sourceNovaName，_embConditions 在 sourceRefFields 构建完后才计算
         target._sourceFields = embSourceFields || {}
         target._sourceNovaName = sourceNovaName || novaName
-        // consumedKeys: 记录已被 REFERENCE / LINK_TARGET 匹配消费掉的 sourceField key，
-        // 剩余的 key 由 drill 兜底逻辑以 TEXT 类型注入条件
+        // consumedKeys: 记录已被 refMap 匹配消费掉的 sourceField key，
+        // 剩余的 key（LINK_TARGET 的 thisReferenceField / drill 的 joinColumn）直接用 key 本身作为条件列
         var consumedKeys = []
         if (embSourceFields && Object.keys(embSourceFields).length > 0) {
           var sourceKeys = Object.keys(embSourceFields)
@@ -274,10 +272,16 @@ window.NovaTableJQ = (function ($) {
             if (sourceKeys.indexOf(refInfo.storageField) !== -1) {
               hiddenRefNovas.push(refInfo.referenceName)
               consumedKeys.push(refInfo.storageField)
-              sourceRefFields.push({ field: f.field, type: 'REFERENCE', referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
+              sourceRefFields.push({ field: f.field, referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
               return false
             }
             return true
+          })
+          // 未命中 refMap 的 source key 直接作为条件列（类型由后端按字段注解适配）
+          sourceKeys.forEach(function(k) {
+            if (embSourceFields[k] != null && consumedKeys.indexOf(k) === -1) {
+              sourceRefFields.push({ field: k, referenceField: k, value: String(embSourceFields[k]) })
+            }
           })
           target._sourceRefFields = sourceRefFields
           // 同步过滤搜索条件中的外键 REFERENCE 字段
@@ -293,53 +297,6 @@ window.NovaTableJQ = (function ($) {
           target.editReferenceTabs = target.editReferenceTabs.filter(function(tab) {
             return hiddenRefNovas.indexOf(tab.tapNovaName) === -1
           })
-        }
-        // 处理 LINK_TARGET 嵌入过滤：sourceFields 中有 FK 列名时注入为过滤条件
-        if (embSourceFields && Object.keys(embSourceFields).length > 0) {
-          var linkTargetInfo = resp.data.linkTarget || {}
-          var existingRefFields = target._sourceRefFields || []
-          var ltFields = [linkTargetInfo.thisReferenceField, linkTargetInfo.linkReferenceField]
-          ltFields.forEach(function(refField) {
-            if (refField && embSourceFields[refField] != null) {
-              if (consumedKeys.indexOf(refField) === -1) consumedKeys.push(refField)
-              existingRefFields.push({ field: refField, type: 'LINK_TARGET', referenceField: refField, value: embSourceFields[refField] })
-            }
-          })
-          target._sourceRefFields = existingRefFields
-        }
-        // drill / 兜底：对未匹配 REFERENCE / LINK_TARGET 的 source key，
-        // 直接以 TEXT 类型注入条件（drill 的 joinColumn 不过 refMap 映射）
-        if (target._sourceRefFields && embSourceFields && Object.keys(embSourceFields).length > 0) {
-          var _srfs = target._sourceRefFields
-          sourceKeys.forEach(function(k) {
-            if (embSourceFields[k] != null && consumedKeys.indexOf(k) === -1) {
-              _srfs.push({ field: k, type: 'TEXT', referenceField: k, value: String(embSourceFields[k]) })
-            }
-          })
-        }
-        // 从主表 currentRow 直接构建 _embConditions（兜底：_sourceRefFields 为空时使用）
-        if (sourceNovaName && embSourceFields && Object.keys(embSourceFields).length > 0) {
-          var parentVm2 = window.vmMap && window.vmMap[sourceNovaName]
-          if (parentVm2 && parentVm2.currentRow) {
-            var embConditions = {}
-            var finalRefFields = target._sourceRefFields || []
-            // 用 _sourceRefFields 映射好的 referenceField 构建 conditions
-            finalRefFields.forEach(function(rf) {
-              if (rf.referenceField && rf.value != null && rf.value !== '') {
-                embConditions[rf.referenceField] = { value: String(rf.value), type: 'TEXT', ext: '', vague: false }
-              }
-            })
-            // 如果 _sourceRefFields 为空，兜底用 sourceField key 直接当条件
-            if (Object.keys(embConditions).length === 0) {
-              Object.keys(embSourceFields).forEach(function(sfKey) {
-                var sfVal = embSourceFields[sfKey]
-                if (sfVal != null && sfVal !== '') {
-                  embConditions[sfKey] = { value: String(sfVal), type: 'TEXT', ext: '', vague: false }
-                }
-              })
-            }
-            target._embConditions = embConditions
-          }
         }
         // LINK embedded 模式：子组件 build 完成后，把 linkTarget 等元数据同步到父组件 linkTabBuild
         if (sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField) {
@@ -367,7 +324,7 @@ window.NovaTableJQ = (function ($) {
               target._sourceFields = refVal != null ? { [lt.thisReferenceField]: String(refVal) } : {}
               var srf = []
               if (refVal != null) {
-                srf.push({ field: lt.thisReferenceField, type: 'LINK_TARGET', referenceField: lt.thisReferenceField, value: String(refVal) })
+                srf.push({ field: lt.thisReferenceField, referenceField: lt.thisReferenceField, value: String(refVal) })
               }
               target._sourceRefFields = srf
               loadData(key)
@@ -475,9 +432,9 @@ window.NovaTableJQ = (function ($) {
       } else {
         strVal = Array.isArray(val) ? val.join(',') : String(val)
       }
-      // LINK 字段：作为跨表条件放入 conditions，用 type=LINK 标记；key 即 search 下的字段名，后端据此反查关联表
+      // LINK 字段：作为跨表条件放入 conditions；key 即 search 下的字段名，后端据此反查关联表
       if (fieldDef.type === 'LINK') {
-        conditions[fieldDef.field] = { value: strVal, type: 'LINK', vague: fieldDef.vague || false }
+        conditions[fieldDef.field] = { value: strVal, vague: fieldDef.vague || false }
         return
       }
       // REFERENCE 字段：使用 referenceField 作为实际查询字段
@@ -493,7 +450,6 @@ window.NovaTableJQ = (function ($) {
       }
       conditions[actualField] = {
         value: strVal,
-        type: fieldDef.type || '',
         ext: (target.choiceMap && target.choiceMap[fieldDef.field] && target.choiceMap[fieldDef.field].selectType) || '',
         vague: fieldDef.vague || false
       }
@@ -507,19 +463,15 @@ window.NovaTableJQ = (function ($) {
     // tapSearch 字段：注入 tab 选中值到 conditions
     var tsf = target.tapSearchField
     if (tsf && target.tapSearchValue != null) {
-      conditions[tsf.field] = { value: String(target.tapSearchValue), type: tsf.type || 'CHOICE', ext: 'SINGLE', vague: false }
+      conditions[tsf.field] = { value: String(target.tapSearchValue), ext: 'SINGLE', vague: false }
     }
     // embedded 模式：把 _sourceRefFields 中的 referenceField 注入 conditions
     var sourceRefFields = target._sourceRefFields || []
     sourceRefFields.forEach(function(rf) {
       if (rf.referenceField && rf.value != null && rf.value !== '') {
-        conditions[rf.referenceField] = { value: String(rf.value), type: 'TEXT', ext: '', vague: false }
+        conditions[rf.referenceField] = { value: String(rf.value), ext: '', vague: false }
       }
     })
-    // embedded 模式兜底：从主表 currentRow 直接拿字段值当 conditions
-    if (Object.keys(conditions).length === 0 && target._embConditions && Object.keys(target._embConditions).length > 0) {
-      Object.assign(conditions, target._embConditions)
-    }
     window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, pageBean: pageBean, conditions: conditions }, window.__novaMenuCode(queryName)).then(function (resp) {
       var t = window.vmMap && window.vmMap[vmKey]
       if (!t) return

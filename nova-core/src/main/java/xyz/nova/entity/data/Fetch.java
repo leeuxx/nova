@@ -39,9 +39,6 @@ public class Fetch {
         @Comment("属性值")
         private String value;
 
-        @Comment("属性类型")
-        private String type;
-
         @Comment("是否高级查询")
         private Boolean vague;
 

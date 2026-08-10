@@ -1216,8 +1216,8 @@ const NovaTable = {
         target._sourceFields = embSourceFields
         var sourceKeys = Object.keys(embSourceFields)
         var sourceRefFields = []
-        // consumedKeys: 记录已被 REFERENCE / LINK_TARGET 匹配消费的 source key，
-        // 防止 TEXT 兜底重复添加（与 buildTable 逻辑一致）
+        // consumedKeys: 记录已被 refMap 匹配消费掉的 sourceField key，
+        // 剩余的 key（LINK_TARGET 的 thisReferenceField / drill 的 joinColumn）直接用 key 本身作为条件列
         var consumedKeys = []
         if (sourceKeys.length > 0) {
           // 使用 referenceMap（与 buildTable 一致）而非 editFields 做匹配，
@@ -1227,25 +1227,14 @@ const NovaTable = {
             var refInfo = refMap[field]
             if (refInfo.storageField && sourceKeys.includes(refInfo.storageField)) {
               consumedKeys.push(refInfo.storageField)
-              sourceRefFields.push({ field: field, type: 'REFERENCE', referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
+              sourceRefFields.push({ field: field, referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
             }
           })
         }
-        var linkInfo = target.linkTargetInfo
-        if (linkInfo && sourceKeys.length > 0) {
-          var ltFields = [linkInfo.thisReferenceField, linkInfo.linkReferenceField]
-          ltFields.forEach(function(refField) {
-            if (refField && embSourceFields[refField] != null && consumedKeys.indexOf(refField) === -1) {
-              consumedKeys.push(refField)
-              sourceRefFields.push({ field: refField, type: 'LINK_TARGET', referenceField: refField, value: embSourceFields[refField] })
-            }
-          })
-        }
-        // drill / 兜底：对未匹配 REFERENCE / LINK_TARGET 的 source key，
-        // 直接以 TEXT 类型注入条件（drill 的 joinColumn 不过 refMap 映射）
+        // 未命中 refMap 的 source key 直接作为条件列（类型由后端按字段注解适配）
         sourceKeys.forEach(function(k) {
           if (embSourceFields[k] != null && consumedKeys.indexOf(k) === -1) {
-            sourceRefFields.push({ field: k, type: 'TEXT', referenceField: k, value: String(embSourceFields[k]) })
+            sourceRefFields.push({ field: k, referenceField: k, value: String(embSourceFields[k]) })
           }
         })
         target._sourceRefFields = sourceRefFields
@@ -3306,24 +3295,23 @@ const NovaTable = {
       target._sourceFields = embSourceFields
       var sourceKeys = Object.keys(embSourceFields)
       var sourceRefFields = []
+      var consumedKeys = []
       if (sourceKeys.length > 0) {
         var refMap = target.referenceMap || {}
         for (var field in refMap) {
           var refInfo = refMap[field]
           if (refInfo.storageField && sourceKeys.indexOf(refInfo.storageField) !== -1) {
-            sourceRefFields.push({ field: field, type: 'REFERENCE', referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
+            consumedKeys.push(refInfo.storageField)
+            sourceRefFields.push({ field: field, referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
           }
         }
       }
-      var linkInfo = target.linkTargetInfo
-      if (linkInfo && sourceKeys.length > 0) {
-        var ltFields = [linkInfo.thisReferenceField, linkInfo.linkReferenceField]
-        ltFields.forEach(function(refField) {
-          if (refField && embSourceFields[refField] != null && !sourceRefFields.some(function(s) { return s.field === refField })) {
-            sourceRefFields.push({ field: refField, type: 'LINK_TARGET', referenceField: refField, value: embSourceFields[refField] })
-          }
-        })
-      }
+      // 未命中 refMap 的 source key 直接作为条件列（LINK_TARGET / drill joinColumn）
+      sourceKeys.forEach(function(k) {
+        if (embSourceFields[k] != null && consumedKeys.indexOf(k) === -1) {
+          sourceRefFields.push({ field: k, referenceField: k, value: String(embSourceFields[k]) })
+        }
+      })
       target._sourceRefFields = sourceRefFields
     },
     reloadDual(novaName, sourceFields) {

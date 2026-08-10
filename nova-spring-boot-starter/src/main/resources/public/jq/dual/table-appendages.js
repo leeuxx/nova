@@ -38,28 +38,23 @@ window.NovaDualAppendagesJQ = (function () {
     target._sourceFields = embSourceFields
     var sourceKeys = Object.keys(embSourceFields)
     var sourceRefFields = []
-
-    // drill 类型：直接用 joinColumn 作为 referenceField（不经 refMap 映射）
-    var sub = (hostVm.dualTableSubTables || []).find(s => s.id === hostVm.dualTableCurrentSubId)
-    if (sub && sub.type === 'drill') {
-      var drillInfo = sub.fieldInfo || {}
-      var joinColumn = drillInfo.joinColumn
-      if (joinColumn && embSourceFields[joinColumn] != null) {
-        sourceRefFields.push({ field: joinColumn, type: 'DRILL', referenceField: joinColumn, value: String(embSourceFields[joinColumn]) })
-      }
-      target._sourceRefFields = sourceRefFields
-      return
-    }
-
+    var consumedKeys = []
     if (sourceKeys.length > 0) {
       var refMap = target.referenceMap || {}
       for (var field in refMap) {
         var refInfo = refMap[field]
         if (refInfo.storageField && sourceKeys.indexOf(refInfo.storageField) !== -1) {
-          sourceRefFields.push({ field: field, type: 'REFERENCE', referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
+          consumedKeys.push(refInfo.storageField)
+          sourceRefFields.push({ field: field, referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
         }
       }
     }
+    // 未命中 refMap 的 source key 直接作为条件列（drill 的 joinColumn 等）
+    sourceKeys.forEach(function(k) {
+      if (embSourceFields[k] != null && consumedKeys.indexOf(k) === -1) {
+        sourceRefFields.push({ field: k, referenceField: k, value: String(embSourceFields[k]) })
+      }
+    })
     target._sourceRefFields = sourceRefFields
   }
 

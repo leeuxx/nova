@@ -352,7 +352,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         Map<String, Fetch.Search> requestConditions = new LinkedHashMap<>();
         if (conditions != null) {
             conditions.forEach((field, search) -> requestConditions.put(field,
-                    new Fetch.Search().setValue(search.getValue()).setType(search.getType()).setVague(search.getVague())
+                    new Fetch.Search().setValue(search.getValue()).setVague(search.getVague())
             ));
         }
         // 排序

@@ -1,9 +1,9 @@
 package xyz.nova.dto;
 
-import xyz.nova.annotation.comment.Comment;
-import xyz.nova.dto.page.PageBean;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import xyz.nova.annotation.comment.Comment;
+import xyz.nova.dto.page.PageBean;
 
 import java.util.Map;
 
@@ -32,9 +32,6 @@ public class NovaTableData {
 
         @Comment("属性值")
         private String value;
-
-        @Comment("属性类型")
-        private String type;
 
         @Comment("是否高级查询")
         private Boolean vague;

@@ -8,6 +8,7 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.edit.ChoiceType;
+import xyz.nova.config.NovaApplication;
 import xyz.nova.entity.data.Fetch;
 import xyz.nova.entity.data.OrderItemBean;
 import xyz.nova.entity.data.Tree;
@@ -37,14 +38,21 @@ public class NovaQueryUtils {
         QueryWrapper<T> wrapper = new QueryWrapper<>();
         Map<String, Fetch.Search> conditions = fetch.getConditions();
         if (conditions != null) {
+            Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+            NovaApplication.ScanNova scanNova = scanNovas.get(novaName);
+            if (scanNova == null) {
+                throw new RuntimeException("Nova类不存在");
+            }
+            Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
             Map<String, NovaFieldUtils.DateInfo> dateMap = NovaFieldUtils.getDate(novaName);
-            conditions.forEach((field, search) -> applyCondition(
-                    wrapper, novaName, field,
-                    MixUtils.camelToSnake(field),
-                    search.getValue(), search.getType(),
-                    Boolean.TRUE.equals(search.getVague()),
-                    dateMap.get(field)
-            ));
+            conditions.forEach((field, search) -> {
+                NovaApplication.ScanNova.NovaFieldInfo novaFieldInfo = novaFields.get(field);
+                applyCondition(wrapper, novaName, field,
+                        MixUtils.camelToSnake(field),
+                        search.getValue(), novaFieldInfo == null ? null : novaFieldInfo.getType(),
+                        Boolean.TRUE.equals(search.getVague()),
+                        dateMap.get(field));
+            });
         }
         List<OrderItemBean> orders = fetch.getOrders();
         if (orders != null && !orders.isEmpty()) {
@@ -87,17 +95,22 @@ public class NovaQueryUtils {
         return wrapper.lambda();
     }
 
-    private static <T> void applyCondition(QueryWrapper<T> wrapper, String novaName, String field, String column, String value, String type, boolean vague, NovaFieldUtils.DateInfo dateInfo) {
+    private static <T> void applyCondition(QueryWrapper<T> wrapper, String novaName, String field, String column, String value, Edit.Type type, boolean vague, NovaFieldUtils.DateInfo dateInfo) {
         // 统一前置判空
         if (value == null || value.isEmpty()) {
             return;
         }
+        // 空兜底精确匹配（理论上属于关联类型：REFERENCE / APPENDAGE / APPENDAGES）
+        if (type == null) {
+            wrapper.eq(column, value);
+            return;
+        }
         // LINK 跨表条件：当前表直接过滤无意义
-        if (Edit.Type.LINK.name().equals(type)) {
+        if (Edit.Type.LINK.equals(type)) {
             return;
         }
         // 文本类型（INPUT / TEXTAREA）, 支持模糊查询
-        if (Edit.Type.INPUT.name().equals(type) || Edit.Type.TEXTAREA.name().equals(type)) {
+        if (Edit.Type.INPUT.equals(type) || Edit.Type.TEXTAREA.equals(type)) {
             if (vague) {
                 wrapper.like(column, value);
             } else {
@@ -105,13 +118,8 @@ public class NovaQueryUtils {
             }
             return;
         }
-        // 引用类型（REFERENCE / APPENDAGE / APPENDAGES）, 精确匹配
-        if (Edit.Type.REFERENCE.name().equals(type) || Edit.Type.APPENDAGE.name().equals(type) || Edit.Type.APPENDAGES.name().equals(type)) {
-            wrapper.eq(column, value);
-            return;
-        }
         // 数字类型（NUMBER）
-        if (Edit.Type.NUMBER.name().equals(type)) {
+        if (Edit.Type.NUMBER.equals(type)) {
             if (vague && value.contains(",")) {
                 String[] parts = value.split(",", 2);
                 String lo = parts[0].trim(), hi = parts[1].trim();
@@ -123,7 +131,7 @@ public class NovaQueryUtils {
             return;
         }
         // 选择类型（CHOICE）
-        if (Edit.Type.CHOICE.name().equals(type)) {
+        if (Edit.Type.CHOICE.equals(type)) {
             ChoiceType.SelectType selectType = NovaFieldUtils.getChoiceSelectType(novaName, field);
             if (selectType == ChoiceType.SelectType.MULTI) {
                 List<String> vals = Arrays.asList(value.split(","));
@@ -143,7 +151,7 @@ public class NovaQueryUtils {
             }
         }
         // 标签类型（TAG）
-        if (Edit.Type.TAG.name().equals(type)) {
+        if (Edit.Type.TAG.equals(type)) {
             List<String> vals = Arrays.asList(value.split(","));
             if (!vals.isEmpty()) {
                 wrapper.and(w -> {
@@ -156,7 +164,7 @@ public class NovaQueryUtils {
             }
         }
         // 日期类型（DATE）
-        if (Edit.Type.DATE.name().equals(type)) {
+        if (Edit.Type.DATE.equals(type)) {
             String dateType = dateInfo != null ? dateInfo.getType().name() : "DATETIME";
             if (vague && value.contains(",")) {
                 String[] parts = value.split(",", 2);
@@ -168,12 +176,11 @@ public class NovaQueryUtils {
             return;
         }
         // 布尔类型（BOOLEAN）
-        if (Edit.Type.BOOLEAN.name().equals(type)) {
+        if (Edit.Type.BOOLEAN.equals(type)) {
             wrapper.eq(column, Boolean.parseBoolean(value));
             return;
         }
-        log.warn("不自动匹配的组件类型：{}", type);
-        // 其他未知类型：静默忽略
+        log.warn("未识别组件类型：{}", type.name());
     }
 
     private static String msToStr(String ms, String dateType) {
