@@ -14,11 +14,12 @@ spring:
       max-lifetime: 1800000
       keepalive-time: 60000
 
-  # MyBatis-Plus 配置
-  mybatis-plus:
-    mapper-locations: classpath*:/mapper/*.xml
-    configuration:
-      map-underscore-to-camel-case: true
+# MyBatis-Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
   # 静态资源配置（使用 Spring Boot 默认位置：public/、static/、resources/、META-INF/resources/）
   web:
