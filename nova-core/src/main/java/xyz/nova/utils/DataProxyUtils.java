@@ -216,15 +216,15 @@ public class DataProxyUtils {
         if (scanNova == null) {
             return null;
         }
-        Class<?> searchClass = scanNova.getNova().searchClass();
-        if (searchClass == void.class) {
+        Class<?> conditionClass = scanNova.getNova().conditionClass();
+        if (conditionClass == void.class) {
             return null;
         }
         Object searchObj;
         try {
-            searchObj = searchClass.getDeclaredConstructor().newInstance();
+            searchObj = conditionClass.getDeclaredConstructor().newInstance();
         } catch (ReflectiveOperationException e) {
-            throw new NovaException("查询条件类实例化失败: " + searchClass.getName());
+            throw new NovaException("查询条件类实例化失败: " + conditionClass.getName());
         }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         for (Map.Entry<String, NovaApplication.ScanNova.NovaFieldInfo> entry : novaFields.entrySet()) {
@@ -249,7 +249,7 @@ public class DataProxyUtils {
             }
             Field targetField;
             try {
-                targetField = searchClass.getDeclaredField(condKey);
+                targetField = conditionClass.getDeclaredField(condKey);
             } catch (NoSuchFieldException e) {
                 // 查询条件类未声明该字段，则不入查询实体（LINK/APPENDAGE 等跨表条件由开发决定是否建模）
                 continue;

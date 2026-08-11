@@ -37,7 +37,7 @@ import java.time.LocalDateTime;
                 label = "name"
         ),
         dataProxy = TestDemoService.class,
-        searchClass = TestDemoQuery.class,
+        conditionClass = TestDemoQuery.class,
         rowOperation = {
                 @RowOperation(
                         title = "下发指令",
