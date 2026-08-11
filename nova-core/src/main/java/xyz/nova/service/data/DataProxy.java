@@ -9,7 +9,7 @@ import xyz.nova.error.NovaException;
 
 import java.util.List;
 
-public interface DataProxy<MODEL> {
+public interface DataProxy<MODEL, CONDITION> {
 
     @Comment("增加")
     default void add(MODEL model) {
@@ -32,7 +32,7 @@ public interface DataProxy<MODEL> {
     }
 
     @Comment("查询")
-    default Fetch.Vo<MODEL> fetch(Fetch fetch) {
+    default Fetch.Vo<MODEL> fetch(Fetch<CONDITION> fetch) {
         throw new NovaException("DataProxy.fetch未实现");
     }
 

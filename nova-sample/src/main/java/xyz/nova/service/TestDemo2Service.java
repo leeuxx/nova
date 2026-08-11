@@ -27,12 +27,12 @@ import java.util.Objects;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Lazy)
-public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> implements DataProxy<TestDemo2View>, PopHandler {
+public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> implements DataProxy<TestDemo2View, Object>, PopHandler {
 
     private TestDemoService testDemoService;
 
     @Override
-    public Fetch.Vo<TestDemo2View> fetch(Fetch fetch) {
+    public Fetch.Vo<TestDemo2View> fetch(Fetch<Object> fetch) {
         NovaQueryUtils.Result<TestDemo2> testDemo2Result = NovaQueryUtils.buildWrapper(TestDemo2View.class, fetch);
         Page<TestDemo2> page = testDemo2Result.getPage();
         LambdaQueryWrapper<TestDemo2> wrapper = testDemo2Result.getWrapper();

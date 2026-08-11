@@ -10,7 +10,7 @@ import java.util.Map;
 
 @Data
 @Accessors(chain = true)
-public class Fetch {
+public class Fetch<CONDITION> {
 
     @Comment("当前页")
     private long current = 1;
@@ -22,7 +22,7 @@ public class Fetch {
     private List<OrderItemBean> orders;
 
     @Comment("查询条件")
-    private Object condition;
+    private CONDITION condition;
 
     @Comment("来源nova名称")
     private String novaName;

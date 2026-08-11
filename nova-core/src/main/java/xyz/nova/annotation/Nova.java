@@ -18,7 +18,7 @@ public @interface Nova {
     String name();
 
     @Comment("数据行为代理接口，对增、删、改、查等行为做逻辑处理")
-    Class<? extends DataProxy<?>> dataProxy();
+    Class<? extends DataProxy<?, ?>> dataProxy();
 
     @Comment("查询条件构造类")
     Class<?> searchClass() default void.class;

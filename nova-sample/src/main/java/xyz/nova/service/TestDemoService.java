@@ -33,7 +33,7 @@ import java.util.*;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Lazy)
-public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemoView>, OperationHandler<Long, Object>, ButtonHandle {
+public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemoView, TestDemoQuery>, OperationHandler<Long, Object>, ButtonHandle {
 
     private TestDemo2Service testDemo2Service;
 
@@ -51,7 +51,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     }
 
     @Override
-    public Fetch.Vo<TestDemoView> fetch(Fetch fetch) {
+    public Fetch.Vo<TestDemoView> fetch(Fetch<TestDemoQuery> fetch) {
         NovaQueryUtils.Result<TestDemo> testDemoResult = NovaQueryUtils.buildWrapper(TestDemoView.class, fetch);
         Page<TestDemo> page = testDemoResult.getPage();
         LambdaQueryWrapper<TestDemo> wrapper = testDemoResult.getWrapper();

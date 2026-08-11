@@ -365,7 +365,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                 .setNovaName(novaTableData.getSourceNovaName())
                 .setContext(novaTableData.getSourceFields());
         // 调用代理，获取实体列表
-        DataProxy<?> dataProxy = DataProxyUtils.getDataProxy(novaName);
+        DataProxy<?, ?> dataProxy = DataProxyUtils.getDataProxy(novaName);
         Fetch.Vo<?> fetch = dataProxy.fetch(queryRequest);
         List<?> records = fetch.getRecords();
         // 转换Map
@@ -380,7 +380,7 @@ public class NovaTableServiceImpl implements NovaTableService {
     public Map<String, Object> details(NovaTableDetails novaTableDetails) {
         String novaName = novaTableDetails.getNovaName();
         String storageFieldValue = novaTableDetails.getStorageFieldValue();
-        DataProxy<?> dataProxy = DataProxyUtils.getDataProxy(novaName);
+        DataProxy<?, ?> dataProxy = DataProxyUtils.getDataProxy(novaName);
         return DataProxyUtils.toMapWithTimestamp(dataProxy.details(new Details()
                 .setNovaName(novaName)
                 .setValue(storageFieldValue)

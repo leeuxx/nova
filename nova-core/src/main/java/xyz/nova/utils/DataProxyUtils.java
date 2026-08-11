@@ -29,7 +29,7 @@ public class DataProxyUtils {
      * @param className 类名
      * @return 数据代理
      */
-    public static DataProxy<?> getDataProxy(String className) {
+    public static DataProxy<?, ?> getDataProxy(String className) {
         Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
         NovaApplication.ScanNova scanNova = scanNovas.get(className);
         if (scanNova == null) {
