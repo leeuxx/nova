@@ -1,6 +1,7 @@
 package xyz.nova.annotation.sub.nova.field.view;
 
 import xyz.nova.annotation.comment.Comment;
+import xyz.nova.annotation.sub.nova.row.ExprBool;
 
 public @interface Pop {
 
@@ -8,7 +9,7 @@ public @interface Pop {
     String title();
 
     @Comment("是否显示")
-    boolean show() default true;
+    ExprBool show() default @ExprBool;
 
     @Comment("可被popHandler接口获取到")
     String param() default "";

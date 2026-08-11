@@ -28,5 +28,5 @@ public @interface View {
     String defaultValue() default "";
 
     @Comment("弹框内容")
-    Pop pop() default @Pop(show = false, title = "");
+    Pop pop() default @Pop(title = "", show = @ExprBool(value = false));
 }

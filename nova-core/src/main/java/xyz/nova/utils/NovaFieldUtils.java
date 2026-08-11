@@ -1,5 +1,7 @@
 package xyz.nova.utils;
 
+import lombok.Data;
+import lombok.experimental.Accessors;
 import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.sub.nova.field.Edit;
@@ -9,8 +11,6 @@ import xyz.nova.annotation.sub.nova.field.view.Pop;
 import xyz.nova.annotation.sub.nova.field.view.PopHandler;
 import xyz.nova.annotation.sub.nova.row.ExprBool;
 import xyz.nova.config.NovaApplication;
-import lombok.Data;
-import lombok.experimental.Accessors;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -723,7 +723,23 @@ public class NovaFieldUtils {
             boolean isReference = (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE || type == Edit.Type.LINK_TARGET);
             for (View view : views) {
                 Pop pop = view.pop();
-                if (pop.show()) {
+                ExprBool exprBool = pop.show();
+                boolean show = exprBool.value();
+                if (!show) {
+                    continue;
+                }
+                Class<? extends ExprBool.ExprHandler>[] handlers = exprBool.exprHandler();
+                if (handlers.length > 0) {
+                    String param = exprBool.param();
+                    for (Class<? extends ExprBool.ExprHandler> handlerClass : handlers) {
+                        ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlerClass);
+                        if (!handler.handler(param)) {
+                            show = false;
+                            break;
+                        }
+                    }
+                }
+                if (show) {
                     Class<? extends PopHandler>[] handle = pop.popHandler();
                     PopInfo popInfo = new PopInfo()
                             .setTitle(pop.title())
