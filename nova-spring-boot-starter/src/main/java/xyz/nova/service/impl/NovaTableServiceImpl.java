@@ -346,13 +346,9 @@ public class NovaTableServiceImpl implements NovaTableService {
     public PageBean<Map<String, Object>> data(NovaTableData novaTableData) {
         String novaName = novaTableData.getNovaName();
         PageBean<Map<String, Object>> pageBean = novaTableData.getPageBean();
-        Map<String, NovaTableData.Search> conditions = novaTableData.getConditions();
         List<OrderItemBean> orders = pageBean.getOrders();
-        // 搜索条件
-        Map<String, String> requestConditions = new LinkedHashMap<>();
-        if (conditions != null) {
-            conditions.forEach((field, search) -> requestConditions.put(field, search.getValue()));
-        }
+        // 搜索条件（conditions 值已为 JSON 数组字符串，直接透传给 mapToSearchObj）
+        Map<String, String> requestConditions = novaTableData.getConditions();
         // 排序
         List<OrderItemBean> requestOrders = new ArrayList<>();
         if (orders != null && !orders.isEmpty()) {

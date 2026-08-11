@@ -436,7 +436,7 @@ window.NovaTableJQ = (function ($) {
       var strVal = JSON.stringify(arr)
       // LINK 字段：作为跨表条件放入 conditions；key 即 search 下的字段名，后端据此反查关联表
       if (fieldDef.type === 'LINK') {
-        conditions[fieldDef.field] = { value: strVal, vague: fieldDef.vague || false }
+        conditions[fieldDef.field] = strVal
         return
       }
       // REFERENCE 字段：使用 referenceField 作为实际查询字段
@@ -453,13 +453,9 @@ window.NovaTableJQ = (function ($) {
       // 反向映射字段（APPENDAGE/APPENDAGES 的 by、REFERENCE 的 ref）可能落到同一键：已存在则数组合并
       var existingCond = conditions[actualField]
       if (existingCond) {
-        existingCond.value = JSON.stringify(JSON.parse(existingCond.value).concat(arr))
+        conditions[actualField] = JSON.stringify(JSON.parse(existingCond).concat(arr))
       } else {
-        conditions[actualField] = {
-          value: strVal,
-          ext: (target.choiceMap && target.choiceMap[fieldDef.field] && target.choiceMap[fieldDef.field].selectType) || '',
-          vague: fieldDef.vague || false
-        }
+        conditions[actualField] = strVal
       }
     })
     var pageBean = {
@@ -471,13 +467,13 @@ window.NovaTableJQ = (function ($) {
     // tapSearch 字段：注入 tab 选中值到 conditions
     var tsf = target.tapSearchField
     if (tsf && target.tapSearchValue != null) {
-      conditions[tsf.field] = { value: JSON.stringify([String(target.tapSearchValue)]), ext: 'SINGLE', vague: false }
+      conditions[tsf.field] = JSON.stringify([String(target.tapSearchValue)])
     }
     // embedded 模式：把 _sourceRefFields 中的 referenceField 注入 conditions
     var sourceRefFields = target._sourceRefFields || []
     sourceRefFields.forEach(function(rf) {
       if (rf.referenceField && rf.value != null && rf.value !== '') {
-        conditions[rf.referenceField] = { value: JSON.stringify([String(rf.value)]), ext: '', vague: false }
+        conditions[rf.referenceField] = JSON.stringify([String(rf.value)])
       }
     })
     window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, pageBean: pageBean, conditions: conditions }, window.__novaMenuCode(queryName)).then(function (resp) {

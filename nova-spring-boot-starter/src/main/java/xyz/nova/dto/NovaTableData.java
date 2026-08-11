@@ -21,20 +21,8 @@ public class NovaTableData {
     private PageBean<Map<String, Object>> pageBean;
 
     @Comment("查询条件")
-    private Map<String, Search> conditions;
+    private Map<String, String> conditions;
 
     @Comment("来源上下文属性集合")
     private Map<String, String> sourceFields;
-
-    @Data
-    @Accessors(chain = true)
-    public static class Search {
-
-        @Comment("属性值")
-        private String value;
-
-        @Comment("是否高级查询")
-        private Boolean vague;
-
-    }
 }
