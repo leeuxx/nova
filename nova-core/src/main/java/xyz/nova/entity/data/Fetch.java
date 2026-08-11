@@ -33,13 +33,13 @@ public class Fetch<CONDITION> {
 
     @Data
     @Accessors(chain = true)
-    public static class Vo<T> {
+    public static class Vo<MODEL> {
 
         @Comment("数据总数")
         private long total = 0;
 
         @Comment("数据列表")
-        private List<T> records = Collections.emptyList();
+        private List<MODEL> records = Collections.emptyList();
 
     }
 }
