@@ -51,19 +51,20 @@ public class NovaFieldUtils {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
             Search search = edit.search();
-            if (search == null) {
-                return;
-            }
             if (!search.value()) {
                 return;
             }
-            Class<? extends SearchHandler>[] searchHandlerClasses = search.searchHandler();
-            if (searchHandlerClasses.length > 0) {
-                String[] searchHandlerParams = search.searchHandlerParams();
-                for (Class<? extends SearchHandler> searchHandlerClass : searchHandlerClasses) {
-                    SearchHandler searchHandler = SpringBeanUtils.getBean(searchHandlerClass);
-                    boolean result = searchHandler.searchValue(searchHandlerParams);
-                    if (!result) {
+            ExprBool exprBool = search.show();
+            boolean show = exprBool.value();
+            if (!show) {
+                return;
+            }
+            Class<? extends ExprBool.ExprHandler>[] handlers = exprBool.exprHandler();
+            if (handlers.length > 0) {
+                String param = exprBool.param();
+                for (Class<? extends ExprBool.ExprHandler> handlerClass : handlers) {
+                    ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlerClass);
+                    if (!handler.handler(param)) {
                         return;
                     }
                 }
