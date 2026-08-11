@@ -32,7 +32,7 @@ public class NovaQueryUtils {
      * @param novaClass @Nova 注解所在类
      * @param fetch     框架传入的查询请求
      */
-    public static <T> Result<T> buildWrapper(Class<?> novaClass, Fetch fetch) {
+    public static <T> Result<T> buildWrapper(Class<?> novaClass, Fetch<?> fetch) {
         String novaName = novaClass.getSimpleName();
         QueryWrapper<T> wrapper = new QueryWrapper<>();
         Object condition = fetch.getCondition();

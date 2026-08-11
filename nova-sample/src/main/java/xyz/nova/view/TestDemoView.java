@@ -18,7 +18,6 @@ import xyz.nova.service.authority.RowAuthExpr;
 import xyz.nova.service.data.DefaultDataProxy;
 import lombok.Data;
 import lombok.experimental.Accessors;
-import xyz.nova.view.query.TestDemoQuery;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-public class TestDemoQuery {
+public class TestDemoCondition {
 
     private List<Long> id;
 

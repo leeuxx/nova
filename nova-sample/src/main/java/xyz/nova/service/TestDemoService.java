@@ -26,18 +26,20 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import xyz.nova.view.query.TestDemoQuery;
+import xyz.nova.view.query.TestDemoCondition;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Lazy)
-public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemoView, TestDemoQuery>, OperationHandler<Long, Object>, ButtonHandle {
+public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> implements ChoiceFetchHandler, DataProxy<TestDemoView, TestDemoCondition>, OperationHandler<Long, Object>, ButtonHandle {
 
     private TestDemo2Service testDemo2Service;
 
     private TestDemo3Service testDemo3Service;
+
+    // ===========
 
     @Override
     public List<VLModel> fetch(String param) {
@@ -51,7 +53,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     }
 
     @Override
-    public Fetch.Vo<TestDemoView> fetch(Fetch<TestDemoQuery> fetch) {
+    public Fetch.Vo<TestDemoView> fetch(Fetch<TestDemoCondition> fetch) {
         NovaQueryUtils.Result<TestDemo> testDemoResult = NovaQueryUtils.buildWrapper(TestDemoView.class, fetch);
         Page<TestDemo> page = testDemoResult.getPage();
         LambdaQueryWrapper<TestDemo> wrapper = testDemoResult.getWrapper();
