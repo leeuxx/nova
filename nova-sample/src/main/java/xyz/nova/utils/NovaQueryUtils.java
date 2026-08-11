@@ -29,11 +29,11 @@ public class NovaQueryUtils {
     /**
      * 根据 Fetch 请求构造 LambdaQueryWrapper 和 Page
      *
-     * @param viewClass View 类（@Nova 注解所在类，用于读取字段元数据）
+     * @param novaClass @Nova 注解所在类
      * @param fetch     框架传入的查询请求
      */
-    public static <T> Result<T> buildWrapper(Class<?> viewClass, Fetch fetch) {
-        String novaName = viewClass.getSimpleName();
+    public static <T> Result<T> buildWrapper(Class<?> novaClass, Fetch fetch) {
+        String novaName = novaClass.getSimpleName();
         QueryWrapper<T> wrapper = new QueryWrapper<>();
         Object condition = fetch.getCondition();
         if (condition != null) {
