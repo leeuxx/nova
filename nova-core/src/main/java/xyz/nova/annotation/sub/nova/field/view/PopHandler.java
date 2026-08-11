@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface PopHandler {
 
-    @Comment("获取pop列表")
+    @Comment("获取pop列表, param=透传参数 value=点击的数据")
     List<PopModel> getPopModel(String param, String value);
 
     @Data
