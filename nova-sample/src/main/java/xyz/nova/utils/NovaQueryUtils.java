@@ -5,24 +5,21 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.edit.ChoiceType;
 import xyz.nova.config.NovaApplication;
 import xyz.nova.entity.data.Fetch;
 import xyz.nova.entity.data.OrderItemBean;
 import xyz.nova.entity.data.Tree;
+import xyz.nova.error.NovaException;
 
 import java.lang.reflect.Field;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * MyBatis-Plus 查询构造工具
@@ -43,22 +40,14 @@ public class NovaQueryUtils {
             Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
             NovaApplication.ScanNova scanNova = scanNovas.get(novaName);
             if (scanNova == null) {
-                throw new RuntimeException("Nova类不存在");
+                throw new NovaException("Nova类不存在");
             }
             Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
-            Map<String, NovaFieldUtils.DateInfo> dateMap = NovaFieldUtils.getDate(novaName);
+            // 关联列：REFERENCE的ref、APPENDAGE/APPENDAGES的by, 一律按列精确匹配
+            List<String> assocColumns = scanNova.getAssocColumns();
             reflectConditions(condition).forEach((key, value) -> {
                 NovaApplication.ScanNova.NovaFieldInfo novaFieldInfo = novaFields.get(key);
-                boolean vague = false;
-                Edit.Type type = null;
-                if (novaFieldInfo != null) {
-                    vague = novaFieldInfo.getNovaField().edit().search().vague();
-                    type = novaFieldInfo.getType();
-                }
-                applyCondition(wrapper, novaName, key,
-                        MixUtils.camelToSnake(key),
-                        value, type, vague,
-                        dateMap.get(key));
+                applyCondition(wrapper, MixUtils.camelToSnake(key), value, novaFieldInfo, assocColumns.contains(key));
             });
         }
         List<OrderItemBean> orders = fetch.getOrders();
@@ -115,80 +104,94 @@ public class NovaQueryUtils {
                     map.put(f.getName(), value);
                 }
             } catch (IllegalAccessException e) {
-                throw new RuntimeException("读取查询条件属性失败: " + f.getName(), e);
+                throw new NovaException("读取查询条件属性失败: " + f.getName());
             }
         }
         return map;
     }
 
-    private static <T> void applyCondition(QueryWrapper<T> wrapper, String novaName, String field, String column, Object value, Edit.Type type, boolean vague, NovaFieldUtils.DateInfo dateInfo) {
+    private static <T> void applyCondition(QueryWrapper<T> wrapper, String column, Object value, NovaApplication.ScanNova.NovaFieldInfo novaFieldInfo, boolean assocColumn) {
         // 统一前置判空
         if (value == null) {
             return;
         }
+        // 关联列（REFERENCE的ref、APPENDAGE/APPENDAGES的by）：按列精确匹配，避免撞上字段类型干扰
+        if (assocColumn) {
+            applyExactMatch(wrapper, column, value);
+            return;
+        }
+        // 非Nova字段（其他）：按列精确匹配
+        if (novaFieldInfo == null) {
+            applyExactMatch(wrapper, column, value);
+            return;
+        }
+        NovaField novaField = novaFieldInfo.getNovaField();
+        Edit edit = novaField.edit();
+        Edit.Type type = novaFieldInfo.getType();
         // LINK/LINK_TARGET 跨表条件：当前表直接过滤无意义
         if (Edit.Type.LINK.equals(type) || Edit.Type.LINK_TARGET.equals(type)) {
             return;
         }
         // 文本类型（INPUT / TEXTAREA），支持模糊查询
         if (Edit.Type.INPUT.equals(type) || Edit.Type.TEXTAREA.equals(type)) {
-            if (vague) {
-                wrapper.like(column, value);
+            Object v = value instanceof List<?> list ? list.get(0) : value;
+            if (edit.search().vague()) {
+                wrapper.like(column, v);
             } else {
-                wrapper.eq(column, value);
+                wrapper.eq(column, v);
             }
             return;
         }
-        // 数字类型（NUMBER）：vague 区间为 List[lo,hi]，非区间为单值
+        // 数字类型（NUMBER）：2 元素 List 视为区间 [lo,hi]，单值按精确匹配
         if (Edit.Type.NUMBER.equals(type)) {
-            if (vague) {
-                List<?> list = (List<?>) value;
+            List<?> list = value instanceof List<?> l ? l : Collections.singletonList(value);
+            if (list.size() == 2) {
                 Object lo = list.get(0);
                 Object hi = list.get(1);
-                if (lo != null) wrapper.ge(column, lo);
-                if (hi != null) wrapper.le(column, hi);
+                if (lo != null) {
+                    wrapper.ge(column, lo);
+                }
+                if (hi != null) {
+                    wrapper.le(column, hi);
+                }
             } else {
-                wrapper.eq(column, value instanceof List<?> list ? list.get(0) : value);
+                wrapper.eq(column, list.get(0));
             }
             return;
         }
-        // 选择类型（CHOICE）
+        // 选择类型（CHOICE）：scalar 归一为单元素 List，语义由 SelectType 决定
         if (Edit.Type.CHOICE.equals(type)) {
-            ChoiceType.SelectType selectType = NovaFieldUtils.getChoiceSelectType(novaName, field);
-            if (selectType == ChoiceType.SelectType.MULTI) {
-                if (value instanceof List<?> list) {
-                    applyFindInSet(wrapper, column, list);
-                } else {
-                    wrapper.apply("FIND_IN_SET({0}, " + column + ") > 0", value);
-                }
-            } else if (vague) {
-                List<?> list = value instanceof List<?> l ? l : Collections.singletonList(value);
+            List<?> list = value instanceof List<?> l ? l : Collections.singletonList(value);
+            if (edit.choiceType().selectType() == ChoiceType.SelectType.MULTI) {
+                applyFindInSet(wrapper, column, list);
+            } else if (list.size() > 1) {
                 wrapper.in(column, list);
             } else {
-                wrapper.eq(column, value instanceof List<?> list ? list.get(0) : value);
+                wrapper.eq(column, list.get(0));
             }
             return;
         }
-        // 标签类型（TAG）
+        // 标签类型（TAG）：scalar 归一为单元素 List
         if (Edit.Type.TAG.equals(type)) {
-            if (value instanceof List<?> list) {
-                applyFindInSet(wrapper, column, list);
-            } else {
-                wrapper.apply("FIND_IN_SET({0}, " + column + ") > 0", value);
-            }
+            List<?> list = value instanceof List<?> l ? l : Collections.singletonList(value);
+            applyFindInSet(wrapper, column, list);
             return;
         }
-        // 日期类型（DATE）：vague 区间为 List，非区间为单值
+        // 日期类型（DATE）：2 元素 List 视为区间 [start,end]，单值按精确匹配
         if (Edit.Type.DATE.equals(type)) {
-            String dateType = dateInfo != null ? dateInfo.getType().name() : "DATETIME";
-            if (vague) {
-                List<?> list = (List<?>) value;
+            String dateType = edit.dateType().type().name();
+            List<?> list = value instanceof List<?> l ? l : Collections.singletonList(value);
+            if (list.size() == 2) {
                 Object start = list.get(0);
                 Object end = list.get(1);
-                if (start != null) wrapper.ge(column, formatDate(start, dateType));
-                if (end != null) wrapper.le(column, formatDate(end, dateType));
+                if (start != null) {
+                    wrapper.ge(column, formatDate(start, dateType));
+                }
+                if (end != null) {
+                    wrapper.le(column, formatDate(end, dateType));
+                }
             } else {
-                wrapper.eq(column, formatDate(value instanceof List<?> list ? list.get(0) : value, dateType));
+                wrapper.eq(column, formatDate(list.get(0), dateType));
             }
             return;
         }
@@ -197,9 +200,20 @@ public class NovaQueryUtils {
             wrapper.eq(column, value instanceof List<?> list ? list.get(0) : value);
             return;
         }
-        // 空兜底精确匹配（REFERENCE 的 ref、APPENDAGE/APPENDAGES 的 by、type==null 未知列等）
+        // 其余组件类型无合法查询列（ATTACHMENT/BUTTON/DIVIDE/EMPTY，key 恰好是 REFERENCE/APPENDAGE 字段名，或未成功解析的 AUTO）：显式报错，不静默丢弃
+        throw new NovaException("不支持的查询组件类型: " + type + ", 列: " + column);
+    }
+
+    /**
+     * 按列精确匹配：List 多值用 in，单值用 eq
+     */
+    private static <T> void applyExactMatch(QueryWrapper<T> wrapper, String column, Object value) {
         if (value instanceof List<?> list) {
-            wrapper.in(column, list);
+            if (list.size() > 1) {
+                wrapper.in(column, list);
+            } else {
+                wrapper.eq(column, list.get(0));
+            }
         } else {
             wrapper.eq(column, value);
         }
@@ -232,7 +246,7 @@ public class NovaQueryUtils {
         if (date instanceof Date d) {
             return d.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter);
         }
-        throw new RuntimeException("无法格式化日期条件值: " + date);
+        throw new NovaException("无法格式化日期条件值: " + date);
     }
 
     @Data

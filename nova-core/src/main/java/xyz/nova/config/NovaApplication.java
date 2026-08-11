@@ -68,6 +68,7 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
         for (Class<?> clz : novaClasses) {
             String novaIdFieldName = null;
             Map<String, ScanNova.NovaFieldInfo> novaFields = new LinkedHashMap<>();
+            List<String> assocColumns = new ArrayList<>();
             Field[] fields = clz.getDeclaredFields();
             for (Field field : fields) {
                 if (field.isAnnotationPresent(NovaField.class)) {
@@ -79,6 +80,12 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
                             .setFieldClass(field.getType())
                             .setFieldName(field.getName())
                     );
+                    Edit edit = novaField.edit();
+                    if (type == Edit.Type.REFERENCE) {
+                        assocColumns.add(edit.referenceType().ref());
+                    } else if (type == Edit.Type.APPENDAGE || type == Edit.Type.APPENDAGES) {
+                        assocColumns.add(edit.appendageType().by());
+                    }
                 }
                 if (field.isAnnotationPresent(NovaId.class)) {
                     novaIdFieldName = field.getName();
@@ -92,7 +99,8 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
                     .setNova(nova)
                     .setNovaFields(novaFields)
                     .setDataProxyClass(nova.dataProxy())
-                    .setRowOperations(rowOperations);
+                    .setRowOperations(rowOperations)
+                    .setAssocColumns(assocColumns);
             if (check(scanNova)) {
                 log.info("@Nova classes: {}", clz.getName());
                 scanNovas.put(clz.getSimpleName(), scanNova);
@@ -121,6 +129,9 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
 
         @Comment("自定义功能按钮")
         private List<RowOperation> rowOperations;
+
+        @Comment("关联组件列（REFERENCE的ref、APPENDAGE/APPENDAGES的by）")
+        private List<String> assocColumns;
 
         @Data
         @Accessors(chain = true)

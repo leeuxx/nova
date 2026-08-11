@@ -28,7 +28,7 @@ public class TestDemoQuery {
 
     private List<LocalDate> bindTime;
 
-    private List<Boolean> status;
+    private Boolean status;
 
     private List<BigDecimal> size;
 
