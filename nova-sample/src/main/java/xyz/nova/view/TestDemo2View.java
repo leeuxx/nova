@@ -1,5 +1,7 @@
 package xyz.nova.view;
 
+import lombok.Data;
+import lombok.experimental.Accessors;
 import xyz.nova.annotation.Nova;
 import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.config.NovaId;
@@ -9,8 +11,6 @@ import xyz.nova.annotation.sub.nova.field.View;
 import xyz.nova.annotation.sub.nova.field.edit.*;
 import xyz.nova.annotation.sub.nova.field.view.Pop;
 import xyz.nova.service.TestDemo2Service;
-import lombok.Data;
-import lombok.experimental.Accessors;
 
 import java.time.LocalDateTime;
 
@@ -23,7 +23,8 @@ import java.time.LocalDateTime;
         layout = @Layout(
                 editLayout = Layout.EditLayout.FULL_LINE
         ),
-        dataProxy = TestDemo2Service.class
+        dataProxy = TestDemo2Service.class,
+        conditionClass = void.class
 )
 public class TestDemo2View {
 

@@ -21,7 +21,7 @@ public @interface Nova {
     Class<? extends DataProxy<?, ?>> dataProxy();
 
     @Comment("查询条件构造类")
-    Class<?> conditionClass() default void.class;
+    Class<?> conditionClass();
 
     @Comment("功能描述")
     String desc() default "";

@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
         desc = "测试功能4描述",
         orderBy = "id desc",
         dataProxy = TestDemo4Service.class,
+        conditionClass = void.class,
         rowOperation = {
                 @RowOperation(
                         title = "测试按钮",

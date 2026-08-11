@@ -16,7 +16,8 @@ import lombok.experimental.Accessors;
         name = "测试关联",
         desc = "测试关联",
         orderBy = "id desc",
-        dataProxy = TestDemoRef2Service.class
+        dataProxy = TestDemoRef2Service.class,
+        conditionClass = void.class
 )
 public class TestDemoRef2View {
 

@@ -15,7 +15,7 @@ import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.service.TestDemo2Service;
 import xyz.nova.service.TestDemoService;
 import xyz.nova.service.authority.RowAuthExpr;
-import xyz.nova.utils.VoidDataProxy;
+import xyz.nova.service.data.DefaultDataProxy;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import xyz.nova.view.query.TestDemoQuery;
@@ -37,7 +37,7 @@ import java.time.LocalDateTime;
                 label = "name"
         ),
         dataProxy = TestDemoService.class,
-        conditionClass = TestDemoQuery.class,
+        conditionClass = void.class,
         rowOperation = {
                 @RowOperation(
                         title = "下发指令",
@@ -466,7 +466,8 @@ public class TestDemoView {
             layout = @Layout(
                     editLayout = Layout.EditLayout.FULL_LINE
             ),
-            dataProxy = VoidDataProxy.class,
+            dataProxy = DefaultDataProxy.class,
+            conditionClass = void.class,
             power = false
     )
     public static class TestRow {

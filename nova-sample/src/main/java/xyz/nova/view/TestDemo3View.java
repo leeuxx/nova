@@ -18,7 +18,8 @@ import java.time.LocalDateTime;
         name = "测试功能3",
         desc = "测试功能3描述",
         orderBy = "id desc",
-        dataProxy = TestDemo3Service.class
+        dataProxy = TestDemo3Service.class,
+        conditionClass = void.class
 )
 public class TestDemo3View {
 

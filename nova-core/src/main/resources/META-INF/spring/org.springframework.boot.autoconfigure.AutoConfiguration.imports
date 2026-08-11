@@ -3,5 +3,5 @@ xyz.nova.service.authority.RowAuthExpr
 xyz.nova.service.file.DefaultAttachmentProxy
 xyz.nova.service.message.DefaultMessageProxy
 xyz.nova.utils.SpringBeanUtils
-xyz.nova.utils.VoidDataProxy
+xyz.nova.service.data.DefaultDataProxy
 xyz.nova.service.DefaultOperationHandler
