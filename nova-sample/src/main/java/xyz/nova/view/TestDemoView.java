@@ -149,7 +149,8 @@ public class TestDemoView {
             edit = @Edit(
                     title = "用户名",
                     notNull = true,
-                    search = @Search
+                    search = @Search,
+                    group = "用户信息"
             )
     )
     private String name;
@@ -164,7 +165,8 @@ public class TestDemoView {
             ),
             edit = @Edit(
                     title = "用户昵称",
-                    search = @Search(vague = true)
+                    search = @Search(vague = true),
+                    group = "用户信息"
             )
     )
     private String nick;

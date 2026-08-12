@@ -202,6 +202,9 @@ public class NovaTableBuild {
                 @Comment("动态是否显示表达式")
                 private String showByExpr;
 
+                @Comment("分组,将相同分组字段收纳到一个面板中")
+                private String group;
+
                 @Data
                 @Accessors(chain = true)
                 public static class ReadonlyInfo {

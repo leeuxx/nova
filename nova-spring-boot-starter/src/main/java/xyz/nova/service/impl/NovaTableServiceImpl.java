@@ -105,6 +105,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                                     .setAdd(ro.getAdd())
                                     .setEdit(ro.getEdit()))
                             .setShowByExpr(thisForm.getShowBy().value())
+                            .setGroup(thisForm.getGroup())
                     );
                 }
                 edit.setThisForms(thisFormList);

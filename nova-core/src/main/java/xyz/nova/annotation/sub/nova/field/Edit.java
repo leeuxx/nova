@@ -26,6 +26,9 @@ public @interface Edit {
     @Comment("动态是否显示,使用此方式必须把show设置为true")
     ShowBy showBy() default @ShowBy("");
 
+    @Comment("分组,将相同分组字段收纳到一个面板中")
+    String group() default "";
+
     @Comment("组件类型")
     Type type() default Type.AUTO;
 

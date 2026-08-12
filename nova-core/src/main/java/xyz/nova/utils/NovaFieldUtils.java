@@ -195,7 +195,8 @@ public class NovaFieldUtils {
                                     .setAdd(readonly.add())
                                     .setEdit(readonly.edit())
                             )
-                            .setShowBy(edit.showBy());
+                            .setShowBy(edit.showBy())
+                            .setGroup(edit.group());
                     thisForms.add(thisForm);
                 }
             }
@@ -860,6 +861,9 @@ public class NovaFieldUtils {
 
             @Comment("动态是否显示")
             private ShowBy showBy;
+
+            @Comment("分组,将相同分组字段收纳到一个面板中")
+            private String group;
 
             @Data
             @Accessors(chain = true)
