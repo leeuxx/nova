@@ -187,7 +187,8 @@ public class TestDemoView {
                             }
                     ),
                     search = @Search(vague = true),
-                    notNull = true
+                    notNull = true,
+                    group = "引用信息"
             )
     )
     private TestDemo2View testDemo2View;
@@ -256,7 +257,8 @@ public class TestDemoView {
                             ref = "parentId",
                             tapShow = true
                     ),
-                    search = @Search
+                    search = @Search,
+                    group = "引用信息"
             )
     )
     private TestDemoView testDemoView;
@@ -282,7 +284,8 @@ public class TestDemoView {
                                     @VL(value = "2", label = "女", color = "#fe6767")
                             }
                     ),
-                    search = @Search(vague = true)
+                    search = @Search(vague = true),
+                    group = "用户信息"
             )
     )
     private String sex;
@@ -299,28 +302,11 @@ public class TestDemoView {
                             tapSearch = @TapSearch(value = true),
                             refChoice = "sex"
                     ),
-                    search = @Search(vague = true)
+                    search = @Search(vague = true),
+                    group = "用户信息"
             )
     )
     private String hobby;
-
-    @NovaField(
-            edit = @Edit(
-                    title = "发送短信",
-                    type = Edit.Type.BUTTON,
-                    buttonType = @ButtonType(
-                            //handle = TestDemoService.class,
-                            handleJs = "js/test.js",
-                            param = "test",
-                            transmitParams = {
-                                    "name",
-                                    "sex"
-                            },
-                            id = "sms"
-                    )
-            )
-    )
-    private String button;
 
     @NovaField(
             edit = @Edit(
@@ -353,6 +339,24 @@ public class TestDemoView {
             )
     )
     private LocalDateTime bindTime;
+
+    @NovaField(
+            edit = @Edit(
+                    title = "发送短信",
+                    type = Edit.Type.BUTTON,
+                    buttonType = @ButtonType(
+                            //handle = TestDemoService.class,
+                            handleJs = "js/test.js",
+                            param = "test",
+                            transmitParams = {
+                                    "name",
+                                    "sex"
+                            },
+                            id = "sms"
+                    )
+            )
+    )
+    private String button;
 
 
     @NovaField(

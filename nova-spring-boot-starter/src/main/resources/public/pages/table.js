@@ -4363,7 +4363,7 @@ const NovaTable = {
         :title="(opFormBtn && opFormBtn.title) || '操作'"
         style="width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column"
         :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}"
-        :header-style="{paddingBottom:'8px',borderBottom:'1px solid #e0e0e6'}">
+        :header-style="{paddingBottom:'8px',borderBottom:'1px solid var(--n-border-color)'}">
         <n-tabs v-model:value="opFormTab" type="line"
           style="padding:0 20px;margin-top:-4px"
           @update:value="onOpFormTabChange">
