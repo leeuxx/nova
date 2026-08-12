@@ -26,6 +26,30 @@ window.NovaAppForm = {
     }
   },
 
+  computed: {
+    // 按 group 值分组：同组字段归入一个面板，未分组字段归入无标题面板，面板按首次出现顺序排列
+    sections() {
+      var seen  = {}
+      var order = []
+      var map   = {}
+      ;(this.buildData.editFields || []).forEach(function(f) {
+        var g = (f && f.group) || ''
+        if (!seen[g]) {
+          seen[g] = true
+          order.push(g)
+          map[g] = []
+        }
+        map[g].push(f)
+      })
+      var self = this
+      return order.map(function(g) {
+        return { key: g || '__ungrouped__', title: g || '', items: map[g] }
+      }).filter(function(sec) {
+        return sec.items.some(function(f) { return self.fieldVisible(f) })
+      })
+    }
+  },
+
   methods: {
     // ── 字段只读判断 ──────────────────────────────────────────────
     isReadonly(f) {
@@ -125,8 +149,13 @@ window.NovaAppForm = {
   template: `
 <div :key="'app_' + appNovaName" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
 <div v-if="!(buildData.editFields || []).length" style="text-align:center;padding:40px;color:#aaa;font-size:13px">加载中…</div>
-<div v-else :style="'display:grid;gap:16px 24px;' + (buildData.editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
-  <template v-for="f in (buildData.editFields || [])" :key="f.field">
+<div v-else>
+  <n-card v-for="sec in sections" :key="sec.key" class="form-panel" size="small" :bordered="true">
+    <template v-if="sec.title" #header>
+      <span>{{ sec.title }}</span>
+    </template>
+    <div :style="'display:grid;gap:16px 24px;' + (buildData.editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
+    <template v-for="f in sec.items" :key="f.field">
     <n-divider v-if="f.type === 'DIVIDE' && buildData.editLayout !== 'FULL_LINE'" v-show="fieldVisible(f)" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
     <div v-else-if="f.type === 'EMPTY' && buildData.editLayout !== 'FULL_LINE'" v-show="fieldVisible(f)"></div>
     <div v-else-if="f.type === 'BUTTON'" v-show="fieldVisible(f)" style="display:flex;flex-direction:column;gap:4px;padding-top:25px;align-items:flex-start">
@@ -238,7 +267,9 @@ window.NovaAppForm = {
         :disabled="isReadonly(f)" clearable @update:value="onFieldUpdate(f.field, $event)" />
       <span v-if="formErrors[f.field]" class="form-error-tip">{{ formErrors[f.field] }}</span>
     </div>
-  </template>
+    </template>
+    </div>
+  </n-card>
 </div>
 </div>
   `
