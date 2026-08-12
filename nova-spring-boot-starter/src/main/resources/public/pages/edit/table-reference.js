@@ -51,7 +51,7 @@ var NovaRefForm = {
       })
     },
     gridStyle: function() {
-      return 'display:grid;gap:16px 24px;' + (this.editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')
+      return 'display:grid;gap:20px 24px;' + (this.editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')
     }
   },
 
@@ -221,7 +221,7 @@ var NovaRefForm = {
   },
 
   template: `
-<div>
+<div class="ref-detail">
   <div v-if="viewData === null" style="display:flex;align-items:center;justify-content:center;padding:60px">
     <n-spin v-if="loadingStyle === 'spinner'" size="small" />
     <div v-else-if="loadingStyle === 'wave'" class="custom-loading loading-wave" style="padding:0">
@@ -251,14 +251,14 @@ var NovaRefForm = {
           <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
           <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'"></div>
           <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON'"
-            :style="'display:flex;flex-direction:column;gap:4px;min-width:0;overflow:hidden' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
-            <span class="ref-form-label">{{ f.title }}</span>
+            :style="'display:flex;align-items:baseline;gap:8px;min-width:0;overflow:hidden' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+            <span class="ref-desc-label">{{ f.title }}</span>
             <span v-if="f.type === 'BOOLEAN' && displayText(f) !== ''" class="ref-boolean-pill"
               :class="displayText(f) === '是' ? 'ref-boolean-true' : 'ref-boolean-false'">{{ displayText(f) }}</span>
             <div v-else-if="f.type === 'ATTACHMENT' && isImageAttach(f) && getAttachUrls(f, viewData).length > 0" class="ref-attach-wrap">
               <NovaImagePreview :src-list="getAttachUrls(f, viewData)" :width="36" :height="36" show-all />
             </div>
-            <div v-else class="ref-form-field">
+            <div v-else class="ref-desc-value">
               <n-ellipsis v-if="f.type === 'ATTACHMENT' && getAttachUrls(f, viewData).length > 0" class="ref-form-value">{{ getAttachUrls(f, viewData).join(', ') }}</n-ellipsis>
               <span v-else-if="containsHtml(displayText(f))" class="ref-form-html" v-html="displayText(f)"></span>
               <n-ellipsis v-else-if="displayText(f) !== ''" class="ref-form-value"

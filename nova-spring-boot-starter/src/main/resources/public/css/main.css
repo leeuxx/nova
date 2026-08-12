@@ -981,35 +981,39 @@ body.dark { background: #151515 !important; }
 .ref-boolean-true  { background: #18a058; }
 .ref-boolean-false { background: #d03050; }
 
-/* ─── REFERENCE 只读表单（key/value 视觉区分） ───── */
-.ref-form-label {
-  font-size: 12px;
-  color: #8a8a8a;
-  line-height: 1.5;
+/* ─── REFERENCE 只读反显（descriptions 式：label 左 / 值右） ─── */
+/* 卡片内边距与网格间距统一为 20/24，避免内容贴边 */
+.ref-detail .n-card {
+  --n-padding-top: 20px !important;
+  --n-padding-right: 24px !important;
+  --n-padding-bottom: 20px !important;
+  --n-padding-left: 24px !important;
 }
-.dark .ref-form-label { color: #666; }
+.ref-desc-label {
+  flex: 0 0 80px;
+  min-width: 0;
+  font-size: 13px;
+  color: #8a8a8a;
+  line-height: 1.6;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dark .ref-desc-label { color: #666; }
 
 .ref-form-value {
-  font-size: 13px;
+  font-size: 14px;
   color: #1f1f1f;
   font-weight: 500;
   line-height: 1.6;
 }
 .dark .ref-form-value { color: #e0e0e0; }
 
-/* 只读字段盒：给普通值一个淡色容器，模拟只读表单输入框 */
-.ref-form-field {
-  width: 100%;
+/* 值容器：占满 label 右侧剩余宽度，让 n-ellipsis 截断生效 */
+.ref-desc-value {
+  flex: 1 1 auto;
   min-width: 0;
-  box-sizing: border-box;
-  background: #fafafa;
-  border: 1px solid #e5e5e5;
-  border-radius: 4px;
-  padding: 6px 10px;
-}
-.dark .ref-form-field {
-  background: #181818;
-  border-color: #333;
 }
 
 .ref-form-html {
