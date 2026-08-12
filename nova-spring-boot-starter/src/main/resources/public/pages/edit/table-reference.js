@@ -255,15 +255,16 @@ var NovaRefForm = {
             <span class="ref-form-label">{{ f.title }}</span>
             <span v-if="f.type === 'BOOLEAN' && displayText(f) !== ''" class="ref-boolean-pill"
               :class="displayText(f) === '是' ? 'ref-boolean-true' : 'ref-boolean-false'">{{ displayText(f) }}</span>
-            <span v-else-if="f.type === 'CHOICE' && displayText(f) !== ''" class="ref-choice-tag"
-              :style="getChoiceColor(f, viewData) ? { background: getChoiceColor(f, viewData) + '20', color: getChoiceColor(f, viewData) } : {}">{{ displayText(f) }}</span>
             <div v-else-if="f.type === 'ATTACHMENT' && isImageAttach(f) && getAttachUrls(f, viewData).length > 0" class="ref-attach-wrap">
               <NovaImagePreview :src-list="getAttachUrls(f, viewData)" :width="36" :height="36" show-all />
             </div>
-            <n-ellipsis v-else-if="f.type === 'ATTACHMENT' && getAttachUrls(f, viewData).length > 0" class="ref-form-value">{{ getAttachUrls(f, viewData).join(', ') }}</n-ellipsis>
-            <span v-else-if="containsHtml(displayText(f))" class="ref-form-html" v-html="displayText(f)"></span>
-            <n-ellipsis v-else-if="displayText(f) !== ''" class="ref-form-value">{{ displayText(f) }}</n-ellipsis>
-            <span v-else>-</span>
+            <div v-else class="ref-form-field">
+              <n-ellipsis v-if="f.type === 'ATTACHMENT' && getAttachUrls(f, viewData).length > 0" class="ref-form-value">{{ getAttachUrls(f, viewData).join(', ') }}</n-ellipsis>
+              <span v-else-if="containsHtml(displayText(f))" class="ref-form-html" v-html="displayText(f)"></span>
+              <n-ellipsis v-else-if="displayText(f) !== ''" class="ref-form-value"
+                :style="getChoiceColor(f, viewData) ? { color: getChoiceColor(f, viewData) } : {}">{{ displayText(f) }}</n-ellipsis>
+              <span v-else class="ref-form-value">-</span>
+            </div>
           </div>
         </template>
       </div>

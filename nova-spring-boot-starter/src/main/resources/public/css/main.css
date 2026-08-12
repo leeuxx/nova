@@ -997,22 +997,26 @@ body.dark { background: #151515 !important; }
 }
 .dark .ref-form-value { color: #e0e0e0; }
 
+/* 只读字段盒：给普通值一个淡色容器，模拟只读表单输入框 */
+.ref-form-field {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background: #fafafa;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+.dark .ref-form-field {
+  background: #181818;
+  border-color: #333;
+}
+
 .ref-form-html {
   max-width: 100%;
   overflow: hidden;
   word-break: break-word;
   overflow-wrap: break-word;
-}
-
-/* ─── CHOICE 标签 ─────────────────────────────── */
-.ref-choice-tag {
-  align-self: flex-start;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 0 4px;
-  border-radius: 3px;
 }
 
 /* ─── ATTACHMENT 缩略图 ───────────────────────── */
