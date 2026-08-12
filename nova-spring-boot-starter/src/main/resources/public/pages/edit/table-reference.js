@@ -262,9 +262,9 @@ var NovaRefForm = {
           <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON'"
             :style="'display:flex;align-items:' + (f.type === 'BOOLEAN' ? 'center' : 'baseline') + ';gap:8px;min-width:0;overflow:hidden' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
             <span class="ref-desc-label">{{ f.title }}</span>
-            <n-button-group v-if="f.type === 'BOOLEAN' && displayText(f) !== ''" size="small">
-              <n-button :type="booleanValue(f) ? 'primary' : 'default'" disabled>是</n-button>
-              <n-button :type="!booleanValue(f) ? 'primary' : 'default'" disabled>否</n-button>
+            <n-button-group v-if="f.type === 'BOOLEAN' && displayText(f) !== ''" size="small" style="pointer-events:none">
+              <n-button :type="booleanValue(f) ? 'primary' : 'default'">是</n-button>
+              <n-button :type="!booleanValue(f) ? 'primary' : 'default'">否</n-button>
             </n-button-group>
             <div v-else-if="f.type === 'ATTACHMENT' && isImageAttach(f) && getAttachUrls(f, viewData).length > 0" class="ref-attach-wrap">
               <NovaImagePreview :src-list="getAttachUrls(f, viewData)" :width="36" :height="36" show-all />
