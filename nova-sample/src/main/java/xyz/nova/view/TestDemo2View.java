@@ -11,6 +11,7 @@ import xyz.nova.annotation.sub.nova.field.View;
 import xyz.nova.annotation.sub.nova.field.edit.*;
 import xyz.nova.annotation.sub.nova.field.view.Pop;
 import xyz.nova.service.TestDemo2Service;
+import xyz.nova.view.query.Test2DemoCondition;
 
 import java.time.LocalDateTime;
 
@@ -24,7 +25,7 @@ import java.time.LocalDateTime;
                 editLayout = Layout.EditLayout.FULL_LINE
         ),
         dataProxy = TestDemo2Service.class,
-        conditionClass = void.class
+        conditionClass = Test2DemoCondition.class
 )
 public class TestDemo2View {
 

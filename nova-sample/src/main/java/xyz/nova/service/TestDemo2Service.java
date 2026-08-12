@@ -19,6 +19,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import xyz.nova.view.query.Test2DemoCondition;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,12 +28,12 @@ import java.util.Objects;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Lazy)
-public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> implements DataProxy<TestDemo2View, Object>, PopHandler {
+public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> implements DataProxy<TestDemo2View, Test2DemoCondition>, PopHandler {
 
     private TestDemoService testDemoService;
 
     @Override
-    public Fetch.Vo<TestDemo2View> fetch(Fetch<Object> fetch) {
+    public Fetch.Vo<TestDemo2View> fetch(Fetch<Test2DemoCondition> fetch) {
         NovaQueryUtils.Result<TestDemo2> testDemo2Result = NovaQueryUtils.buildWrapper(TestDemo2View.class, fetch);
         Page<TestDemo2> page = testDemo2Result.getPage();
         LambdaQueryWrapper<TestDemo2> wrapper = testDemo2Result.getWrapper();
