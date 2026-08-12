@@ -1006,15 +1006,10 @@ body.dark { background: #151515 !important; }
 .dark .ref-form-label { color: #666; }
 
 .ref-form-value {
-  max-width: 100%;
-  min-width: 0;
   font-size: 13px;
   color: #1f1f1f;
   font-weight: 500;
   line-height: 1.6;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .dark .ref-form-value { color: #e0e0e0; }
 

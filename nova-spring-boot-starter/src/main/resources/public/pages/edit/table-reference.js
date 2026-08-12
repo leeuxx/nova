@@ -260,12 +260,9 @@ var NovaRefForm = {
             <div v-else-if="f.type === 'ATTACHMENT' && isImageAttach(f) && getAttachUrls(f, viewData).length > 0" class="ref-attach-wrap">
               <NovaImagePreview :src-list="getAttachUrls(f, viewData)" :width="36" :height="36" show-all />
             </div>
-            <span v-else-if="f.type === 'ATTACHMENT' && getAttachUrls(f, viewData).length > 0"
-              :title="getAttachUrls(f, viewData).join(', ')"
-              style="display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ getAttachUrls(f, viewData).join(', ') }}</span>
+            <n-ellipsis v-else-if="f.type === 'ATTACHMENT' && getAttachUrls(f, viewData).length > 0" class="ref-form-value">{{ getAttachUrls(f, viewData).join(', ') }}</n-ellipsis>
             <span v-else-if="containsHtml(displayText(f))" class="ref-form-html" v-html="displayText(f)"></span>
-            <span v-else-if="displayText(f) !== ''" class="ref-form-value" :title="displayText(f)"
-              style="display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ displayText(f) }}</span>
+            <n-ellipsis v-else-if="displayText(f) !== ''" class="ref-form-value">{{ displayText(f) }}</n-ellipsis>
             <span v-else>-</span>
           </div>
         </template>
