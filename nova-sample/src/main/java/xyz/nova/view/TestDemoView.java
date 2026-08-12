@@ -502,7 +502,8 @@ public class TestDemoView {
                         referenceType = @ReferenceType(
                                 ref = ""
                         ),
-                        notNull = true
+                        notNull = true,
+                        group = "其他信息"
                 )
         )
         private TestDemo2View testDemo2View;
@@ -544,7 +545,8 @@ public class TestDemoView {
                                 selectType = ChoiceType.SelectType.MULTI,
                                 fetchHandler = TestDemoService.class,
                                 refChoice = "sex"
-                        )
+                        ),
+                        group = "其他信息"
                 )
         )
         private String hobby;
@@ -557,7 +559,8 @@ public class TestDemoView {
                                 type = AttachmentType.Type.IMAGE,
                                 showType = AttachmentType.ShowType.TOP,
                                 maxLimit = 7
-                        )
+                        ),
+                        group = "其他信息"
                 )
         )
         private String file;
