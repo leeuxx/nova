@@ -623,6 +623,25 @@ const NovaTable = {
         return { field: f, visible: !f.showByExpr || evalShowExpr(f.showByExpr, evalFd) }
       })
     },
+    opFormSections() {
+      var seen  = {}
+      var order = []
+      var map   = {}
+      this.visibleOpFormFields.forEach(function(item) {
+        var g = (item.field && item.field.group) || ''
+        if (!seen[g]) {
+          seen[g] = true
+          order.push(g)
+          map[g] = []
+        }
+        map[g].push(item)
+      })
+      return order.map(function(g) {
+        return { key: g || '__ungrouped__', title: g || '', items: map[g] }
+      }).filter(function(sec) {
+        return sec.items.some(function(it) { return it.visible })
+      })
+    },
     opFormLayout() {
       return (this.opFormLayoutObj && this.opFormLayoutObj.editLayout) || 'DEFAULT'
     },
@@ -2042,6 +2061,24 @@ const NovaTable = {
     },
     // ── opForm tab 辅助 ───────────────────────────────────────
     opFormAppBuild(n)       { return this.opFormAppTabBuild[n] || {} },
+    opFormAppSections(n) {
+      var seen  = {}
+      var order = []
+      var map   = {}
+      var fields = (this.opFormAppTabBuild[n] || {}).editFields || []
+      fields.forEach(function(f) {
+        var g = (f && f.group) || ''
+        if (!seen[g]) {
+          seen[g] = true
+          order.push(g)
+          map[g] = []
+        }
+        map[g].push(f)
+      })
+      return order.map(function(g) {
+        return { key: g || '__ungrouped__', title: g || '', items: map[g] }
+      })
+    },
     opFormAppData(n)        { return this.opFormAppFormData[n] || {} },
     opFormAppErrors(n)      { return this.opFormAppFormErrors[n] || {} },
     opFormAppSetFd(n, f, v) {
@@ -4337,8 +4374,12 @@ const NovaTable = {
               <span v-if="opFormTabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ opFormTabRequiredCount('form') }}</span>
             </template>
             <div :key="'opTab_' + opFormTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
-            <div :style="'display:grid;gap:16px 24px;' + (opFormLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
-            <template v-for="{field: f, visible: _vis} in visibleOpFormFields" :key="f.field">
+            <n-card v-for="sec in opFormSections" :key="sec.key" class="form-panel" size="small" :bordered="true">
+              <template v-if="sec.title" #header>
+                <span>{{ sec.title }}</span>
+              </template>
+              <div :style="'display:grid;gap:16px 24px;' + (opFormLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
+              <template v-for="{field: f, visible: _vis} in sec.items" :key="f.field">
               <n-divider v-if="f.type === 'DIVIDE' && opFormLayout !== 'FULL_LINE'" v-show="_vis" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
               <div v-else-if="f.type === 'EMPTY' && opFormLayout !== 'FULL_LINE'" v-show="_vis"></div>
               <div v-else-if="f.type === 'BUTTON'" v-show="_vis" style="display:flex;flex-direction:column;gap:4px;justify-content:flex-end;align-items:flex-start">
@@ -4457,6 +4498,7 @@ const NovaTable = {
               </div>
             </template>
           </div>
+          </n-card>
           </div>
           </n-tab-pane>
           <!-- APPENDAGE 表单 Tab -->
@@ -4468,8 +4510,13 @@ const NovaTable = {
             </template>
             <div :key="'opAppTab_' + opFormTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
             <div v-if="!(opFormAppBuild(tab.tapNovaName).editFields || []).length" style="text-align:center;padding:40px;color:#aaa;font-size:13px">加载中…</div>
-            <div v-else :style="'display:grid;gap:16px 24px;' + ((opFormAppBuild(tab.tapNovaName).layout || {}).editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
-              <template v-for="f in (opFormAppBuild(tab.tapNovaName).editFields || [])" :key="f.field">
+            <div v-else>
+              <n-card v-for="sec in opFormAppSections(tab.tapNovaName)" :key="sec.key" class="form-panel" size="small" :bordered="true">
+                <template v-if="sec.title" #header>
+                  <span>{{ sec.title }}</span>
+                </template>
+                <div :style="'display:grid;gap:16px 24px;' + ((opFormAppBuild(tab.tapNovaName).layout || {}).editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')">
+                <template v-for="f in sec.items" :key="f.field">
                 <n-divider v-if="f.type === 'DIVIDE' && (opFormAppBuild(tab.tapNovaName).layout || {}).editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
                 <div v-else-if="f.type === 'DIVIDE'" style="grid-column:1/-1;margin:0"><n-divider>{{ f.title }}</n-divider></div>
                 <div v-else-if="f.type === 'EMPTY' && (opFormAppBuild(tab.tapNovaName).layout || {}).editLayout !== 'FULL_LINE'"></div>
@@ -4610,6 +4657,8 @@ const NovaTable = {
                   <span v-if="opFormAppErrors(tab.tapNovaName)[f.field]" class="form-error-tip">{{ opFormAppErrors(tab.tapNovaName)[f.field] }}</span>
                 </div>
               </template>
+              </div>
+            </n-card>
             </div>
             </div>
           </n-tab-pane>
