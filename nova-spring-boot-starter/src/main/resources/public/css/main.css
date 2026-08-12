@@ -914,22 +914,6 @@ body.dark { background: #151515 !important; }
   border-radius: 1px;
 }
 
-/* ─── REFERENCE 引用详情 descriptions ──────────────── */
-.ref-descriptions-wrapper {
-  width: 100%;
-  max-height: calc(100vh - 300px);
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #bbb transparent;
-}
-.ref-descriptions-wrapper::-webkit-scrollbar { width: 6px; }
-.ref-descriptions-wrapper::-webkit-scrollbar-track { background: transparent; border-radius: 3px; }
-.ref-descriptions-wrapper::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
-.ref-descriptions-wrapper::-webkit-scrollbar-thumb:hover { background: #999; }
-.dark .ref-descriptions-wrapper { scrollbar-color: #555 transparent; }
-.dark .ref-descriptions-wrapper::-webkit-scrollbar-track { background: transparent; }
-.dark .ref-descriptions-wrapper::-webkit-scrollbar-thumb { background: #555; }
-.dark .ref-descriptions-wrapper::-webkit-scrollbar-thumb:hover { background: #777; }
 .ref-descriptions-table {
   width: 100%;
   table-layout: fixed;

@@ -221,7 +221,7 @@ var NovaRefForm = {
   },
 
   template: `
-<div class="ref-descriptions-wrapper">
+<div>
   <div v-if="viewData === null" style="display:flex;align-items:center;justify-content:center;padding:60px">
     <n-spin v-if="loadingStyle === 'spinner'" size="small" />
     <div v-else-if="loadingStyle === 'wave'" class="custom-loading loading-wave" style="padding:0">
