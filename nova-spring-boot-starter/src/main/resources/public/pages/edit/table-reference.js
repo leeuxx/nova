@@ -174,6 +174,14 @@ var NovaRefForm = {
       return String(val).toLowerCase() === 'true' ? '是' : '否'
     },
 
+    // BOOLEAN 禁用开关取值
+    booleanValue: function(f) {
+      var v = this._getVal(f, this.viewData)
+      if (v === true || v === 1) return true
+      if (v === false || v === 0) return false
+      return String(v).toLowerCase() === 'true'
+    },
+
     // 统一取展示文本（空值由模板以 '-' 占位）
     displayText: function(f) {
       if (f.type === 'BOOLEAN') return this.formatBoolean(f, this.viewData)
@@ -251,10 +259,12 @@ var NovaRefForm = {
           <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
           <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'"></div>
           <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON'"
-            :style="'display:flex;align-items:baseline;gap:8px;min-width:0;overflow:hidden' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+            :style="'display:flex;align-items:' + (f.type === 'BOOLEAN' ? 'center' : 'baseline') + ';gap:8px;min-width:0;overflow:hidden' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
             <span class="ref-desc-label">{{ f.title }}</span>
-            <span v-if="f.type === 'BOOLEAN' && displayText(f) !== ''" class="ref-boolean-pill"
-              :class="displayText(f) === '是' ? 'ref-boolean-true' : 'ref-boolean-false'">{{ displayText(f) }}</span>
+            <n-button-group v-if="f.type === 'BOOLEAN' && displayText(f) !== ''" size="small">
+              <n-button :type="booleanValue(f) ? 'primary' : 'default'" disabled>是</n-button>
+              <n-button :type="!booleanValue(f) ? 'primary' : 'default'" disabled>否</n-button>
+            </n-button-group>
             <div v-else-if="f.type === 'ATTACHMENT' && isImageAttach(f) && getAttachUrls(f, viewData).length > 0" class="ref-attach-wrap">
               <NovaImagePreview :src-list="getAttachUrls(f, viewData)" :width="36" :height="36" show-all />
             </div>

@@ -967,20 +967,6 @@ body.dark { background: #151515 !important; }
   border-right-color: #333;
 }
 
-/* ─── BOOLEAN 彩色徽章 ─────────────────────────── */
-.ref-boolean-pill {
-  display: inline-block;
-  align-self: flex-start;
-  padding: 0 10px;
-  border-radius: 10px;
-  font-size: 12px;
-  line-height: 22px;
-  font-weight: 500;
-  color: #fff;
-}
-.ref-boolean-true  { background: #18a058; }
-.ref-boolean-false { background: #d03050; }
-
 /* ─── REFERENCE 只读反显（descriptions 式：label 左 / 值右） ─── */
 /* 卡片内边距与网格间距统一为 20/24，避免内容贴边 */
 .ref-detail .n-card {
