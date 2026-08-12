@@ -986,6 +986,7 @@ body.dark { background: #151515 !important; }
 /* ─── BOOLEAN 彩色徽章 ─────────────────────────── */
 .ref-boolean-pill {
   display: inline-block;
+  align-self: flex-start;
   padding: 0 10px;
   border-radius: 10px;
   font-size: 12px;
@@ -996,8 +997,41 @@ body.dark { background: #151515 !important; }
 .ref-boolean-true  { background: #18a058; }
 .ref-boolean-false { background: #d03050; }
 
+/* ─── REFERENCE 只读表单（key/value 视觉区分） ───── */
+.ref-form-label {
+  font-size: 12px;
+  color: #8a8a8a;
+  line-height: 1.5;
+}
+.dark .ref-form-label { color: #666; }
+
+.ref-form-value {
+  max-width: 100%;
+  min-width: 0;
+  font-size: 13px;
+  color: #1f1f1f;
+  font-weight: 500;
+  line-height: 1.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dark .ref-form-value { color: #e0e0e0; }
+
+.ref-form-html {
+  max-width: 100%;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
 /* ─── CHOICE 标签 ─────────────────────────────── */
 .ref-choice-tag {
+  align-self: flex-start;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   padding: 0 4px;
   border-radius: 3px;
 }

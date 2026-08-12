@@ -1,4 +1,4 @@
-// pages/table-ref.js — referenceForm（引用详情）Vue 子组件
+// pages/table-ref.js — referenceForm（引用详情，只读表单式反显）Vue 子组件
 ;(function () {
 
 var NovaRefForm = {
@@ -19,13 +19,39 @@ var NovaRefForm = {
   data: function() {
     return {
       viewData: null,
-      refColumns: [],
+      editFields: [],
+      editLayout: 'DEFAULT',
       choiceMap: {},
       dateMap: {},
-      booleanMap: {},
       attachmentMap: {},
-      appendageMap: {},
-      appendageData: {}
+      referenceMap: {}
+    }
+  },
+
+  computed: {
+    // 按 group 值分组：同组字段归入一个面板，未分组字段归入无标题面板，面板按首次出现顺序排列
+    sections: function() {
+      var seen  = {}
+      var order = []
+      var map   = {}
+      ;(this.editFields || []).forEach(function(f) {
+        var g = (f && f.group) || ''
+        if (!seen[g]) {
+          seen[g] = true
+          order.push(g)
+          map[g] = []
+        }
+        map[g].push(f)
+      })
+      var self = this
+      return order.map(function(g) {
+        return { key: g || '__ungrouped__', title: g || '', items: map[g] }
+      }).filter(function(sec) {
+        return sec.items.some(function(f) { return self.fieldVisible(f) })
+      })
+    },
+    gridStyle: function() {
+      return 'display:grid;gap:16px 24px;' + (this.editLayout === 'FULL_LINE' ? 'grid-template-columns:1fr' : 'grid-template-columns:1fr 1fr 1fr')
     }
   },
 
@@ -37,24 +63,19 @@ var NovaRefForm = {
     loadData: function() {
       var self = this
 
-      // 获取引用表的列定义及类型元信息
+      // 获取引用表的 thisForm 字段配置及类型元信息
       window.fetchApi.post('/nova/table/build', { novaName: this.refNovaName }, window.__novaMenuCode(this.refNovaName)).then(function(resp) {
         if (resp.data) {
-          if (resp.data.tableColumns) {
-            self.refColumns = resp.data.tableColumns.filter(function(col) {
-              return col.field && col.field.indexOf('__') !== 0
-            })
-          }
+          self.editFields = (resp.data.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
+          self.editLayout = (resp.data.layout || {}).editLayout || 'DEFAULT'
           self.choiceMap     = resp.data.choice     || {}
           self.dateMap       = resp.data.date       || {}
-          self.booleanMap    = resp.data.booleanInfo || {}
           self.attachmentMap = resp.data.attachment  || {}
-          self.appendageMap  = resp.data.appendage   || {}
-          console.log('[ref] build response nova=' + self.refNovaName, 'choiceKeys=', Object.keys(self.choiceMap))
+          self.referenceMap  = resp.data.reference   || {}
         }
       })
 
-      // 获取引用详情数据
+      // 获取引用详情数据（反显）
       var fkValue = window.NovaTableJQ_ref.findFkValue(
         this.sourceReferenceMap,
         this.sourceFormData,
@@ -67,54 +88,17 @@ var NovaRefForm = {
       }
       window.NovaTableJQ_ref.fetchRefDetails(this.refNovaName, fkValue, function(data) {
         self.viewData = data
-        self.$nextTick(function() { self._loadAppendageDetails() })
       })
     },
 
-    // 懒加载所有 APPENDAGE 字段的详情
-    _loadAppendageDetails: function() {
-      var self = this
-      if (!this.viewData || !this.appendageMap) return
-      var loaded = {}
-      this.refColumns.forEach(function(col) {
-        if (col.type !== 'APPENDAGE') return
-        var dotIdx = col.field.indexOf('.')
-        var base = dotIdx > -1 ? col.field.slice(0, dotIdx) : col.field
-        if (loaded[base]) return
-        loaded[base] = true
-        var appInfo = self.appendageMap[base]
-        if (!appInfo || !appInfo.referenceName) return
-        var fkValue = appInfo.storageField ? self.viewData[appInfo.storageField] : null
-        if (!fkValue) return
-        window.fetchApi.post('/nova/table/details', {
-          novaName: appInfo.referenceName,
-          storageFieldValue: String(fkValue)
-        }).then(function(resp) {
-          if (!resp.data) return
-          var newData = Object.assign({}, self.appendageData)
-          newData[base] = resp.data
-          self.appendageData = newData
-        })
-      })
+    // ── 字段动态显示判断 ──────────────────────────────
+    fieldVisible: function(f) {
+      if (!f.showByExpr) return true
+      return window.evalShowExpr(f.showByExpr, this.viewData || {})
     },
 
-    // 从行数据中取值，支持嵌套字段名（如 "manager.name"）
+    // ── 取值 ────────────────────────────────────────
     _getVal: function(col, row) {
-      var dotIdx = col.field.indexOf('.')
-      if (dotIdx > -1) {
-        var base = col.field.slice(0, dotIdx)
-        var prop = col.field.slice(dotIdx + 1)
-        // APPENDAGE：从独立加载的 appendageData 中取值
-        if (col.type === 'APPENDAGE') {
-          var appData = this.appendageData[base]
-          if (appData) return String(appData[prop] != null ? appData[prop] : '')
-          return ''
-        }
-        // REFERENCE 等：从行数据的嵌套对象中取值
-        var nested = row[base]
-        if (nested && typeof nested === 'object') return String(nested[prop] != null ? nested[prop] : '')
-        return ''
-      }
       var v = row[col.field]
       return v != null ? v : ''
     },
@@ -125,7 +109,14 @@ var NovaRefForm = {
 
       // REFERENCE
       if (col.type === 'REFERENCE') {
-        return row[col.field + '_display'] || String(val)
+        var displayVal = row[col.field + '_display']
+        if (displayVal !== null && displayVal !== undefined && displayVal !== '') return String(displayVal)
+        if (val && typeof val === 'object') {
+          var refInfo = (this.referenceMap || {})[col.field] || {}
+          if (refInfo.displayField && val[refInfo.displayField] != null) return String(val[refInfo.displayField])
+          return ''
+        }
+        return val != null ? String(val) : ''
       }
 
       var s = String(val)
@@ -179,8 +170,14 @@ var NovaRefForm = {
     // BOOLEAN
     formatBoolean: function(col, row) {
       var val = row[col.field]
-      if (val === null || val === undefined) return ''
+      if (val === null || val === undefined || val === '') return ''
       return String(val).toLowerCase() === 'true' ? '是' : '否'
+    },
+
+    // 统一取展示文本（空值由模板以 '-' 占位）
+    displayText: function(f) {
+      if (f.type === 'BOOLEAN') return this.formatBoolean(f, this.viewData)
+      return this.formatText(f, this.viewData)
     },
 
     // ATTACHMENT IMAGE 判断
@@ -244,38 +241,37 @@ var NovaRefForm = {
       </span>
     </div>
   </div>
-  <table v-else class="ref-descriptions-table" cellspacing="0" cellpadding="0">
-    <tbody>
-      <tr v-for="col in refColumns" :key="col.field">
-        <th class="ref-desc-label" :title="col.title">{{ col.title }}</th>
-        <td class="ref-desc-value">
-
-          <!-- BOOLEAN -->
-          <span v-if="col.type === 'BOOLEAN'" class="ref-boolean-pill"
-            :class="formatBoolean(col, viewData) === '是' ? 'ref-boolean-true' : 'ref-boolean-false'">{{ formatBoolean(col, viewData) }}</span>
-
-          <!-- CHOICE -->
-          <span v-else-if="col.type === 'CHOICE'"
-            :style="getChoiceColor(col, viewData) ? { background: getChoiceColor(col, viewData) + '20', color: getChoiceColor(col, viewData) } : {}">{{ formatText(col, viewData) }}</span>
-
-          <!-- ATTACHMENT IMAGE：复用表格行图片预览组件 -->
-          <div v-else-if="col.type === 'ATTACHMENT' && isImageAttach(col)" class="ref-attach-wrap">
-            <NovaImagePreview :src-list="getAttachUrls(col, viewData)" :width="36" :height="36" show-all />
+  <div v-else>
+    <n-card v-for="sec in sections" :key="sec.key" class="form-panel" size="small" :bordered="true">
+      <template v-if="sec.title" #header>
+        <span>{{ sec.title }}</span>
+      </template>
+      <div :style="gridStyle">
+        <template v-for="f in sec.items" :key="f.field">
+          <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
+          <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'"></div>
+          <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON'"
+            :style="'display:flex;flex-direction:column;gap:4px;min-width:0;overflow:hidden' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+            <span class="ref-form-label">{{ f.title }}</span>
+            <span v-if="f.type === 'BOOLEAN' && displayText(f) !== ''" class="ref-boolean-pill"
+              :class="displayText(f) === '是' ? 'ref-boolean-true' : 'ref-boolean-false'">{{ displayText(f) }}</span>
+            <span v-else-if="f.type === 'CHOICE' && displayText(f) !== ''" class="ref-choice-tag"
+              :style="getChoiceColor(f, viewData) ? { background: getChoiceColor(f, viewData) + '20', color: getChoiceColor(f, viewData) } : {}">{{ displayText(f) }}</span>
+            <div v-else-if="f.type === 'ATTACHMENT' && isImageAttach(f) && getAttachUrls(f, viewData).length > 0" class="ref-attach-wrap">
+              <NovaImagePreview :src-list="getAttachUrls(f, viewData)" :width="36" :height="36" show-all />
+            </div>
+            <span v-else-if="f.type === 'ATTACHMENT' && getAttachUrls(f, viewData).length > 0"
+              :title="getAttachUrls(f, viewData).join(', ')"
+              style="display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ getAttachUrls(f, viewData).join(', ') }}</span>
+            <span v-else-if="containsHtml(displayText(f))" class="ref-form-html" v-html="displayText(f)"></span>
+            <span v-else-if="displayText(f) !== ''" class="ref-form-value" :title="displayText(f)"
+              style="display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ displayText(f) }}</span>
+            <span v-else>-</span>
           </div>
-
-          <!-- ATTACHMENT BASE -->
-          <span v-else-if="col.type === 'ATTACHMENT'">{{ getAttachUrls(col, viewData).join(', ') }}</span>
-
-          <!-- HTML -->
-          <span v-else-if="containsHtml(formatText(col, viewData))" v-html="formatText(col, viewData)"></span>
-
-          <!-- 纯文本 -->
-          <span v-else :title="formatText(col, viewData)">{{ formatText(col, viewData) }}</span>
-
-        </td>
-      </tr>
-    </tbody>
-  </table>
+        </template>
+      </div>
+    </n-card>
+  </div>
 </div>`
 }
 
