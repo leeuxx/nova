@@ -4,6 +4,10 @@
 var NovaRefForm = {
   name: 'NovaRefForm',
 
+  components: {
+    NovaImagePreview: window.NovaImagePreview
+  },
+
   props: {
     refNovaName:        { type: String, required: true },
     sourceFormData:     { type: Object, default: function() { return {} } },
@@ -202,16 +206,6 @@ var NovaRefForm = {
       return null
     },
 
-    // 点击附件图片预览
-    previewAttach: function(col) {
-      var urls = this.getAttachUrls(col, this.viewData)
-      this.$emit('preview-attach', {
-        field: { field: col.field, title: col.title },
-        urls: urls,
-        type: 'IMAGE'
-      })
-    },
-
     // HTML 检测
     containsHtml: function(str) {
       return /<[a-z]+[\s>]/i.test(String(str))
@@ -264,11 +258,9 @@ var NovaRefForm = {
           <span v-else-if="col.type === 'CHOICE'"
             :style="getChoiceColor(col, viewData) ? { background: getChoiceColor(col, viewData) + '20', color: getChoiceColor(col, viewData) } : {}">{{ formatText(col, viewData) }}</span>
 
-          <!-- ATTACHMENT IMAGE -->
+          <!-- ATTACHMENT IMAGE：复用表格行图片预览组件 -->
           <div v-else-if="col.type === 'ATTACHMENT' && isImageAttach(col)" class="ref-attach-wrap">
-            <img v-for="(url, idx) in getAttachUrls(col, viewData)" :key="idx"
-              :src="url" class="ref-attach-thumb"
-              @click="previewAttach(col)" />
+            <NovaImagePreview :src-list="getAttachUrls(col, viewData)" :width="36" :height="36" show-all />
           </div>
 
           <!-- ATTACHMENT BASE -->

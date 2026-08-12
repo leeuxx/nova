@@ -4205,7 +4205,6 @@ const NovaTable = {
             :source-reference-map="referenceMap"
             :source-raw-detail-row="rawDetailRow"
             :loading-style="loadingStyle"
-            @preview-attach="(p) => openTableAttachPreview(p.field, p.urls, p.type)"
           />
 
           <!-- appendageForm 内容 -->
