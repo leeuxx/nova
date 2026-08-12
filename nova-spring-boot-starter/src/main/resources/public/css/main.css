@@ -723,15 +723,13 @@ body.dark { background: #151515 !important; }
 .form-error-tip          { font-size: 12px; color: #d03050; }
 .dark .form-error-tip    { color: #f56c6c; }
 
-/* ─── 表单分组面板（thisForm 按 group 收纳） ─────────────── */
-.form-panel              { border: 1px solid var(--n-border-color); border-radius: 8px; padding: 14px 16px 16px; margin-bottom: 12px; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06); }
+/* ─── 表单分组面板（thisForm 按 group 收纳，基于 n-card） ─── */
+.form-panel              { margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06); }
 .form-panel:last-child   { margin-bottom: 0; }
-.form-panel-title        { display: flex; align-items: center; font-size: 15px; font-weight: 600; color: var(--n-text-color-1); text-align: left; padding-bottom: 12px; margin-bottom: 14px; border-bottom: 1px solid var(--n-border-color); }
-.form-panel-title::before { content: ''; width: 3px; height: 16px; border-radius: 2px; background: var(--n-primary-color); margin-right: 8px; flex-shrink: 0; }
-.dark .form-panel        { background: #1f1f1f; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+.dark .form-panel        { box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
 
 /* ─── 弹窗卡片内容滚动条（跟随主题） ─────────────────────── */
-.n-modal .n-card-content    { scrollbar-width: thin; scrollbar-color: #bbb #fafafa; }
+.n-modal .n-card-content    { scrollbar-width: thin; scrollbar-color: #bbb #fafafa; scrollbar-gutter: stable; }
 .n-modal .n-card-content::-webkit-scrollbar        { width: 6px; }
 .n-modal .n-card-content::-webkit-scrollbar-track  { background: #fafafa; border-radius: 3px; }
 .n-modal .n-card-content::-webkit-scrollbar-thumb  { background: #bbb; border-radius: 3px; }

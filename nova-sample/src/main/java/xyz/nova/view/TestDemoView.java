@@ -264,7 +264,8 @@ public class TestDemoView {
     @NovaField(
             views = @View(title = "手机号", width = "10%", desc = "+86"),
             edit = @Edit(
-                    title = "手机号"
+                    title = "手机号",
+                    group = "用户信息"
             )
     )
     private String tel;

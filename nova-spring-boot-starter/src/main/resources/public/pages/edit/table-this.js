@@ -344,10 +344,6 @@ window.NovaFormThis = {
   emits: ['field-change', 'reference-click', 'preview-click', 'attachment-change'],
 
   computed: {
-    // 是否存在分组（非空 group），决定是否启用面板收纳
-    hasGroup() {
-      return this.editFields.some(function(f) { return f && f.group })
-    },
     visibleEditFields() {
       var fields = this.editFields
       var fd     = this.formData
@@ -388,37 +384,24 @@ window.NovaFormThis = {
 
   template: `
 <div :key="'tab_' + formTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
-  <div v-if="!hasGroup" :style="gridStyle">
-    <nova-field-this v-for="{field: f, visible: _vis} in visibleEditFields" :key="f.field"
-      :field="f" :visible="_vis"
-      :form-data="formData" :form-errors="formErrors"
-      :choice-map="choiceMap" :reference-map="referenceMap"
-      :number-map="numberMap" :date-map="dateMap" :tag-map="tagMap"
-      :attachment-map="attachmentMap" :boolean-map="booleanMap"
-      :buttons="buttons" :form-mode="formMode" :edit-layout="editLayout" :nova-name="novaName"
-      @field-change="$emit('field-change', $event)"
-      @reference-click="$emit('reference-click', $event)"
-      @preview-click="$emit('preview-click', $event)"
-      @attachment-change="(f2, e) => $emit('attachment-change', f2, e)" />
-  </div>
-  <template v-else>
-    <div v-for="sec in sections" :key="sec.key" class="form-panel">
-      <div v-if="sec.title" class="form-panel-title">{{ sec.title }}</div>
-      <div :style="gridStyle">
-        <nova-field-this v-for="{field: f, visible: _vis} in sec.items" :key="f.field"
-          :field="f" :visible="_vis"
-          :form-data="formData" :form-errors="formErrors"
-          :choice-map="choiceMap" :reference-map="referenceMap"
-          :number-map="numberMap" :date-map="dateMap" :tag-map="tagMap"
-          :attachment-map="attachmentMap" :boolean-map="booleanMap"
-          :buttons="buttons" :form-mode="formMode" :edit-layout="editLayout" :nova-name="novaName"
-          @field-change="$emit('field-change', $event)"
-          @reference-click="$emit('reference-click', $event)"
-          @preview-click="$emit('preview-click', $event)"
-          @attachment-change="(f2, e) => $emit('attachment-change', f2, e)" />
-      </div>
+  <n-card v-for="sec in sections" :key="sec.key" class="form-panel" size="small" :bordered="true">
+    <template v-if="sec.title" #header>
+      <span>{{ sec.title }}</span>
+    </template>
+    <div :style="gridStyle">
+      <nova-field-this v-for="{field: f, visible: _vis} in sec.items" :key="f.field"
+        :field="f" :visible="_vis"
+        :form-data="formData" :form-errors="formErrors"
+        :choice-map="choiceMap" :reference-map="referenceMap"
+        :number-map="numberMap" :date-map="dateMap" :tag-map="tagMap"
+        :attachment-map="attachmentMap" :boolean-map="booleanMap"
+        :buttons="buttons" :form-mode="formMode" :edit-layout="editLayout" :nova-name="novaName"
+        @field-change="$emit('field-change', $event)"
+        @reference-click="$emit('reference-click', $event)"
+        @preview-click="$emit('preview-click', $event)"
+        @attachment-change="(f2, e) => $emit('attachment-change', f2, e)" />
     </div>
-  </template>
+  </n-card>
 </div>
   `
 }
