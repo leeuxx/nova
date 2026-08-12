@@ -182,6 +182,7 @@ var NovaRefForm = {
       return String(v).toLowerCase() === 'true'
     },
 
+
     // 统一取展示文本（空值由模板以 '-' 占位）
     displayText: function(f) {
       if (f.type === 'BOOLEAN') return this.formatBoolean(f, this.viewData)

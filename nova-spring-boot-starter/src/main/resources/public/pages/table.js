@@ -1,7 +1,7 @@
 // pages/table.js — 通用表格页 Vue 组件，所有表格菜单共用此模板
 ;(function () {
 const { h } = Vue
-const { NPopconfirm, NSpace, NTooltip, NTag, NRadio, NDropdown } = naive
+const { NPopconfirm, NSpace, NTooltip, NTag, NRadio, NDropdown, NButtonGroup, NButton } = naive
 const NovaImagePreview = window.NovaImagePreview
 const NovaRollNumber   = window.NovaRollNumber
 
@@ -762,7 +762,23 @@ const NovaTable = {
             const bInfo = col.refNovaName && subMeta
               ? ((subMeta.booleanInfo || {})[propKey])
               : (vm.booleanMap && vm.booleanMap[col.field])
-            if (bInfo && bInfo.tableType === 'SWITCH') {
+            if (bInfo && (bInfo.tableType === 'SWITCH' || bInfo.tableType === 'SEGMENT')) {
+              const novaName = vm.novaName
+              const novaIdField = vm.novaIdFieldName
+              const editField = (vm.editFields || []).find(function(f) { return f.field === col.field })
+              const disabled = !editField || (editField.readonly && editField.readonly.edit) || !window.__hasButton(vm.novaName, 'edit')
+              if (bInfo.tableType === 'SEGMENT') {
+                const segSet = disabled ? undefined : (newVal) => {
+                  window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: newVal, type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success('修改成功'); window.NovaTableJQ.loadData(novaName) })
+                }
+                return h(NButtonGroup, { size: 'small' }, {
+                  default: () => [
+                    h(NButton, { type: isTrue ? 'primary' : 'default', disabled, onClick: () => segSet && segSet('true') }, { default: () => '是' }),
+                    h(NButton, { type: isTrue ? 'default' : 'primary', disabled, onClick: () => segSet && segSet('false') }, { default: () => '否' })
+                  ]
+                })
+              }
+              // SWITCH
               const isDark = document.body.classList.contains('dark')
               const offBg = isDark ? '#444' : '#d9d9d9'
               if (col.refNovaName) {
@@ -772,10 +788,6 @@ const NovaTable = {
                   h('span', { style: `position:absolute;top:3px;left:${isTrue ? '26px' : '3px'};width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)` })
                 ])
               }
-              const novaName = vm.novaName
-              const novaIdField = vm.novaIdFieldName
-              const editField = (vm.editFields || []).find(function(f) { return f.field === col.field })
-              const disabled = !editField || (editField.readonly && editField.readonly.edit) || !window.__hasButton(vm.novaName, 'edit')
               const newVal = isTrue ? 'false' : 'true'
               const onClick = disabled ? undefined : () => {
                 window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: newVal, type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success('修改成功'); window.NovaTableJQ.loadData(novaName) })
@@ -4428,6 +4440,10 @@ const NovaTable = {
                     @update:value="(v) => opFormData[f.field] = v ? 'true' : 'false'" />
                   <span style="font-size:13px;color:#666">{{ opFormData[f.field] === 'true' ? '是' : '否' }}</span>
                 </div>
+                <n-button-group v-else-if="f.type === 'BOOLEAN' && (opFormBooleanMap[f.field] || {}).type === 'SEGMENT'" size="small">
+                  <n-button :type="opFormData[f.field] === 'true' ? 'primary' : 'default'" @click="opFormData[f.field] = 'true'">是</n-button>
+                  <n-button :type="opFormData[f.field] === 'true' ? 'default' : 'primary'" @click="opFormData[f.field] = 'false'">否</n-button>
+                </n-button-group>
                 <n-select
                   v-else-if="f.type === 'BOOLEAN'"
                   v-model:value="opFormData[f.field]"
@@ -4566,6 +4582,10 @@ const NovaTable = {
                       @update:value="(v) => opFormAppSetFd(tab.tapNovaName, f.field, v ? 'true' : 'false')" />
                     <span style="font-size:13px;color:#666">{{ opFormAppData(tab.tapNovaName)[f.field] === 'true' ? '是' : '否' }}</span>
                   </div>
+                  <n-button-group v-else-if="f.type === 'BOOLEAN' && ((opFormAppBuild(tab.tapNovaName).booleanMap || {})[f.field] || {}).type === 'SEGMENT'" size="small">
+                    <n-button :type="opFormAppData(tab.tapNovaName)[f.field] === 'true' ? 'primary' : 'default'" @click="opFormAppSetFd(tab.tapNovaName, f.field, 'true')">是</n-button>
+                    <n-button :type="opFormAppData(tab.tapNovaName)[f.field] === 'true' ? 'default' : 'primary'" @click="opFormAppSetFd(tab.tapNovaName, f.field, 'false')">否</n-button>
+                  </n-button-group>
                   <n-select
                     v-else-if="f.type === 'BOOLEAN'"
                     :value="opFormAppData(tab.tapNovaName)[f.field]" :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"

@@ -384,7 +384,7 @@ public class TestDemoView {
                     title = "状态",
                     type = Edit.Type.BOOLEAN,
                     booleanType = @BooleanType(
-                            type = BooleanType.Type.SWITCH,
+                            type = BooleanType.Type.SEGMENT,
                             tableType = BooleanType.Type.SWITCH
                     ),
                     search = @Search

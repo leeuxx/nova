@@ -14,7 +14,9 @@ public @interface BooleanType {
         @Comment("默认")
         DEFAULT,
         @Comment("开关")
-        SWITCH
+        SWITCH,
+        @Comment("左右纽扣")
+        SEGMENT
     }
 
 }

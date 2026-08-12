@@ -205,6 +205,10 @@ window.NovaFieldThis = {
         @update:value="(v) => onFieldUpdate(f.field, v ? 'true' : 'false')" />
       <span style="font-size:13px;color:#666">{{ formData[f.field] === 'true' ? '是' : '否' }}</span>
     </div>
+    <n-button-group v-else-if="f.type === 'BOOLEAN' && (booleanMap[f.field] || {}).type === 'SEGMENT'" size="small">
+      <n-button :type="formData[f.field] === 'true' ? 'primary' : 'default'" :disabled="isReadonly(f)" @click="onFieldUpdate(f.field, 'true')">是</n-button>
+      <n-button :type="formData[f.field] === 'true' ? 'default' : 'primary'" :disabled="isReadonly(f)" @click="onFieldUpdate(f.field, 'false')">否</n-button>
+    </n-button-group>
     <n-select
       v-else-if="f.type === 'BOOLEAN'"
       :value="formData[f.field]"
