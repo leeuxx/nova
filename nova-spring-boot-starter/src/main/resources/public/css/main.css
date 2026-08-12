@@ -915,14 +915,14 @@ body.dark { background: #151515 !important; }
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #ececec;
   border-radius: 6px;
   overflow: hidden;
 }
 .ref-descriptions-table tr th,
 .ref-descriptions-table tr td {
   padding: 8px 12px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #ececec;
   font-size: 13px;
   line-height: 1.6;
   text-align: left;
@@ -939,7 +939,7 @@ body.dark { background: #151515 !important; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-right: 1px solid #e0e0e0;
+  border-right: 1px solid #ececec;
 }
 .ref-descriptions-table tr td {
   width: 85%;
