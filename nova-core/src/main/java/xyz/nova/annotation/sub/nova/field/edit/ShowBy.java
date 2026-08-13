@@ -4,7 +4,8 @@ import xyz.nova.annotation.comment.Comment;
 
 public @interface ShowBy {
 
-    @Comment("条件表达式，纯前端实现，使用字段属性名来运算（== != > >= < <= ==null !=null，支持 && || 括号分组）")
+    @Comment("条件表达式，纯前端实现，使用字段属性名来运算")
+    @Comment("比较运算符：（== != > >= < <=）逻辑运算符：（&& || 括号分组）")
     String value();
 
 }
