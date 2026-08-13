@@ -363,7 +363,7 @@ var NovaRefForm = {
               <NovaImagePreview :src-list="getAttachUrls(item.field, viewData)" :width="36" :height="36" :showAll="true" />
             </div>
             <div v-else class="ref-desc-value" :style="item.field.type === 'TEXTAREA' ? 'display:block;width:100%;min-width:0' : ''">
-              <div v-if="item.field.type === 'TEXTAREA'" style="background:rgba(0,0,0,0.02);border-left:3px solid #2563eb;padding:8px 12px;border-radius:4px;font-family:monospace;font-size:13px;white-space:pre-wrap;word-break:break-word;line-height:1.6;max-height:150px;overflow-y:auto">{{ displayText(item.field) || '-' }}</div>
+              <div v-if="item.field.type === 'TEXTAREA'" class="ref-textarea-box" style="background:rgba(0,0,0,0.02);border-left:3px solid #2563eb;padding:8px 12px;border-radius:4px;font-family:monospace;font-size:13px;white-space:pre-wrap;word-break:break-word;line-height:1.6;max-height:150px;overflow-y:auto">{{ displayText(item.field) || '-' }}</div>
               <div v-else-if="item.field.type === 'CHOICE' && getChoiceTags(item.field, viewData).length > 0" style="display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center">
                 <template v-for="(tag, idx) in getChoiceTags(item.field, viewData).slice(0, 2)" :key="idx">
                   <span :style="'display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;background:' + (tag.color ? tag.color + '20' : 'rgba(128,128,128,0.1)') + ';color:' + (tag.color ? darkenHex(tag.color, 0.35) : 'inherit')">{{ tag.label }}</span>

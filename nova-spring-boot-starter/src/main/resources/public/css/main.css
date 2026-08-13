@@ -1028,3 +1028,22 @@ body.dark { background: #151515 !important; }
 .ref-attach-thumb:hover { opacity: .8; }
 .dark .ref-attach-thumb { border-color: #333; }
 
+/* TEXTAREA scrollbar 美化 */
+.ref-textarea-box {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.ref-textarea-box::-webkit-scrollbar {
+  width: 6px;
+}
+.ref-textarea-box::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ref-textarea-box::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+.ref-textarea-box::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
