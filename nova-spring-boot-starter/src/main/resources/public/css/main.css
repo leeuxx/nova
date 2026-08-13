@@ -980,6 +980,7 @@ body.dark { background: #151515 !important; }
   min-width: 0;
   font-size: 13px;
   color: #8a8a8a;
+  font-weight: 600;
   line-height: 1.6;
   text-align: right;
   overflow: hidden;
@@ -989,9 +990,9 @@ body.dark { background: #151515 !important; }
 .dark .ref-desc-label { color: #666; }
 
 .ref-form-value {
-  font-size: 14px;
+  font-size: 15px;
   color: #1f1f1f;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.6;
 }
 .dark .ref-form-value { color: #e0e0e0; }

@@ -45,9 +45,17 @@ var NovaRefForm = {
       })
       var self = this
       return order.map(function(g) {
-        return { key: g || '__ungrouped__', title: g || '', items: map[g] }
+        var items = map[g]
+        var visibleIndex = 0
+        return {
+          key: g || '__ungrouped__',
+          title: g || '',
+          items: items.map(function(f) {
+            return { field: f, rowIndex: visibleIndex++ }
+          })
+        }
       }).filter(function(sec) {
-        return sec.items.some(function(f) { return self.fieldVisible(f) })
+        return sec.items.some(function(it) { return self.fieldVisible(it.field) })
       })
     },
     gridStyle: function() {
@@ -256,24 +264,24 @@ var NovaRefForm = {
         <span>{{ sec.title }}</span>
       </template>
       <div :style="gridStyle">
-        <template v-for="f in sec.items" :key="f.field">
-          <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
-          <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'"></div>
-          <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON'"
-            :style="'display:flex;align-items:' + (f.type === 'BOOLEAN' ? 'center' : 'baseline') + ';gap:8px;min-width:0;overflow:hidden' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
-            <span class="ref-desc-label">{{ f.title }}</span>
-            <n-button-group v-if="f.type === 'BOOLEAN' && displayText(f) !== ''" size="small" style="pointer-events:none">
-              <n-button :type="booleanValue(f) ? 'primary' : 'default'">是</n-button>
-              <n-button :type="!booleanValue(f) ? 'primary' : 'default'">否</n-button>
+        <template v-for="(item, idx) in sec.items" :key="item.field.field">
+          <n-divider v-if="item.field.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ item.field.title }}</n-divider>
+          <div v-else-if="item.field.type === 'EMPTY' && editLayout !== 'FULL_LINE'"></div>
+          <div v-else-if="item.field.type !== 'DIVIDE' && item.field.type !== 'EMPTY' && item.field.type !== 'BUTTON'"
+            :style="'display:flex;align-items:' + (item.field.type === 'BOOLEAN' ? 'center' : 'baseline') + ';gap:8px;min-width:0;overflow:hidden;padding:6px;border-radius:4px' + (item.field.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+            <span class="ref-desc-label">{{ item.field.title }}:</span>
+            <n-button-group v-if="item.field.type === 'BOOLEAN' && displayText(item.field) !== ''" size="small" style="pointer-events:none">
+              <n-button :type="booleanValue(item.field) ? 'primary' : 'default'">是</n-button>
+              <n-button :type="!booleanValue(item.field) ? 'primary' : 'default'">否</n-button>
             </n-button-group>
-            <div v-else-if="f.type === 'ATTACHMENT' && isImageAttach(f) && getAttachUrls(f, viewData).length > 0" class="ref-attach-wrap">
-              <NovaImagePreview :src-list="getAttachUrls(f, viewData)" :width="36" :height="36" show-all />
+            <div v-else-if="item.field.type === 'ATTACHMENT' && isImageAttach(item.field) && getAttachUrls(item.field, viewData).length > 0" class="ref-attach-wrap">
+              <NovaImagePreview :src-list="getAttachUrls(item.field, viewData)" :width="36" :height="36" show-all />
             </div>
             <div v-else class="ref-desc-value">
-              <n-ellipsis v-if="f.type === 'ATTACHMENT' && getAttachUrls(f, viewData).length > 0" class="ref-form-value">{{ getAttachUrls(f, viewData).join(', ') }}</n-ellipsis>
-              <span v-else-if="containsHtml(displayText(f))" class="ref-form-html" v-html="displayText(f)"></span>
-              <n-ellipsis v-else-if="displayText(f) !== ''" class="ref-form-value"
-                :style="getChoiceColor(f, viewData) ? { color: getChoiceColor(f, viewData) } : {}">{{ displayText(f) }}</n-ellipsis>
+              <n-ellipsis v-if="item.field.type === 'ATTACHMENT' && getAttachUrls(item.field, viewData).length > 0" class="ref-form-value">{{ getAttachUrls(item.field, viewData).join(', ') }}</n-ellipsis>
+              <span v-else-if="containsHtml(displayText(item.field))" class="ref-form-html" v-html="displayText(item.field)"></span>
+              <n-ellipsis v-else-if="displayText(item.field) !== ''" class="ref-form-value"
+                :style="getChoiceColor(item.field, viewData) ? { color: getChoiceColor(item.field, viewData) } : {}">{{ displayText(item.field) }}</n-ellipsis>
               <span v-else class="ref-form-value">-</span>
             </div>
           </div>
