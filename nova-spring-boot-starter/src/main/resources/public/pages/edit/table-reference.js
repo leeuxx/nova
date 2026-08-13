@@ -5,7 +5,8 @@ var NovaRefForm = {
   name: 'NovaRefForm',
 
   components: {
-    NovaImagePreview: window.NovaImagePreview
+    NovaImagePreview: window.NovaImagePreview,
+    NTooltip: naive.NTooltip
   },
 
   props: {
@@ -220,6 +221,90 @@ var NovaRefForm = {
       return null
     },
 
+    // CHOICE 标签渲染
+    getChoiceTags: function(col, row) {
+      var val = row[col.field]
+      if (!val) return []
+      var choice = this.choiceMap[col.field]
+      if (!choice || !choice.values) return []
+
+      var valMap = {}
+      var colorMap = {}
+      if (Array.isArray(choice.values)) {
+        choice.values.forEach(function(item) {
+          if (item && item.value !== undefined) {
+            valMap[String(item.value)] = item.label || String(item.value)
+            if (item.color) {
+              colorMap[String(item.value)] = item.color
+            }
+          }
+        })
+      } else {
+        for (var k in choice.values) {
+          valMap[k] = choice.values[k]
+        }
+      }
+
+      var isMulti = choice.selectType === 'MULTI'
+      var rawLabels = isMulti ? String(val).split(',').map(function(s) { return s.trim() }).filter(Boolean) : [String(val)]
+
+      return rawLabels.map(function(rawVal, i) {
+        var label = valMap[rawVal] || rawVal
+        var color = colorMap[rawVal] || null
+        return { label: label, color: color }
+      })
+    },
+
+    // 深化颜色（用于标签文本）
+    darkenHex: function(hex, amount) {
+      if (!hex) return 'inherit'
+      var num = parseInt(hex.replace('#', ''), 16)
+      var r = Math.max(0, (num >> 16) - Math.round(255 * amount))
+      var g = Math.max(0, ((num >> 8) & 0x00FF) - Math.round(255 * amount))
+      var b = Math.max(0, (num & 0x0000FF) - Math.round(255 * amount))
+      return '#' + (0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1)
+    },
+
+    // 获取 CHOICE 多余数量
+    getChoiceRest: function(col, row) {
+      var tags = this.getChoiceTags(col, row)
+      return tags.length > 2 ? tags.length - 2 : 0
+    },
+
+    // 获取 CHOICE 多余标签
+    getChoiceRestTags: function(col, row) {
+      var tags = this.getChoiceTags(col, row)
+      return tags.slice(2)
+    },
+
+    // TAG 标签渲染
+    getTagTags: function(col, row) {
+      var val = row[col.field]
+      if (!val) return []
+      var tags = String(val).split(',').map(function(t) { return t.trim() }).filter(Boolean)
+      return tags.map(function(tag) {
+        return { label: tag }
+      })
+    },
+
+    // 获取 TAG 多余数量
+    getTagRest: function(col, row) {
+      var tags = this.getTagTags(col, row)
+      return tags.length > 2 ? tags.length - 2 : 0
+    },
+
+    // 获取 TAG 多余标签
+    getTagRestTags: function(col, row) {
+      var tags = this.getTagTags(col, row)
+      return tags.slice(2)
+    },
+
+    // 获取附件多余数量
+    getAttachmentRest: function(col, row) {
+      var urls = this.getAttachUrls(col, row)
+      return urls.length > 2 ? urls.length - 2 : 0
+    },
+
     // HTML 检测
     containsHtml: function(str) {
       return /<[a-z]+[\s>]/i.test(String(str))
@@ -274,14 +359,40 @@ var NovaRefForm = {
               <n-button :type="booleanValue(item.field) ? 'primary' : 'default'">是</n-button>
               <n-button :type="!booleanValue(item.field) ? 'primary' : 'default'">否</n-button>
             </n-button-group>
-            <div v-else-if="item.field.type === 'ATTACHMENT' && isImageAttach(item.field) && getAttachUrls(item.field, viewData).length > 0" class="ref-attach-wrap">
-              <NovaImagePreview :src-list="getAttachUrls(item.field, viewData)" :width="36" :height="36" show-all />
+            <div v-else-if="item.field.type === 'ATTACHMENT' && isImageAttach(item.field) && getAttachUrls(item.field, viewData).length > 0" class="ref-attach-wrap" style="display:inline-flex;gap:6px;align-items:center">
+              <NovaImagePreview :src-list="getAttachUrls(item.field, viewData)" :width="36" :height="36" :showAll="true" />
             </div>
             <div v-else class="ref-desc-value">
-              <n-ellipsis v-if="item.field.type === 'ATTACHMENT' && getAttachUrls(item.field, viewData).length > 0" class="ref-form-value">{{ getAttachUrls(item.field, viewData).join(', ') }}</n-ellipsis>
+              <div v-if="item.field.type === 'CHOICE' && getChoiceTags(item.field, viewData).length > 0" style="display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center">
+                <template v-for="(tag, idx) in getChoiceTags(item.field, viewData).slice(0, 2)" :key="idx">
+                  <span :style="'display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;background:' + (tag.color ? tag.color + '20' : 'rgba(128,128,128,0.1)') + ';color:' + (tag.color ? darkenHex(tag.color, 0.35) : 'inherit')">{{ tag.label }}</span>
+                </template>
+                <n-tooltip v-if="getChoiceRest(item.field, viewData) > 0" trigger="hover" placement="top">
+                  <template #trigger>
+                    <span style="flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 8px;background:rgba(128,128,128,0.1);border-radius:4px">+{{ getChoiceRest(item.field, viewData) }}</span>
+                  </template>
+                  <div style="max-width:400px">
+                    <div v-for="(tag, idx) in getChoiceRestTags(item.field, viewData)" :key="idx" style="padding:4px 0">{{ tag.label }}</div>
+                  </div>
+                </n-tooltip>
+              </div>
+              <div v-else-if="item.field.type === 'TAG' && getTagTags(item.field, viewData).length > 0" style="display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center">
+                <template v-for="(tag, idx) in getTagTags(item.field, viewData).slice(0, 2)" :key="idx">
+                  <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;background:rgba(37,99,235,0.08);color:#2563eb">{{ tag.label }}</span>
+                </template>
+                <n-tooltip v-if="getTagRest(item.field, viewData) > 0" trigger="hover" placement="top">
+                  <template #trigger>
+                    <span style="flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 8px;background:rgba(128,128,128,0.1);border-radius:4px">+{{ getTagRest(item.field, viewData) }}</span>
+                  </template>
+                  <div style="max-width:400px">
+                    <div v-for="(tag, idx) in getTagRestTags(item.field, viewData)" :key="idx" style="padding:4px 0">{{ tag.label }}</div>
+                  </div>
+                </n-tooltip>
+              </div>
+              <n-ellipsis v-else-if="item.field.type === 'ATTACHMENT' && getAttachUrls(item.field, viewData).length > 0" class="ref-form-value">{{ getAttachUrls(item.field, viewData).join(', ') }}</n-ellipsis>
               <span v-else-if="containsHtml(displayText(item.field))" class="ref-form-html" v-html="displayText(item.field)"></span>
               <n-ellipsis v-else-if="displayText(item.field) !== ''" class="ref-form-value"
-                :style="getChoiceColor(item.field, viewData) ? { color: getChoiceColor(item.field, viewData) } : {}">{{ displayText(item.field) }}</n-ellipsis>
+                :style="item.field.type === 'CHOICE' ? {} : {}">{{ displayText(item.field) }}</n-ellipsis>
               <span v-else class="ref-form-value">-</span>
             </div>
           </div>
