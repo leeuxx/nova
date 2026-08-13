@@ -10,19 +10,20 @@ public @interface Readonly {
     @Comment("修改只读")
     boolean edit() default false;
 
-    @Comment("动态只读处理器")
-    Class<? extends ReadonlyHandler> exprHandler() default ReadonlyHandler.class;
-
     @Comment("可被exprHandler接口获取到")
-    String[] params() default {};
+    String param() default "";
+
+    @Comment("动态只读控制实现，优先级高于静态配置")
+    Class<? extends ReadonlyHandler> exprHandler() default ReadonlyHandler.class;
 
     interface ReadonlyHandler {
 
         @Comment("新增只读")
-        boolean add(boolean add, String[] params);
+        boolean add(String param);
 
         @Comment("修改只读")
-        boolean edit(boolean edit, String[] params);
+        boolean edit(String param);
 
     }
+
 }

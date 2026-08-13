@@ -184,7 +184,17 @@ public class NovaFieldUtils {
             if (edit.show()) {
                 // 排除附属对象、附属集合、集合引用
                 if (novaFieldInfo.getType() != Edit.Type.APPENDAGE && novaFieldInfo.getType() != Edit.Type.APPENDAGES && novaFieldInfo.getType() != Edit.Type.LINK) {
+                    // 只读处理
                     Readonly readonly = edit.readonly();
+                    boolean addReadonly = readonly.add();
+                    boolean editReadonly = readonly.edit();
+                    Class<? extends Readonly.ReadonlyHandler> exprHandler = readonly.exprHandler();
+                    if (exprHandler != Readonly.ReadonlyHandler.class) {
+                        String param = readonly.param();
+                        Readonly.ReadonlyHandler readonlyHandler = SpringBeanUtils.getBean(exprHandler);
+                        addReadonly = readonlyHandler.add(param);
+                        editReadonly = readonlyHandler.edit(param);
+                    }
                     EditInfo.ThisForm thisForm = new EditInfo.ThisForm()
                             .setField(field)
                             .setTitle(edit.title())
@@ -192,8 +202,8 @@ public class NovaFieldUtils {
                             .setType(novaFieldInfo.getType())
                             .setNotNull(edit.notNull())
                             .setReadonly(new EditInfo.ThisForm.ReadonlyInfo()
-                                    .setAdd(readonly.add())
-                                    .setEdit(readonly.edit())
+                                    .setAdd(addReadonly)
+                                    .setEdit(editReadonly)
                             )
                             .setShowBy(edit.showBy())
                             .setGroup(edit.group());
