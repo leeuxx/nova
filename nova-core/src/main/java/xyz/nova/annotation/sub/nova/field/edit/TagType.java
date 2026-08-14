@@ -17,6 +17,6 @@ public @interface TagType {
     String param() default "";
 
     @Comment("动态标签列表")
-    Class<? extends TagFetchHandler>[] fetchHandler() default {};
+    Class<? extends TagFetchHandler> fetchHandler() default TagFetchHandler.class;
 
 }

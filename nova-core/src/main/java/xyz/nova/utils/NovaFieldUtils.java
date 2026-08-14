@@ -388,14 +388,12 @@ public class NovaFieldUtils {
                 String[] staticTags = tagType.tags();
                 List<String> tags = new ArrayList<>(Arrays.asList(staticTags));
                 // 动态选择列表
-                Class<? extends TagFetchHandler>[] tagFetchHandlerClass = tagType.fetchHandler();
-                if (tagFetchHandlerClass.length > 0) {
+                Class<? extends TagFetchHandler> tagFetchHandlerClass = tagType.fetchHandler();
+                if (tagFetchHandlerClass != TagFetchHandler.class) {
                     String param = tagType.param();
-                    for (Class<? extends TagFetchHandler> handlerClass : tagFetchHandlerClass) {
-                        TagFetchHandler tagFetchHandler = SpringBeanUtils.getBean(handlerClass);
-                        List<String> fetchTags = tagFetchHandler.fetchTags(param);
-                        tags.addAll(fetchTags);
-                    }
+                    TagFetchHandler tagFetchHandler = SpringBeanUtils.getBean(tagFetchHandlerClass);
+                    List<String> fetchTags = tagFetchHandler.fetchTags(param);
+                    tags.addAll(fetchTags);
                 }
                 TagInfo tagInfo = new TagInfo()
                         .setAllowExtension(tagType.allowExtension())
