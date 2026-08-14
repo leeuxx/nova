@@ -342,21 +342,19 @@ public class NovaFieldUtils {
                     values.add(valueInfo);
                 }
                 // 动态选择列表
-                Class<? extends ChoiceFetchHandler>[] choiceFetchHandlerClass = choiceType.fetchHandler();
-                if (choiceFetchHandlerClass.length > 0) {
+                Class<? extends ChoiceFetchHandler> choiceFetchHandlerClass = choiceType.fetchHandler();
+                if (choiceFetchHandlerClass != ChoiceFetchHandler.class) {
                     String param = choiceType.param();
-                    for (Class<? extends ChoiceFetchHandler> handlerClass : choiceFetchHandlerClass) {
-                        ChoiceFetchHandler choiceFetchHandler = SpringBeanUtils.getBean(handlerClass);
-                        List<ChoiceFetchHandler.VLModel> vlModelList = choiceFetchHandler.fetchChoices(param);
-                        vlModelList.forEach(vlModel -> {
-                            ChoiceInfo.ValueInfo valueInfo = new ChoiceInfo.ValueInfo()
-                                    .setValue(vlModel.getValue())
-                                    .setLabel(vlModel.getLabel())
-                                    .setColor(vlModel.getColor())
-                                    .setRefValue(vlModel.getRefValue());
-                            values.add(valueInfo);
-                        });
-                    }
+                    ChoiceFetchHandler choiceFetchHandler = SpringBeanUtils.getBean(choiceFetchHandlerClass);
+                    List<ChoiceFetchHandler.VLModel> vlModelList = choiceFetchHandler.fetchChoices(param);
+                    vlModelList.forEach(vlModel -> {
+                        ChoiceInfo.ValueInfo valueInfo = new ChoiceInfo.ValueInfo()
+                                .setValue(vlModel.getValue())
+                                .setLabel(vlModel.getLabel())
+                                .setColor(vlModel.getColor())
+                                .setRefValue(vlModel.getRefValue());
+                        values.add(valueInfo);
+                    });
                 }
                 choiceInfo.setValues(values);
                 choiceValues.put(field, choiceInfo);

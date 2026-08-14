@@ -17,7 +17,7 @@ public @interface ChoiceType {
     VL[] vl() default {};
 
     @Comment("动态选择列表")
-    Class<? extends ChoiceFetchHandler>[] fetchHandler() default {};
+    Class<? extends ChoiceFetchHandler> fetchHandler() default ChoiceFetchHandler.class;
 
     @Comment("可被fetchHandler接口获取到")
     String param() default "";
