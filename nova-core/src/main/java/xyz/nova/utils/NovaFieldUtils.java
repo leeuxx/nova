@@ -347,7 +347,7 @@ public class NovaFieldUtils {
                     String param = choiceType.param();
                     for (Class<? extends ChoiceFetchHandler> handlerClass : choiceFetchHandlerClass) {
                         ChoiceFetchHandler choiceFetchHandler = SpringBeanUtils.getBean(handlerClass);
-                        List<ChoiceFetchHandler.VLModel> vlModelList = choiceFetchHandler.fetch(param);
+                        List<ChoiceFetchHandler.VLModel> vlModelList = choiceFetchHandler.fetchChoices(param);
                         vlModelList.forEach(vlModel -> {
                             ChoiceInfo.ValueInfo valueInfo = new ChoiceInfo.ValueInfo()
                                     .setValue(vlModel.getValue())

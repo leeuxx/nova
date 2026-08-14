@@ -9,7 +9,7 @@ import java.util.List;
 public interface ChoiceFetchHandler {
 
     @Comment("获取下拉列表")
-    List<VLModel> fetch(String param);
+    List<VLModel> fetchChoices(String param);
 
     @Data
     @Accessors(chain = true)

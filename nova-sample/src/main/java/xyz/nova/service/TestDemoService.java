@@ -40,7 +40,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     private TestDemo3Service testDemo3Service;
 
     @Override
-    public List<VLModel> fetch(String param) {
+    public List<VLModel> fetchChoices(String param) {
         return Arrays.asList(
                 new VLModel().setValue("1").setLabel("篮球").setRefValue("1"),
                 new VLModel().setValue("2").setLabel("羽毛球").setColor("#fe6767").setRefValue("2"),
