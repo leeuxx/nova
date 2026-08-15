@@ -4486,7 +4486,7 @@ const NovaTable = {
                   <n-button-group>
                     <n-button v-if="!opFormAttachmentMap[f.field] || !opFormAttachmentMap[f.field].maxLimit || (opFormData[f.field] || []).length < opFormAttachmentMap[f.field].maxLimit"
                       style="flex:1" @click="triggerOpFileUpload(f.field)">
-                      <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px"></iconify-icon>
+                      <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
                       上传{{ opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit ? '（共' + (opFormAttachmentMap[f.field].maxLimit - (opFormData[f.field] || []).length) + '个）' : '' }}
                     </n-button>
                     <n-button style="flex:1" :disabled="!(opFormData[f.field] || []).length" @click="openPreview(f, null, true)">
@@ -4627,7 +4627,7 @@ const NovaTable = {
                     <n-button-group>
                       <n-button v-if="!((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) || !((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit || (opFormAppData(tab.tapNovaName)[f.field] || []).length < ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit"
                         style="flex:1" @click="triggerOpAppFileUpload(tab.tapNovaName, f.field)">
-                        <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px"></iconify-icon>
+                        <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
                         上传{{ ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit ? '（共' + (((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit - (opFormAppData(tab.tapNovaName)[f.field] || []).length) + '个）' : '' }}
                       </n-button>
                       <n-button style="flex:1" :disabled="!(opFormAppData(tab.tapNovaName)[f.field] || []).length" @click="openPreview(f, tab.tapNovaName, true)">
