@@ -1,8 +1,8 @@
 package xyz.nova.dto;
 
-import xyz.nova.annotation.comment.Comment;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import xyz.nova.annotation.comment.Comment;
 
 import java.util.List;
 import java.util.Map;
@@ -321,9 +321,6 @@ public class NovaTableBuild {
 
             @Comment("附件类型")
             private String type;
-
-            @Comment("附件显示类型")
-            private String showType;
 
             @Comment("附件表格中显示类型")
             private String tableShowType;

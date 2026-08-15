@@ -510,7 +510,6 @@ public class NovaFieldUtils {
             if (novaFieldInfo.getType() == Edit.Type.ATTACHMENT) {
                 AttachmentTypeInfo attachmentTypeInfo = new AttachmentTypeInfo()
                         .setType(edit.attachmentType().type())
-                        .setShowType(edit.attachmentType().showType())
                         .setTableShowType(edit.attachmentType().tableShowType())
                         .setMaxLimit(edit.attachmentType().maxLimit())
                         .setMinSize(edit.attachmentType().minSize())
@@ -986,9 +985,6 @@ public class NovaFieldUtils {
 
         @Comment("附件类型")
         private AttachmentType.Type type;
-
-        @Comment("附件显示类型")
-        private AttachmentType.ShowType showType;
 
         @Comment("附件在表格中显示类型")
         private AttachmentType.TableShowType tableShowType;

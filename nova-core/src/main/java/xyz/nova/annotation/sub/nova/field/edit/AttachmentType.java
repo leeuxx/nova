@@ -7,9 +7,6 @@ public @interface AttachmentType {
     @Comment("附件类型")
     Type type() default Type.BASE;
 
-    @Comment("附件显示类型")
-    ShowType showType() default ShowType.DOWN;
-
     @Comment("附件在表格中显示类型")
     TableShowType tableShowType() default TableShowType.TEXT;
 
@@ -30,13 +27,6 @@ public @interface AttachmentType {
         BASE,
         @Comment("图片文件")
         IMAGE
-    }
-
-    enum ShowType {
-        @Comment("往上展开")
-        TOP,
-        @Comment("往下展开")
-        DOWN
     }
 
     enum TableShowType {

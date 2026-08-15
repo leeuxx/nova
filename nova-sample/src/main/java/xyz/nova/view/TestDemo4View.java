@@ -94,7 +94,6 @@ public class TestDemo4View {
                     type = Edit.Type.ATTACHMENT,
                     attachmentType = @AttachmentType(
                             type = AttachmentType.Type.IMAGE,
-                            showType = AttachmentType.ShowType.TOP,
                             maxLimit = 5
                     )
             )

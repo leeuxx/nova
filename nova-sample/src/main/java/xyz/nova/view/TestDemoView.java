@@ -1,5 +1,7 @@
 package xyz.nova.view;
 
+import lombok.Data;
+import lombok.experimental.Accessors;
 import xyz.nova.annotation.Nova;
 import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.config.NovaId;
@@ -16,8 +18,6 @@ import xyz.nova.service.TestDemo2Service;
 import xyz.nova.service.TestDemoService;
 import xyz.nova.service.authority.RowAuthExpr;
 import xyz.nova.service.data.DefaultDataProxy;
-import lombok.Data;
-import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -441,7 +441,6 @@ public class TestDemoView {
                     type = Edit.Type.ATTACHMENT,
                     attachmentType = @AttachmentType(
                             type = AttachmentType.Type.IMAGE,
-                            showType = AttachmentType.ShowType.DOWN,
                             maxLimit = 7,
                             tableShowType = AttachmentType.TableShowType.IMAGE
                     )
@@ -456,7 +455,6 @@ public class TestDemoView {
                     type = Edit.Type.ATTACHMENT,
                     attachmentType = @AttachmentType(
                             type = AttachmentType.Type.BASE,
-                            showType = AttachmentType.ShowType.TOP,
                             maxLimit = 3,
                             tableShowType = AttachmentType.TableShowType.VIDEO
                     )
@@ -557,7 +555,6 @@ public class TestDemoView {
                         type = Edit.Type.ATTACHMENT,
                         attachmentType = @AttachmentType(
                                 type = AttachmentType.Type.IMAGE,
-                                showType = AttachmentType.ShowType.TOP,
                                 maxLimit = 7
                         ),
                         group = "其他信息"
