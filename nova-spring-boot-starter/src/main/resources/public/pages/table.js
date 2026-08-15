@@ -384,7 +384,6 @@ const NovaTable = {
       tableAttachPreviewType: null,
       tableAttachPreviewIndex: 0,
       videoHoverIdx: -1,
-      attachmentDropdownKey: null,
       refSelectOptions:  {},   // { [field]: [{label, value}] }
       refSelectLoading:  {},   // { [field]: bool }
       refSelectTotal:    {},   // { [field]: number }
@@ -2480,11 +2479,13 @@ const NovaTable = {
       list.splice(idx, 1)
       if (this.previewIndex >= list.length) this.previewIndex = Math.max(0, list.length - 1)
     },
-    setAttachmentDropdown(fieldKey) {
-      this.attachmentDropdownKey = fieldKey
+    triggerOpFileUpload(fieldKey) {
+      var input = document.getElementById('upload-op-' + fieldKey)
+      if (input) input.click()
     },
-    clearAttachmentDropdown() {
-      this.attachmentDropdownKey = null
+    triggerOpAppFileUpload(appNovaName, fieldKey) {
+      var input = document.getElementById('upload-opApp-' + appNovaName + '-' + fieldKey)
+      if (input) input.click()
     },
     // 打开表格附件预览弹窗
     openTableAttachPreview(field, urls, type) {
@@ -4481,33 +4482,21 @@ const NovaTable = {
                     <template #suffix><iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon></template>
                   </n-input>
                 </div>
-                <div v-else-if="f.type === 'ATTACHMENT'" class="attachment-field"
-                  @mouseenter="attachmentDropdownKey = 'op_' + f.field" @mouseleave="attachmentDropdownKey = null">
-                  <div class="attachment-btn">
-                    <iconify-icon icon="mdi:paperclip" style="font-size:13px"></iconify-icon>附件管理
-                    <iconify-icon icon="mdi:chevron-down" :style="'font-size:12px;transition:transform .2s ease;transform:' + (attachmentDropdownKey === 'op_' + f.field ? 'rotate(180deg)' : 'rotate(0deg)')"></iconify-icon>
-                  </div>
-                  <transition name="dropdown-fade">
-                    <div v-if="attachmentDropdownKey === 'op_' + f.field" :class="'attachment-dropdown' + (opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].showType === 'DOWN' ? ' down' : '')">
-                      <div class="attachment-dropdown-inner">
-                        <label v-if="!opFormAttachmentMap[f.field] || !opFormAttachmentMap[f.field].maxLimit || (opFormData[f.field] || []).length < opFormAttachmentMap[f.field].maxLimit"
-                          class="attachment-dropdown-item" :for="'upload-op-' + f.field">
-                          <iconify-icon icon="mdi:upload" style="font-size:13px"></iconify-icon>
-                          上传文件{{ opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit ? '（共' + (opFormAttachmentMap[f.field].maxLimit - (opFormData[f.field] || []).length) + '个）' : '' }}
-                          <input :id="'upload-op-' + f.field" type="file" style="display:none"
-                            :multiple="opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit > 1"
-                            @change="handleOpAttachmentChange(f, $event)" />
-                        </label>
-                        <div v-if="(opFormData[f.field] || []).length > 0" class="attachment-dropdown-item" @click="openPreview(f, null, true)">
-                          <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>
-                          查看文件（共{{ (opFormData[f.field] || []).length }}个）
-                        </div>
-                        <div v-else class="attachment-dropdown-item attachment-disabled">
-                          <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>查看文件（共0个）
-                        </div>
-                      </div>
-                    </div>
-                  </transition>
+                <div v-else-if="f.type === 'ATTACHMENT'" style="display:flex;flex-direction:column;gap:4px">
+                  <n-button-group>
+                    <n-button v-if="!opFormAttachmentMap[f.field] || !opFormAttachmentMap[f.field].maxLimit || (opFormData[f.field] || []).length < opFormAttachmentMap[f.field].maxLimit"
+                      style="flex:1" @click="triggerOpFileUpload(f.field)">
+                      <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px"></iconify-icon>
+                      上传{{ opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit ? '（共' + (opFormAttachmentMap[f.field].maxLimit - (opFormData[f.field] || []).length) + '个）' : '' }}
+                    </n-button>
+                    <n-button style="flex:1" :disabled="!(opFormData[f.field] || []).length" @click="openPreview(f, null, true)">
+                      <iconify-icon icon="mdi:eye-outline" style="font-size:14px;margin-right:4px"></iconify-icon>
+                      查看（共{{ (opFormData[f.field] || []).length }}个）
+                    </n-button>
+                  </n-button-group>
+                  <input :id="'upload-op-' + f.field" type="file" style="display:none"
+                    :multiple="opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit > 1"
+                    @change="handleOpAttachmentChange(f, $event)" />
                 </div>
                 <n-input v-else v-model:value="opFormData[f.field]" :placeholder="'请输入' + f.title" clearable />
                 <span v-if="opFormErrors[f.field]" class="form-error-tip">{{ opFormErrors[f.field] }}</span>
@@ -4634,39 +4623,21 @@ const NovaTable = {
                       <template #suffix><iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon></template>
                     </n-input>
                   </div>
-                  <div v-else-if="f.type === 'ATTACHMENT'" class="attachment-field"
-                    :style="'grid-column:1/-1'"
-                    @mouseenter="attachmentDropdownKey = 'opApp_' + tab.tapNovaName + '_' + f.field"
-                    @mouseleave="attachmentDropdownKey = null">
-                    <div class="attachment-btn">
-                      <iconify-icon icon="mdi:paperclip" style="font-size:13px"></iconify-icon>附件管理
-                      <iconify-icon icon="mdi:chevron-down" :style="'font-size:12px;transition:transform .2s ease;transform:' + (attachmentDropdownKey === 'opApp_' + tab.tapNovaName + '_' + f.field ? 'rotate(180deg)' : 'rotate(0deg)')"></iconify-icon>
-                    </div>
-                    <transition name="dropdown-fade">
-                      <div v-if="attachmentDropdownKey === 'opApp_' + tab.tapNovaName + '_' + f.field"
-                        :class="'attachment-dropdown' + ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field] && (opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field].showType === 'DOWN' ? ' down' : '')">
-                        <div class="attachment-dropdown-inner">
-                          <label v-if="!((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) || !((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit || (opFormAppData(tab.tapNovaName)[f.field] || []).length < ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit"
-                            class="attachment-dropdown-item"
-                            :for="'upload-opApp-' + tab.tapNovaName + '-' + f.field">
-                            <iconify-icon icon="mdi:upload" style="font-size:13px"></iconify-icon>
-                            上传文件{{ ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit ? '（共' + (((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit - (opFormAppData(tab.tapNovaName)[f.field] || []).length) + '个）' : '' }}
-                            <input :id="'upload-opApp-' + tab.tapNovaName + '-' + f.field" type="file" style="display:none"
-                              :multiple="((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit > 1"
-                              @change="handleOpAppAttachmentChange(tab.tapNovaName, f, $event)" />
-                          </label>
-                          <div v-if="(opFormAppData(tab.tapNovaName)[f.field] || []).length > 0"
-                            class="attachment-dropdown-item"
-                            @click="openPreview(f, tab.tapNovaName, true)">
-                            <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>
-                            查看文件（共{{ (opFormAppData(tab.tapNovaName)[f.field] || []).length }}个）
-                          </div>
-                          <div v-else class="attachment-dropdown-item attachment-disabled">
-                            <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>查看文件（共0个）
-                          </div>
-                        </div>
-                      </div>
-                    </transition>
+                  <div v-else-if="f.type === 'ATTACHMENT'" style="display:flex;flex-direction:column;gap:4px;grid-column:1/-1">
+                    <n-button-group>
+                      <n-button v-if="!((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) || !((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit || (opFormAppData(tab.tapNovaName)[f.field] || []).length < ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit"
+                        style="flex:1" @click="triggerOpAppFileUpload(tab.tapNovaName, f.field)">
+                        <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px"></iconify-icon>
+                        上传{{ ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit ? '（共' + (((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit - (opFormAppData(tab.tapNovaName)[f.field] || []).length) + '个）' : '' }}
+                      </n-button>
+                      <n-button style="flex:1" :disabled="!(opFormAppData(tab.tapNovaName)[f.field] || []).length" @click="openPreview(f, tab.tapNovaName, true)">
+                        <iconify-icon icon="mdi:eye-outline" style="font-size:14px;margin-right:4px"></iconify-icon>
+                        查看（共{{ (opFormAppData(tab.tapNovaName)[f.field] || []).length }}个）
+                      </n-button>
+                    </n-button-group>
+                    <input :id="'upload-opApp-' + tab.tapNovaName + '-' + f.field" type="file" style="display:none"
+                      :multiple="((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit > 1"
+                      @change="handleOpAppAttachmentChange(tab.tapNovaName, f, $event)" />
                   </div>
                   <n-input
                     v-else
