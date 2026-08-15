@@ -275,11 +275,11 @@ window.NovaFieldThis = {
         <n-button v-if="!isReadonly(f) && (!attachmentMap[f.field] || !attachmentMap[f.field].maxLimit || (formData[f.field] || []).length < attachmentMap[f.field].maxLimit)"
           style="flex:1" @click="triggerFileUpload(f.field)">
           <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
-          上传{{ attachmentMap[f.field] && attachmentMap[f.field].maxLimit ? '（共' + (attachmentMap[f.field].maxLimit - (formData[f.field] || []).length) + '个）' : '' }}
+          上传<span style="font-size:12px;opacity:0.7">{{ attachmentMap[f.field] && attachmentMap[f.field].maxLimit ? '（共' + (attachmentMap[f.field].maxLimit - (formData[f.field] || []).length) + '个）' : '' }}</span>
         </n-button>
         <n-button style="flex:1" :disabled="!(formData[f.field] || []).length" @click="$emit('preview-click', f)">
           <iconify-icon icon="mdi:eye-outline" style="font-size:14px;margin-right:4px"></iconify-icon>
-          查看（共{{ (formData[f.field] || []).length }}个）
+          查看<span style="font-size:12px;opacity:0.7">（共{{ (formData[f.field] || []).length }}个）</span>
         </n-button>
       </n-button-group>
       <input :id="'upload-dd-' + f.field" type="file" style="display:none"
