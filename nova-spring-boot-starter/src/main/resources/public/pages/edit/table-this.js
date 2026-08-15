@@ -94,24 +94,6 @@ window.NovaFieldThis = {
     },
     setAttachmentDropdown(fieldKey) {
       this.attachmentDropdownKey = fieldKey
-      var self = this
-      this.$nextTick(function() {
-        var el = document.querySelector('[data-attach-field="' + fieldKey + '"]')
-        if (!el) return
-        var dropdown = el.querySelector('.attachment-dropdown')
-        if (!dropdown) return
-        var btn = el.querySelector('.attachment-btn')
-        if (!btn) return
-        var rect = btn.getBoundingClientRect()
-        var inner = dropdown.querySelector('.attachment-dropdown-inner')
-        var innerHeight = inner ? inner.offsetHeight : 100
-        var showType = self.attachmentMap[fieldKey] && self.attachmentMap[fieldKey].showType
-        var isDown = showType === 'DOWN'
-        var top = isDown ? rect.bottom + 4 : rect.top - innerHeight - 4
-        dropdown.style.left = rect.left + 'px'
-        dropdown.style.top = top + 'px'
-        dropdown.style.width = rect.width + 'px'
-      })
     },
     clearAttachmentDropdown() {
       this.attachmentDropdownKey = null
@@ -292,7 +274,7 @@ window.NovaFieldThis = {
         <template #suffix><iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon></template>
       </n-input>
     </div>
-    <div v-else-if="f.type === 'ATTACHMENT'" class="attachment-field" :data-attach-field="f.field"
+    <div v-else-if="f.type === 'ATTACHMENT'" class="attachment-field"
       @mouseenter="setAttachmentDropdown(f.field)" @mouseleave="clearAttachmentDropdown">
       <div class="attachment-btn">
         <iconify-icon icon="mdi:paperclip" style="font-size:13px"></iconify-icon>
@@ -300,7 +282,7 @@ window.NovaFieldThis = {
         <iconify-icon icon="mdi:chevron-down" :style="'font-size:12px;transition:transform .2s ease;transform:' + (attachmentDropdownKey === f.field ? 'rotate(180deg)' : 'rotate(0deg)')"></iconify-icon>
       </div>
       <transition name="dropdown-fade">
-        <div v-if="attachmentDropdownKey === f.field" class="attachment-dropdown">
+        <div v-if="attachmentDropdownKey === f.field" :class="'attachment-dropdown' + (attachmentMap[f.field] && attachmentMap[f.field].showType === 'DOWN' ? ' down' : '')">
           <div class="attachment-dropdown-inner">
             <label v-if="!isReadonly(f) && (!attachmentMap[f.field] || !attachmentMap[f.field].maxLimit || (formData[f.field] || []).length < attachmentMap[f.field].maxLimit)"
               class="attachment-dropdown-item"

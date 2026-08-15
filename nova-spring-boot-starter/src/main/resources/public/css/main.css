@@ -661,10 +661,11 @@ body.dark { background: #151515 !important; }
 }
 
 /* ─── 附件管理按钮/下拉列表（亮色） ─────────────────────────── */
-.attachment-field                    { position: relative; height: 34px; z-index: 100; }
+.attachment-field                    { position: relative; height: 34px; }
 .attachment-btn                      { display: flex; align-items: center; justify-content: center; gap: 6px; height: 34px; padding: 0 14px; box-sizing: border-box; border: 1px solid #d5dce3; border-radius: 4px; background: #fff; cursor: pointer; font-size: 12px; color: #333; transition: border-color .15s, color .15s; }
 .attachment-btn:hover                { border-color: #2080f0; color: #2080f0; }
-.attachment-dropdown                 { position: fixed; z-index: 9999; }
+.attachment-dropdown                 { position: absolute; bottom: calc(100% - 4px); left: 0; right: 0; padding-bottom: 4px; z-index: 1000; }
+.attachment-dropdown.down            { top: calc(100% - 4px); bottom: unset; padding-top: 4px; padding-bottom: 0; }
 .attachment-dropdown-inner           { background: #fff; border: 1px solid #e5e5e5; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 4px; }
 .attachment-dropdown-item            { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; font-size: 12px; color: #333; cursor: pointer; border-radius: 4px; transition: background .15s, color .15s; }
 .attachment-dropdown-item:hover      { background: #f0f7ff; color: #2080f0; }
