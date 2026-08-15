@@ -21,9 +21,7 @@ window.NovaAppForm = {
   emits: ['field-change', 'reference-click', 'preview-click', 'attachment-change'],
 
   data() {
-    return {
-      attachmentDropdownKey: null
-    }
+    return {}
   },
 
   computed: {
@@ -143,6 +141,10 @@ window.NovaAppForm = {
       var val = this.formData[field]
       if (val === null || val === undefined || val === '') return ''
       return String(val)
+    },
+    triggerFileUpload(fieldKey) {
+      var input = document.getElementById('upload-app-' + this.appNovaName + '-' + fieldKey)
+      if (input) input.click()
     }
   },
 
@@ -238,32 +240,22 @@ window.NovaAppForm = {
           <template #suffix><iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon></template>
         </n-input>
       </div>
-      <div v-else-if="f.type === 'ATTACHMENT'" class="attachment-field"
-        @mouseenter="attachmentDropdownKey = f.field" @mouseleave="attachmentDropdownKey = null">
-        <div class="attachment-btn">
-          <iconify-icon icon="mdi:paperclip" style="font-size:13px"></iconify-icon>附件管理
-          <iconify-icon icon="mdi:chevron-down" :style="'font-size:12px;transition:transform .2s ease;transform:' + (attachmentDropdownKey === f.field ? 'rotate(180deg)' : 'rotate(0deg)')"></iconify-icon>
-        </div>
-        <transition name="dropdown-fade">
-          <div v-if="attachmentDropdownKey === f.field" :class="'attachment-dropdown' + ((buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].showType === 'DOWN' ? ' down' : '')">
-            <div class="attachment-dropdown-inner">
-              <label v-if="!isReadonly(f) && (!(buildData.attachmentMap||{})[f.field] || !(buildData.attachmentMap||{})[f.field].maxLimit || (formData[f.field]||[]).length < (buildData.attachmentMap||{})[f.field].maxLimit)"
-                class="attachment-dropdown-item" :for="'upload-app-'+appNovaName+'-'+f.field">
-                <iconify-icon icon="mdi:upload" style="font-size:13px"></iconify-icon>
-                上传文件{{ (buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].maxLimit ? '\\uff08\\u5171'+((buildData.attachmentMap||{})[f.field].maxLimit-(formData[f.field]||[]).length)+'\\u4e2a\\uff09' : '' }}
-                <input :id="'upload-app-'+appNovaName+'-'+f.field" type="file" style="display:none"
-                  :multiple="(buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].maxLimit > 1"
-                  @change="$emit('attachment-change', f, $event)" />
-              </label>
-              <div v-if="(formData[f.field]||[]).length > 0" class="attachment-dropdown-item" @click="$emit('preview-click', f)">
-                <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>查看文件（共{{ (formData[f.field]||[]).length }}个）
-              </div>
-              <div v-else class="attachment-dropdown-item attachment-disabled">
-                <iconify-icon icon="mdi:eye-outline" style="font-size:13px"></iconify-icon>查看文件（共0个）
-              </div>
-            </div>
-          </div>
-        </transition>
+      <div v-else-if="f.type === 'ATTACHMENT'" style="display:flex;flex-direction:column;gap:4px">
+        <n-button-group>
+          <n-button v-if="!isReadonly(f) && (!(buildData.attachmentMap||{})[f.field] || !(buildData.attachmentMap||{})[f.field].maxLimit || (formData[f.field]||[]).length < (buildData.attachmentMap||{})[f.field].maxLimit)"
+            style="flex:1" @click="triggerFileUpload(f.field)">
+            <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px"></iconify-icon>
+            上传{{ (buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].maxLimit ? '（共'+((buildData.attachmentMap||{})[f.field].maxLimit-(formData[f.field]||[]).length)+'个）' : '' }}
+          </n-button>
+          <n-button style="flex:1" :disabled="!(formData[f.field]||[]).length" @click="$emit('preview-click', f)">
+            <iconify-icon icon="mdi:eye-outline" style="font-size:14px;margin-right:4px"></iconify-icon>
+            查看（共{{ (formData[f.field]||[]).length }}个）
+          </n-button>
+        </n-button-group>
+        <input :id="'upload-app-'+appNovaName+'-'+f.field" type="file" style="display:none"
+          :multiple="(buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].maxLimit > 1"
+          :accept="(buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].fileTypes && (buildData.attachmentMap||{})[f.field].fileTypes.length ? (buildData.attachmentMap||{})[f.field].fileTypes.join(',') : undefined"
+          @change="$emit('attachment-change', f, $event)" />
       </div>
       <n-input v-else
         :value="formData[f.field]" :placeholder="'请输入'+f.title"
