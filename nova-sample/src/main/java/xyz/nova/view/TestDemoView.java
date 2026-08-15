@@ -441,7 +441,7 @@ public class TestDemoView {
                     type = Edit.Type.ATTACHMENT,
                     attachmentType = @AttachmentType(
                             type = AttachmentType.Type.IMAGE,
-                            showType = AttachmentType.ShowType.TOP,
+                            showType = AttachmentType.ShowType.DOWN,
                             maxLimit = 7,
                             tableShowType = AttachmentType.TableShowType.IMAGE
                     )
