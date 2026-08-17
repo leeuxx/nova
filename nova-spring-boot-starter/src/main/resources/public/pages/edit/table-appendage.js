@@ -242,15 +242,17 @@ window.NovaAppForm = {
       </div>
       <div v-else-if="f.type === 'ATTACHMENT'" style="display:flex;flex-direction:column;gap:4px">
         <n-button-group>
-          <n-button v-if="!isReadonly(f) && (!(buildData.attachmentMap||{})[f.field] || !(buildData.attachmentMap||{})[f.field].maxLimit || (formData[f.field]||[]).length < (buildData.attachmentMap||{})[f.field].maxLimit)"
-            style="flex:1" @click="triggerFileUpload(f.field)">
+          <n-button style="flex:1"
+            :disabled="isReadonly(f) || ((buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].maxLimit && (formData[f.field]||[]).length >= (buildData.attachmentMap||{})[f.field].maxLimit)"
+            @click="triggerFileUpload(f.field)">
             <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
-            上传<span style="font-size:12px;opacity:0.7">{{ (buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].maxLimit ? '（共'+((buildData.attachmentMap||{})[f.field].maxLimit-(formData[f.field]||[]).length)+'个）' : '' }}</span>
+            上传<span style="font-size:12px;opacity:0.7">{{ (buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].maxLimit ? '（共'+Math.max(0, (buildData.attachmentMap||{})[f.field].maxLimit-(formData[f.field]||[]).length)+'个）' : '（共0个）' }}</span>
           </n-button>
           <n-button style="flex:1" :disabled="!(formData[f.field]||[]).length" @click="$emit('preview-click', f)">
             <iconify-icon icon="mdi:eye-outline" style="font-size:14px;margin-right:4px"></iconify-icon>
-            查看<span style="font-size:12px;opacity:0.7">（共{{ (formData[f.field]||[]).length }}个）</span>
+            查看<span style="font-size:12px;opacity:0.7">（共{{(formData[f.field]||[]).length}}个）</span>
           </n-button>
+        </n-button-group>
         </n-button-group>
         <input :id="'upload-app-'+appNovaName+'-'+f.field" type="file" style="display:none"
           :multiple="(buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].maxLimit > 1"

@@ -4484,10 +4484,11 @@ const NovaTable = {
                 </div>
                 <div v-else-if="f.type === 'ATTACHMENT'" style="display:flex;flex-direction:column;gap:4px">
                   <n-button-group>
-                    <n-button v-if="!opFormAttachmentMap[f.field] || !opFormAttachmentMap[f.field].maxLimit || (opFormData[f.field] || []).length < opFormAttachmentMap[f.field].maxLimit"
-                      style="flex:1" @click="triggerOpFileUpload(f.field)">
+                    <n-button style="flex:1"
+                      :disabled="opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit && (opFormData[f.field] || []).length >= opFormAttachmentMap[f.field].maxLimit"
+                      @click="triggerOpFileUpload(f.field)">
                       <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
-                      上传<span style="font-size:12px;opacity:0.7">{{ opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit ? '（共' + (opFormAttachmentMap[f.field].maxLimit - (opFormData[f.field] || []).length) + '个）' : '' }}</span>
+                      上传<span style="font-size:12px;opacity:0.7">{{ opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit ? '（共' + Math.max(0, opFormAttachmentMap[f.field].maxLimit - (opFormData[f.field] || []).length) + '个）' : '（共0个）' }}</span>
                     </n-button>
                     <n-button style="flex:1" :disabled="!(opFormData[f.field] || []).length" @click="openPreview(f, null, true)">
                       <iconify-icon icon="mdi:eye-outline" style="font-size:14px;margin-right:4px"></iconify-icon>
@@ -4625,10 +4626,11 @@ const NovaTable = {
                   </div>
                   <div v-else-if="f.type === 'ATTACHMENT'" style="display:flex;flex-direction:column;gap:4px;grid-column:1/-1">
                     <n-button-group>
-                      <n-button v-if="!((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) || !((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit || (opFormAppData(tab.tapNovaName)[f.field] || []).length < ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit"
-                        style="flex:1" @click="triggerOpAppFileUpload(tab.tapNovaName, f.field)">
+                      <n-button style="flex:1"
+                        :disabled="((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit && (opFormAppData(tab.tapNovaName)[f.field] || []).length >= ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit"
+                        @click="triggerOpAppFileUpload(tab.tapNovaName, f.field)">
                         <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
-                        上传<span style="font-size:12px;opacity:0.7">{{ ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit ? '（共' + (((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit - (opFormAppData(tab.tapNovaName)[f.field] || []).length) + '个）' : '' }}</span>
+                        上传<span style="font-size:12px;opacity:0.7">{{ ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit ? '（共' + Math.max(0, ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit - (opFormAppData(tab.tapNovaName)[f.field] || []).length) + '个）' : '（共0个）' }}</span>
                       </n-button>
                       <n-button style="flex:1" :disabled="!(opFormAppData(tab.tapNovaName)[f.field] || []).length" @click="openPreview(f, tab.tapNovaName, true)">
                         <iconify-icon icon="mdi:eye-outline" style="font-size:14px;margin-right:4px"></iconify-icon>
