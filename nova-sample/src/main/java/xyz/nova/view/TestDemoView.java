@@ -18,6 +18,7 @@ import xyz.nova.service.TestDemo2Service;
 import xyz.nova.service.TestDemoService;
 import xyz.nova.service.authority.RowAuthExpr;
 import xyz.nova.service.data.DefaultDataProxy;
+import xyz.nova.view.query.TestDemoCondition;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,7 +37,7 @@ import java.time.LocalDateTime;
                 label = "name"
         ),
         dataProxy = TestDemoService.class,
-        conditionClass = void.class,
+        conditionClass = TestDemoCondition.class,
         rowOperation = {
                 @RowOperation(
                         title = "下发指令",
