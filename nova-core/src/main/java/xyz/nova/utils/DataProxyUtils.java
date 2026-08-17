@@ -226,39 +226,20 @@ public class DataProxyUtils {
         } catch (ReflectiveOperationException e) {
             throw new NovaException("查询条件类实例化失败: " + conditionClass.getName());
         }
-        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
-        for (Map.Entry<String, NovaApplication.ScanNova.NovaFieldInfo> entry : novaFields.entrySet()) {
-            NovaApplication.ScanNova.NovaFieldInfo novaFieldInfo = entry.getValue();
-            NovaField novaField = novaFieldInfo.getNovaField();
-            Edit edit = novaField.edit();
-            Search search = edit.search();
-            if (!search.value()) {
-                continue;
-            }
-            Edit.Type type = novaFieldInfo.getType();
-            // 查询条件键：REFERENCE 组件使用 ref 值作为键，APPENDAGE/APPENDAGES 使用主表 by 值作为键（附属对象存主表外键，前端以主表 by 为 key 发送）
-            String condKey = entry.getKey();
-            if (Edit.Type.REFERENCE.equals(type)) {
-                condKey = edit.referenceType().ref();
-            } else if (Edit.Type.APPENDAGE.equals(type) || Edit.Type.APPENDAGES.equals(type)) {
-                condKey = edit.appendageType().by();
-            }
-            String value = conditions.get(condKey);
+        for (Map.Entry<String, String> entry : conditions.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
             if (value == null || value.isBlank()) {
                 continue;
             }
-            Field targetField;
             try {
-                targetField = conditionClass.getDeclaredField(condKey);
+                Field field = conditionClass.getDeclaredField(key);
+                field.setAccessible(true);
+                field.set(searchObj, convertConditionValue(field, value));
             } catch (NoSuchFieldException e) {
-                // 查询条件类未声明该字段，则不入查询实体（LINK/APPENDAGE 等跨表条件由开发决定是否建模）
-                continue;
-            }
-            targetField.setAccessible(true);
-            try {
-                targetField.set(searchObj, convertConditionValue(targetField, value));
+                // 没有这个字段，跳过
             } catch (IllegalAccessException e) {
-                throw new NovaException("查询条件类属性赋值失败: " + condKey);
+                throw new NovaException("查询条件类属性赋值失败: " + key);
             }
         }
         return searchObj;
