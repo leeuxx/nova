@@ -4361,7 +4361,7 @@ const NovaTable = {
       <!-- LINK 多选关联弹窗 -->
       <n-modal v-model:show="linkPickerShow" preset="card" class="ref-picker-modal" :title="linkPickerTitle || '选择关联数据'" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="3500">
         <div :style="{ height: 'calc(100vh - 180px)', maxHeight: '700px', overflow: 'hidden' }">
-          <nova-table v-if="linkPickerShow" :picker-mode="true" :picker-multi="true" :nova-name-prop="linkPickerTargetNova" :source-fields-prop="linkPickerSourceFields" @check="onLinkPickerPick" />
+          <nova-table v-if="linkPickerShow" :picker-mode="true" :picker-multi="true" :nova-name-prop="linkPickerTargetNova" :source-nova-name-prop="novaName" :source-fields-prop="linkPickerSourceFields" @check="onLinkPickerPick" />
         </div>
         <template #footer>
           <div style="display:flex;justify-content:flex-end;gap:8px;width:100%">
