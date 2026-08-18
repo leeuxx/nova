@@ -17,7 +17,7 @@ public @interface ButtonType {
     String[] transmitParams() default {};
 
     @Comment("按钮点击处理（后端接口）")
-    Class<? extends ButtonHandle>[] handle() default {};
+    Class<? extends ButtonHandle> handle() default ButtonHandle.class;
 
     @Comment("按钮点击处理（前端js文件）")
     String handleJs() default "";
