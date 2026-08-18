@@ -5,7 +5,7 @@ import xyz.nova.annotation.comment.Comment;
 public @interface LinkTargetType {
 
     @Comment("引用类型")
-    Type type() default Type.OPERATE;
+    Type type();
 
     @Comment("当前类关联字段")
     String ref();
