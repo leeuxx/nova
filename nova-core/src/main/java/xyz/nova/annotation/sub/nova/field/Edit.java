@@ -60,7 +60,7 @@ public @interface Edit {
     LinkType linkType() default @LinkType;
 
     @Comment("集合引用目标组件配置")
-    LinkTargetType linkTargetType() default @LinkTargetType(ref = "");
+    LinkTargetType linkTargetType() default @LinkTargetType(type = LinkTargetType.Type.OPERATE, ref = "");
 
     @Comment("按钮组件配置")
     ButtonType buttonType() default @ButtonType;
