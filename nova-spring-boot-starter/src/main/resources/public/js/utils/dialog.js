@@ -10,65 +10,65 @@
   }
 
   window.modal = {
-    success: function (content, options) {
-      options = options || {}
-      openDialog({
-        type: 'success',
-        title: options.title,
-        content,
-        negativeText: '关闭',
-        style: 'margin-top:80px',
-        negativeButtonProps: { size: 'medium' }
-      })
-    },
-    error: function (content, options) {
-      options = options || {}
-      openDialog({
-        type: 'error',
-        title: options.title,
-        content,
-        negativeText: '关闭',
-        style: 'margin-top:80px',
-        negativeButtonProps: { size: 'medium' }
-      })
-    },
-    info: function (content, options) {
-      options = options || {}
-      openDialog({
-        type: 'info',
-        title: options.title,
-        content,
-        negativeText: '关闭',
-        style: 'margin-top:80px',
-        negativeButtonProps: { size: 'medium' }
-      })
-    },
-    warning: function (content, options) {
-      options = options || {}
-      openDialog({
-        type: 'warning',
-        title: options.title,
-        content,
-        negativeText: '关闭',
-        style: 'margin-top:80px',
-        negativeButtonProps: { size: 'medium' }
-      })
-    },
-    confirm: function (content, options) {
-      options = options || {}
-      openDialog({
-        type: "warning",
-        title: options.title,
-        content,
-        positiveText:        '确定',
-        negativeText:        '取消',
-        style:               'margin-top:80px',
-        positiveButtonProps: { type: 'primary', size: 'medium' },
-        negativeButtonProps: { size: 'medium' },
-        onPositiveClick:     options.onConfirm
-      })
+      success: function (content, options) {
+        options = options || {}
+        openDialog({
+          type: 'success',
+          title: options.title,
+          content,
+          negativeText: options.negativeText || '关闭',
+          style: 'margin-top:80px',
+          negativeButtonProps: { size: 'medium' }
+        })
+      },
+      error: function (content, options) {
+        options = options || {}
+        openDialog({
+          type: 'error',
+          title: options.title,
+          content,
+          negativeText: options.negativeText || '关闭',
+          style: 'margin-top:80px',
+          negativeButtonProps: { size: 'medium' }
+        })
+      },
+      info: function (content, options) {
+        options = options || {}
+        openDialog({
+          type: 'info',
+          title: options.title,
+          content,
+          negativeText: options.negativeText || '关闭',
+          style: 'margin-top:80px',
+          negativeButtonProps: { size: 'medium' }
+        })
+      },
+      warning: function (content, options) {
+        options = options || {}
+        openDialog({
+          type: 'warning',
+          title: options.title,
+          content,
+          negativeText: options.negativeText || '关闭',
+          style: 'margin-top:80px',
+          negativeButtonProps: { size: 'medium' }
+        })
+      },
+      confirm: function (content, options) {
+        options = options || {}
+        openDialog({
+          type: "warning",
+          title: options.title,
+          content,
+          positiveText: options.positiveText || '确定',
+          negativeText: options.negativeText || '关闭',
+          style: 'margin-top:80px',
+          positiveButtonProps: { type: 'primary', size: 'medium' },
+          negativeButtonProps: { size: 'medium' },
+          onPositiveClick: options.onConfirm
+        })
+      }
     }
-  }
 })()
 
 // ── 消息通知（window.msg）──
