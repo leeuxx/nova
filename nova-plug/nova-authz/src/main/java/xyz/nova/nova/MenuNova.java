@@ -66,17 +66,6 @@ public class MenuNova {
     private String icon;
 
     @NovaField(
-            edit = @Edit(
-                    title = "上级菜单",
-                    type = Edit.Type.REFERENCE,
-                    referenceType = @ReferenceType(
-                            ref = "parentId"
-                    )
-            )
-    )
-    private MenuNova menuNova;
-
-    @NovaField(
             views = @View(title = "类型", width = "10%"),
             edit = @Edit(
                     title = "类型",
@@ -93,6 +82,17 @@ public class MenuNova {
             )
     )
     private String type;
+
+    @NovaField(
+            edit = @Edit(
+                    title = "上级菜单",
+                    type = Edit.Type.REFERENCE,
+                    referenceType = @ReferenceType(
+                            ref = "parentId"
+                    )
+            )
+    )
+    private MenuNova menuNova;
 
     @NovaField(
             views = @View(title = "类型值", width = "10%", defaultValue = "-"),
