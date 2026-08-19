@@ -55,7 +55,7 @@ public class MenuNova {
     private String code;
 
     @NovaField(
-            views = @View(title = "图标", width = "10%"),
+            views = @View(title = "图标", width = "10%", desc = "图标参考：https://icon-sets.iconify.design/material-symbols"),
             edit = @Edit(
                     title = "图标",
                     desc = "图标参考：https://icon-sets.iconify.design/material-symbols",
@@ -105,9 +105,10 @@ public class MenuNova {
     private String value;
 
     @NovaField(
-            views = @View(title = "排序", width = "10%"),
+            views = @View(title = "排序", width = "10%", desc = "正序"),
             edit = @Edit(
-                    title = "排序"
+                    title = "排序",
+                    desc = "正序"
             )
     )
     private Integer sort;
