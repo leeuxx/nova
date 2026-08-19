@@ -24,7 +24,7 @@ import java.util.*;
 /**
  * MyBatis-Plus 查询构造工具
  */
-public class NovaQueryUtils {
+public class NovaMyBatisUtils {
 
     /**
      * 根据 Fetch 请求构造 LambdaQueryWrapper 和 Page

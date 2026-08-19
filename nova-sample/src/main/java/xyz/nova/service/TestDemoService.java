@@ -16,7 +16,7 @@ import xyz.nova.entity.data.Fetch;
 import xyz.nova.entity.data.Tree;
 import xyz.nova.mapper.TestDemoMapper;
 import xyz.nova.service.data.DataProxy;
-import xyz.nova.utils.NovaQueryUtils;
+import xyz.nova.utils.NovaMyBatisUtils;
 import xyz.nova.utils.collections.list.JArrayList;
 import xyz.nova.utils.collections.list.JList;
 import xyz.nova.view.TestDemo2View;
@@ -52,7 +52,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
 
     @Override
     public Fetch.Vo<TestDemoView> fetch(Fetch<TestDemoCondition> fetch) {
-        NovaQueryUtils.Result<TestDemo> testDemoResult = NovaQueryUtils.buildWrapper(TestDemoView.class, fetch);
+        NovaMyBatisUtils.Result<TestDemo> testDemoResult = NovaMyBatisUtils.buildWrapper(TestDemoView.class, fetch);
         Page<TestDemo> page = testDemoResult.getPage();
         LambdaQueryWrapper<TestDemo> wrapper = testDemoResult.getWrapper();
         //wrapper.isNull(TestDemo::getParentId);
@@ -121,7 +121,7 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
         Tree.Vo<TestDemoView> vo = new Tree.Vo<TestDemoView>()
                 .setRootList(new ArrayList<>())
                 .setChildrenList(new ArrayList<>());
-        LambdaQueryWrapper<TestDemo> lambdaQueryWrapper = NovaQueryUtils.buildWrapper(TestDemoView.class, tree);
+        LambdaQueryWrapper<TestDemo> lambdaQueryWrapper = NovaMyBatisUtils.buildWrapper(TestDemoView.class, tree);
         JList<TestDemo> testDemos = new JArrayList<>(list(lambdaQueryWrapper));
         JList<TestDemo> rootList = testDemos.filter().isNull(TestDemo::getParentId).list();
         JList<TestDemo> childrenList = testDemos.filter().isNotNull(TestDemo::getParentId).list();

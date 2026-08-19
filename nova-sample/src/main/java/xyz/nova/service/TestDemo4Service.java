@@ -12,7 +12,7 @@ import xyz.nova.entity.TestDemo;
 import xyz.nova.entity.TestDemo4;
 import xyz.nova.mapper.TestDemo4Mapper;
 import xyz.nova.service.data.DataProxy;
-import xyz.nova.utils.NovaQueryUtils;
+import xyz.nova.utils.NovaMyBatisUtils;
 import xyz.nova.view.TestDemo4View;
 import xyz.nova.view.TestDemoView;
 import lombok.AllArgsConstructor;
@@ -32,7 +32,7 @@ public class TestDemo4Service extends ServiceImpl<TestDemo4Mapper, TestDemo4> im
 
     @Override
     public Fetch.Vo<TestDemo4View> fetch(Fetch<Object> fetch) {
-        NovaQueryUtils.Result<TestDemo4> testDemo4Result = NovaQueryUtils.buildWrapper(TestDemo4View.class, fetch);
+        NovaMyBatisUtils.Result<TestDemo4> testDemo4Result = NovaMyBatisUtils.buildWrapper(TestDemo4View.class, fetch);
         Page<TestDemo4> page = testDemo4Result.getPage();
         LambdaQueryWrapper<TestDemo4> wrapper = testDemo4Result.getWrapper();
         IPage<TestDemo4> iPage = page(page, wrapper);

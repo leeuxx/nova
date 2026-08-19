@@ -13,7 +13,7 @@ import xyz.nova.mapper.TestDemoRefMapper;
 import xyz.nova.service.data.DataProxy;
 import xyz.nova.utils.Beans;
 import xyz.nova.utils.Emptys;
-import xyz.nova.utils.NovaQueryUtils;
+import xyz.nova.utils.NovaMyBatisUtils;
 import xyz.nova.utils.collections.list.JArrayList;
 import xyz.nova.utils.collections.map.JMap;
 import xyz.nova.view.TestDemo4View;
@@ -60,7 +60,7 @@ public class TestDemoRefService extends ServiceImpl<TestDemoRefMapper, TestDemoR
 
     @Override
     public Fetch.Vo<TestDemoRefView> fetch(Fetch<Object> fetch) {
-        NovaQueryUtils.Result<TestDemoRef> testDemoRefResult = NovaQueryUtils.buildWrapper(TestDemoRefView.class, fetch);
+        NovaMyBatisUtils.Result<TestDemoRef> testDemoRefResult = NovaMyBatisUtils.buildWrapper(TestDemoRefView.class, fetch);
         Page<TestDemoRef> page = testDemoRefResult.getPage();
         LambdaQueryWrapper<TestDemoRef> wrapper = testDemoRefResult.getWrapper();
         IPage<TestDemoRef> iPage = page(page, wrapper);

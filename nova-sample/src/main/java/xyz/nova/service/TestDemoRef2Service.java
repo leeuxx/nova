@@ -13,7 +13,7 @@ import xyz.nova.mapper.TestDemoRef2Mapper;
 import xyz.nova.service.data.DataProxy;
 import xyz.nova.utils.Beans;
 import xyz.nova.utils.Emptys;
-import xyz.nova.utils.NovaQueryUtils;
+import xyz.nova.utils.NovaMyBatisUtils;
 import xyz.nova.utils.collections.list.JArrayList;
 import xyz.nova.utils.collections.list.JList;
 import xyz.nova.utils.collections.map.JMap;
@@ -51,7 +51,7 @@ public class TestDemoRef2Service extends ServiceImpl<TestDemoRef2Mapper, TestDem
 
     @Override
     public Fetch.Vo<TestDemoRef2View> fetch(Fetch<Object> fetch) {
-        NovaQueryUtils.Result<TestDemoRef2> testDemoRefResult = NovaQueryUtils.buildWrapper(TestDemoRef2View.class, fetch);
+        NovaMyBatisUtils.Result<TestDemoRef2> testDemoRefResult = NovaMyBatisUtils.buildWrapper(TestDemoRef2View.class, fetch);
         Page<TestDemoRef2> page = testDemoRefResult.getPage();
         LambdaQueryWrapper<TestDemoRef2> wrapper = testDemoRefResult.getWrapper();
         IPage<TestDemoRef2> iPage = page(page, wrapper);
@@ -83,7 +83,7 @@ public class TestDemoRef2Service extends ServiceImpl<TestDemoRef2Mapper, TestDem
                 .setRootList(new ArrayList<>())
                 .setChildrenList(new ArrayList<>());
         // 获取数据
-        LambdaQueryWrapper<TestDemoRef2> lambdaQueryWrapper = NovaQueryUtils.buildWrapper(TestDemoRef2View.class, tree);
+        LambdaQueryWrapper<TestDemoRef2> lambdaQueryWrapper = NovaMyBatisUtils.buildWrapper(TestDemoRef2View.class, tree);
         lambdaQueryWrapper.eq(TestDemoRef2::getDemoId, tree.getOperateValue());
         JList<TestDemoRef2> testDemoRef2s = new JArrayList<>(list(lambdaQueryWrapper));
         if (Emptys.check(testDemoRef2s)) {
