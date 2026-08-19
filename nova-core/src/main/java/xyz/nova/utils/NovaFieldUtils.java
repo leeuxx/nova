@@ -59,14 +59,12 @@ public class NovaFieldUtils {
             if (!show) {
                 return;
             }
-            Class<? extends ExprBool.ExprHandler>[] handlers = exprBool.exprHandler();
-            if (handlers.length > 0) {
+            Class<? extends ExprBool.ExprHandler> handlers = exprBool.exprHandler();
+            if (handlers != ExprBool.ExprHandler.class) {
                 String param = exprBool.param();
-                for (Class<? extends ExprBool.ExprHandler> handlerClass : handlers) {
-                    ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlerClass);
-                    if (!handler.handler(param)) {
-                        return;
-                    }
+                ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlers);
+                if (!handler.handler(param)) {
+                    return;
                 }
             }
             SearchInfo searchInfo = new SearchInfo()
@@ -119,44 +117,39 @@ public class NovaFieldUtils {
                 if (!show || isAppendages || isLink || isButton || isDivide || isEmpty) {
                     continue;
                 }
-                Class<? extends ExprBool.ExprHandler>[] handlers = exprBool.exprHandler();
-                if (handlers.length > 0) {
+                Class<? extends ExprBool.ExprHandler> handlers = exprBool.exprHandler();
+                if (handlers != ExprBool.ExprHandler.class) {
                     String param = exprBool.param();
-                    for (Class<? extends ExprBool.ExprHandler> handlerClass : handlers) {
-                        ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlerClass);
-                        if (!handler.handler(param)) {
-                            show = false;
-                            break;
-                        }
+                    ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlers);
+                    if (!handler.handler(param)) {
+                        continue;
                     }
                 }
-                if (show) {
-                    Edit.Type findType = type;
-                    String fieldName = field;
-                    String refNovaName = null;
-                    if (isReference) {
-                        NovaApplication.ScanNova referenceScanNova = scanNovas.get(novaFieldInfo.getFieldClass().getSimpleName());
-                        Map<String, NovaApplication.ScanNova.NovaFieldInfo> referenceNovaFields = referenceScanNova.getNovaFields();
-                        NovaApplication.ScanNova.NovaFieldInfo referenceNovaFieldInfo = referenceNovaFields.get(view.column());
-                        findType = referenceNovaFieldInfo.getType();
-                        fieldName = field + "." + view.column();
-                        if (findType == Edit.Type.NUMBER || findType == Edit.Type.CHOICE
-                                || findType == Edit.Type.TAG || findType == Edit.Type.DATE
-                                || findType == Edit.Type.BOOLEAN || findType == Edit.Type.ATTACHMENT) {
-                            refNovaName = novaFieldInfo.getFieldClass().getSimpleName();
-                        }
+                Edit.Type findType = type;
+                String fieldName = field;
+                String refNovaName = null;
+                if (isReference) {
+                    NovaApplication.ScanNova referenceScanNova = scanNovas.get(novaFieldInfo.getFieldClass().getSimpleName());
+                    Map<String, NovaApplication.ScanNova.NovaFieldInfo> referenceNovaFields = referenceScanNova.getNovaFields();
+                    NovaApplication.ScanNova.NovaFieldInfo referenceNovaFieldInfo = referenceNovaFields.get(view.column());
+                    findType = referenceNovaFieldInfo.getType();
+                    fieldName = field + "." + view.column();
+                    if (findType == Edit.Type.NUMBER || findType == Edit.Type.CHOICE
+                            || findType == Edit.Type.TAG || findType == Edit.Type.DATE
+                            || findType == Edit.Type.BOOLEAN || findType == Edit.Type.ATTACHMENT) {
+                        refNovaName = novaFieldInfo.getFieldClass().getSimpleName();
                     }
-                    TableColumnInfo tableColumnInfo = new TableColumnInfo()
-                            .setField(fieldName)
-                            .setTitle(view.title())
-                            .setDesc(view.desc())
-                            .setWidth(view.width())
-                            .setSortable(view.sortable())
-                            .setType(findType)
-                            .setDefaultValue(view.defaultValue())
-                            .setRefNovaName(refNovaName);
-                    tableColumnInfos.add(tableColumnInfo);
                 }
+                TableColumnInfo tableColumnInfo = new TableColumnInfo()
+                        .setField(fieldName)
+                        .setTitle(view.title())
+                        .setDesc(view.desc())
+                        .setWidth(view.width())
+                        .setSortable(view.sortable())
+                        .setType(findType)
+                        .setDefaultValue(view.defaultValue())
+                        .setRefNovaName(refNovaName);
+                tableColumnInfos.add(tableColumnInfo);
             }
         });
         return tableColumnInfos;
@@ -735,29 +728,24 @@ public class NovaFieldUtils {
                 if (!show) {
                     continue;
                 }
-                Class<? extends ExprBool.ExprHandler>[] handlers = exprBool.exprHandler();
-                if (handlers.length > 0) {
+                Class<? extends ExprBool.ExprHandler> handlers = exprBool.exprHandler();
+                if (handlers != ExprBool.ExprHandler.class) {
                     String param = exprBool.param();
-                    for (Class<? extends ExprBool.ExprHandler> handlerClass : handlers) {
-                        ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlerClass);
-                        if (!handler.handler(param)) {
-                            show = false;
-                            break;
-                        }
+                    ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlers);
+                    if (!handler.handler(param)) {
+                        continue;
                     }
                 }
-                if (show) {
-                    Class<? extends PopHandler>[] handle = pop.popHandler();
-                    PopInfo popInfo = new PopInfo()
-                            .setTitle(pop.title())
-                            .setParam(pop.param())
-                            .setHandleClass(handle.length > 0 ? handle[0] : null);
-                    String fieldName = field;
-                    if (isReference) {
-                        fieldName += "." + view.column();
-                    }
-                    popInfoMaps.put(fieldName, popInfo);
+                Class<? extends PopHandler>[] handle = pop.popHandler();
+                PopInfo popInfo = new PopInfo()
+                        .setTitle(pop.title())
+                        .setParam(pop.param())
+                        .setHandleClass(handle.length > 0 ? handle[0] : null);
+                String fieldName = field;
+                if (isReference) {
+                    fieldName += "." + view.column();
                 }
+                popInfoMaps.put(fieldName, popInfo);
             }
         });
         return popInfoMaps;

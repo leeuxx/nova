@@ -84,18 +84,15 @@ public class NovaUtils {
             if (!exprBool.value()) {
                 continue;
             }
-            Class<? extends ExprBool.ExprHandler>[] handlers = exprBool.exprHandler();
-            if (handlers.length == 0) {
+            Class<? extends ExprBool.ExprHandler> handlers = exprBool.exprHandler();
+            if (handlers == ExprBool.ExprHandler.class) {
                 result.add(operation);
                 continue;
             }
             String param = exprBool.param();
-            for (Class<? extends ExprBool.ExprHandler> handlerClass : handlers) {
-                ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlerClass);
-                if (handler.handler(param)) {
-                    result.add(operation);
-                    break;
-                }
+            ExprBool.ExprHandler handler = SpringBeanUtils.getBean(handlers);
+            if (handler.handler(param)) {
+                result.add(operation);
             }
         }
         return result;
@@ -147,14 +144,11 @@ public class NovaUtils {
         if (!show || !exprBool.value()) {
             return false;
         }
-        Class<? extends ExprBool.ExprHandler>[] exprHandlers = exprBool.exprHandler();
-        if (exprHandlers.length > 0) {
+        Class<? extends ExprBool.ExprHandler> exprHandlers = exprBool.exprHandler();
+        if (exprHandlers != ExprBool.ExprHandler.class) {
             String param = exprBool.param();
-            for (Class<? extends ExprBool.ExprHandler> exprHandler : exprHandlers) {
-                ExprBool.ExprHandler service = SpringBeanUtils.getBean(exprHandler);
-                return service.handler(param);
-            }
-            return false;
+            ExprBool.ExprHandler service = SpringBeanUtils.getBean(exprHandlers);
+            return service.handler(param);
         } else {
             return true;
         }

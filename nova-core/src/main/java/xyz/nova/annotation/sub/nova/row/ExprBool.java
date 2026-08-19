@@ -11,7 +11,7 @@ public @interface ExprBool {
     String param() default "";
 
     @Comment("动态是否显示，使用此方式必须把value设置为true")
-    Class<? extends ExprHandler>[] exprHandler() default {};
+    Class<? extends ExprHandler> exprHandler() default ExprHandler.class;
 
     interface ExprHandler {
 
