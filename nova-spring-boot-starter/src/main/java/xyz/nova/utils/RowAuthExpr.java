@@ -1,10 +1,10 @@
-package xyz.nova.service.authority;
+package xyz.nova.utils;
 
-import xyz.nova.annotation.comment.Comment;
-import xyz.nova.annotation.sub.nova.row.ExprBool;
-import xyz.nova.utils.AuthorityUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import xyz.nova.annotation.comment.Comment;
+import xyz.nova.annotation.sub.nova.row.ExprBool;
+import xyz.nova.service.authority.AuthorityProxy;
 
 @Service
 @AllArgsConstructor

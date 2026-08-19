@@ -16,8 +16,8 @@ import xyz.nova.annotation.sub.nova.row.ExprBool;
 import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.service.TestDemo2Service;
 import xyz.nova.service.TestDemoService;
-import xyz.nova.service.authority.RowAuthExpr;
 import xyz.nova.service.data.DefaultDataProxy;
+import xyz.nova.utils.RowAuthExpr;
 import xyz.nova.view.query.TestDemoCondition;
 
 import java.math.BigDecimal;
