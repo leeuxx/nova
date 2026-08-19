@@ -27,6 +27,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <nova.version>${project.version}</nova.version>
         <!-- 工具库版本 -->
         <hutool.version>5.8.26</hutool.version>
         <commons-lang3.version>3.14.0</commons-lang3.version>
@@ -47,12 +48,12 @@
             <dependency>
                 <groupId>xyz.nova</groupId>
                 <artifactId>nova-core</artifactId>
-                <version>1.0.0</version>
+                <version>${nova.version}</version>
             </dependency>
             <dependency>
                 <groupId>xyz.nova</groupId>
                 <artifactId>nova-spring-boot-starter</artifactId>
-                <version>1.0.0</version>
+                <version>${nova.version}</version>
             </dependency>
             <!-- Hutool -->
             <dependency>
