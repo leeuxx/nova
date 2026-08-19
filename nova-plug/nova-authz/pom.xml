@@ -1,31 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
         <groupId>xyz.nova</groupId>
-        <artifactId>nova</artifactId>
+        <artifactId>nova-plug</artifactId>
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>nova-sample</artifactId>
-    <packaging>jar</packaging>
-    <name>nova-sample</name>
+    <artifactId>nova-authz</artifactId>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <dependencies>
-        <!-- 引入框架 starter -->
+        <!-- 依赖 core 模块 -->
         <dependency>
             <groupId>xyz.nova</groupId>
-            <artifactId>nova-spring-boot-starter</artifactId>
-            <version>${nova.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>xyz.nova</groupId>
-            <artifactId>nova-authz</artifactId>
-            <version>${nova.version}</version>
+            <artifactId>nova-core</artifactId>
         </dependency>
 
         <!-- Web 支持 -->
@@ -33,14 +29,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
         <!-- 雪花ID -->
         <dependency>
             <groupId>com.github.yitter</groupId>
             <artifactId>yitter-idgenerator</artifactId>
             <version>1.0.6</version>
         </dependency>
-
         <!-- MySQL 驱动 -->
         <dependency>
             <groupId>com.mysql</groupId>
@@ -59,13 +53,4 @@
             <version>3.5.9</version>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 </project>

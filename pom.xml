@@ -21,6 +21,7 @@
         <module>nova-spring-boot-starter</module>
         <module>nova-sample</module>
         <module>nova-core</module>
+        <module>nova-plug</module>
     </modules>
 
     <properties>
@@ -53,6 +54,11 @@
             <dependency>
                 <groupId>xyz.nova</groupId>
                 <artifactId>nova-spring-boot-starter</artifactId>
+                <version>${nova.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>xyz.nova</groupId>
+                <artifactId>nova-authz</artifactId>
                 <version>${nova.version}</version>
             </dependency>
             <!-- Hutool -->
