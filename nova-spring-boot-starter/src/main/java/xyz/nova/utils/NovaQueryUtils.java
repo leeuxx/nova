@@ -63,7 +63,7 @@ public class NovaQueryUtils {
             }
         }
         return new Result<T>()
-                .setPage(Page.of(fetch.getCurrent(), fetch.getSize()))
+                .setPage(new Page<>(fetch.getCurrent(), fetch.getSize()))
                 .setWrapper(wrapper.lambda());
     }
 
