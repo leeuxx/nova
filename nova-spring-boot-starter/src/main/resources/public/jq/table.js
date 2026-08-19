@@ -757,7 +757,7 @@ window.NovaTableJQ = (function ($) {
       var fd = {}
       var cm = bd.choiceMap || {}
       ;(bd.editFields || []).forEach(function(f) {
-        var dv = window.NovaTableJQ_form.convertDefaultValue(f)
+        var dv = window.NovaTableJQ_form.convertDefaultValue(f, cm)
         if (dv !== undefined) {
           fd[f.field] = dv
           if (f.type === 'REFERENCE') fd[f.field + '_display'] = ''

@@ -10,7 +10,7 @@ window.NovaTableJQ_form = (function () {
   function initFormData(editFields, choiceMap, sourceFields) {
     var formData = {}
     editFields.forEach(function (f) {
-      var dv = window.NovaTableJQ_form.convertDefaultValue(f)
+      var dv = window.NovaTableJQ_form.convertDefaultValue(f, choiceMap)
       if (dv !== undefined) {
         formData[f.field] = dv
         if (f.type === 'REFERENCE') formData[f.field + '_display'] = ''
@@ -128,7 +128,7 @@ window.NovaTableJQ_form = (function () {
 
   // ── 将 defaultValue 按字段类型转换 ──────────────────────────────
   // 返回该字段应填充的默认值，无默认值时返回 undefined
-  function convertDefaultValue(f) {
+  function convertDefaultValue(f, choiceMap) {
     if (f.defaultValue == null || f.defaultValue === '') return undefined
     if (f.type === 'NUMBER') {
       var num = Number(f.defaultValue)
@@ -140,6 +140,10 @@ window.NovaTableJQ_form = (function () {
     } else if (f.type === 'DATE') {
       var ts = Number(f.defaultValue)
       return isNaN(ts) ? null : ts
+    } else if (f.type === 'CHOICE') {
+      // 多选转数组，单选保持原值
+      var ci = choiceMap && choiceMap[f.field]
+      return ci && ci.selectType === 'MULTI' ? String(f.defaultValue).split(',') : f.defaultValue
     }
     return f.defaultValue
   }

@@ -306,7 +306,8 @@ public class TestDemoView {
                             refChoice = "sex"
                     ),
                     search = @Search(vague = true),
-                    group = "用户信息"
+                    group = "用户信息",
+                    defaultValue = "2"
             )
     )
     private String hobby;

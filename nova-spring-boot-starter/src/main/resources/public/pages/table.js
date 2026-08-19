@@ -2193,7 +2193,7 @@ const NovaTable = {
           // 初始化表单数据（应用 defaultValue）
           var fd = {}
           editFields.forEach(function(f) {
-            var dv = window.NovaTableJQ_form.convertDefaultValue(f)
+            var dv = window.NovaTableJQ_form.convertDefaultValue(f, cm)
             if (dv !== undefined) {
               fd[f.field] = dv
               if (f.type === 'REFERENCE') fd[f.field + '_display'] = ''
@@ -2223,7 +2223,7 @@ const NovaTable = {
         var val = source[f.field]
         // 后端没返回值（undefined/null）时，应用 defaultValue
         if ((val === undefined || val === null)) {
-          var dv = window.NovaTableJQ_form.convertDefaultValue(f)
+          var dv = window.NovaTableJQ_form.convertDefaultValue(f, choiceMap)
           if (dv !== undefined) {
             targetData[f.field] = dv
             if (f.type === 'REFERENCE') targetData[f.field + '_display'] = ''

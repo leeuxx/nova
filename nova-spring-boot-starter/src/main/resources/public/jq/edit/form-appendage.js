@@ -97,7 +97,7 @@ window.NovaTableJQ_app = (function () {
           if (existingFd[f.field] !== undefined) {
             fd[f.field] = existingFd[f.field]
           } else {
-            var dv = window.NovaTableJQ_form.convertDefaultValue(f)
+            var dv = window.NovaTableJQ_form.convertDefaultValue(f, cm)
             if (dv !== undefined) {
               fd[f.field] = dv
             } else {
