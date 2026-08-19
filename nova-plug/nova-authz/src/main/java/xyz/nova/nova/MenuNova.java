@@ -59,6 +59,7 @@ public class MenuNova {
             views = @View(title = "图标", width = "10%"),
             edit = @Edit(
                     title = "图标",
+                    type = Edit.Type.ICON,
                     notNull = true
             )
     )

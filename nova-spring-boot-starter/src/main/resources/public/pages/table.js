@@ -752,6 +752,14 @@ const NovaTable = {
           }
         }
 
+        if (col.type === 'ICON') {
+          colDef.render = (row) => {
+            const val = getFieldValue(row, col.field)
+            if (val === null || val === undefined || val === '') return ''
+            return h('iconify-icon', { icon: String(val), style: 'font-size:18px;display:inline-flex;align-items:center' })
+          }
+        }
+
         if (col.type === 'BOOLEAN') {
           colDef.render = (row) => {
             const val = getFieldValue(row, col.field)

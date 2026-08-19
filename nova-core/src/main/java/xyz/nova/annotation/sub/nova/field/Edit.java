@@ -114,6 +114,9 @@ public @interface Edit {
         @Comment("按钮")
         BUTTON,
 
+        @Comment("图标")
+        ICON,
+
         @Comment("分割线")
         DIVIDE,
 
