@@ -8,12 +8,10 @@
     <parent>
         <groupId>xyz.nova</groupId>
         <artifactId>nova</artifactId>
-        <version>1.0</version>
+        <version>1.0.0</version>
     </parent>
 
     <artifactId>nova-spring-boot-starter</artifactId>
-    <packaging>jar</packaging>
-    <name>nova-service</name>
 
     <dependencies>
         <!-- 依赖 core 模块 -->
