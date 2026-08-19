@@ -94,13 +94,18 @@ window.NovaTableJQ_app = (function () {
         var existingFd = (t2.appendageFormData || {})[appNovaName] || {}
         var fd = {}
         editFields.forEach(function(f) {
-          var ci = cm[f.field]
-          var isMulti = f.type === 'CHOICE' && ci && ci.selectType === 'MULTI'
-          var isSingle = f.type === 'CHOICE' && ci && ci.selectType === 'SINGLE'
           if (existingFd[f.field] !== undefined) {
             fd[f.field] = existingFd[f.field]
           } else {
-            fd[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (isSingle || f.type === 'DATE' || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
+            var dv = window.NovaTableJQ_form.convertDefaultValue(f)
+            if (dv !== undefined) {
+              fd[f.field] = dv
+            } else {
+              var ci = cm[f.field]
+              var isMulti = f.type === 'CHOICE' && ci && ci.selectType === 'MULTI'
+              var isSingle = f.type === 'CHOICE' && ci && ci.selectType === 'SINGLE'
+              fd[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (isSingle || f.type === 'DATE' || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
+            }
           }
           if (f.type === 'REFERENCE') fd[f.field + '_display'] = existingFd[f.field + '_display'] || ''
         })

@@ -205,6 +205,9 @@ public class NovaTableBuild {
                 @Comment("分组,将相同分组字段收纳到一个面板中")
                 private String group;
 
+                @Comment("默认值,新增反显")
+                private String defaultValue;
+
                 @Data
                 @Accessors(chain = true)
                 public static class ReadonlyInfo {

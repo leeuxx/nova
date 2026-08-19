@@ -11,7 +11,7 @@ import xyz.nova.service.authority.AuthorityProxy;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
+//@Service
 @AllArgsConstructor
 public class AuthorityProxyImpl implements AuthorityProxy {
 

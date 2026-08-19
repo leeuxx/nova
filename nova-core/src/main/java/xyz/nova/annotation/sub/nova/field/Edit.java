@@ -29,6 +29,9 @@ public @interface Edit {
     @Comment("分组,将相同分组字段收纳到一个面板中")
     String group() default "";
 
+    @Comment("默认值,新增反显（日期组件需要使用13位时间戳）")
+    String defaultValue() default "";
+
     @Comment("组件类型")
     Type type() default Type.AUTO;
 

@@ -2190,9 +2190,15 @@ const NovaTable = {
             buttons: d.buttons || {},
             layout: d.layout || {}
           }
-          // 初始化表单数据
+          // 初始化表单数据（应用 defaultValue）
           var fd = {}
           editFields.forEach(function(f) {
+            var dv = window.NovaTableJQ_form.convertDefaultValue(f)
+            if (dv !== undefined) {
+              fd[f.field] = dv
+              if (f.type === 'REFERENCE') fd[f.field + '_display'] = ''
+              return
+            }
             var ci = cm[f.field]
             var isMulti = f.type === 'CHOICE' && ci && ci.selectType === 'MULTI'
             fd[f.field] = (isMulti || f.type === 'TAG' || f.type === 'ATTACHMENT') ? [] : (f.type === 'CHOICE' && ci && ci.selectType === 'SINGLE' ? null : f.type === 'DATE' || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : '')
@@ -2215,6 +2221,15 @@ const NovaTable = {
       fields.forEach(function(f) {
         if (f.type === 'DIVIDE' || f.type === 'EMPTY') return
         var val = source[f.field]
+        // 后端没返回值（undefined/null）时，应用 defaultValue
+        if ((val === undefined || val === null)) {
+          var dv = window.NovaTableJQ_form.convertDefaultValue(f)
+          if (dv !== undefined) {
+            targetData[f.field] = dv
+            if (f.type === 'REFERENCE') targetData[f.field + '_display'] = ''
+            return
+          }
+        }
         if (val === undefined) return
         if (f.type === 'CHOICE') {
           var ci = cm[f.field]

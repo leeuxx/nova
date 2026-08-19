@@ -199,7 +199,8 @@ public class NovaFieldUtils {
                                     .setEdit(editReadonly)
                             )
                             .setShowBy(edit.showBy())
-                            .setGroup(edit.group());
+                            .setGroup(edit.group())
+                            .setDefaultValue(edit.defaultValue());
                     thisForms.add(thisForm);
                 }
             }
@@ -857,6 +858,9 @@ public class NovaFieldUtils {
 
             @Comment("分组,将相同分组字段收纳到一个面板中")
             private String group;
+
+            @Comment("默认值,新增反显")
+            private String defaultValue;
 
             @Data
             @Accessors(chain = true)

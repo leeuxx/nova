@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Nova(
         name = "菜单管理",
         desc = "菜单功能管理",
-        orderBy = "sort asc",
+        orderBy = "sort asc, create_time desc",
         dataProxy = MenuServiceImpl.class,
         conditionClass = void.class,
         tree = @TreeType(
@@ -108,7 +108,8 @@ public class MenuNova {
             views = @View(title = "排序", width = "10%", desc = "正序"),
             edit = @Edit(
                     title = "排序",
-                    desc = "正序"
+                    desc = "正序",
+                    defaultValue = "0"
             )
     )
     private Integer sort;
@@ -120,7 +121,8 @@ public class MenuNova {
                     booleanType = @BooleanType(
                             type = BooleanType.Type.SEGMENT,
                             tableType = BooleanType.Type.SWITCH
-                    )
+                    ),
+                    defaultValue = "true"
             )
     )
     private Boolean status;

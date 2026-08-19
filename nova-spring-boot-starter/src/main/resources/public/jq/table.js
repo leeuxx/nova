@@ -757,6 +757,12 @@ window.NovaTableJQ = (function ($) {
       var fd = {}
       var cm = bd.choiceMap || {}
       ;(bd.editFields || []).forEach(function(f) {
+        var dv = window.NovaTableJQ_form.convertDefaultValue(f)
+        if (dv !== undefined) {
+          fd[f.field] = dv
+          if (f.type === 'REFERENCE') fd[f.field + '_display'] = ''
+          return
+        }
         var ci = cm[f.field]
         var isMulti = f.type === 'CHOICE' && ci && ci.selectType === 'MULTI'
         var isSingle = f.type === 'CHOICE' && ci && ci.selectType === 'SINGLE'

@@ -268,6 +268,7 @@ public class TestDemoView {
             views = @View(title = "手机号", width = "10%", desc = "+86"),
             edit = @Edit(
                     title = "手机号",
+                    defaultValue = "13162880890",
                     group = "用户信息"
             )
     )
@@ -286,7 +287,8 @@ public class TestDemoView {
                             }
                     ),
                     search = @Search(vague = true),
-                    group = "用户信息"
+                    group = "用户信息",
+                    defaultValue = "2"
             )
     )
     private String sex;
@@ -323,7 +325,8 @@ public class TestDemoView {
                     title = "创建时间",
                     type = Edit.Type.DATE,
                     dateType = @DateType,
-                    search = @Search(vague = true)
+                    search = @Search(vague = true),
+                    defaultValue = "1784131200000"
             )
     )
     private LocalDateTime createTime;
@@ -336,7 +339,8 @@ public class TestDemoView {
                     dateType = @DateType(
                             type = DateType.Type.DATE
                     ),
-                    search = @Search(vague = true)
+                    search = @Search(vague = true),
+                    defaultValue = "1784164589000"
             )
     )
     private LocalDateTime bindTime;
@@ -374,7 +378,8 @@ public class TestDemoView {
             edit = @Edit(
                     title = "文本",
                     type = Edit.Type.TEXTAREA,
-                    desc = "文本描述"
+                    desc = "文本描述",
+                    defaultValue = "这是第撒啊完全"
             )
     )
     private String text;
@@ -388,7 +393,8 @@ public class TestDemoView {
                             type = BooleanType.Type.SEGMENT,
                             tableType = BooleanType.Type.SWITCH
                     ),
-                    search = @Search
+                    search = @Search,
+                    defaultValue = "true"
             )
     )
     private Boolean status;
@@ -400,9 +406,11 @@ public class TestDemoView {
                     type = Edit.Type.NUMBER,
                     numberType = @NumberType(
                             type = NumberType.Type.DECIMAL,
+                            decimal = 3,
                             roll = true
                     ),
-                    search = @Search(vague = true)
+                    search = @Search(vague = true),
+                    defaultValue = "28.6"
             )
     )
     private BigDecimal size;
@@ -430,7 +438,8 @@ public class TestDemoView {
                                     "手镯"
                             }
                     ),
-                    search = @Search(vague = true)
+                    search = @Search(vague = true),
+                    defaultValue = "戒指,护腕"
             )
     )
     private String tags;
@@ -444,7 +453,8 @@ public class TestDemoView {
                             type = AttachmentType.Type.IMAGE,
                             maxLimit = 7,
                             tableShowType = AttachmentType.TableShowType.IMAGE
-                    )
+                    ),
+                    defaultValue = "https://cdn.ossfile.mxrvending.com/tyGoods/6902890255482.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890252771.png,https://cdn.ossfile.mxrvending.com/tyGoods/6901668934451.png,https://cdn.ossfile.mxrvending.com/tyGoods/6901668933232.png"
             )
     )
     private String file;
@@ -565,7 +575,8 @@ public class TestDemoView {
 
         @NovaField(
                 edit = @Edit(
-                        title = "说明"
+                        title = "说明",
+                        desc = "测试说明"
                 )
         )
         private String msg;

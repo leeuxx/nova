@@ -10,6 +10,12 @@ window.NovaTableJQ_form = (function () {
   function initFormData(editFields, choiceMap, sourceFields) {
     var formData = {}
     editFields.forEach(function (f) {
+      var dv = window.NovaTableJQ_form.convertDefaultValue(f)
+      if (dv !== undefined) {
+        formData[f.field] = dv
+        if (f.type === 'REFERENCE') formData[f.field + '_display'] = ''
+        return
+      }
       var ci = choiceMap[f.field]
       var isMulti = f.type === 'CHOICE' && ci && ci.selectType === 'MULTI'
       var isSingle = f.type === 'CHOICE' && ci && ci.selectType === 'SINGLE'
@@ -120,5 +126,23 @@ window.NovaTableJQ_form = (function () {
     return formInfo
   }
 
-  return { initFormData, mapDetailToFormData, validateThisForm, buildFormInfo }
+  // ── 将 defaultValue 按字段类型转换 ──────────────────────────────
+  // 返回该字段应填充的默认值，无默认值时返回 undefined
+  function convertDefaultValue(f) {
+    if (f.defaultValue == null || f.defaultValue === '') return undefined
+    if (f.type === 'NUMBER') {
+      var num = Number(f.defaultValue)
+      return isNaN(num) ? null : num
+    } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
+      return String(f.defaultValue).split(',')
+    } else if (f.type === 'BOOLEAN') {
+      return String(f.defaultValue)
+    } else if (f.type === 'DATE') {
+      var ts = Number(f.defaultValue)
+      return isNaN(ts) ? null : ts
+    }
+    return f.defaultValue
+  }
+
+  return { initFormData, mapDetailToFormData, validateThisForm, buildFormInfo, convertDefaultValue }
 })()
