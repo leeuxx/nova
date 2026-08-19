@@ -29,7 +29,6 @@ public class MenuNova {
 
     @NovaId
     @NovaField(
-            views = @View(title = "ID", width = "10%"),
             edit = @Edit(
                     title = "ID",
                     show = false
@@ -56,9 +55,10 @@ public class MenuNova {
     private String code;
 
     @NovaField(
-            views = @View(title = "图标", width = "6%"),
+            views = @View(title = "图标", width = "10%"),
             edit = @Edit(
                     title = "图标",
+                    desc = "图标参考：https://icon-sets.iconify.design/material-symbols",
                     type = Edit.Type.ICON,
                     notNull = true
             )
@@ -95,7 +95,7 @@ public class MenuNova {
     private String type;
 
     @NovaField(
-            views = @View(title = "类型值", width = "10%"),
+            views = @View(title = "类型值", width = "10%", defaultValue = "-"),
             edit = @Edit(
                     title = "类型值",
                     notNull = true,
@@ -125,7 +125,7 @@ public class MenuNova {
     private Boolean status;
 
     @NovaField(
-            views = @View(title = "自定义参数", width = "10%"),
+            views = @View(title = "自定义参数", width = "15%", defaultValue = "-"),
             edit = @Edit(
                     title = "自定义参数",
                     type = Edit.Type.TEXTAREA
@@ -134,7 +134,7 @@ public class MenuNova {
     private String param;
 
     @NovaField(
-            views = @View(title = "创建时间", width = "14%"),
+            views = @View(title = "创建时间", width = "15%"),
             edit = @Edit(
                     title = "创建时间",
                     type = Edit.Type.DATE,
