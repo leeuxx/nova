@@ -56,7 +56,7 @@ public class MenuNova {
     private String code;
 
     @NovaField(
-            views = @View(title = "图标", width = "10%"),
+            views = @View(title = "图标", width = "6%"),
             edit = @Edit(
                     title = "图标",
                     type = Edit.Type.ICON,
@@ -134,7 +134,7 @@ public class MenuNova {
     private String param;
 
     @NovaField(
-            views = @View(title = "创建时间", width = "10%"),
+            views = @View(title = "创建时间", width = "14%"),
             edit = @Edit(
                     title = "创建时间",
                     type = Edit.Type.DATE,

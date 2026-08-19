@@ -756,7 +756,11 @@ const NovaTable = {
           colDef.render = (row) => {
             const val = getFieldValue(row, col.field)
             if (val === null || val === undefined || val === '') return ''
-            return h('iconify-icon', { icon: String(val), style: 'font-size:18px;display:inline-flex;align-items:center' })
+            const iconStr = String(val)
+            return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
+              default: () => iconStr,
+              trigger: () => h('iconify-icon', { icon: iconStr, style: 'font-size:18px;display:inline-flex;align-items:center' })
+            })
           }
         }
 
