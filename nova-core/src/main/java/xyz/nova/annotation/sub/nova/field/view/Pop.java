@@ -15,6 +15,6 @@ public @interface Pop {
     String param() default "";
 
     @Comment("弹窗处理类")
-    Class<? extends PopHandler>[] popHandler() default {};
+    Class<? extends PopHandler> popHandler() default PopHandler.class;
 
 }

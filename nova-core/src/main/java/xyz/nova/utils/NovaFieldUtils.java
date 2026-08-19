@@ -736,11 +736,11 @@ public class NovaFieldUtils {
                         continue;
                     }
                 }
-                Class<? extends PopHandler>[] handle = pop.popHandler();
+                Class<? extends PopHandler> popHandler = pop.popHandler();
                 PopInfo popInfo = new PopInfo()
                         .setTitle(pop.title())
                         .setParam(pop.param())
-                        .setHandleClass(handle.length > 0 ? handle[0] : null);
+                        .setHandleClass(popHandler != PopHandler.class ? popHandler : null);
                 String fieldName = field;
                 if (isReference) {
                     fieldName += "." + view.column();
