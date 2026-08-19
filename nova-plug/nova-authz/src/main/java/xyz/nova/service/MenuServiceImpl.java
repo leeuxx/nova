@@ -1,5 +1,6 @@
 package xyz.nova.service;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yitter.idgen.YitIdHelper;
 import org.springframework.beans.BeanUtils;
@@ -31,7 +32,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
                 .setCode(Long.toString(id, 36).toUpperCase())
                 .setIcon(menuNova.getIcon())
                 .setSort(menuNova.getSort() == null ? 0 : menuNova.getSort())
-                .setStatus(menuNova.getStatus() == null || menuNova.getStatus())
+                .setStatus(menuNova.getStatus())
                 .setType(menuNova.getType())
                 .setValue(menuNova.getValue())
                 .setParam(menuNova.getParam())
@@ -57,7 +58,9 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
     @Override
     public Tree.Vo<MenuNova> tree(Tree tree) {
         // 查询所有菜单数据
-        List<Menu> menus = list();
+        List<Menu> menus = list(new LambdaUpdateWrapper<Menu>()
+                .orderByAsc(Menu::getSort, Menu::getCreateTime)
+        );
         // 使用 partitioningBy 只需遍历一次，性能更好
         Map<Boolean, List<Menu>> partitioned = menus.stream()
                 .collect(Collectors.partitioningBy(menu -> menu.getParentId() == null));

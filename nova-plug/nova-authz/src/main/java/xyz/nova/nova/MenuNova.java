@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 @Nova(
         name = "菜单管理",
         desc = "菜单功能管理",
-        orderBy = "sort asc, create_time desc",
         dataProxy = MenuServiceImpl.class,
         conditionClass = void.class,
         tree = @TreeType(
@@ -40,7 +39,8 @@ public class MenuNova {
             views = @View(title = "名称", width = "10%"),
             edit = @Edit(
                     title = "名称",
-                    notNull = true
+                    notNull = true,
+                    group = "主要信息"
             )
     )
     private String name;
@@ -60,7 +60,8 @@ public class MenuNova {
                     title = "图标",
                     desc = "图标参考：https://icon-sets.iconify.design/material-symbols",
                     type = Edit.Type.ICON,
-                    notNull = true
+                    notNull = true,
+                    group = "主要信息"
             )
     )
     private String icon;
@@ -78,7 +79,8 @@ public class MenuNova {
                                     @VL(value = "BUTTON", label = "按钮")
                             }
                     ),
-                    notNull = true
+                    notNull = true,
+                    group = "主要信息"
             )
     )
     private String type;
@@ -89,7 +91,8 @@ public class MenuNova {
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(
                             ref = "parentId"
-                    )
+                    ),
+                    group = "主要信息"
             )
     )
     private MenuNova menuNova;
@@ -109,7 +112,8 @@ public class MenuNova {
             edit = @Edit(
                     title = "排序",
                     desc = "正序",
-                    defaultValue = "0"
+                    defaultValue = "0",
+                    group = "扩展信息"
             )
     )
     private Integer sort;
@@ -122,7 +126,8 @@ public class MenuNova {
                             type = BooleanType.Type.SEGMENT,
                             tableType = BooleanType.Type.SWITCH
                     ),
-                    defaultValue = "true"
+                    defaultValue = "true",
+                    group = "扩展信息"
             )
     )
     private Boolean status;
@@ -131,7 +136,8 @@ public class MenuNova {
             views = @View(title = "自定义参数", width = "15%", defaultValue = "-"),
             edit = @Edit(
                     title = "自定义参数",
-                    type = Edit.Type.TEXTAREA
+                    type = Edit.Type.TEXTAREA,
+                    group = "扩展信息"
             )
     )
     private String param;
