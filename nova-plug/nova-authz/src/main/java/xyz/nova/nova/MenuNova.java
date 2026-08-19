@@ -102,7 +102,8 @@ public class MenuNova {
             edit = @Edit(
                     title = "类型值",
                     notNull = true,
-                    showBy = @ShowBy("type == 'NOVA' || type == 'TPL'")
+                    showBy = @ShowBy("type == 'NOVA' || type == 'TPL'"),
+                    group = "主要信息"
             )
     )
     private String value;
