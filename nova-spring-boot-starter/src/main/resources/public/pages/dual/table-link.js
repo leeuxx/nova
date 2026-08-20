@@ -172,7 +172,7 @@ window.DualLinkTable = {
           :data="linkTreeData"
           :checked-keys="linkTreeDisplayKeys"
           :cascade="linkTreeTargetConfig ? linkTreeTargetConfig.treeCascade !== false : true"
-          :key-field="linkTreeTargetConfig ? linkTreeTargetConfig.novaIdFieldName : 'id'"
+          :key-field="linkTreeTargetConfig ? linkTreeTargetConfig.linkStorageField : 'id'"
           :label-field="linkTreeTargetConfig ? linkTreeTargetConfig.treeSearchField : 'name'"
           checkable block-line
           @update:checked-keys="onTreeCheck"
@@ -183,7 +183,7 @@ window.DualLinkTable = {
           :checked-keys="linkTreeDisplayKeys"
           :expanded-keys="linkTreeExpandedKeys"
           :cascade="linkTreeTargetConfig ? linkTreeTargetConfig.treeCascade !== false : true"
-          :key-field="linkTreeTargetConfig ? linkTreeTargetConfig.novaIdFieldName : 'id'"
+          :key-field="linkTreeTargetConfig ? linkTreeTargetConfig.linkStorageField : 'id'"
           :label-field="linkTreeTargetConfig ? linkTreeTargetConfig.treeSearchField : 'name'"
           checkable block-line
           @update:checked-keys="onTreeCheck"

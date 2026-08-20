@@ -133,7 +133,7 @@ window.NovaLinkForm = {
           :data="linkTreeData[linkNovaName]"
           :checked-keys="linkTreeDisplayKeys[linkNovaName]"
           :cascade="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
-          :key-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
+          :key-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.linkStorageField"
           :label-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField"
           checkable block-line
           @update:checked-keys="onTreeCheck"
@@ -144,7 +144,7 @@ window.NovaLinkForm = {
           :checked-keys="linkTreeDisplayKeys[linkNovaName]"
           :expanded-keys="linkTreeExpandedKeys[linkNovaName] || []"
           :cascade="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeCascade !== false"
-          :key-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.novaIdFieldName"
+          :key-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.linkStorageField"
           :label-field="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField"
           :render-label="linkTreeRenderLabel()"
           checkable block-line

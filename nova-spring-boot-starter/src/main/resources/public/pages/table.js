@@ -2892,18 +2892,12 @@ const NovaTable = {
               return
             }
             const buildData = buildResp.data || {}
-            const pkField = buildData.novaIdFieldName
             const treeInfo = buildData.tree || {}
             const treeSearchField = treeInfo.searchField
             const treeCascade = treeInfo.cascade !== false
             const treeLevel = treeInfo.level != null ? treeInfo.level : 0
             const refMap = buildData.reference || {}
 
-            if (!pkField) {
-              self.linkTreeLoading[stateKey] = false
-              if (window.$message) window.$message.error('目标表配置缺少主键字段')
-              return
-            }
             if (!treeSearchField) {
               self.linkTreeLoading[stateKey] = false
               if (window.$message) window.$message.error('目标表配置缺少树搜索字段')
@@ -2922,9 +2916,17 @@ const NovaTable = {
               }
             }
 
+            // 全量树 key = linkStorageField（中间表 build 的 linkTarget 下）
+            const linkStorageField = lt.linkStorageField || ''
+            if (!linkStorageField) {
+              self.linkTreeLoading[stateKey] = false
+              if (window.$message) window.$message.error('中间表 linkTarget 缺少 linkStorageField')
+              return
+            }
+
             const newBuild = Object.assign({}, self.linkTabBuild[tapNovaName] || {})
             newBuild.linkTreeTargetConfig = {
-              novaIdFieldName: pkField,
+              linkStorageField: linkStorageField,
               treeSearchField: treeSearchField,
               treeCascade: treeCascade,
               treeLevel: treeLevel,
@@ -2948,7 +2950,7 @@ const NovaTable = {
         this.linkTreeLoading[stateKey] = false
         return
       }
-      const pkField = config.novaIdFieldName
+      const linkStorageField = config.linkStorageField
       const treeSearchField = config.treeSearchField
       const treeCascade = config.treeCascade
       const treeLevel = config.treeLevel
@@ -3021,10 +3023,10 @@ const NovaTable = {
           const childrenList = treeResp.data.childrenList || []
 
           rootList.forEach(function(node) {
-            nodeMap[String(node[pkField])] = node
+            nodeMap[String(node[linkStorageField])] = node
           })
           childrenList.forEach(function(node) {
-            nodeMap[String(node[pkField])] = node
+            nodeMap[String(node[linkStorageField])] = node
           })
 
           // 构建 parentMap（用于建树）
@@ -3046,7 +3048,7 @@ const NovaTable = {
 
           function buildTree(nodes) {
             nodes.forEach(function(node) {
-              const children = parentMap[String(node[pkField])] || []
+              const children = parentMap[String(node[linkStorageField])] || []
               if (children.length > 0) {
                 node.children = children.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0) })
                 buildTree(children)
@@ -3061,7 +3063,7 @@ const NovaTable = {
             var collectByLevel = function(nodes, depth) {
               if (depth >= treeLevel) return
               nodes.forEach(function(node) {
-                if (node[pkField] != null) defaultExpandKeys.push(node[pkField])
+                if (node[linkStorageField] != null) defaultExpandKeys.push(node[linkStorageField])
                 if (node.children && node.children.length) {
                   collectByLevel(node.children, depth + 1)
                 }
@@ -3079,13 +3081,16 @@ const NovaTable = {
 
       // Step 2b: 中间表 tree（获取已勾选的节点 ID，回显勾选）
       var storageField = lt.thisStorageField
+      var targetField = build.targetFieldName  // SELECT 选取类字段名
+      // linkStorageField 已在函数顶部声明（全量树 key 字段）
       window.fetchApi.post('/nova/table/tree', { novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String((row || self.currentRow)[storageField]) }, window.__novaMenuCode(tapNovaName)).then(function(linkResp) {
           if (linkResp.code === 200) {
             // 合并 rootList + childrenList 取所有节点
             var allRecords = (linkResp.data.rootList || []).concat(linkResp.data.childrenList || [])
-            // 中间表里目标表关联字段
+            // 中间表 SELECT 对象中取 linkStorageField 属性值
             allRecords.forEach(function(rec) {
-              var val = rec[storageField]
+              var selectObj = rec[targetField]
+              var val = selectObj && selectObj[linkStorageField]
               if (val != null) {
                   checkedKeys.add(val)
               }
@@ -3117,7 +3122,7 @@ const NovaTable = {
       const config = (this.linkTabBuild[configKey] || {}).linkTreeTargetConfig
       if (!config) return
       const searchField = config.treeSearchField
-      const pkField = config.novaIdFieldName
+      const linkStorageField = config.linkStorageField
       const parentField = config.treeParentField
       const storageField = config.treeStorageField
 
@@ -3125,7 +3130,7 @@ const NovaTable = {
       const nodeMap = new Map()
       const collectAll = function(nodes) {
         nodes.forEach(function(node) {
-          nodeMap.set(node[pkField], node)
+          nodeMap.set(node[linkStorageField], node)
           if (node.children && node.children.length) collectAll(node.children)
         })
       }
@@ -3178,7 +3183,7 @@ const NovaTable = {
       var filterTree = function(nodes) {
         var result = []
         nodes.forEach(function(node) {
-          if (!visibleKeys.has(node[pkField])) return
+          if (!visibleKeys.has(node[linkStorageField])) return
           var copy = Object.assign({}, node)
           if (node.children && node.children.length) {
             var fc = filterTree(node.children)
