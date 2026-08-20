@@ -668,6 +668,24 @@ public class NovaTableServiceImpl implements NovaTableService {
     }
 
     @Override
+    public List treeDisplay(NovaTableTree novaTableTree) {
+        // 排序
+        List<OrderItemBean> orders = novaTableTree.getOrders();
+        List<OrderItemBean> requestOrders = new ArrayList<>();
+        if (orders != null && !orders.isEmpty()) {
+            orders.forEach(o -> requestOrders.add(
+                    new OrderItemBean().setColumn(MixUtils.camelToSnake(o.getColumn())).setAsc(o.isAsc())
+            ));
+        }
+        return DataProxyUtils.getDataProxy(novaTableTree.getNovaName()).treeDisplay(new Tree()
+                .setNovaName(novaTableTree.getSourceNovaName())
+                .setContext(novaTableTree.getSourceFields())
+                .setOrders(requestOrders)
+                .setOperateValue(novaTableTree.getOperateValue())
+        );
+    }
+
+    @Override
     @SneakyThrows
     public NovaTableButton.Vo buttonClick(NovaTableButton novaTableButton) {
         Class<?> handleClass = Class.forName(novaTableButton.getHandleName());

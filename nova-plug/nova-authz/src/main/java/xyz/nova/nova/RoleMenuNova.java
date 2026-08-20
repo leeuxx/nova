@@ -29,10 +29,6 @@ public class RoleMenuNova {
     private Long id;
 
     @NovaField(
-            views = {
-                    @View(title = "角色名称", column = "name"),
-                    @View(title = "用户编码", column = "code")
-            },
             edit = @Edit(
                     title = "角色信息",
                     type = Edit.Type.LINK_TARGET,
@@ -45,11 +41,6 @@ public class RoleMenuNova {
     private RoleNova roleNova;
 
     @NovaField(
-            views = {
-                    @View(title = "菜单图标", column = "icon"),
-                    @View(title = "菜单名称", column = "name"),
-                    @View(title = "菜单类型", column = "type")
-            },
             edit = @Edit(
                     title = "角色信息",
                     type = Edit.Type.LINK_TARGET,

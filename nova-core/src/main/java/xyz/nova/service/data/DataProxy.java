@@ -46,6 +46,11 @@ public interface DataProxy<MODEL, CONDITION> {
         throw new NovaException("DataProxy.tree未实现");
     }
 
+    @Comment("树引用反显查询")
+    default List<?> treeDisplay(Tree tree) {
+        throw new NovaException("DataProxy.treeDisplay未实现");
+    }
+
     @Comment("关键词搜索（供引用nova用做下拉查询条件搜索）")
     default PromptSearch.Vo promptSearch(PromptSearch promptSearch) {
         throw new NovaException("DataProxy.promptSearch未实现");

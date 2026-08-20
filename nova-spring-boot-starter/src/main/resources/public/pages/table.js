@@ -3079,27 +3079,20 @@ const NovaTable = {
           if (window.$message) window.$message.error('加载树数据失败')
         })
 
-      // Step 2b: 中间表 tree（获取已勾选的节点 ID，回显勾选）
+      // Step 2b: 反显接口（返回已勾选的 key 列表，直接回显）
       var storageField = lt.thisStorageField
-      var targetField = build.targetFieldName  // SELECT 选取类字段名
       // linkStorageField 已在函数顶部声明（全量树 key 字段）
-      window.fetchApi.post('/nova/table/tree', { novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String((row || self.currentRow)[storageField]) }, window.__novaMenuCode(tapNovaName)).then(function(linkResp) {
+      window.fetchApi.post('/nova/table/treeDisplay', { novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String((row || self.currentRow)[storageField]) }, window.__novaMenuCode(tapNovaName)).then(function(linkResp) {
           if (linkResp.code === 200) {
-            // 合并 rootList + childrenList 取所有节点
-            var allRecords = (linkResp.data.rootList || []).concat(linkResp.data.childrenList || [])
-            // 中间表 SELECT 对象中取 linkStorageField 属性值
-            allRecords.forEach(function(rec) {
-              var selectObj = rec[targetField]
-              var val = selectObj && selectObj[linkStorageField]
-              if (val != null) {
-                  checkedKeys.add(val)
-              }
+            var list = linkResp.data || []
+            list.forEach(function(val) {
+              if (val != null) checkedKeys.add(val)
             })
           }
           checkedReady = true
           renderTree()
         }).catch(function() {
-          // 中间表 tree 失败：不回显勾选，树仍可正常显示
+          // 反显失败：不勾选，树仍可正常显示
           checkedReady = true
           renderTree()
         })

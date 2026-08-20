@@ -109,6 +109,14 @@ public class NovaTableController {
         return R.ok(tree);
     }
 
+    @Comment("获取树形结构引用反显数据")
+    @PostMapping("treeDisplay")
+    @NovaRouter(verifyType = NovaRouter.VerifyType.LOGIN_MENU)
+    public R<List<?>> treeDisplay(@RequestBody @Validated NovaTableTree req) {
+        List<?> tree = novaTableService.treeDisplay(req);
+        return R.ok(tree);
+    }
+
     @Comment("按钮组件点击")
     @PostMapping("buttonClick")
     @NovaRouter
