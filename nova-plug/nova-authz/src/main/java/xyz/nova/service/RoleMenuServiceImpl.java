@@ -2,6 +2,7 @@ package xyz.nova.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.yitter.idgen.YitIdHelper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import xyz.nova.entity.Menu;
@@ -31,7 +32,20 @@ public class RoleMenuServiceImpl extends ServiceImpl<RoleMenuMapper, RoleMenu> i
 
     @Override
     public void add(List<RoleMenuNova> roleMenuNova) {
-
+        remove(new LambdaQueryWrapper<RoleMenu>()
+                .eq(RoleMenu::getRoleId, roleMenuNova.get(0).getRoleNova().getId())
+        );
+        List<RoleMenu> roleMenus = new ArrayList<>(roleMenuNova.size());
+        for (RoleMenuNova nova : roleMenuNova) {
+            RoleNova roleNova = nova.getRoleNova();
+            MenuNova menuNova = nova.getMenuNova();
+            RoleMenu roleMenu = new RoleMenu()
+                    .setId(YitIdHelper.nextId())
+                    .setRoleId(roleNova.getId())
+                    .setMenuId(menuNova.getId());
+            roleMenus.add(roleMenu);
+        }
+        saveBatch(roleMenus);
     }
 
     @Override
