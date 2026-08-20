@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yitter.idgen.YitIdHelper;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import xyz.nova.entity.Role;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Fetch;
@@ -20,7 +22,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements DataProxy<RoleNova, RoleCondition> {
+
+    private RoleMenuServiceImpl roleMenuService;
 
     @Override
     public void add(RoleNova roleNova) {
@@ -37,8 +42,12 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Da
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(List<RoleNova> roleNova) {
         List<Long> ids = roleNova.stream().map(RoleNova::getId).toList();
+        // 删除角色菜单权限
+        roleMenuService.roleDelete(ids);
+        // 删除角色
         removeBatchByIds(ids);
     }
 
@@ -71,4 +80,5 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Da
         Role role = getById(details.getValue());
         return BeanCopyUtils.copy(role, RoleNova.class);
     }
+
 }

@@ -46,4 +46,23 @@ public class RoleMenuServiceImpl extends ServiceImpl<RoleMenuMapper, RoleMenu> i
         }
         return roleMenus.stream().map(RoleMenu::getMenuId).toList();
     }
+
+    /**
+     * 根据菜单删除菜单权限
+     */
+    public void menuDelete(List<Long> menuIds) {
+        remove(new LambdaQueryWrapper<RoleMenu>()
+                .in(RoleMenu::getMenuId, menuIds)
+        );
+    }
+
+    /**
+     * 根据角色删除菜单权限
+     */
+    public void roleDelete(List<Long> roleIds) {
+        remove(new LambdaQueryWrapper<RoleMenu>()
+                .in(RoleMenu::getRoleId, roleIds)
+        );
+    }
+
 }

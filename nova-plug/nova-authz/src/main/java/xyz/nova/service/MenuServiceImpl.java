@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yitter.idgen.YitIdHelper;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import xyz.nova.entity.Menu;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Tree;
@@ -20,7 +22,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements DataProxy<MenuNova, Object> {
+
+    private RoleMenuServiceImpl roleMenuService;
 
     @Override
     public void add(MenuNova menuNova) {
@@ -36,8 +41,12 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(List<MenuNova> menuNova) {
         List<Long> ids = menuNova.stream().map(MenuNova::getId).toList();
+        // 删除所有角色菜单权限
+        roleMenuService.menuDelete(ids);
+        // 删除菜单
         cascadeDelete(ids);
     }
 
