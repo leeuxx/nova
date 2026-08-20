@@ -57,20 +57,18 @@ public class RoleMenuServiceImpl extends ServiceImpl<RoleMenuMapper, RoleMenu> i
             List<Menu> childrenList = partitioned.get(false);
             for (Menu menu : rootList) {
                 RoleMenu roleMenuInfo = roleMenuMaps.get(menu.getId());
-                MenuNova menuNova = BeanCopyUtils.copy(menu, MenuNova.class);
                 RoleMenuNova roleMenuNova = new RoleMenuNova()
                         .setId(roleMenuInfo.getId())
                         .setRoleNova(roleNova)
-                        .setMenuNova(menuNova);
+                        .setMenuNova(BeanCopyUtils.copy(menu, MenuNova.class));
                 vo.getRootList().add(roleMenuNova);
             }
             for (Menu menu : childrenList) {
                 RoleMenu roleMenuInfo = roleMenuMaps.get(menu.getId());
-                MenuNova menuNova = BeanCopyUtils.copy(menu, MenuNova.class);
                 RoleMenuNova roleMenuNova = new RoleMenuNova()
                         .setId(roleMenuInfo.getId())
                         .setRoleNova(roleNova)
-                        .setMenuNova(menuNova);
+                        .setMenuNova(BeanCopyUtils.copy(menu, MenuNova.class));
                 vo.getChildrenList().add(roleMenuNova);
             }
         }
