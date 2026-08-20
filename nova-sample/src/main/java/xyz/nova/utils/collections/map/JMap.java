@@ -1,6 +1,6 @@
 package xyz.nova.utils.collections.map;
 
-import xyz.nova.utils.LambdaUtils;
+import xyz.nova.utils.LambdaUtils2;
 import xyz.nova.utils.SetUtils;
 import xyz.nova.utils.collections.list.JArrayList;
 import xyz.nova.utils.collections.list.JList;
@@ -30,12 +30,12 @@ public interface JMap<K, V> extends Map<K, V> {
     /**
      * 覆盖写入
      */
-    <T> JMap<K, V> set(LambdaUtils.JLFunction<T, ?> function, V value);
+    <T> JMap<K, V> set(LambdaUtils2.JLFunction<T, ?> function, V value);
 
     /**
      * 覆盖写入
      */
-    <T> JMap<K, V> set(boolean condition, LambdaUtils.JLFunction<T, ?> function, V value);
+    <T> JMap<K, V> set(boolean condition, LambdaUtils2.JLFunction<T, ?> function, V value);
 
     /**
      * 不覆盖写入，key存在直接返回旧value，不存在则新增且返回null
@@ -45,7 +45,7 @@ public interface JMap<K, V> extends Map<K, V> {
     /**
      * 不覆盖写入，key存在直接返回旧value，不存在则新增且返回null
      */
-    <T> V setIfAbsent(LambdaUtils.JLFunction<T, ?> function, V value);
+    <T> V setIfAbsent(LambdaUtils2.JLFunction<T, ?> function, V value);
 
     /**
      * 写入全部
@@ -71,43 +71,43 @@ public interface JMap<K, V> extends Map<K, V> {
     /**
      * 删除并返回value
      */
-    <T> V del(LambdaUtils.JLFunction<T, ?> function);
+    <T> V del(LambdaUtils2.JLFunction<T, ?> function);
 
     String getString(K key);
 
-    <T> String getString(LambdaUtils.JLFunction<T, ?> function);
+    <T> String getString(LambdaUtils2.JLFunction<T, ?> function);
 
     Integer getInt(K key);
 
-    <T> Integer getInt(LambdaUtils.JLFunction<T, ?> function);
+    <T> Integer getInt(LambdaUtils2.JLFunction<T, ?> function);
 
     Long getLong(K key);
 
-    <T> Long getLong(LambdaUtils.JLFunction<T, ?> function);
+    <T> Long getLong(LambdaUtils2.JLFunction<T, ?> function);
 
     Double getDouble(K key);
 
-    <T> Double getDouble(LambdaUtils.JLFunction<T, ?> function);
+    <T> Double getDouble(LambdaUtils2.JLFunction<T, ?> function);
 
     BigDecimal getBigDecimal(K key);
 
-    <T> BigDecimal getBigDecimal(LambdaUtils.JLFunction<T, ?> function);
+    <T> BigDecimal getBigDecimal(LambdaUtils2.JLFunction<T, ?> function);
 
     Boolean getBoolean(K key);
 
-    <T> Boolean getBoolean(LambdaUtils.JLFunction<T, ?> function);
+    <T> Boolean getBoolean(LambdaUtils2.JLFunction<T, ?> function);
 
     LocalDateTime getLocalDateTime(K key);
 
-    <T> LocalDateTime getLocalDateTime(LambdaUtils.JLFunction<T, ?> function);
+    <T> LocalDateTime getLocalDateTime(LambdaUtils2.JLFunction<T, ?> function);
 
     Timestamp getTimestamp(K key);
 
-    <T> Timestamp getTimestamp(LambdaUtils.JLFunction<T, ?> function);
+    <T> Timestamp getTimestamp(LambdaUtils2.JLFunction<T, ?> function);
 
     V get(K key, Class<V> t);
 
-    <T> V get(LambdaUtils.JLFunction<T, ?> function, Class<V> t);
+    <T> V get(LambdaUtils2.JLFunction<T, ?> function, Class<V> t);
 
     /**
      * 获取所有key

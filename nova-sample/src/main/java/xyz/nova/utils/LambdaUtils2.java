@@ -13,7 +13,7 @@ import java.util.function.Function;
 /**
  * lambda解析工具
  */
-public class LambdaUtils {
+public class LambdaUtils2 {
 
     /**
      * 获取属性名

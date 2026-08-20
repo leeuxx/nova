@@ -1,7 +1,7 @@
 package xyz.nova.utils.collections.list;
 
 import xyz.nova.utils.FunctionUtils;
-import xyz.nova.utils.LambdaUtils;
+import xyz.nova.utils.LambdaUtils2;
 import xyz.nova.utils.SetUtils;
 import xyz.nova.utils.collections.map.JHashMap;
 import xyz.nova.utils.collections.map.JMap;
@@ -39,7 +39,7 @@ public interface JList<T> extends List<T> {
     /**
      * 转map（对象）
      */
-    <R> ToMapOper<T, R> toMap(LambdaUtils.JLFunction<T, R> jlFunction);
+    <R> ToMapOper<T, R> toMap(LambdaUtils2.JLFunction<T, R> jlFunction);
 
     /**
      * 转map（元素）
@@ -49,7 +49,7 @@ public interface JList<T> extends List<T> {
     /**
      * 去重（对象）
      */
-    JList<T> comparing(LambdaUtils.JLFunction<T, ?>... jlFunction);
+    JList<T> comparing(LambdaUtils2.JLFunction<T, ?>... jlFunction);
 
     /**
      * 去重（元素）
@@ -59,7 +59,7 @@ public interface JList<T> extends List<T> {
     /**
      * 正序（对象）
      */
-    JList<T> asc(LambdaUtils.JLFunction<T, ?> jlFunction);
+    JList<T> asc(LambdaUtils2.JLFunction<T, ?> jlFunction);
 
     /**
      * 正序（元素）
@@ -69,7 +69,7 @@ public interface JList<T> extends List<T> {
     /**
      * 倒序（对象）
      */
-    JList<T> desc(LambdaUtils.JLFunction<T, ?> jlFunction);
+    JList<T> desc(LambdaUtils2.JLFunction<T, ?> jlFunction);
 
     /**
      * 倒序（元素）
@@ -79,7 +79,7 @@ public interface JList<T> extends List<T> {
     /**
      * 获取某个属性集合
      */
-    <R> JList<R> getProperty(LambdaUtils.JLFunction<T, R> jlFunction);
+    <R> JList<R> getProperty(LambdaUtils2.JLFunction<T, R> jlFunction);
 
     /**
      * 随机洗牌
@@ -116,7 +116,7 @@ public interface JList<T> extends List<T> {
      * @param addFunctions
      * @return
      */
-    T forAdd(LambdaUtils.JLFunction<T, ?> addFunction, LambdaUtils.JLFunction<T, ?>... addFunctions);
+    T forAdd(LambdaUtils2.JLFunction<T, ?> addFunction, LambdaUtils2.JLFunction<T, ?>... addFunctions);
 
     /**
      * 循环累加
@@ -126,7 +126,7 @@ public interface JList<T> extends List<T> {
      * @param addFunctions
      * @return
      */
-    T forAdd(FunctionUtils.ParamsNoResult<T> fors, LambdaUtils.JLFunction<T, ?> addFunction, LambdaUtils.JLFunction<T, ?>... addFunctions);
+    T forAdd(FunctionUtils.ParamsNoResult<T> fors, LambdaUtils2.JLFunction<T, ?> addFunction, LambdaUtils2.JLFunction<T, ?>... addFunctions);
 
     /**
      * 查询
@@ -138,13 +138,13 @@ public interface JList<T> extends List<T> {
      */
     class ToMapOper<T, R> {
         private List<T> list;
-        private LambdaUtils.JLFunction<T, R> jlFunction;
+        private LambdaUtils2.JLFunction<T, R> jlFunction;
 
         public ToMapOper(List list) {
             this.list = list;
         }
 
-        public ToMapOper(List list, LambdaUtils.JLFunction jlFunction) {
+        public ToMapOper(List list, LambdaUtils2.JLFunction jlFunction) {
             this.list = list;
             this.jlFunction = jlFunction;
         }
@@ -183,7 +183,7 @@ public interface JList<T> extends List<T> {
          *
          * @return
          */
-        public Filter<T> eq(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+        public Filter<T> eq(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
             filter.eq(jlFunction, value);
             return this;
         }
@@ -204,7 +204,7 @@ public interface JList<T> extends List<T> {
          *
          * @return
          */
-        public Filter<T> lt(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+        public Filter<T> lt(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
             filter.lt(jlFunction, value);
             return this;
         }
@@ -225,7 +225,7 @@ public interface JList<T> extends List<T> {
          *
          * @return
          */
-        public Filter<T> gt(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+        public Filter<T> gt(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
             filter.gt(jlFunction, value);
             return this;
         }
@@ -246,7 +246,7 @@ public interface JList<T> extends List<T> {
          *
          * @return
          */
-        public Filter<T> le(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+        public Filter<T> le(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
             filter.le(jlFunction, value);
             return this;
         }
@@ -267,7 +267,7 @@ public interface JList<T> extends List<T> {
          *
          * @return
          */
-        public Filter<T> ge(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+        public Filter<T> ge(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
             filter.ge(jlFunction, value);
             return this;
         }
@@ -288,7 +288,7 @@ public interface JList<T> extends List<T> {
          *
          * @return
          */
-        public Filter<T> ne(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+        public Filter<T> ne(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
             filter.ne(jlFunction, value);
             return this;
         }
@@ -309,7 +309,7 @@ public interface JList<T> extends List<T> {
          *
          * @return
          */
-        public Filter<T> like(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+        public Filter<T> like(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
             filter.like(jlFunction, value);
             return this;
         }
@@ -330,7 +330,7 @@ public interface JList<T> extends List<T> {
          *
          * @return
          */
-        public Filter<T> vlike(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+        public Filter<T> vlike(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
             filter.vlike(jlFunction, value);
             return this;
         }
@@ -351,7 +351,7 @@ public interface JList<T> extends List<T> {
          *
          * @return
          */
-        public <R> Filter<T> in(LambdaUtils.JLFunction<T, R> jlFunction, List<R> value) {
+        public <R> Filter<T> in(LambdaUtils2.JLFunction<T, R> jlFunction, List<R> value) {
             filter.in(jlFunction, value);
             return this;
         }
@@ -372,7 +372,7 @@ public interface JList<T> extends List<T> {
          *
          * @return
          */
-        public <R> Filter<T> notIn(LambdaUtils.JLFunction<T, R> jlFunction, List<R> value) {
+        public <R> Filter<T> notIn(LambdaUtils2.JLFunction<T, R> jlFunction, List<R> value) {
             filter.notIn(jlFunction, value);
             return this;
         }
@@ -393,7 +393,7 @@ public interface JList<T> extends List<T> {
          *
          * @return
          */
-        public <R> Filter<T> isNull(LambdaUtils.JLFunction<T, R> jlFunction) {
+        public <R> Filter<T> isNull(LambdaUtils2.JLFunction<T, R> jlFunction) {
             filter.isNull(jlFunction);
             return this;
         }
@@ -403,7 +403,7 @@ public interface JList<T> extends List<T> {
          *
          * @return
          */
-        public <R> Filter<T> isNotNull(LambdaUtils.JLFunction<T, R> jlFunction) {
+        public <R> Filter<T> isNotNull(LambdaUtils2.JLFunction<T, R> jlFunction) {
             filter.isNotNull(jlFunction);
             return this;
         }

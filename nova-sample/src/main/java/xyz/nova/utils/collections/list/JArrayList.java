@@ -59,7 +59,7 @@ public class JArrayList<T> extends ArrayList<T> implements JList<T> {
     }
 
     @Override
-    public <R> ToMapOper<T, R> toMap(LambdaUtils.JLFunction<T, R> jlFunction) {
+    public <R> ToMapOper<T, R> toMap(LambdaUtils2.JLFunction<T, R> jlFunction) {
         return new ToMapOper<>(this, jlFunction);
     }
 
@@ -69,7 +69,7 @@ public class JArrayList<T> extends ArrayList<T> implements JList<T> {
     }
 
     @Override
-    public JList<T> comparing(LambdaUtils.JLFunction<T, ?>... jlFunction) {
+    public JList<T> comparing(LambdaUtils2.JLFunction<T, ?>... jlFunction) {
         List<T> comparing = SetUtils.list(this).comparing(jlFunction);
         return new JArrayList<T>(comparing);
     }
@@ -81,7 +81,7 @@ public class JArrayList<T> extends ArrayList<T> implements JList<T> {
     }
 
     @Override
-    public JList<T> asc(LambdaUtils.JLFunction<T, ?> jlFunction) {
+    public JList<T> asc(LambdaUtils2.JLFunction<T, ?> jlFunction) {
         List<T> asc = SetUtils.list(this).asc(jlFunction);
         return new JArrayList<>(asc);
     }
@@ -93,7 +93,7 @@ public class JArrayList<T> extends ArrayList<T> implements JList<T> {
     }
 
     @Override
-    public JList<T> desc(LambdaUtils.JLFunction<T, ?> jlFunction) {
+    public JList<T> desc(LambdaUtils2.JLFunction<T, ?> jlFunction) {
         List<T> desc = SetUtils.list(this).desc(jlFunction);
         return new JArrayList<>(desc);
     }
@@ -105,7 +105,7 @@ public class JArrayList<T> extends ArrayList<T> implements JList<T> {
     }
 
     @Override
-    public <R> JList<R> getProperty(LambdaUtils.JLFunction<T, R> jlFunction) {
+    public <R> JList<R> getProperty(LambdaUtils2.JLFunction<T, R> jlFunction) {
         List<R> property = SetUtils.list(this).getProperty(jlFunction);
         return new JArrayList<>(property);
     }
@@ -144,21 +144,21 @@ public class JArrayList<T> extends ArrayList<T> implements JList<T> {
     }
 
     @Override
-    public T forAdd(LambdaUtils.JLFunction<T, ?> addFunction, LambdaUtils.JLFunction<T, ?>... addFunctions) {
+    public T forAdd(LambdaUtils2.JLFunction<T, ?> addFunction, LambdaUtils2.JLFunction<T, ?>... addFunctions) {
         return forAdd(null, addFunction, addFunctions);
     }
 
     @Override
     @SneakyThrows
-    public T forAdd(FunctionUtils.ParamsNoResult<T> fors, LambdaUtils.JLFunction<T, ?> addFunction, LambdaUtils.JLFunction<T, ?>... addFunctions) {
+    public T forAdd(FunctionUtils.ParamsNoResult<T> fors, LambdaUtils2.JLFunction<T, ?> addFunction, LambdaUtils2.JLFunction<T, ?>... addFunctions) {
         if (this.size() == 0) {
             return null;
         }
         JMap<String, BigDecimal> propertys = new JHashMap<String, BigDecimal>()
-                .set(LambdaUtils.getProperty(addFunction), new BigDecimal(0));
+                .set(LambdaUtils2.getProperty(addFunction), new BigDecimal(0));
         if (addFunctions != null && addFunctions.length > 0) {
-            for (LambdaUtils.JLFunction<T, ?> function : addFunctions) {
-                propertys.set(LambdaUtils.getProperty(function), new BigDecimal(0));
+            for (LambdaUtils2.JLFunction<T, ?> function : addFunctions) {
+                propertys.set(LambdaUtils2.getProperty(function), new BigDecimal(0));
             }
         }
         this.forEach(t -> {

@@ -98,7 +98,7 @@ public class SetUtils {
         /**
          * 转map（对象）
          */
-        public <R> ToMapOper<T, R> toMap(LambdaUtils.JLFunction<T, R> jlFunction) {
+        public <R> ToMapOper<T, R> toMap(LambdaUtils2.JLFunction<T, R> jlFunction) {
             return new ToMapOper<>(list, jlFunction);
         }
 
@@ -112,15 +112,15 @@ public class SetUtils {
         /**
          * 去重（对象）
          */
-        public List<T> comparing(LambdaUtils.JLFunction<T, ?>... jlFunction) {
+        public List<T> comparing(LambdaUtils2.JLFunction<T, ?>... jlFunction) {
             return list.stream().collect(
                     Collectors.collectingAndThen(
                             Collectors.toCollection(() -> new TreeSet<>(
                                             Comparator.comparing(o -> {
                                                 try {
                                                     StringJoiner stringJoiner = new StringJoiner(";");
-                                                    for (LambdaUtils.JLFunction<T, ?> tjlFunction : jlFunction) {
-                                                        String property = LambdaUtils.getProperty(tjlFunction);
+                                                    for (LambdaUtils2.JLFunction<T, ?> tjlFunction : jlFunction) {
+                                                        String property = LambdaUtils2.getProperty(tjlFunction);
                                                         Tuple.Tuple3<String, Object, Class<?>> tuple3 = Reflect.PropertyReflect.getProperty(o, property);
                                                         if (tuple3 == null) {
                                                             return null;
@@ -147,16 +147,16 @@ public class SetUtils {
         /**
          * 正序（对象）
          */
-        public List<T> asc(LambdaUtils.JLFunction<T, ?> jlFunction) {
-            Collections.sort(list, Comparator.comparing((LambdaUtils.JLFunction) jlFunction));
+        public List<T> asc(LambdaUtils2.JLFunction<T, ?> jlFunction) {
+            Collections.sort(list, Comparator.comparing((LambdaUtils2.JLFunction) jlFunction));
             return new ArrayList<T>(list);
         }
 
         /**
          * 倒序（对象）
          */
-        public List<T> desc(LambdaUtils.JLFunction<T, ?> jlFunction) {
-            Collections.sort(list, Comparator.comparing((LambdaUtils.JLFunction) jlFunction).reversed());
+        public List<T> desc(LambdaUtils2.JLFunction<T, ?> jlFunction) {
+            Collections.sort(list, Comparator.comparing((LambdaUtils2.JLFunction) jlFunction).reversed());
             return new ArrayList<T>(list);
         }
 
@@ -179,7 +179,7 @@ public class SetUtils {
         /**
          * 获取某个属性集合
          */
-        public <R> List<R> getProperty(LambdaUtils.JLFunction<T, R> jlFunction) {
+        public <R> List<R> getProperty(LambdaUtils2.JLFunction<T, R> jlFunction) {
             return list.stream().map(jlFunction).collect(Collectors.toList());
         }
 
@@ -240,13 +240,13 @@ public class SetUtils {
          */
         public static class ToMapOper<T, R> {
             private List<T> list;
-            private LambdaUtils.JLFunction<T, R> jlFunction;
+            private LambdaUtils2.JLFunction<T, R> jlFunction;
 
             public ToMapOper(List list) {
                 this.list = list;
             }
 
-            public ToMapOper(List list, LambdaUtils.JLFunction jlFunction) {
+            public ToMapOper(List list, LambdaUtils2.JLFunction jlFunction) {
                 this.list = list;
                 this.jlFunction = jlFunction;
             }
@@ -258,7 +258,7 @@ public class SetUtils {
                 if (jlFunction == null) {
                     return (Map<R, T>) list.stream().collect(Collectors.toMap(o -> o, Function.identity(), (key1, key2) -> key2));
                 }
-                String property = LambdaUtils.getProperty(jlFunction);
+                String property = LambdaUtils2.getProperty(jlFunction);
                 return list.stream().collect(Collectors.toMap(o -> {
                     try {
                         Tuple.Tuple3<String, Object, Class<?>> tuple3 = Reflect.PropertyReflect.getProperty(o, property);
@@ -280,7 +280,7 @@ public class SetUtils {
                 if (jlFunction == null) {
                     return (Map<R, List<T>>) list.stream().collect(Collectors.groupingBy(o -> o));
                 }
-                String property = LambdaUtils.getProperty(jlFunction);
+                String property = LambdaUtils2.getProperty(jlFunction);
                 return list.stream().collect(Collectors.groupingBy(o -> {
                     try {
                         Tuple.Tuple3<String, Object, Class<?>> tuple3 = Reflect.PropertyReflect.getProperty(o, property);
@@ -316,8 +316,8 @@ public class SetUtils {
              * @param propertyValue
              * @param oper
              */
-            private void exec(LambdaUtils.JLFunction<T, ?> jlFunction, Object propertyValue, String oper) {
-                String property = LambdaUtils.getProperty(jlFunction);
+            private void exec(LambdaUtils2.JLFunction<T, ?> jlFunction, Object propertyValue, String oper) {
+                String property = LambdaUtils2.getProperty(jlFunction);
                 list = list.stream().filter(ss -> {
                     try {
                         Tuple.Tuple3<String, Object, Class<?>> tuple3 = Reflect.PropertyReflect.getProperty(ss, property);
@@ -346,7 +346,7 @@ public class SetUtils {
              *
              * @return
              */
-            public Filter<T> eq(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+            public Filter<T> eq(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
                 exec(jlFunction, value, EQ);
                 return this;
             }
@@ -367,7 +367,7 @@ public class SetUtils {
              *
              * @return
              */
-            public Filter<T> lt(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+            public Filter<T> lt(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
                 exec(jlFunction, value, LT);
                 return this;
             }
@@ -388,7 +388,7 @@ public class SetUtils {
              *
              * @return
              */
-            public Filter<T> gt(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+            public Filter<T> gt(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
                 exec(jlFunction, value, GT);
                 return this;
             }
@@ -409,7 +409,7 @@ public class SetUtils {
              *
              * @return
              */
-            public Filter<T> le(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+            public Filter<T> le(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
                 exec(jlFunction, value, LE);
                 return this;
             }
@@ -430,7 +430,7 @@ public class SetUtils {
              *
              * @return
              */
-            public Filter<T> ge(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+            public Filter<T> ge(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
                 exec(jlFunction, value, GE);
                 return this;
             }
@@ -451,7 +451,7 @@ public class SetUtils {
              *
              * @return
              */
-            public Filter<T> ne(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+            public Filter<T> ne(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
                 exec(jlFunction, value, NE);
                 return this;
             }
@@ -472,7 +472,7 @@ public class SetUtils {
              *
              * @return
              */
-            public Filter<T> like(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+            public Filter<T> like(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
                 exec(jlFunction, value, LIKE);
                 return this;
             }
@@ -493,7 +493,7 @@ public class SetUtils {
              *
              * @return
              */
-            public Filter<T> vlike(LambdaUtils.JLFunction<T, ?> jlFunction, Object value) {
+            public Filter<T> vlike(LambdaUtils2.JLFunction<T, ?> jlFunction, Object value) {
                 exec(jlFunction, value, VLIKE);
                 return this;
             }
@@ -514,7 +514,7 @@ public class SetUtils {
              *
              * @return
              */
-            public <R> Filter<T> in(LambdaUtils.JLFunction<T, R> jlFunction, List<R> value) {
+            public <R> Filter<T> in(LambdaUtils2.JLFunction<T, R> jlFunction, List<R> value) {
                 exec(jlFunction, value, IN);
                 return this;
             }
@@ -535,7 +535,7 @@ public class SetUtils {
              *
              * @return
              */
-            public <R> Filter<T> notIn(LambdaUtils.JLFunction<T, R> jlFunction, List<R> value) {
+            public <R> Filter<T> notIn(LambdaUtils2.JLFunction<T, R> jlFunction, List<R> value) {
                 exec(jlFunction, value, NOT_IN);
                 return this;
             }
@@ -556,7 +556,7 @@ public class SetUtils {
              *
              * @return
              */
-            public <R> Filter<T> isNull(LambdaUtils.JLFunction<T, R> jlFunction) {
+            public <R> Filter<T> isNull(LambdaUtils2.JLFunction<T, R> jlFunction) {
                 exec(jlFunction, null, IS_NULL);
                 return this;
             }
@@ -566,7 +566,7 @@ public class SetUtils {
              *
              * @return
              */
-            public <R> Filter<T> isNotNull(LambdaUtils.JLFunction<T, R> jlFunction) {
+            public <R> Filter<T> isNotNull(LambdaUtils2.JLFunction<T, R> jlFunction) {
                 exec(jlFunction, null, IS_NOT_NULL);
                 return this;
             }
@@ -597,7 +597,7 @@ public class SetUtils {
              *
              * @return
              */
-            public <R> ToMapOper<T, R> map(LambdaUtils.JLFunction<T, R> jlFunction) {
+            public <R> ToMapOper<T, R> map(LambdaUtils2.JLFunction<T, R> jlFunction) {
                 return new ToMapOper<>(list, jlFunction);
             }
 

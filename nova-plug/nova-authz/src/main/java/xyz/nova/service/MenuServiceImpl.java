@@ -11,9 +11,9 @@ import xyz.nova.entity.data.Tree;
 import xyz.nova.mapper.MenuMapper;
 import xyz.nova.nova.MenuNova;
 import xyz.nova.service.data.DataProxy;
+import xyz.nova.utils.BeanCopyUtils;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,17 +25,11 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
     public void add(MenuNova menuNova) {
         MenuNova parent = menuNova.getMenuNova();
         long id = YitIdHelper.nextId();
-        Menu menu = new Menu()
-                .setId(YitIdHelper.nextId())
+        Menu menu = BeanCopyUtils.copy(menuNova, Menu.class)
+                .setId(id)
                 .setParentId(parent != null ? parent.getId() : null)
-                .setName(menuNova.getName())
                 .setCode(Long.toString(id, 36).toUpperCase())
-                .setIcon(menuNova.getIcon())
                 .setSort(menuNova.getSort() == null ? 0 : menuNova.getSort())
-                .setStatus(menuNova.getStatus())
-                .setType(menuNova.getType())
-                .setValue(menuNova.getValue())
-                .setParam(menuNova.getParam())
                 .setCreateTime(LocalDateTime.now());
         save(menu);
     }
@@ -52,7 +46,17 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
 
     @Override
     public MenuNova details(Details details) {
-        return DataProxy.super.details(details);
+        Menu menu = getById(details.getValue());
+        MenuNova menuNova = new MenuNova();
+        BeanUtils.copyProperties(menu, menuNova);
+        if (menu.getParentId() != null) {
+            Menu parentMenu = getById(menu.getParentId());
+            menuNova.setMenuNova(new MenuNova()
+                    .setId(parentMenu.getId())
+                    .setName(parentMenu.getName())
+            );
+        }
+        return menuNova;
     }
 
     @Override

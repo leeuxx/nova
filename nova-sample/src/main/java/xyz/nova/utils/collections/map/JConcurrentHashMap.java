@@ -1,6 +1,6 @@
 package xyz.nova.utils.collections.map;
 
-import xyz.nova.utils.LambdaUtils;
+import xyz.nova.utils.LambdaUtils2;
 import xyz.nova.utils.SetUtils;
 import xyz.nova.utils.collections.list.JArrayList;
 import xyz.nova.utils.collections.list.JList;
@@ -51,13 +51,13 @@ public class JConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> implements
     }
 
     @Override
-    public <T> JMap<K, V> set(LambdaUtils.JLFunction<T, ?> function, V value) {
+    public <T> JMap<K, V> set(LambdaUtils2.JLFunction<T, ?> function, V value) {
         set(getKey(function), value);
         return this;
     }
 
     @Override
-    public <T> JMap<K, V> set(boolean condition, LambdaUtils.JLFunction<T, ?> function, V value) {
+    public <T> JMap<K, V> set(boolean condition, LambdaUtils2.JLFunction<T, ?> function, V value) {
         set(condition, getKey(function), value);
         return this;
     }
@@ -68,7 +68,7 @@ public class JConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> implements
     }
 
     @Override
-    public <T> V setIfAbsent(LambdaUtils.JLFunction<T, ?> function, V value) {
+    public <T> V setIfAbsent(LambdaUtils2.JLFunction<T, ?> function, V value) {
         return setIfAbsent(getKey(function), value);
     }
 
@@ -92,7 +92,7 @@ public class JConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> implements
     }
 
     @Override
-    public <T> V del(LambdaUtils.JLFunction<T, ?> function) {
+    public <T> V del(LambdaUtils2.JLFunction<T, ?> function) {
         return del(getKey(function));
     }
 
@@ -102,7 +102,7 @@ public class JConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> implements
     }
 
     @Override
-    public <T> String getString(LambdaUtils.JLFunction<T, ?> function) {
+    public <T> String getString(LambdaUtils2.JLFunction<T, ?> function) {
         return this.get(getKey(function)) == null ? null : this.get(getKey(function)).toString();
     }
 
@@ -112,7 +112,7 @@ public class JConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> implements
     }
 
     @Override
-    public <T> Integer getInt(LambdaUtils.JLFunction<T, ?> function) {
+    public <T> Integer getInt(LambdaUtils2.JLFunction<T, ?> function) {
         return this.get(getKey(function)) == null ? null : Integer.parseInt(this.get(getKey(function)).toString());
     }
 
@@ -122,7 +122,7 @@ public class JConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> implements
     }
 
     @Override
-    public <T> Long getLong(LambdaUtils.JLFunction<T, ?> function) {
+    public <T> Long getLong(LambdaUtils2.JLFunction<T, ?> function) {
         return this.get(getKey(function)) == null ? null : Long.parseLong(this.get(getKey(function)).toString());
     }
 
@@ -132,7 +132,7 @@ public class JConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> implements
     }
 
     @Override
-    public <T> Double getDouble(LambdaUtils.JLFunction<T, ?> function) {
+    public <T> Double getDouble(LambdaUtils2.JLFunction<T, ?> function) {
         return this.get(getKey(function)) == null ? null : Double.parseDouble(this.get(getKey(function)).toString());
     }
 
@@ -142,7 +142,7 @@ public class JConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> implements
     }
 
     @Override
-    public <T> BigDecimal getBigDecimal(LambdaUtils.JLFunction<T, ?> function) {
+    public <T> BigDecimal getBigDecimal(LambdaUtils2.JLFunction<T, ?> function) {
         return this.get(getKey(function)) == null ? null : new BigDecimal(this.get(getKey(function)).toString());
     }
 
@@ -152,7 +152,7 @@ public class JConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> implements
     }
 
     @Override
-    public <T> Boolean getBoolean(LambdaUtils.JLFunction<T, ?> function) {
+    public <T> Boolean getBoolean(LambdaUtils2.JLFunction<T, ?> function) {
         return this.get(getKey(function)) == null ? null : Boolean.parseBoolean(this.get(getKey(function)).toString());
     }
 
@@ -162,7 +162,7 @@ public class JConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> implements
     }
 
     @Override
-    public <T> LocalDateTime getLocalDateTime(LambdaUtils.JLFunction<T, ?> function) {
+    public <T> LocalDateTime getLocalDateTime(LambdaUtils2.JLFunction<T, ?> function) {
         return this.get(getKey(function)) == null ? null : (LocalDateTime) this.get(getKey(function));
     }
 
@@ -172,7 +172,7 @@ public class JConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> implements
     }
 
     @Override
-    public <T> Timestamp getTimestamp(LambdaUtils.JLFunction<T, ?> function) {
+    public <T> Timestamp getTimestamp(LambdaUtils2.JLFunction<T, ?> function) {
         return this.get(getKey(function)) == null ? null : (Timestamp) this.get(getKey(function));
     }
 
@@ -183,7 +183,7 @@ public class JConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> implements
     }
 
     @Override
-    public <T> V get(LambdaUtils.JLFunction<T, ?> function, Class<V> t) {
+    public <T> V get(LambdaUtils2.JLFunction<T, ?> function, Class<V> t) {
         V v = this.get(getKey(function));
         return v == null ? null : v;
     }
@@ -212,7 +212,7 @@ public class JConcurrentHashMap<K, V> extends ConcurrentHashMap<K, V> implements
         return SetUtils.map(this).toBean(t);
     }
 
-    private <T> K getKey(LambdaUtils.JLFunction<T, ?> function) {
-        return (K) LambdaUtils.getProperty(function);
+    private <T> K getKey(LambdaUtils2.JLFunction<T, ?> function) {
+        return (K) LambdaUtils2.getProperty(function);
     }
 }
