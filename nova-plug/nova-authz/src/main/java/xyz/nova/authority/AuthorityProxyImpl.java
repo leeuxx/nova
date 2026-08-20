@@ -7,6 +7,7 @@ import xyz.nova.entity.authority.Login;
 import xyz.nova.entity.authority.Menu;
 import xyz.nova.service.MenuServiceImpl;
 import xyz.nova.service.authority.AuthorityProxy;
+import xyz.nova.utils.BeanCopyUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,12 +43,9 @@ public class AuthorityProxyImpl implements AuthorityProxy {
         List<xyz.nova.entity.Menu> list = menuService.list();
         List<Menu> menus = new ArrayList<>(list.size());
         list.forEach(m -> {
-            Menu menu = new Menu().setId(m.getId())
-                    .setCode(m.getCode())
-                    .setValue(m.getValue())
-                    .setName(m.getName())
-                    .setIcon(m.getIcon())
+            Menu menu = BeanCopyUtils.copy(m, Menu.class)
                     .setPid(m.getParentId())
+                    .setShow(m.getStatus())
                     .setType(m.getType().equals("DIR") ? Menu.Type.DIR
                             : m.getType().equals("NOVA") ? Menu.Type.NOVA
                             : m.getType().equals("TPL") ? Menu.Type.TPL

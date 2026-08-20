@@ -70,11 +70,11 @@ public class NovaMyBatisUtils {
     /**
      * 根据 Tree 构造 LambdaQueryWrapper
      *
-     * @param viewClass View 类（@Nova 注解所在类，用于读取字段元数据）
+     * @param novaClass @Nova 注解所在类
      * @param tree      框架传入的查询请求
      */
-    public static <T> LambdaQueryWrapper<T> buildWrapper(Class<?> viewClass, Tree tree) {
-        String novaName = viewClass.getSimpleName();
+    public static <T> LambdaQueryWrapper<T> buildWrapper(Class<?> novaClass, Tree tree) {
+        String novaName = novaClass.getSimpleName();
         QueryWrapper<T> wrapper = new QueryWrapper<>();
         List<OrderItemBean> orders = tree.getOrders();
         if (orders != null && !orders.isEmpty()) {
