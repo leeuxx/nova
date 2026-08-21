@@ -191,7 +191,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
         // 根据 novaName 决定是否过滤系统按钮
         List<Menu> filteredMenus;
         Map<Long, Set<String>> buttonGroupMap;
-        if (novaName != null && novaName.equals(MenuNova.class.getSimpleName())) {
+        if (novaName.equals(MenuNova.class.getSimpleName())) {
             // 1. 先收集所有系统按钮，按父菜单ID分组
             buttonGroupMap = menus.stream()
                     .filter(menu -> {
