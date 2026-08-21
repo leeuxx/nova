@@ -9,8 +9,10 @@ import xyz.nova.annotation.sub.nova.TreeType;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.View;
 import xyz.nova.annotation.sub.nova.field.edit.*;
+import xyz.nova.annotation.sub.nova.row.ExprBool;
 import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.service.MenuServiceImpl;
+import xyz.nova.utils.RowAuthExpr;
 
 import java.time.LocalDateTime;
 
@@ -28,9 +30,13 @@ import java.time.LocalDateTime;
                 @RowOperation(
                         title = "添加",
                         mode = RowOperation.Mode.SINGLE,
-                        param = "add",
+                        param = "menu_add",
                         novaClass = MenuNova.class,
-                        operationHandler = MenuServiceImpl.class
+                        operationHandler = MenuServiceImpl.class,
+                        show = @ExprBool(
+                                param = "menu_add",
+                                exprHandler = RowAuthExpr.class
+                        )
                 )
         }
 )
@@ -46,7 +52,7 @@ public class MenuNova {
     private Long id;
 
     @NovaField(
-            views = @View(title = "名称", width = "10%"),
+            views = @View(title = "名称", width = "12%"),
             edit = @Edit(
                     title = "名称",
                     notNull = true,
@@ -65,7 +71,7 @@ public class MenuNova {
     private String code;
 
     @NovaField(
-            views = @View(title = "图标", width = "10%", desc = "图标参考：https://icon-sets.iconify.design/material-symbols"),
+            views = @View(title = "图标", width = "9%", desc = "图标参考：https://icon-sets.iconify.design/material-symbols"),
             edit = @Edit(
                     title = "图标",
                     desc = "图标参考：https://icon-sets.iconify.design/material-symbols",
@@ -151,7 +157,7 @@ public class MenuNova {
     private Integer sort;
 
     @NovaField(
-            views = @View(title = "显示状态", width = "10%"),
+            views = @View(title = "显示状态", width = "9%"),
             edit = @Edit(
                     title = "显示状态",
                     booleanType = @BooleanType(

@@ -292,7 +292,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
 
     @Override
     public String exec(List<Long> novaIds, Object o, String param) {
-        if (param.equals("add")) {
+        if (param.equals("menu_add")) {
             MenuNova menuNova = (MenuNova) o;
             add(menuNova);
         }
@@ -301,7 +301,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
 
     @Override
     public Object novaFormValue(List<Long> novaIds, String param) {
-        if (param.equals("add")) {
+        if (param.equals("menu_add")) {
             Menu menu = getById(novaIds.get(0));
             return new MenuNova()
                     .setMenuNova(new MenuNova()
