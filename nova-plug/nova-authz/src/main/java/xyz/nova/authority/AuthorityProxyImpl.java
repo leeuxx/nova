@@ -51,15 +51,12 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                             : m.getType().equals("TPL") ? Menu.Type.TPL
                             : m.getType().equals("BUTTON") ? Menu.Type.BUTTON
                             : null
+                    )
+                    .setSystemButton(new Menu.SystemButton()
+                            .setAdd(true)
+                            .setEdit(true)
+                            .setDelete(true)
                     );
-            String code = menu.getCode();
-            if (!code.contains("@ADD") && !code.contains("@DELETE") && !code.contains("@EDIT")) {
-                menu.setSystemButton(new Menu.SystemButton()
-                        .setAdd(true)
-                        .setEdit(true)
-                        .setDelete(true)
-                );
-            }
             menus.add(menu);
         });
         return menus;
