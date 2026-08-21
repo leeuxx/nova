@@ -259,11 +259,31 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
                     return menuNova;
                 })
                 .collect(Collectors.toList());
-
         // 封装返回结果
         return new Tree.Vo<MenuNova>()
                 .setRootList(rootList)
                 .setChildrenList(childrenList);
+    }
+
+    @Override
+    public String exec(List<Long> novaIds, Object o, String param) {
+        if (param.equals("menu_add")) {
+            MenuNova menuNova = (MenuNova) o;
+            add(menuNova);
+        }
+        return null;
+    }
+
+    @Override
+    public Object novaFormValue(List<Long> novaIds, String param) {
+        if (param.equals("menu_add")) {
+            Menu menu = getById(novaIds.get(0));
+            return new MenuNova().setMenuNova(new MenuNova()
+                            .setId(menu.getId())
+                            .setName(menu.getName())
+                    );
+        }
+        return null;
     }
 
     /**
@@ -288,27 +308,5 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
                     .toList();
             cascadeDelete(childIds);
         }
-    }
-
-    @Override
-    public String exec(List<Long> novaIds, Object o, String param) {
-        if (param.equals("menu_add")) {
-            MenuNova menuNova = (MenuNova) o;
-            add(menuNova);
-        }
-        return null;
-    }
-
-    @Override
-    public Object novaFormValue(List<Long> novaIds, String param) {
-        if (param.equals("menu_add")) {
-            Menu menu = getById(novaIds.get(0));
-            return new MenuNova()
-                    .setMenuNova(new MenuNova()
-                            .setId(menu.getId())
-                            .setName(menu.getName())
-                    );
-        }
-        return null;
     }
 }

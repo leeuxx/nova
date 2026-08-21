@@ -20,7 +20,6 @@ import java.time.LocalDateTime;
 @Accessors(chain = true)
 @Nova(
         name = "菜单管理",
-        desc = "菜单功能管理",
         dataProxy = MenuServiceImpl.class,
         conditionClass = void.class,
         tree = @TreeType(
