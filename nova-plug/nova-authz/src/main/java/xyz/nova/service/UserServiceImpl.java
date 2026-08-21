@@ -149,6 +149,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
                     .setId(novaIds.get(0))
                     .setSalt(salt)
                     .setPassword(password)
+                    .setResetPwdTime(LocalDateTime.now())
             );
         }
         return null;
