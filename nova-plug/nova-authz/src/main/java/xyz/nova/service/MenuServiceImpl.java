@@ -12,6 +12,7 @@ import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Tree;
 import xyz.nova.mapper.MenuMapper;
 import xyz.nova.nova.MenuNova;
+import xyz.nova.nova.RoleNova;
 import xyz.nova.service.data.DataProxy;
 import xyz.nova.utils.BeanCopyUtils;
 
@@ -182,23 +183,83 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
 
     @Override
     public Tree.Vo<MenuNova> tree(Tree tree) {
+        String novaName = tree.getNovaName();
         // 查询所有菜单数据
         List<Menu> menus = list(new LambdaUpdateWrapper<Menu>()
                 .orderByAsc(Menu::getSort, Menu::getCreateTime)
         );
+        // 根据 novaName 决定是否过滤系统按钮
+        List<Menu> filteredMenus;
+        Map<Long, Set<String>> buttonGroupMap;
+        if (novaName != null && novaName.equals(MenuNova.class.getSimpleName())) {
+            // 1. 先收集所有系统按钮，按父菜单ID分组
+            buttonGroupMap = menus.stream()
+                    .filter(menu -> {
+                        String code = menu.getCode();
+                        return code != null && (code.endsWith("@ADD") || code.endsWith("@EDIT") || code.endsWith("@DELETE"));
+                    })
+                    .collect(Collectors.groupingBy(
+                            Menu::getParentId,
+                            Collectors.mapping(
+                                    menu -> menu.getCode().substring(menu.getCode().lastIndexOf("@") + 1),
+                                    Collectors.toSet()
+                            )
+                    ));
+            // 2. 过滤掉系统按钮，保留其他菜单
+            filteredMenus = menus.stream()
+                    .filter(menu -> {
+                        String code = menu.getCode();
+                        if (code == null) return true;
+                        // 过滤掉以 @ADD、@EDIT、@DELETE 结尾的按钮
+                        return !(code.endsWith("@ADD") || code.endsWith("@EDIT") || code.endsWith("@DELETE"));
+                    })
+                    .collect(Collectors.toList());
+        } else {
+            buttonGroupMap = new HashMap<>();
+            // 不过滤，保留所有数据
+            filteredMenus = menus;
+        }
         // 使用 partitioningBy 只需遍历一次，性能更好
-        Map<Boolean, List<Menu>> partitioned = menus.stream()
+        Map<Boolean, List<Menu>> partitioned = filteredMenus.stream()
                 .collect(Collectors.partitioningBy(menu -> menu.getParentId() == null));
-        // 将根菜单列表转换为 MenuNova 对象列表
+        // 将根菜单列表转换为 MenuNova 对象列表，并设置 sysButton
         List<MenuNova> rootList = partitioned.get(true).stream()
-                .map(menu -> BeanCopyUtils.copy(menu, MenuNova.class))
+                .map(menu -> {
+                    MenuNova menuNova = BeanCopyUtils.copy(menu, MenuNova.class);
+                    // 如果存在按钮分组，设置 sysButton
+                    if (!buttonGroupMap.isEmpty()) {
+                        Set<String> buttons = buttonGroupMap.get(menu.getId());
+                        if (buttons != null && !buttons.isEmpty()) {
+                            // 按固定顺序排序：ADD, EDIT, DELETE
+                            List<String> sortedButtons = Arrays.asList("ADD", "EDIT", "DELETE").stream()
+                                    .filter(buttons::contains)
+                                    .collect(Collectors.toList());
+                            menuNova.setSysButton(String.join(",", sortedButtons));
+                        }
+                    }
+                    return menuNova;
+                })
                 .collect(Collectors.toList());
-        // 将子菜单列表转换为 MenuNova 对象列表
+        // 将子菜单列表转换为 MenuNova 对象列表，并设置 sysButton
         List<MenuNova> childrenList = partitioned.get(false).stream()
-                .map(menu -> BeanCopyUtils.copy(menu, MenuNova.class)
-                        .setMenuNova(new MenuNova().setId(menu.getParentId()))
-                )
+                .map(menu -> {
+                    MenuNova menuNova = BeanCopyUtils.copy(menu, MenuNova.class)
+                            .setMenuNova(new MenuNova().setId(menu.getParentId()));
+                    // 如果存在按钮分组，设置 sysButton
+                    if (!buttonGroupMap.isEmpty()) {
+                        Set<String> buttons = buttonGroupMap.get(menu.getId());
+                        if (buttons != null && !buttons.isEmpty()) {
+                            // 按固定顺序排序：ADD, EDIT, DELETE
+                            List<String> sortedButtons = Arrays.asList("ADD", "EDIT", "DELETE").stream()
+                                    .filter(buttons::contains)
+                                    .collect(Collectors.toList());
+                            menuNova.setSysButton(String.join(",", sortedButtons));
+                        }
+                    }
+                    return menuNova;
+                })
                 .collect(Collectors.toList());
+
         // 封装返回结果
         return new Tree.Vo<MenuNova>()
                 .setRootList(rootList)

@@ -110,6 +110,7 @@ public class MenuNova {
     private String value;
 
     @NovaField(
+            views = @View(title = "系统按钮", width = "10%", defaultValue = "-"),
             edit = @Edit(
                     title = "系统按钮",
                     type = Edit.Type.CHOICE,
@@ -117,9 +118,9 @@ public class MenuNova {
                             showType = ChoiceType.ShowType.RADIO,
                             selectType = ChoiceType.SelectType.MULTI,
                             vl = {
-                                    @VL(value = "ADD", label = "新增"),
-                                    @VL(value = "EDIT", label = "编辑"),
-                                    @VL(value = "DELETE", label = "删除")
+                                    @VL(value = "ADD", label = "新增", color = "#0000FF"),
+                                    @VL(value = "EDIT", label = "编辑", color = "#FFFF00"),
+                                    @VL(value = "DELETE", label = "删除", color = "#FF0000")
                             }
                     ),
                     showBy = @ShowBy("type == 'NOVA'"),
@@ -129,7 +130,7 @@ public class MenuNova {
     private String sysButton;
 
     @NovaField(
-            views = @View(title = "排序", width = "10%", desc = "正序"),
+            views = @View(title = "排序", width = "5%", desc = "正序"),
             edit = @Edit(
                     title = "排序",
                     desc = "正序",
@@ -154,7 +155,7 @@ public class MenuNova {
     private Boolean status;
 
     @NovaField(
-            views = @View(title = "自定义参数", width = "15%", defaultValue = "-"),
+            views = @View(title = "自定义参数", width = "10%", defaultValue = "-"),
             edit = @Edit(
                     title = "自定义参数",
                     type = Edit.Type.TEXTAREA,
