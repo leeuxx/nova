@@ -60,6 +60,7 @@ public class MenuNova {
                     title = "图标",
                     desc = "图标参考：https://icon-sets.iconify.design/material-symbols",
                     type = Edit.Type.ICON,
+                    defaultValue = "tdesign:system-2",
                     notNull = true,
                     group = "主要信息"
             )
@@ -107,6 +108,25 @@ public class MenuNova {
             )
     )
     private String value;
+
+    @NovaField(
+            edit = @Edit(
+                    title = "系统按钮",
+                    type = Edit.Type.CHOICE,
+                    choiceType = @ChoiceType(
+                            showType = ChoiceType.ShowType.RADIO,
+                            selectType = ChoiceType.SelectType.MULTI,
+                            vl = {
+                                    @VL(value = "ADD", label = "新增"),
+                                    @VL(value = "EDIT", label = "编辑"),
+                                    @VL(value = "DELETE", label = "删除")
+                            }
+                    ),
+                    showBy = @ShowBy("type == 'NOVA'"),
+                    group = "主要信息"
+            )
+    )
+    private String sysButton;
 
     @NovaField(
             views = @View(title = "排序", width = "10%", desc = "正序"),
