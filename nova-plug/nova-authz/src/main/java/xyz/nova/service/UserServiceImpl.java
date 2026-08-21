@@ -56,7 +56,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
 
     @Override
     public void delete(List<UserNova> userNova) {
-        DataProxy.super.delete(userNova);
+        List<Long> ids = userNova.stream().map(UserNova::getId).toList();
+        removeByIds(ids);
     }
 
     @Override

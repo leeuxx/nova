@@ -12,7 +12,6 @@ import xyz.nova.annotation.sub.nova.field.edit.*;
 import xyz.nova.annotation.sub.nova.row.ExprBool;
 import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.nova.condition.UserCondition;
-import xyz.nova.service.MenuServiceImpl;
 import xyz.nova.service.UserServiceImpl;
 import xyz.nova.service.data.DefaultDataProxy;
 import xyz.nova.utils.RowAuthExpr;
@@ -165,6 +164,15 @@ public class UserNova {
             )
     )
     private LocalDateTime createTime;
+
+    @NovaField(
+            edit = @Edit(
+                    title = "角色授权",
+                    type = Edit.Type.LINK,
+                    linkType = @LinkType
+            )
+    )
+    private UserRoleNova userRoleNova;
 
     @Data
     @Accessors(chain = true)

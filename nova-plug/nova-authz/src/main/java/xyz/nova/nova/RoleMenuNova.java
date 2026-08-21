@@ -42,7 +42,7 @@ public class RoleMenuNova {
 
     @NovaField(
             edit = @Edit(
-                    title = "角色信息",
+                    title = "菜单信息",
                     type = Edit.Type.LINK_TARGET,
                     linkTargetType = @LinkTargetType(
                             type = LinkTargetType.Type.SELECT,
