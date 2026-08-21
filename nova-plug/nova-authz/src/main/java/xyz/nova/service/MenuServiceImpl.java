@@ -7,12 +7,12 @@ import com.github.yitter.idgen.YitIdHelper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import xyz.nova.annotation.sub.nova.row.OperationHandler;
 import xyz.nova.entity.Menu;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Tree;
 import xyz.nova.mapper.MenuMapper;
 import xyz.nova.nova.MenuNova;
-import xyz.nova.nova.RoleNova;
 import xyz.nova.service.data.DataProxy;
 import xyz.nova.utils.BeanCopyUtils;
 
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements DataProxy<MenuNova, Object> {
+public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements DataProxy<MenuNova, Object>, OperationHandler<Long, Object> {
 
     private RoleMenuServiceImpl roleMenuService;
 
@@ -288,5 +288,27 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
                     .toList();
             cascadeDelete(childIds);
         }
+    }
+
+    @Override
+    public String exec(List<Long> novaIds, Object o, String param) {
+        if (param.equals("add")) {
+            MenuNova menuNova = (MenuNova) o;
+            add(menuNova);
+        }
+        return null;
+    }
+
+    @Override
+    public Object novaFormValue(List<Long> novaIds, String param) {
+        if (param.equals("add")) {
+            Menu menu = getById(novaIds.get(0));
+            return new MenuNova()
+                    .setMenuNova(new MenuNova()
+                            .setId(menu.getId())
+                            .setName(menu.getName())
+                    );
+        }
+        return null;
     }
 }

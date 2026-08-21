@@ -9,6 +9,7 @@ import xyz.nova.annotation.sub.nova.TreeType;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.View;
 import xyz.nova.annotation.sub.nova.field.edit.*;
+import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.service.MenuServiceImpl;
 
 import java.time.LocalDateTime;
@@ -22,7 +23,16 @@ import java.time.LocalDateTime;
         conditionClass = void.class,
         tree = @TreeType(
                 label = "name"
-        )
+        ),
+        rowOperation = {
+                @RowOperation(
+                        title = "添加",
+                        mode = RowOperation.Mode.SINGLE,
+                        param = "add",
+                        novaClass = MenuNova.class,
+                        operationHandler = MenuServiceImpl.class
+                )
+        }
 )
 public class MenuNova {
 
