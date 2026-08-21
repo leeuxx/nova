@@ -3012,8 +3012,8 @@ const NovaTable = {
         if (remain > 0) { setTimeout(apply, remain) } else { apply() }
       }
 
-      // Step 2a: 目标表 tree（全量树结构）
-      window.fetchApi.post('/nova/table/tree', { novaName: targetNovaName, sourceNovaName: targetNovaName, sourceFields: srcFields }, window.__novaMenuCode(targetNovaName)).then(function(treeResp) {
+      // Step 2a: 目标表 tree（全量树结构），sourceNovaName 为外层主 nova
+      window.fetchApi.post('/nova/table/tree', { novaName: targetNovaName, sourceNovaName: self.novaName, sourceFields: srcFields }, window.__novaMenuCode(targetNovaName)).then(function(treeResp) {
           if (treeResp.code !== 200) {
             self.linkTreeLoading[stateKey] = false
             if (window.$message) window.$message.error('加载树数据失败')
