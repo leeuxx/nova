@@ -16,6 +16,7 @@ import xyz.nova.nova.MenuNova;
 import xyz.nova.nova.OrgNova;
 import xyz.nova.service.data.DataProxy;
 import xyz.nova.utils.BeanCopyUtils;
+import xyz.nova.utils.SpringBeanUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,6 +47,9 @@ public class OrgServiceImpl extends ServiceImpl<OrgMapper, Org> implements DataP
     @Transactional(rollbackFor = Exception.class)
     public void delete(List<OrgNova> orgNova) {
         List<Long> ids = orgNova.stream().map(OrgNova::getId).toList();
+        // 删除用户组织
+        SpringBeanUtils.getBean(UserServiceImpl.class).orgClear(ids);
+        // 删除组织
         cascadeDelete(ids);
     }
 

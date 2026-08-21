@@ -67,6 +67,7 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
         Set<Class<?>> novaClasses = reflections.get(Scanners.TypesAnnotated.with(Nova.class).asClass());
         for (Class<?> clz : novaClasses) {
             String novaIdFieldName = null;
+            Class<?> novaIdClass = null;
             Map<String, ScanNova.NovaFieldInfo> novaFields = new LinkedHashMap<>();
             List<String> assocColumns = new ArrayList<>();
             Field[] fields = clz.getDeclaredFields();
@@ -89,6 +90,7 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
                 }
                 if (field.isAnnotationPresent(NovaId.class)) {
                     novaIdFieldName = field.getName();
+                    novaIdClass = field.getType();
                 }
             }
             Nova nova = clz.getDeclaredAnnotation(Nova.class);
@@ -96,6 +98,7 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
             ScanNova scanNova = new ScanNova()
                     .setClz(clz)
                     .setNovaIdFieldName(novaIdFieldName)
+                    .setNovaIdClass(novaIdClass)
                     .setNova(nova)
                     .setNovaFields(novaFields)
                     .setDataProxyClass(nova.dataProxy())
@@ -117,6 +120,9 @@ public class NovaApplication implements ImportBeanDefinitionRegistrar {
 
         @Comment("novaId属性名")
         private String novaIdFieldName;
+
+        @Comment("novaId属性类型")
+        private Class<?> novaIdClass;
 
         @Comment("Nova注解")
         private Nova nova;

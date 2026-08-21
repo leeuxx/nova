@@ -3,7 +3,12 @@ package xyz.nova.service.impl;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 import xyz.nova.annotation.sub.nova.TreeType;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.edit.ButtonHandle;
@@ -23,6 +28,8 @@ import java.util.*;
 @Service
 @AllArgsConstructor
 public class NovaTableServiceImpl implements NovaTableService {
+
+    private ConversionService conversionService;
 
     @Override
     public NovaTableBuild.Vo build(NovaTableBuild novaTableBuild) {
@@ -561,7 +568,11 @@ public class NovaTableServiceImpl implements NovaTableService {
         Class<?> handlerClass = Class.forName(req.getOperationHandler());
         OperationHandler handler = (OperationHandler<?, ?>) SpringBeanUtils.getBean(handlerClass);
         List<String> novaIds = req.getNovaIds() != null ? req.getNovaIds() : List.of();
-        Object formValue = handler.novaFormValue(novaIds, req.getOperationParam());
+        Class<?> novaIdClass = NovaFieldUtils.getNovaIdClass(novaName);
+        List<Object> convertedIds = novaIds.stream()
+                .map(id -> conversionService.convert(id, novaIdClass))
+                .collect(Collectors.toList());
+        Object formValue = handler.novaFormValue(convertedIds, req.getOperationParam());
         if (formValue == null) {
             return Map.of();
         }
@@ -633,7 +644,11 @@ public class NovaTableServiceImpl implements NovaTableService {
             List<String> novaIds = req.getNovaIds();
             Class<?> operationHandlerClass = Class.forName(req.getOperationHandler());
             OperationHandler operationHandler = (OperationHandler<?, ?>) SpringBeanUtils.getBean(operationHandlerClass);
-            String jsExpression = operationHandler.exec(novaIds, novaForm, req.getOperationParam());
+            Class<?> novaIdClass = NovaFieldUtils.getNovaIdClass(req.getNovaName());
+            List<Object> convertedIds = novaIds.stream()
+                    .map(id -> conversionService.convert(id, novaIdClass))
+                    .collect(Collectors.toList());
+            String jsExpression = operationHandler.exec(convertedIds, novaForm, req.getOperationParam());
             return new NovaTableRowOperationSubmit.Vo().setJsExpression(jsExpression);
         }
         return new NovaTableRowOperationSubmit.Vo();

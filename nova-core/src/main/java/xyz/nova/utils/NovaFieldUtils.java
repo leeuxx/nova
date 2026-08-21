@@ -18,10 +18,10 @@ import java.util.*;
 public class NovaFieldUtils {
 
     /**
-     * 获取novaId属性名
+     * 获取novaId属性参数
      *
      * @param className 类名
-     * @return novaId属性名
+     * @return novaId属性
      */
     public static String getNovaIdFieldName(String className) {
         Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
@@ -30,6 +30,21 @@ public class NovaFieldUtils {
             return null;
         }
         return scanNova.getNovaIdFieldName();
+    }
+
+    /**
+     * 获取novaId属性类型
+     *
+     * @param className 类名
+     * @return novaId属性类型
+     */
+    public static Class<?> getNovaIdClass(String className) {
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            return null;
+        }
+        return scanNova.getNovaIdClass();
     }
 
     /**

@@ -71,7 +71,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Da
         List<Role> records = iPage.getRecords();
         List<RoleNova> roleNovas = BeanCopyUtils.<Role, RoleNova>copy(records, RoleNova.class);
         return new Fetch.Vo<RoleNova>()
-                .setTotal(roleNovas.size())
+                .setTotal(iPage.getTotal())
                 .setRecords(roleNovas);
     }
 
