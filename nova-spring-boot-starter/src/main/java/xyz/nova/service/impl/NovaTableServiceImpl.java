@@ -361,6 +361,9 @@ public class NovaTableServiceImpl implements NovaTableService {
         if (sysBtnShowInfo.getDelete() != null) {
             sysBtnHide.setDelete(sysBtnShowInfo.getDelete().value());
         }
+        if (sysBtnShowInfo.getRowSelect() != null) {
+            sysBtnHide.setRowSelect(sysBtnShowInfo.getRowSelect().value());
+        }
         vo.setSysBtnHide(sysBtnHide);
         return vo;
     }

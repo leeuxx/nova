@@ -650,7 +650,7 @@ const NovaTable = {
 
       if (vm.pickerMode) {
         if (vm.pickerMulti) {
-          cols.push({ type: 'selection', title: '', key: 'selection', width: 50 })
+          cols.push({ type: 'selection', title: '', key: 'selection', width: 50, disabled: (row) => vm.isRowSelectDisabled(row) })
         } else {
           cols.push({
             key: '__radio__', width: 50, title: '',
@@ -668,7 +668,7 @@ const NovaTable = {
         }
       } else if (!vm.readonly) {
         // dualMode 下即使 readonly 也保留复选框列，保持与 appendages 等子表格式统一（纯展示无实际操作）
-        cols.push({ type: 'selection', title: '', key: 'selection', width: 50 })
+        cols.push({ type: 'selection', title: '', key: 'selection', width: 50, disabled: (row) => vm.isRowSelectDisabled(row) })
       } else if (vm.dualMode && !vm.linkMode) {
         cols.push({ type: 'selection', title: '', key: 'selection', width: 50 })
       }
@@ -1404,6 +1404,10 @@ const NovaTable = {
   },
 
   methods: {
+    isRowSelectDisabled(row) {
+      var expr = (this.sysBtnHide || {}).rowSelect
+      return !!(expr && window.evalShowExpr(expr, row))
+    },
     tableRowClassName(row) {
       var cls = []
       if (this.dualTableViewActive && row[this.novaIdFieldName] === (this._dualSelectedRow && this._dualSelectedRow[this.novaIdFieldName])) {

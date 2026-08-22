@@ -25,7 +25,8 @@ import java.time.LocalDateTime;
         conditionClass = void.class,
         sysBtnHide = @SysBtnHide(
                 edit = @ShowBy("id < 26"),
-                delete = @ShowBy("id < 26")
+                delete = @ShowBy("id < 26"),
+                rowSelect = @ShowBy("id < 26")
         ),
         tree = @TreeType(
                 label = "name",

@@ -783,7 +783,8 @@ public class NovaFieldUtils {
         SysBtnHide sysBtnHide = scanNova.getNova().sysBtnHide();
         return new SysBtnHideInfo()
                 .setEdit(sysBtnHide.edit())
-                .setDelete(sysBtnHide.delete());
+                .setDelete(sysBtnHide.delete())
+                .setRowSelect(sysBtnHide.rowSelect());
     }
 
     @Data
@@ -1198,6 +1199,9 @@ public class NovaFieldUtils {
 
         @Comment("删除按钮表达式（满足则隐藏）")
         private ShowBy delete;
+
+        @Comment("选取框表达式（满足则隐藏）")
+        private ShowBy rowSelect;
 
     }
 }

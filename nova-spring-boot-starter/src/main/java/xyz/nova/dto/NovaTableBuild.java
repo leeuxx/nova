@@ -619,6 +619,9 @@ public class NovaTableBuild {
 
             @Comment("删除按钮表达式（满足则隐藏）")
             private String delete;
+
+            @Comment("选取框表达式（满足则隐藏）")
+            private String rowSelect;
         }
     }
 }

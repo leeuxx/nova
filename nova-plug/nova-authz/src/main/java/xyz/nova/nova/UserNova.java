@@ -29,7 +29,8 @@ import java.time.LocalDateTime;
         conditionClass = UserCondition.class,
         sysBtnHide = @SysBtnHide(
                 edit = @ShowBy("account == 'nova'"),
-                delete = @ShowBy("account == 'nova'")
+                delete = @ShowBy("account == 'nova'"),
+                rowSelect = @ShowBy("account == 'nova'")
         ),
         rowOperation = {
                 @RowOperation(
