@@ -36,7 +36,12 @@ public class AuthorityProxyImpl implements AuthorityProxy {
 
     @Override
     public boolean checkToken(String token) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey(redisKey + token));
+        boolean result = Boolean.TRUE.equals(redisTemplate.hasKey(redisKey + token));
+        // token续期
+        if (result) {
+            redisTemplate.expire(redisKey + token, novaAuthorityConfig.getExpireTime(), TimeUnit.MINUTES);
+        }
+        return result;
     }
 
     @Override
