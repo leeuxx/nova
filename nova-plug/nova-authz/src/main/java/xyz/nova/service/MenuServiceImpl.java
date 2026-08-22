@@ -11,6 +11,7 @@ import xyz.nova.annotation.sub.nova.row.OperationHandler;
 import xyz.nova.entity.Menu;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Tree;
+import xyz.nova.error.NovaException;
 import xyz.nova.mapper.MenuMapper;
 import xyz.nova.nova.MenuNova;
 import xyz.nova.service.data.DataProxy;
@@ -279,9 +280,9 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
         if (param.equals("menu_add")) {
             Menu menu = getById(novaIds.get(0));
             return new MenuNova().setMenuNova(new MenuNova()
-                            .setId(menu.getId())
-                            .setName(menu.getName())
-                    );
+                    .setId(menu.getId())
+                    .setName(menu.getName())
+            );
         }
         return null;
     }
@@ -308,5 +309,19 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
                     .toList();
             cascadeDelete(childIds);
         }
+    }
+
+    /**
+     * 登录
+     */
+    public List<Menu> login(boolean isAdmin, List<Long> menuIds) {
+        List<Menu> menus = list(new LambdaQueryWrapper<Menu>()
+                .in(!isAdmin, Menu::getId, menuIds)
+                .orderByAsc(Menu::getSort, Menu::getCreateTime)
+        );
+        if (menus == null || menus.isEmpty()) {
+            throw new NovaException("用户无登录菜单");
+        }
+        return menus;
     }
 }

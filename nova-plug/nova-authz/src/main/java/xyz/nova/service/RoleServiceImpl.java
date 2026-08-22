@@ -97,4 +97,19 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Da
         });
         return vlModels;
     }
+
+    /**
+     * 登录
+     */
+    public List<Long> login(List<Long> roleIds) {
+        List<Role> roles = list(new LambdaQueryWrapper<Role>()
+                .in(Role::getId, roleIds)
+                .eq(Role::getStatus, true)
+        );
+        if (roles == null || roles.isEmpty()) {
+            throw new NovaException("用户无登录角色");
+        }
+        return roles.stream().map(Role::getId).toList();
+    }
+
 }

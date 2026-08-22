@@ -6,6 +6,7 @@ import com.github.yitter.idgen.YitIdHelper;
 import org.springframework.stereotype.Service;
 import xyz.nova.entity.RoleMenu;
 import xyz.nova.entity.data.Tree;
+import xyz.nova.error.NovaException;
 import xyz.nova.mapper.RoleMenuMapper;
 import xyz.nova.nova.MenuNova;
 import xyz.nova.nova.RoleMenuNova;
@@ -65,4 +66,19 @@ public class RoleMenuServiceImpl extends ServiceImpl<RoleMenuMapper, RoleMenu> i
         );
     }
 
+    /**
+     * 登录
+     */
+    public List<Long> login(List<Long> roleIds) {
+        List<RoleMenu> roleMenus = list(new LambdaQueryWrapper<RoleMenu>()
+                .in(RoleMenu::getRoleId, roleIds)
+        );
+        if (roleMenus == null || roleMenus.isEmpty()) {
+            throw new NovaException("用户无登录菜单");
+        }
+        return roleMenus.stream()
+                .map(RoleMenu::getMenuId)
+                .distinct() //去重
+                .toList();
+    }
 }

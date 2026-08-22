@@ -1,70 +1,166 @@
 package xyz.nova.authority;
 
-import com.github.yitter.idgen.YitIdHelper;
-import lombok.AllArgsConstructor;
+import cn.hutool.json.JSONObject;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import xyz.nova.config.NovaAuthorityConfig;
+import xyz.nova.entity.User;
 import xyz.nova.entity.authority.Login;
 import xyz.nova.entity.authority.Menu;
-import xyz.nova.service.MenuServiceImpl;
+import xyz.nova.service.*;
 import xyz.nova.service.authority.AuthorityProxy;
-import xyz.nova.utils.BeanCopyUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthorityProxyImpl implements AuthorityProxy {
 
-    private MenuServiceImpl menuService;
+    public static String redisKey = "nova:login:";
+
+    private final NovaAuthorityConfig novaAuthorityConfig;
+
+    private final UserServiceImpl userService;
+
+    private final UserRoleServiceImpl userRoleService;
+
+    private final RoleServiceImpl roleService;
+
+    private final RoleMenuServiceImpl roleMenuService;
+
+    private final MenuServiceImpl menuService;
+
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Override
     public boolean checkToken(String token) {
-        return true;
+        return Boolean.TRUE.equals(redisTemplate.hasKey(redisKey + token));
     }
 
     @Override
     public Login.User login(Login login) {
-        String token = String.valueOf(YitIdHelper.nextId());
+        // 账号密码验证
+        User user = userService.login(login.getUsername(), login.getPassword());
+        List<xyz.nova.entity.Menu> menus;
+        if (user.getIsAdmin()) {
+            // 查询菜单
+            menus = menuService.login(true, null);
+        } else {
+            // 查询用户角色
+            List<Long> roleIds = userRoleService.login(user.getId());
+            // 验证角色可用性
+            roleIds = roleService.login(roleIds);
+            // 查询角色菜单
+            List<Long> menuIds = roleMenuService.login(roleIds);
+            // 查询菜单
+            menus = menuService.login(false, menuIds);
+        }
+        // 生成token
+        String token = UUID.randomUUID().toString().replace("-", "");
+        // 按父菜单ID分组系统按钮（用于聚合到NOVA菜单的systemButton）
+        Map<Long, List<xyz.nova.entity.Menu>> buttonGroupMap = new LinkedHashMap<>();
+        for (xyz.nova.entity.Menu menu : menus) {
+            if ("BUTTON".equals(menu.getType())) {
+                buttonGroupMap.computeIfAbsent(menu.getParentId(), k -> new ArrayList<>()).add(menu);
+            }
+        }
+        // 构建缓存（Hash结构，key=菜单code，所有菜单包括BUTTON都缓存）
+        Map<String, String> menuMap = new LinkedHashMap<>();
+        int sort = 0;
+        for (xyz.nova.entity.Menu menu : menus) {
+            JSONObject menuObj = new JSONObject()
+                    .set("id", menu.getId())
+                    .set("code", menu.getCode())
+                    .set("name", menu.getName())
+                    .set("value", menu.getValue())
+                    .set("icon", menu.getIcon())
+                    .set("pic", menu.getParentId())
+                    .set("type", menu.getType().equals("DIR") ? Menu.Type.DIR
+                            : menu.getType().equals("NOVA") ? Menu.Type.NOVA
+                            : menu.getType().equals("TPL") ? Menu.Type.TPL
+                            : menu.getType().equals("BUTTON") ? Menu.Type.BUTTON
+                            : null
+                    )
+                    .set("show", menu.getStatus())
+                    .set("sort", sort++);
+            // NOVA菜单附加systemButton聚合信息
+            if ("NOVA".equals(menu.getType())) {
+                List<xyz.nova.entity.Menu> buttons = buttonGroupMap.get(menu.getId());
+                if (buttons != null && !buttons.isEmpty()) {
+                    JSONObject systemButton = new JSONObject();
+                    for (xyz.nova.entity.Menu btn : buttons) {
+                        String suffix = btn.getCode();
+                        if (suffix != null && suffix.contains("@")) {
+                            suffix = suffix.substring(suffix.lastIndexOf("@") + 1);
+                        }
+                        if ("ADD".equals(suffix)) {
+                            systemButton.set("add", true);
+                        } else if ("EDIT".equals(suffix)) {
+                            systemButton.set("edit", true);
+                        } else if ("DELETE".equals(suffix)) {
+                            systemButton.set("delete", true);
+                        }
+                    }
+                    menuObj.set("systemButton", systemButton);
+                }
+            }
+            menuMap.put(menu.getCode(), menuObj.toString());
+        }
+        // 存入Redis Hash
+        redisTemplate.opsForHash().putAll(redisKey + token, menuMap);
+        redisTemplate.expire(redisKey + token, novaAuthorityConfig.getExpireTime(), TimeUnit.MINUTES);
+        // 返回登录信息
         return new Login.User()
                 .setToken(token)
-                .setName("张三")
-                .setAlias("财务人员")
-                .setAvatar("https://avatars.githubusercontent.com/u/10251080?s=200&v=4");
+                .setName(user.getName());
     }
 
     @Override
     public void logout(String token) {
-
+        redisTemplate.delete(redisKey + token);
     }
 
     @Override
     public List<Menu> getMenu(String token) {
-        List<xyz.nova.entity.Menu> list = menuService.list();
-        List<Menu> menus = new ArrayList<>(list.size());
-        list.forEach(m -> {
-            Menu menu = BeanCopyUtils.copy(m, Menu.class)
-                    .setPid(m.getParentId())
-                    .setShow(m.getStatus())
-                    .setType(m.getType().equals("DIR") ? Menu.Type.DIR
-                            : m.getType().equals("NOVA") ? Menu.Type.NOVA
-                            : m.getType().equals("TPL") ? Menu.Type.TPL
-                            : m.getType().equals("BUTTON") ? Menu.Type.BUTTON
-                            : null
-                    )
-                    .setSystemButton(new Menu.SystemButton()
-                            .setAdd(true)
-                            .setEdit(true)
-                            .setDelete(true)
-                    );
+        Map<Object, Object> entries = redisTemplate.opsForHash().entries(redisKey + token);
+        if (entries.isEmpty()) {
+            return List.of();
+        }
+        // 先解析sort，按sort正序排序后再转Menu
+        List<JSONObject> jsonList = new ArrayList<>(entries.size());
+        for (Object value : entries.values()) {
+            jsonList.add(new JSONObject(value.toString()));
+        }
+        jsonList.sort(Comparator.comparingInt(json -> json.getInt("sort", 0)));
+        List<Menu> menus = new ArrayList<>(jsonList.size());
+        for (JSONObject json : jsonList) {
+            Menu menu = new Menu()
+                    .setId(json.getLong("id"))
+                    .setCode(json.getStr("code"))
+                    .setIcon(json.getStr("icon"))
+                    .setName(json.getStr("name"))
+                    .setValue(json.getStr("value"))
+                    .setPid(json.getLong("pic"))
+                    .setType(json.getEnum(Menu.Type.class, "type"))
+                    .setShow(json.getBool("show"));
+            // 系统按钮（仅NOVA类型有）
+            JSONObject sbJson = json.getJSONObject("systemButton");
+            if (sbJson != null) {
+                menu.setSystemButton(new Menu.SystemButton()
+                        .setAdd(sbJson.getBool("add", false))
+                        .setEdit(sbJson.getBool("edit", false))
+                        .setDelete(sbJson.getBool("delete", false)));
+            }
             menus.add(menu);
-        });
+        }
         return menus;
     }
 
     @Override
     public boolean menuPermission(String token, String code) {
-        return true;
+        return redisTemplate.opsForHash().hasKey(redisKey + token, code);
     }
 
 }

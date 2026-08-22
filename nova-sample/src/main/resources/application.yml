@@ -13,6 +13,20 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
       keepalive-time: 60000
+  # Redis 配置
+  data:
+    redis:
+      host: 182.43.87.123
+      port: 9008
+      password: xy20220101
+      database: 0
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
 
 # MyBatis-Plus 配置
 mybatis-plus:

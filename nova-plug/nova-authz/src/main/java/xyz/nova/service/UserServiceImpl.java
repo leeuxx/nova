@@ -214,4 +214,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
         }
         return null;
     }
+
+    /**
+     * 登录
+     */
+    public User login(String username, String password) {
+        User user = getOne(new LambdaQueryWrapper<User>()
+                .eq(User::getAccount, username)
+        );
+        if (user == null) {
+            throw new NovaException("账号或密码错误");
+        }
+        if (!user.getPassword().equals(BCrypt.hashpw(password, user.getSalt()))) {
+            throw new NovaException("账号或密码错误");
+        }
+        if (!user.getStatus()) {
+            throw new NovaException("用户已禁用");
+        }
+        return user;
+    }
 }
