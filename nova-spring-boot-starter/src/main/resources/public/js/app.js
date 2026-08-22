@@ -508,8 +508,8 @@ function mountApp(menuList, config, loginExpired) {
               ...(userAvatar.value ? { src: userAvatar.value } : {})
             }, userAvatar.value ? {} : { default: () => h(NIcon, { size: 40 }, { default: () => h('iconify-icon', { icon: 'material-symbols:account-circle' }) }) }),
             h('div', { style: 'display:flex;flex-direction:column;justify-content:center;min-width:0;flex:1' }, [
-              h('span', { class: 'user-drop-header-alias' }, userAlias.value || '-'),
-              h('span', { class: 'user-drop-header-name', style: 'margin-top:3px' }, userName.value)
+              h('span', { class: 'user-drop-header-alias' }, userName.value),
+              h('span', { class: 'user-drop-header-name', style: 'margin-top:3px' }, userAlias.value || '-')
             ])
           ])
         },
@@ -743,7 +743,7 @@ function mountApp(menuList, config, loginExpired) {
                               style="width:28px;height:28px"
                             />
                             <n-icon v-else size="22"><iconify-icon icon="material-symbols:account-circle"></iconify-icon></n-icon>
-                            <span style="font-size:14px">{{ userAlias || userName }}</span>
+                            <span style="font-size:14px">{{ userName }}</span>
                           </div>
                         </n-dropdown>
                       </n-space>

@@ -119,7 +119,8 @@ public class AuthorityProxyImpl implements AuthorityProxy {
         // 返回登录信息
         return new Login.User()
                 .setToken(token)
-                .setName(user.getName());
+                .setName(user.getName())
+                .setAlias(user.getAccount());
     }
 
     @Override
