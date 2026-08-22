@@ -173,7 +173,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
                 .collect(Collectors.joining(","));
         UserNova userNova = BeanCopyUtils.copy(user, UserNova.class)
                 .setRoles(roleIds)
-                .setPassword("******");
+                .setPassword("*");
         if (user.getOrgId() != null) {
             Org org = orgService.getById(user.getOrgId());
             if (org != null) {
