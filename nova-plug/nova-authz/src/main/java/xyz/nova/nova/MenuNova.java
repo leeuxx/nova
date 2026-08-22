@@ -23,7 +23,8 @@ import java.time.LocalDateTime;
         dataProxy = MenuServiceImpl.class,
         conditionClass = void.class,
         tree = @TreeType(
-                label = "name"
+                label = "name",
+                cascade = false
         ),
         rowOperation = {
                 @RowOperation(
