@@ -12,6 +12,7 @@ import xyz.nova.annotation.sub.nova.field.edit.*;
 import xyz.nova.annotation.sub.nova.row.ExprBool;
 import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.nova.condition.UserCondition;
+import xyz.nova.service.RoleServiceImpl;
 import xyz.nova.service.UserServiceImpl;
 import xyz.nova.service.data.DefaultDataProxy;
 import xyz.nova.utils.RowAuthExpr;
@@ -51,7 +52,7 @@ public class UserNova {
     private Long id;
 
     @NovaField(
-            views = @View(title = "账号"),
+            views = @View(title = "账号", width = "10%"),
             edit = @Edit(
                     title = "账号",
                     notNull = true,
@@ -70,7 +71,7 @@ public class UserNova {
     private String password;
 
     @NovaField(
-            views = @View(title = "名称"),
+            views = @View(title = "名称", width = "10%"),
             edit = @Edit(
                     title = "名称",
                     notNull = true,
@@ -81,7 +82,7 @@ public class UserNova {
 
     @NovaField(
             views = {
-                    @View(title = "组织名称", column = "name")
+                    @View(title = "组织名称", column = "name", width = "10%")
             },
             edit = @Edit(
                     title = "所属组织",
@@ -96,8 +97,31 @@ public class UserNova {
 
     @NovaField(
             views = @View(
+                    title = "角色授权", width = "10%"
+            ),
+            edit = @Edit(
+                    title = "角色授权",
+                    type = Edit.Type.CHOICE,
+                    choiceType = @ChoiceType(
+                            selectType = ChoiceType.SelectType.MULTI,
+                            fetchHandler = RoleServiceImpl.class
+                    )
+            )
+    )
+    private String roles;
+
+    @NovaField(
+            edit = @Edit(
+                    title = "占位",
+                    type = Edit.Type.EMPTY
+            )
+    )
+    private String empty;
+
+    @NovaField(
+            views = @View(
                     title = "超管用户",
-                    sortable = true
+                    sortable = true, width = "10%"
             ),
             edit = @Edit(
                     title = "超管用户",
@@ -113,13 +137,12 @@ public class UserNova {
     @NovaField(
             views = @View(
                     title = "可用状态",
-                    sortable = true
+                    sortable = true, width = "10%"
             ),
             edit = @Edit(
                     title = "可用状态",
                     booleanType = @BooleanType(
-                            type = BooleanType.Type.SEGMENT,
-                            tableType = BooleanType.Type.SWITCH
+                            type = BooleanType.Type.SEGMENT
                     ),
                     defaultValue = "true",
                     search = @Search
@@ -128,7 +151,7 @@ public class UserNova {
     private Boolean status;
 
     @NovaField(
-            views = @View(title = "备注"),
+            views = @View(title = "备注", width = "10%"),
             edit = @Edit(
                     title = "备注",
                     type = Edit.Type.TEXTAREA
@@ -139,7 +162,7 @@ public class UserNova {
     @NovaField(
             views = @View(
                     title = "重置密码时间",
-                    sortable = true
+                    sortable = true, width = "15%"
             ),
             edit = @Edit(
                     title = "重置密码时间",
@@ -153,7 +176,7 @@ public class UserNova {
     @NovaField(
             views = @View(
                     title = "创建时间",
-                    sortable = true
+                    sortable = true, width = "15%"
             ),
             edit = @Edit(
                     title = "创建时间",
@@ -164,15 +187,6 @@ public class UserNova {
             )
     )
     private LocalDateTime createTime;
-
-    @NovaField(
-            edit = @Edit(
-                    title = "角色授权",
-                    type = Edit.Type.LINK,
-                    linkType = @LinkType
-            )
-    )
-    private UserRoleNova userRoleNova;
 
     @Data
     @Accessors(chain = true)

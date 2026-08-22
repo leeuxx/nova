@@ -8,9 +8,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yitter.idgen.YitIdHelper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import xyz.nova.annotation.sub.nova.row.OperationHandler;
 import xyz.nova.entity.Org;
 import xyz.nova.entity.User;
+import xyz.nova.entity.UserRole;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Fetch;
 import xyz.nova.error.NovaException;
@@ -33,7 +35,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
 
     private OrgServiceImpl orgService;
 
+    private UserRoleServiceImpl userRoleService;
+
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void add(UserNova userNova) {
         long count = count(new LambdaQueryWrapper<User>()
                 .eq(User::getAccount, userNova.getAccount())
@@ -41,6 +46,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
         if (count > 0) {
             throw new NovaException("账户已存在");
         }
+        // 增加用户
         String salt = BCrypt.gensalt();
         String password = BCrypt.hashpw(userNova.getPassword(), salt);
         User user = BeanCopyUtils.copy(userNova, User.class)
@@ -52,22 +58,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
             user.setOrgId(userNova.getOrgNova().getId());
         }
         save(user);
+        // 增加角色授权
+        String roles = userNova.getRoles();
+        if (roles != null && !roles.isEmpty()) {
+            String[] strArray = roles.split(",");
+            List<Long> rolesIds = Arrays.stream(strArray)
+                    .map(Long::parseLong)
+                    .toList();
+            userRoleService.addUserRole(user.getId(), rolesIds);
+        }
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(List<UserNova> userNova) {
         List<Long> ids = userNova.stream().map(UserNova::getId).toList();
+        // 删除用户
         removeByIds(ids);
+        // 删除角色授权
+        List<Long> rolesIds = new ArrayList<>();
+        for (Long id : ids) {
+            userRoleService.addUserRole(id, rolesIds);
+        }
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(UserNova userNova) {
+        // 修改用户
         userNova.setAccount(null).setPassword(null);
         User user = BeanCopyUtils.copy(userNova, User.class);
         if (userNova.getOrgNova() != null) {
             user.setOrgId(userNova.getOrgNova().getId());
         }
         updateById(user);
+        // 增加/修改/删除角色授权
+        List<Long> rolesIds = new ArrayList<>();
+        String roles = userNova.getRoles();
+        if (roles != null && !roles.isEmpty()) {
+            String[] strArray = roles.split(",");
+            rolesIds = Arrays.stream(strArray)
+                    .map(Long::parseLong)
+                    .toList();
+        }
+        userRoleService.addUserRole(user.getId(), rolesIds);
     }
 
     @Override
@@ -77,6 +111,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
         List<User> records = iPage.getRecords();
         List<UserNova> userNovas = new ArrayList<>();
         Map<Long, Org> orgMap = Collections.emptyMap();
+        Map<Long, String> userIdToRoleIds = Collections.emptyMap();
         if (!records.isEmpty()) {
             // 查询组织结构
             List<Long> orgIds = records.stream()
@@ -89,9 +124,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
                     orgMap = orgs.stream().collect(Collectors.toMap(Org::getId, Function.identity()));
                 }
             }
+            // 查询用户角色
+            List<Long> ids = records.stream()
+                    .map(User::getId)
+                    .filter(Objects::nonNull)
+                    .toList();
+            List<UserRole> userRoles = userRoleService.list(new LambdaQueryWrapper<UserRole>()
+                    .in(UserRole::getUserId, ids)
+            );
+            userIdToRoleIds = userRoles.stream()
+                    .collect(Collectors.groupingBy(
+                            UserRole::getUserId,
+                            Collectors.mapping(
+                                    ur -> String.valueOf(ur.getRoleId()),
+                                    Collectors.joining(",")
+                            )
+                    ));
         }
         for (User record : records) {
+            String roles = userIdToRoleIds.get(record.getId());
             UserNova userNova = BeanCopyUtils.copy(record, UserNova.class)
+                    .setRoles(roles)
                     .setPassword(null);
             if (record.getOrgId() != null) {
                 Org org = orgMap.get(record.getOrgId());
@@ -112,7 +165,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
     @Override
     public UserNova details(Details details) {
         User user = getById(details.getValue());
+        List<UserRole> userRoles = userRoleService.list(new LambdaQueryWrapper<UserRole>()
+                .eq(UserRole::getUserId, user.getId())
+        );
+        String roleIds = userRoles.stream()
+                .map(ur -> String.valueOf(ur.getRoleId()))
+                .collect(Collectors.joining(","));
         UserNova userNova = BeanCopyUtils.copy(user, UserNova.class)
+                .setRoles(roleIds)
                 .setPassword("******");
         if (user.getOrgId() != null) {
             Org org = orgService.getById(user.getOrgId());

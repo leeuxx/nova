@@ -7,6 +7,7 @@ import com.github.yitter.idgen.YitIdHelper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import xyz.nova.annotation.sub.nova.field.edit.ChoiceFetchHandler;
 import xyz.nova.entity.Role;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Fetch;
@@ -19,11 +20,12 @@ import xyz.nova.utils.BeanCopyUtils;
 import xyz.nova.utils.NovaMyBatisUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @AllArgsConstructor
-public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements DataProxy<RoleNova, RoleCondition> {
+public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements DataProxy<RoleNova, RoleCondition>, ChoiceFetchHandler {
 
     private RoleMenuServiceImpl roleMenuService;
 
@@ -81,4 +83,18 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Da
         return BeanCopyUtils.copy(role, RoleNova.class);
     }
 
+    @Override
+    public List<VLModel> fetchChoices(String param) {
+        List<Role> roles = list(new LambdaQueryWrapper<Role>()
+                .orderByAsc(Role::getCreateTime)
+        );
+        List<VLModel> vlModels = new ArrayList<>();
+        roles.forEach(role -> {
+            VLModel vlModel = new VLModel()
+                    .setLabel(role.getName())
+                    .setValue(String.valueOf(role.getId()));
+            vlModels.add(vlModel);
+        });
+        return vlModels;
+    }
 }
