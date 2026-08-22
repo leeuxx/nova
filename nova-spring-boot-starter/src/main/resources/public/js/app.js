@@ -593,8 +593,6 @@ function mountApp(menuList, config, loginExpired) {
             userAvatar.value = profileForm.value.avatar || ''
             if (window.$message) window.$message.success('更新成功')
             showProfile.value = false
-          }).catch(function () {
-            if (window.$message) window.$message.error('更新失败')
           }).finally(() => {
             profileSaving.value = false
           })

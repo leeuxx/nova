@@ -4,6 +4,7 @@ import xyz.nova.annotation.comment.Comment;
 import xyz.nova.entity.authority.Login;
 import xyz.nova.entity.authority.Menu;
 import xyz.nova.entity.authority.Register;
+import xyz.nova.error.NovaException;
 
 import java.util.List;
 
@@ -26,10 +27,11 @@ public interface AuthorityProxy {
 
     @Comment("修改用户信息")
     default void editUser(Login.User user) {
+        throw new NovaException("AuthorityProxy.editUser未实现");
     }
 
     @Comment("注册")
     default Login.User register(Register register) {
-        return null;
+        throw new NovaException("AuthorityProxy.register未实现");
     }
 }

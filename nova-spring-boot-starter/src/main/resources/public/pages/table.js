@@ -1990,8 +1990,6 @@ const NovaTable = {
           var $btn = cfg.id ? $(window.parent.document).find('#' + cfg.id) : null
           var fn = new Function('param', 'transmitParams', '$btn', code)
           fn(param, transmit, $btn)
-        }).catch(function(err) {
-          if (window.$message) window.$message.error(err.message || '请求失败')
         })
       } else if (handleName) {
         window.fetchApi.post('/nova/table/buttonClick', {

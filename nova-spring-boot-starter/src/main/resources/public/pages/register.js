@@ -59,8 +59,6 @@ window.RegisterPage = {
             if (window.$message) window.$message.warning(resp.message || '注册未返回有效登录信息，请前往登录')
             this.$router.push('/login')
           }
-        }).catch(() => {
-          if (window.$message) window.$message.error('注册失败，请稍后重试')
         }).finally(() => {
           this.loading = false
         })
