@@ -82,7 +82,7 @@ public class UserNova {
 
     @NovaField(
             views = {
-                    @View(title = "组织名称", column = "name", width = "10%")
+                    @View(title = "组织名称", column = "name", width = "10%", defaultValue = "-")
             },
             edit = @Edit(
                     title = "所属组织",
@@ -97,7 +97,7 @@ public class UserNova {
 
     @NovaField(
             views = @View(
-                    title = "角色授权", width = "10%"
+                    title = "角色授权", width = "10%", defaultValue = "-"
             ),
             edit = @Edit(
                     title = "角色授权",
@@ -151,7 +151,7 @@ public class UserNova {
     private Boolean status;
 
     @NovaField(
-            views = @View(title = "备注", width = "10%"),
+            views = @View(title = "备注", width = "10%", defaultValue = "-"),
             edit = @Edit(
                     title = "备注",
                     type = Edit.Type.TEXTAREA
@@ -162,7 +162,7 @@ public class UserNova {
     @NovaField(
             views = @View(
                     title = "重置密码时间",
-                    sortable = true, width = "15%"
+                    sortable = true, width = "15%", defaultValue = "-"
             ),
             edit = @Edit(
                     title = "重置密码时间",
