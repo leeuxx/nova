@@ -52,11 +52,23 @@ public class UserNova {
     private Long id;
 
     @NovaField(
+            views = @View(title = "名称", width = "10%"),
+            edit = @Edit(
+                    title = "名称",
+                    notNull = true,
+                    search = @Search(vague = true),
+                    group = "主要信息"
+            )
+    )
+    private String name;
+
+    @NovaField(
             views = @View(title = "账号", width = "10%"),
             edit = @Edit(
                     title = "账号",
                     notNull = true,
-                    readonly = @Readonly(edit = true)
+                    readonly = @Readonly(edit = true),
+                    group = "主要信息"
             )
     )
     private String account;
@@ -65,58 +77,11 @@ public class UserNova {
             edit = @Edit(
                     title = "密码",
                     notNull = true,
-                    readonly = @Readonly(edit = true)
+                    readonly = @Readonly(edit = true),
+                    group = "主要信息"
             )
     )
     private String password;
-
-    @NovaField(
-            views = @View(title = "名称", width = "10%"),
-            edit = @Edit(
-                    title = "名称",
-                    notNull = true,
-                    search = @Search(vague = true)
-            )
-    )
-    private String name;
-
-    @NovaField(
-            views = {
-                    @View(title = "组织名称", column = "name", width = "10%", defaultValue = "-")
-            },
-            edit = @Edit(
-                    title = "所属组织",
-                    type = Edit.Type.REFERENCE,
-                    referenceType = @ReferenceType(
-                            ref = "orgId"
-                    ),
-                    search = @Search
-            )
-    )
-    private OrgNova orgNova;
-
-    @NovaField(
-            views = @View(
-                    title = "角色授权", width = "10%", defaultValue = "-"
-            ),
-            edit = @Edit(
-                    title = "角色授权",
-                    type = Edit.Type.CHOICE,
-                    choiceType = @ChoiceType(
-                            selectType = ChoiceType.SelectType.MULTI,
-                            fetchHandler = RoleServiceImpl.class
-                    )
-            )
-    )
-    private String roles;
-
-    @NovaField(
-            edit = @Edit(
-                    title = "占位",
-                    type = Edit.Type.EMPTY
-            )
-    )
-    private String empty;
 
     @NovaField(
             views = @View(
@@ -129,7 +94,8 @@ public class UserNova {
                             type = BooleanType.Type.SEGMENT
                     ),
                     defaultValue = "false",
-                    search = @Search
+                    search = @Search,
+                    group = "主要信息"
             )
     )
     private Boolean isAdmin;
@@ -145,16 +111,50 @@ public class UserNova {
                             type = BooleanType.Type.SEGMENT
                     ),
                     defaultValue = "true",
-                    search = @Search
+                    group = "主要信息"
             )
     )
     private Boolean status;
 
     @NovaField(
+            views = {
+                    @View(title = "组织名称", column = "name", width = "10%", defaultValue = "-")
+            },
+            edit = @Edit(
+                    title = "所属组织",
+                    type = Edit.Type.REFERENCE,
+                    referenceType = @ReferenceType(
+                            ref = "orgId"
+                    ),
+                    search = @Search,
+                    group = "其他信息"
+            )
+    )
+    private OrgNova orgNova;
+
+    @NovaField(
+            views = @View(
+                    title = "角色授权", width = "10%", defaultValue = "-"
+            ),
+            edit = @Edit(
+                    title = "角色授权（多选）",
+                    type = Edit.Type.CHOICE,
+                    choiceType = @ChoiceType(
+                            selectType = ChoiceType.SelectType.MULTI,
+                            fetchHandler = RoleServiceImpl.class
+                    ),
+                    showBy = @ShowBy("isAdmin == false"),
+                    group = "其他信息"
+            )
+    )
+    private String roles;
+
+    @NovaField(
             views = @View(title = "备注", width = "10%", defaultValue = "-"),
             edit = @Edit(
                     title = "备注",
-                    type = Edit.Type.TEXTAREA
+                    type = Edit.Type.TEXTAREA,
+                    group = "其他信息"
             )
     )
     private String remark;

@@ -165,7 +165,7 @@ public class MenuNova {
                             tableType = BooleanType.Type.SWITCH
                     ),
                     defaultValue = "true",
-                    group = "扩展信息"
+                    group = "主要信息"
             )
     )
     private Boolean status;
