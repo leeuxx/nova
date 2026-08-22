@@ -6,6 +6,7 @@ import xyz.nova.annotation.Nova;
 import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.config.NovaId;
 import xyz.nova.annotation.sub.nova.Layout;
+import xyz.nova.annotation.sub.nova.SysBtnHide;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.View;
 import xyz.nova.annotation.sub.nova.field.edit.*;
@@ -26,6 +27,10 @@ import java.time.LocalDateTime;
         orderBy = "create_time desc",
         dataProxy = UserServiceImpl.class,
         conditionClass = UserCondition.class,
+        sysBtnHide = @SysBtnHide(
+                edit = @ShowBy("account == 'nova'"),
+                delete = @ShowBy("account == 'nova'")
+        ),
         rowOperation = {
                 @RowOperation(
                         title = "重置密码",
