@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+
 import xyz.nova.annotation.sub.nova.TreeType;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.edit.ButtonHandle;
@@ -18,6 +19,7 @@ import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.dto.*;
 import xyz.nova.dto.page.PageBean;
 import xyz.nova.entity.data.*;
+import xyz.nova.error.NovaException;
 import xyz.nova.service.NovaTableService;
 import xyz.nova.service.data.DataProxy;
 import xyz.nova.utils.*;
@@ -36,6 +38,9 @@ public class NovaTableServiceImpl implements NovaTableService {
         NovaTableBuild.Vo vo = new NovaTableBuild.Vo();
         // 获取novaId属性名称
         String novaIdFieldName = NovaFieldUtils.getNovaIdFieldName(novaTableBuild.getNovaName());
+        if (novaIdFieldName == null) {
+            throw new NovaException("Nova读取异常");
+        }
         vo.setNovaIdFieldName(novaIdFieldName);
         // 获取树结构信息
         TreeType treeType = NovaUtils.tree(novaTableBuild.getNovaName());
