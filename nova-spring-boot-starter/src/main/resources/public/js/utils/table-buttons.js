@@ -19,8 +19,10 @@ var STANDARD = {
 function buildRowActions(vm, row) {
   var buttons = []
 
-  // 编辑（只读模式不显示）
-  if (!vm.readonly && !vm.linkMode && window.__hasButton(vm.novaName, 'edit')) {
+  // 编辑（只读模式不显示，sysBtnShow.editShowBy表达式控制行级显示）
+  var sysBtnShow = vm.sysBtnShow || {}
+  var editShowOk = !sysBtnShow.editShowBy || window.evalShowExpr(sysBtnShow.editShowBy, row)
+  if (!vm.readonly && !vm.linkMode && window.__hasButton(vm.novaName, 'edit') && editShowOk) {
     buttons.push(h('span', {
       class: 'row-action-btn',
       style: { color: '#2080f0', cursor: 'pointer', fontSize: '13px' },
@@ -28,8 +30,9 @@ function buildRowActions(vm, row) {
     }, '编辑'))
   }
 
-  // 删除（只读模式不显示）
-  if (!vm.readonly && window.__hasButton(vm.novaName, 'delete')) {
+  // 删除（只读模式不显示，sysBtnShow.deleteShowBy表达式控制行级显示）
+  var deleteShowOk = !sysBtnShow.deleteShowBy || window.evalShowExpr(sysBtnShow.deleteShowBy, row)
+  if (!vm.readonly && window.__hasButton(vm.novaName, 'delete') && deleteShowOk) {
     buttons.push(h(NPopconfirm, {
       onPositiveClick: function() { vm.handleDelete(row) },
       onNegativeClick: function() {},
@@ -119,14 +122,15 @@ function filterToolbarCustomButtons(rowOperations) {
 
 // ─── 行操作列是否有按钮（决定是否渲染操作列）────────────────
 function hasRowActions(vm) {
-  var hasEdit    = !vm.readonly && !vm.linkMode && window.__hasButton(vm.novaName, 'edit')
-  var hasDelete  = !vm.readonly && window.__hasButton(vm.novaName, 'delete')
+  var sysBtnShow = vm.sysBtnShow || {}
+  var hasEdit    = !vm.readonly && !vm.linkMode && window.__hasButton(vm.novaName, 'edit') && !sysBtnShow.editShowBy
+  var hasDelete  = !vm.readonly && window.__hasButton(vm.novaName, 'delete') && !sysBtnShow.deleteShowBy
   var hasCustom  = filterRowCustomButtons(vm.rowOperations).length > 0
   return hasEdit || hasDelete || hasCustom
 }
 
 // ─── 行操作列宽度计算 ──────────────────────────────────────
-function calcRowActionColWidth(linkMode, rowOperations, novaName, readonly) {
+function calcRowActionColWidth(linkMode, rowOperations, novaName, readonly, sysBtnShow) {
   var hasEdit   = !readonly && !linkMode && window.__hasButton(novaName, 'edit')
   var hasDelete = !readonly && window.__hasButton(novaName, 'delete')
   var btns = filterRowCustomButtons(rowOperations)

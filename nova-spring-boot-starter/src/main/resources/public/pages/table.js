@@ -484,7 +484,7 @@ const NovaTable = {
       return window.NovaTableButtons.filterRowCustomButtons(this.rowOperations)
     },
     rowActionColWidth() {
-      return window.NovaTableButtons.calcRowActionColWidth(this.linkMode, this.rowOperations, this.novaName, this.readonly)
+      return window.NovaTableButtons.calcRowActionColWidth(this.linkMode, this.rowOperations, this.novaName, this.readonly, this.sysBtnShow)
     },
     toolbarCustomButtons() {
       return window.NovaTableButtons.filterToolbarCustomButtons(this.rowOperations)

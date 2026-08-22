@@ -78,6 +78,9 @@ public class NovaTableBuild {
         @Comment("弹窗信息")
         private Map<String, Pop> pops;
 
+        @Comment("表格行系统按钮显隐控制信息")
+        private NovaTableBuild.Vo.SysBtnShow sysBtnShow;
+
         @Data
         @Accessors(chain = true)
         public static class Search {
@@ -605,6 +608,17 @@ public class NovaTableBuild {
             @Comment("弹窗处理的后端完全类名")
             private String handleName;
 
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class SysBtnShow {
+
+            @Comment("编辑按钮表达式")
+            private String editShowBy;
+
+            @Comment("删除按钮表达式")
+            private String deleteShowBy;
         }
     }
 }

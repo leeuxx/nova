@@ -5,6 +5,7 @@ import lombok.experimental.Accessors;
 import xyz.nova.annotation.Nova;
 import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.config.NovaId;
+import xyz.nova.annotation.sub.nova.SysBtnShow;
 import xyz.nova.annotation.sub.nova.TreeType;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.View;
@@ -22,6 +23,10 @@ import java.time.LocalDateTime;
         name = "菜单管理",
         dataProxy = MenuServiceImpl.class,
         conditionClass = void.class,
+        sysBtnShow = @SysBtnShow(
+                edit = @ShowBy("id > 26"),
+                delete = @ShowBy("id > 26")
+        ),
         tree = @TreeType(
                 label = "name",
                 cascade = false
