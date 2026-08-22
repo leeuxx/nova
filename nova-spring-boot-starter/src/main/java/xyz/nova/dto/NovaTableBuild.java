@@ -78,8 +78,8 @@ public class NovaTableBuild {
         @Comment("弹窗信息")
         private Map<String, Pop> pops;
 
-        @Comment("表格行系统按钮显隐控制信息")
-        private NovaTableBuild.Vo.SysBtnShow sysBtnShow;
+        @Comment("表格行系统按钮隐藏控制信息")
+        private NovaTableBuild.Vo.SysBtnHide sysBtnHide;
 
         @Data
         @Accessors(chain = true)
@@ -612,13 +612,13 @@ public class NovaTableBuild {
 
         @Data
         @Accessors(chain = true)
-        public static class SysBtnShow {
+        public static class SysBtnHide {
 
-            @Comment("编辑按钮表达式")
-            private String editShowBy;
+            @Comment("编辑按钮表达式（满足则隐藏）")
+            private String edit;
 
-            @Comment("删除按钮表达式")
-            private String deleteShowBy;
+            @Comment("删除按钮表达式（满足则隐藏）")
+            private String delete;
         }
     }
 }

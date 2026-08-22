@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.comment.Comment;
-import xyz.nova.annotation.sub.nova.SysBtnShow;
+import xyz.nova.annotation.sub.nova.SysBtnHide;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.View;
 import xyz.nova.annotation.sub.nova.field.edit.*;
@@ -769,21 +769,21 @@ public class NovaFieldUtils {
     }
 
     /**
-     * 获取表格行系统按钮显隐控制信息
+     * 获取表格行系统按钮隐藏控制信息
      *
      * @param className 类名
      * @return 表格行系统按钮显隐控制信息
      */
-    public static SysBtnShowInfo getSysBtnShow(String className) {
+    public static SysBtnHideInfo getSysBtnShow(String className) {
         Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
         NovaApplication.ScanNova scanNova = scanNovas.get(className);
         if (scanNova == null) {
-            return new SysBtnShowInfo();
+            return new SysBtnHideInfo();
         }
-        SysBtnShow sysBtnShow = scanNova.getNova().sysBtnShow();
-        return new SysBtnShowInfo()
-                .setEditShowBy(sysBtnShow.edit())
-                .setDeleteShowBy(sysBtnShow.delete());
+        SysBtnHide sysBtnHide = scanNova.getNova().sysBtnHide();
+        return new SysBtnHideInfo()
+                .setEdit(sysBtnHide.edit())
+                .setDelete(sysBtnHide.delete());
     }
 
     @Data
@@ -1191,13 +1191,13 @@ public class NovaFieldUtils {
 
     @Data
     @Accessors(chain = true)
-    public static class SysBtnShowInfo {
+    public static class SysBtnHideInfo {
 
-        @Comment("编辑按钮表达式")
-        private ShowBy editShowBy;
+        @Comment("编辑按钮表达式（满足则隐藏）")
+        private ShowBy edit;
 
-        @Comment("删除按钮表达式")
-        private ShowBy deleteShowBy;
+        @Comment("删除按钮表达式（满足则隐藏）")
+        private ShowBy delete;
 
     }
 }

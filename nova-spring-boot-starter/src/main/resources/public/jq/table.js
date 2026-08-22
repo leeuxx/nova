@@ -149,7 +149,7 @@ window.NovaTableJQ = (function ($) {
         target.linkTargetInfo = resp.data.linkTarget  || {}
         target.rowOperations  = resp.data.rowOperations || []
         target.buttons        = resp.data.buttons      || {}
-        target.sysBtnShow     = resp.data.sysBtnShow   || {}
+        target.sysBtnHide     = resp.data.sysBtnHide   || {}
         target.popMap         = resp.data.pops         || {}
         var fields = resp.data.search || []
         // 提取 tapSearch 字段，从 searchFields 中移除

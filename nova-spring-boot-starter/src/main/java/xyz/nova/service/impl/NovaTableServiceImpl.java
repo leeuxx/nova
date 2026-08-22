@@ -352,16 +352,16 @@ public class NovaTableServiceImpl implements NovaTableService {
             pops.put(field, pop);
         });
         vo.setPops(pops);
-        // 获取表格行系统按钮显隐控制信息
-        NovaFieldUtils.SysBtnShowInfo sysBtnShows = NovaFieldUtils.getSysBtnShow(novaTableBuild.getNovaName());
-        NovaTableBuild.Vo.SysBtnShow sysBtnShow = new NovaTableBuild.Vo.SysBtnShow();
-        if (sysBtnShows.getEditShowBy() != null) {
-            sysBtnShow.setEditShowBy(sysBtnShows.getEditShowBy().value());
+        // 获取表格行系统按钮隐藏控制信息
+        NovaFieldUtils.SysBtnHideInfo sysBtnShowInfo = NovaFieldUtils.getSysBtnShow(novaTableBuild.getNovaName());
+        NovaTableBuild.Vo.SysBtnHide sysBtnHide = new NovaTableBuild.Vo.SysBtnHide();
+        if (sysBtnShowInfo.getEdit() != null) {
+            sysBtnHide.setEdit(sysBtnShowInfo.getEdit().value());
         }
-        if (sysBtnShows.getDeleteShowBy() != null) {
-            sysBtnShow.setDeleteShowBy(sysBtnShows.getDeleteShowBy().value());
+        if (sysBtnShowInfo.getDelete() != null) {
+            sysBtnHide.setDelete(sysBtnShowInfo.getDelete().value());
         }
-        vo.setSysBtnShow(sysBtnShow);
+        vo.setSysBtnHide(sysBtnHide);
         return vo;
     }
 
