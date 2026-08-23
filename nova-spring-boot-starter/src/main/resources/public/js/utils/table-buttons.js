@@ -19,31 +19,47 @@ var STANDARD = {
 function buildRowActions(vm, row) {
   var buttons = []
 
-  // 编辑（只读模式不显示，sysBtnHide.edit表达式满足则隐藏）
+  // 编辑（只读模式不显示，sysBtnHide.edit表达式满足则禁用）
   var sysBtnHide = vm.sysBtnHide || {}
-  var editHidden = sysBtnHide.edit && window.evalShowExpr(sysBtnHide.edit, row)
-  if (!vm.readonly && !vm.linkMode && window.__hasButton(vm.novaName, 'edit') && !editHidden) {
-    buttons.push(h('span', {
-      class: 'row-action-btn',
-      style: { color: '#2080f0', cursor: 'pointer', fontSize: '13px' },
-      onClick: function() { vm.handleEdit(row) }
-    }, '编辑'))
+  var editDisabled = sysBtnHide.edit && window.evalShowExpr(sysBtnHide.edit, row)
+  if (!vm.readonly && !vm.linkMode && window.__hasButton(vm.novaName, 'edit')) {
+    if (editDisabled) {
+      buttons.push(h('span', {
+        class: 'row-action-btn',
+        style: { color: '#ccc', cursor: 'not-allowed', fontSize: '13px' },
+        title: '不可编辑'
+      }, '编辑'))
+    } else {
+      buttons.push(h('span', {
+        class: 'row-action-btn',
+        style: { color: '#2080f0', cursor: 'pointer', fontSize: '13px' },
+        onClick: function() { vm.handleEdit(row) }
+      }, '编辑'))
+    }
   }
 
-  // 删除（只读模式不显示，sysBtnHide.delete表达式满足则隐藏）
-  var deleteHidden = sysBtnHide.delete && window.evalShowExpr(sysBtnHide.delete, row)
-  if (!vm.readonly && window.__hasButton(vm.novaName, 'delete') && !deleteHidden) {
-    buttons.push(h(NPopconfirm, {
-      onPositiveClick: function() { vm.handleDelete(row) },
-      onNegativeClick: function() {},
-      positiveText: '确定',
-      negativeText: '取消'
-    }, {
-      default: function() { return '确定删除吗？' },
-      trigger: function() {
-        return h('span', { class: 'row-action-btn', style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除')
-      }
-    }))
+  // 删除（只读模式不显示，sysBtnHide.delete表达式满足则禁用）
+  var deleteDisabled = sysBtnHide.delete && window.evalShowExpr(sysBtnHide.delete, row)
+  if (!vm.readonly && window.__hasButton(vm.novaName, 'delete')) {
+    if (deleteDisabled) {
+      buttons.push(h('span', {
+        class: 'row-action-btn',
+        style: { color: '#ccc', cursor: 'not-allowed', fontSize: '13px' },
+        title: '不可删除'
+      }, '删除'))
+    } else {
+      buttons.push(h(NPopconfirm, {
+        onPositiveClick: function() { vm.handleDelete(row) },
+        onNegativeClick: function() {},
+        positiveText: '确定',
+        negativeText: '取消'
+      }, {
+        default: function() { return '确定删除吗？' },
+        trigger: function() {
+          return h('span', { class: 'row-action-btn', style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除')
+        }
+      }))
+    }
   }
 
   // ── 自定义按钮：SINGLE / MULTI（行操作区）────────────────

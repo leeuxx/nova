@@ -37,6 +37,7 @@ import java.time.LocalDateTime;
                         title = "添加",
                         mode = RowOperation.Mode.SINGLE,
                         param = "menu_add",
+                        ifExpr = "id > 26",
                         novaClass = MenuNova.class,
                         operationHandler = MenuServiceImpl.class,
                         show = @ExprBool(
