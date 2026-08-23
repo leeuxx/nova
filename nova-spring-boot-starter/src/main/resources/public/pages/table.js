@@ -777,7 +777,8 @@ const NovaTable = {
               const novaName = vm.novaName
               const novaIdField = vm.novaIdFieldName
               const editField = (vm.editFields || []).find(function(f) { return f.field === col.field })
-              const disabled = !editField || (editField.readonly && editField.readonly.edit) || !window.__hasButton(vm.novaName, 'edit')
+              var rowEditHidden = (vm.sysBtnHide || {}).edit && window.evalShowExpr((vm.sysBtnHide || {}).edit, row)
+              const disabled = !editField || (editField.readonly && editField.readonly.edit) || !window.__hasButton(vm.novaName, 'edit') || rowEditHidden
               if (bInfo.tableType === 'SEGMENT') {
                 const segSet = disabled ? undefined : (newVal) => {
                   window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: newVal, type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success('修改成功'); window.NovaTableJQ.loadData(novaName) })
