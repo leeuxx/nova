@@ -29,6 +29,8 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Da
 
     private RoleMenuServiceImpl roleMenuService;
 
+    private UserRoleServiceImpl userRoleService;
+
     @Override
     public void add(RoleNova roleNova) {
         long count = count(new LambdaQueryWrapper<Role>()
@@ -49,6 +51,8 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Da
         List<Long> ids = roleNova.stream().map(RoleNova::getId).toList();
         // 删除角色菜单权限
         roleMenuService.roleDelete(ids);
+        // 删除用户角色授权
+        userRoleService.deleteUserRole(ids);
         // 删除角色
         removeBatchByIds(ids);
     }
