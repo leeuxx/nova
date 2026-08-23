@@ -11,7 +11,7 @@ window.NovaTableJQ_appendages = (function () {
       if (appendageMap[k].referenceName === tab.tapNovaName) {
         const appInfo = appendageMap[k]
         const storageField = appInfo.storageField     // 主表字段（取值用）
-        const referenceField = appInfo.referenceField  // 子表外键字段（条件 key）
+        const referenceField = appInfo.referenceField  // 子表外键字段（查询条件 key）
         const pkVal = hostVm.currentRow && hostVm.currentRow[storageField]
         if (!pkVal) return {}
         return { [referenceField]: String(pkVal) }
@@ -20,5 +20,21 @@ window.NovaTableJQ_appendages = (function () {
     return {}
   }
 
-  return { buildEmbSourceFields: buildEmbSourceFields }
+  // ── 构建 APPENDAGES 子表新增时用的 refReference 外键 ───────────
+  // 返回 { [refReference]: pkVal }，如 { dictNova: '123' }
+  function buildRefReferenceFields(hostVm, tab) {
+    const appendageMap = hostVm.appendageMap || {}
+    for (const k in appendageMap) {
+      if (appendageMap[k].referenceName === tab.tapNovaName) {
+        const refReference = appendageMap[k].refReference
+        const storageField = appendageMap[k].storageField
+        const pkVal = hostVm.currentRow && hostVm.currentRow[storageField]
+        if (refReference && pkVal != null) return { [refReference]: String(pkVal) }
+        return {}
+      }
+    }
+    return {}
+  }
+
+  return { buildEmbSourceFields: buildEmbSourceFields, buildRefReferenceFields: buildRefReferenceFields }
 })()

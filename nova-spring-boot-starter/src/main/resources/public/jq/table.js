@@ -299,6 +299,14 @@ window.NovaTableJQ = (function ($) {
             return hiddenRefNovas.indexOf(tab.tapNovaName) === -1
           })
         }
+        // refReferenceFieldsProp 对应的 REFERENCE 字段也需要隐藏（自动填充，不展示）
+        var refRefFieldsProp = target.refReferenceFieldsProp || {}
+        var refRefKeys = Object.keys(refRefFieldsProp)
+        if (refRefKeys.length > 0) {
+          target.editFields = (target.editFields || []).filter(function(f) {
+            return !(f.type === 'REFERENCE' && refRefKeys.indexOf(f.field) !== -1)
+          })
+        }
         // LINK embedded 模式：子组件 build 完成后，把 linkTarget 等元数据同步到父组件 linkTabBuild
         if (sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField) {
           var parentVm = window.vmMap && window.vmMap[sourceNovaName]
@@ -739,10 +747,12 @@ window.NovaTableJQ = (function ($) {
   function handleAdd(vmKey) {
     var target = vmKey ? (window.vmMap && window.vmMap[vmKey]) : vm()
     if (!target) return
+    // 新增时合并 refReference（REFERENCE 字段名）到 sourceFields，用于表单自动填充
+    var addSourceFields = Object.assign({}, target._sourceFields || {}, target.refReferenceFieldsProp || {})
     var formData = window.NovaTableJQ_form.initFormData(
       target.editFields || [],
       target.choiceMap || {},
-      target._sourceFields || {}
+      addSourceFields
     )
     target.currentRow              = null
     target.rawDetailRow           = null
@@ -963,11 +973,17 @@ window.NovaTableJQ = (function ($) {
         console.info('[Nova] update接口请求失败，novaName:', novaName)
       })
     } else {
-      // 新增
+      // 新增：sourceRefFields 的 field 要用 refReference（REFERENCE 字段名），不用 referenceField
       var novaName = target.novaName
+      var refRefFields = target.refReferenceFieldsProp || {}
+      var refRefKey = Object.keys(refRefFields)[0] || null
+      var sourceRefFields = (target._sourceRefFields || []).map(function(rf) {
+        if (refRefKey) return { field: refRefKey, referenceField: rf.referenceField, value: rf.value }
+        return rf
+      })
       var formInfo = window.NovaTableJQ_form.buildFormInfo(editFields, formData, target.referenceMap, {
         skipEmpty: true,
-        sourceRefFields: target._sourceRefFields || []
+        sourceRefFields: sourceRefFields
       })
       window.fetchApi.post('/nova/table/add', { novaName: novaName, formInfo: formInfo, appendageFormInfo: appendageFormInfo }).then(function (resp) {
         var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])

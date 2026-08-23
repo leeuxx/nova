@@ -13,7 +13,8 @@ window.NovaAppendagesTable = {
     visible:        { type: Boolean, default: false },
     embedKey:       { type: String,  default: '' },
     isEmbTab:       { type: Boolean, default: false },
-    sourceFields:   { type: Object,  default: function() { return {} } }
+    sourceFields:       { type: Object,  default: function() { return {} } },
+    refReferenceFields: { type: Object,  default: function() { return {} } }
   },
 
   template: `
@@ -25,6 +26,7 @@ window.NovaAppendagesTable = {
     :nova-name-prop="appNovaName"
     :source-nova-name-prop="parentNovaName"
     :source-fields-prop="sourceFields"
+    :ref-reference-fields-prop="refReferenceFields"
   />
 </div>
   `

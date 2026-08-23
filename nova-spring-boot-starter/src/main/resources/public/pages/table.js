@@ -222,7 +222,8 @@ const NovaTable = {
     viewRow:            { type: Object,  default: null },
     novaNameProp:       { type: String,  default: '' },
     sourceNovaNameProp: { type: String,  default: '' },
-    sourceFieldsProp:   { type: Object,  default: () => ({}) }
+    sourceFieldsProp:       { type: Object,  default: () => ({}) },
+    refReferenceFieldsProp: { type: Object,  default: () => ({}) }
   },
 
   emits: ['pick', 'link-add', 'check'],
@@ -2634,6 +2635,9 @@ const NovaTable = {
     buildEmbSourceFields(tab) {
       return window.NovaTableJQ_appendages.buildEmbSourceFields(this, tab)
     },
+    buildRefReferenceFields(tab) {
+      return window.NovaTableJQ_appendages.buildRefReferenceFields(this, tab)
+    },
     buildPickerSourceFields(picker) {
       const fields = {}
       if (!picker.isForFilter && this.currentRow) fields.ids = String(this.currentRow[this.novaIdFieldName] || '')
@@ -4307,6 +4311,7 @@ const NovaTable = {
             :embed-key="'emb_' + tab.tapNovaName + '_' + (currentRow && currentRow[novaIdFieldName])"
             :is-emb-tab="isEmbTab"
             :source-fields="buildEmbSourceFields(tab)"
+            :ref-reference-fields="buildRefReferenceFields(tab)"
           />
 
           <!-- linkForm 内容 -->

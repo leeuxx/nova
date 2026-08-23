@@ -78,8 +78,7 @@ public class DictItemNova {
                     type = Edit.Type.REFERENCE,
                     referenceType = @ReferenceType(
                             ref = "dictId"
-                    ),
-                    show = false
+                    )
             )
     )
     private DictNova dictNova;
