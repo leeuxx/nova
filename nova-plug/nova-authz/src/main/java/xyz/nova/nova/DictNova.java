@@ -96,7 +96,8 @@ public class DictNova {
                     title = "字典子项",
                     type = Edit.Type.APPENDAGES,
                     appendageType = @AppendageType(
-                            ref = "dictId"
+                            ref = "dictId",
+                            refReference = "dictNova"
                     )
             )
     )

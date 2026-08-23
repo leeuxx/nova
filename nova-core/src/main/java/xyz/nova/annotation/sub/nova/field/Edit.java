@@ -57,7 +57,7 @@ public @interface Edit {
     ReferenceType referenceType() default @ReferenceType(ref = "");
 
     @Comment("附属对象组件配置")
-    AppendageType appendageType() default @AppendageType(ref = "");
+    AppendageType appendageType() default @AppendageType(ref = "", refReference = "");
 
     @Comment("集合引用组件配置")
     LinkType linkType() default @LinkType;

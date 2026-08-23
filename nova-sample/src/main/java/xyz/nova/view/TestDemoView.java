@@ -203,7 +203,8 @@ public class TestDemoView {
                     title = "岗位信息",
                     type = Edit.Type.APPENDAGE,
                     appendageType = @AppendageType(
-                            ref = "demoId"
+                            ref = "demoId",
+                            refReference = "testDemoView"
                     ),
                     search = @Search(vague = true)
             )
@@ -215,7 +216,8 @@ public class TestDemoView {
                     title = "薪资信息",
                     type = Edit.Type.APPENDAGES,
                     appendageType = @AppendageType(
-                            ref = "demoId"
+                            ref = "demoId",
+                            refReference = "testDemoView"
                     ),
                     search = @Search
             )
@@ -523,7 +525,8 @@ public class TestDemoView {
                         title = "岗位信息",
                         type = Edit.Type.APPENDAGE,
                         appendageType = @AppendageType(
-                                ref = ""
+                                ref = "",
+                                refReference = ""
                         )
                 )
         )

@@ -8,6 +8,9 @@ public @interface AppendageType {
     @Comment("附属类关联字段")
     String ref();
 
+    @Comment("附属类关联当前类REFERENCE组件属性名（附属类新增时通过该属性传递当前类属性）")
+    String refReference();
+
     @Comment("当前类匹配字段")
     String by() default "id";
 

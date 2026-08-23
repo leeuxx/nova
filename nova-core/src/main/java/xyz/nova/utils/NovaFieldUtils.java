@@ -585,6 +585,7 @@ public class NovaFieldUtils {
                 AppendageTypeInfo appendageTypeInfo = new AppendageTypeInfo()
                         .setReferenceClass(novaFieldInfo.getFieldClass())
                         .setRef(appendageType.ref())
+                        .setRefReference(appendageType.refReference())
                         .setBy(appendageType.by())
                         .setRefName(appendageType.refName())
                         .setDualTable(novaFieldInfo.getType() == Edit.Type.APPENDAGES && NovaUtils.exprBool(appendageType.dualTable(), appendageType.show()))
@@ -1063,6 +1064,9 @@ public class NovaFieldUtils {
 
         @Comment("附属类关联字段")
         private String ref;
+
+        @Comment("附属类关联当前类REFERENCE组件属性名（附属类新增时通过该属性传递当前类属性）")
+        private String refReference;
 
         @Comment("当前类匹配字段")
         private String by;

@@ -230,6 +230,7 @@ public class NovaTableServiceImpl implements NovaTableService {
                     .setNovaIdFieldName(appendageNovaIdFieldName)
                     .setReferenceName(simpleName)
                     .setReferenceField(appendageInfo.getRef())
+                    .setRefReference(appendageInfo.getRefReference())
                     .setStorageField(appendageInfo.getBy())
                     .setDisplayField(appendageInfo.getRefName())
                     .setDualTable(appendageInfo.getDualTable())

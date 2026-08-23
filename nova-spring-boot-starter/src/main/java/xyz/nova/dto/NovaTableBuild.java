@@ -379,6 +379,9 @@ public class NovaTableBuild {
             @Comment("附属类存储当前类的关联属性名")
             private String referenceField;
 
+            @Comment("附属类关联当前类REFERENCE组件属性名（附属类新增时通过该属性传递当前类属性）")
+            private String refReference;
+
             @Comment("当前类属性名")
             private String storageField;
 
