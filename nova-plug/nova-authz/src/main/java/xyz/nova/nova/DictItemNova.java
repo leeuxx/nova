@@ -7,6 +7,7 @@ import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.config.NovaId;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.View;
+import xyz.nova.annotation.sub.nova.field.edit.BooleanType;
 import xyz.nova.annotation.sub.nova.field.edit.DateType;
 import xyz.nova.annotation.sub.nova.field.edit.ReferenceType;
 import xyz.nova.annotation.sub.nova.field.edit.Search;
@@ -21,7 +22,7 @@ import java.time.LocalDateTime;
         name = "字典项",
         dataProxy = DictItemServiceImpl.class,
         conditionClass = DictItemCondition.class,
-        orderBy = "create_time desc"
+        orderBy = "create_time asc"
 )
 public class DictItemNova {
 
@@ -35,10 +36,23 @@ public class DictItemNova {
     private Long id;
 
     @NovaField(
+            edit = @Edit(
+                    title = "关联字典",
+                    type = Edit.Type.REFERENCE,
+                    referenceType = @ReferenceType(
+                            ref = "dictId"
+                    ),
+                    notNull = true
+            )
+    )
+    private DictNova dictNova;
+
+    @NovaField(
             views = @View(title = "编码"),
             edit = @Edit(
                     title = "编码",
-                    notNull = true
+                    notNull = true,
+                    search = @Search(vague = true)
             )
     )
     private String code;
@@ -47,7 +61,8 @@ public class DictItemNova {
             views = @View(title = "字典值"),
             edit = @Edit(
                     title = "字典值",
-                    notNull = true
+                    notNull = true,
+                    search = @Search
             )
     )
     private String val;
@@ -62,6 +77,19 @@ public class DictItemNova {
     private String msg;
 
     @NovaField(
+            views = @View(title = "可用状态"),
+            edit = @Edit(
+                    title = "可用状态",
+                    booleanType = @BooleanType(
+                            type = BooleanType.Type.SEGMENT,
+                            tableType = BooleanType.Type.SWITCH
+                    ),
+                    defaultValue = "true"
+            )
+    )
+    private Boolean status;
+
+    @NovaField(
             views = @View(title = "创建时间"),
             edit = @Edit(
                     title = "创建时间",
@@ -72,15 +100,5 @@ public class DictItemNova {
     )
     private LocalDateTime createTime;
 
-    @NovaField(
-            edit = @Edit(
-                    title = "关联字典",
-                    type = Edit.Type.REFERENCE,
-                    referenceType = @ReferenceType(
-                            ref = "dictId"
-                    )
-            )
-    )
-    private DictNova dictNova;
 
 }

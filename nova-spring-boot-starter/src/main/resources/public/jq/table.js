@@ -954,14 +954,20 @@ window.NovaTableJQ = (function ($) {
     // 组装附属表单数据
     var appendageFormInfo = buildAppendageFormInfo(target)
     if (target.currentRow) {
-      // 编辑
+      // 编辑：sourceRefFields 的 field 也要用 refReference
       var novaName = target.novaName
       var novaIdField = target.novaIdFieldName
       var pkValue = String(target.currentRow[novaIdField])
+      var refRefFieldsEdit = target.refReferenceFieldsProp || {}
+      var refRefKeyEdit = Object.keys(refRefFieldsEdit)[0] || null
+      var sourceRefFieldsEdit = (target._sourceRefFields || []).map(function(rf) {
+        if (refRefKeyEdit) return { field: refRefKeyEdit, referenceField: rf.referenceField, value: rf.value }
+        return rf
+      })
       var formInfo = window.NovaTableJQ_form.buildFormInfo(editFields, formData, target.referenceMap, {
         currentRow: target.currentRow,
         novaIdField: novaIdField,
-        sourceRefFields: target._sourceRefFields || []
+        sourceRefFields: sourceRefFieldsEdit
       })
       window.fetchApi.post('/nova/table/update', { novaName: novaName, formInfo: formInfo, appendageFormInfo: appendageFormInfo }).then(function (resp) {
         var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])

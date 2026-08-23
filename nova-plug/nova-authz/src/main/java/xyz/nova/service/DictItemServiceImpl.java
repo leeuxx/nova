@@ -7,11 +7,13 @@ import com.github.yitter.idgen.YitIdHelper;
 import org.springframework.stereotype.Service;
 import xyz.nova.entity.Dict;
 import xyz.nova.entity.DictItem;
+import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Fetch;
 import xyz.nova.error.NovaException;
 import xyz.nova.mapper.DictItemMapper;
 import xyz.nova.nova.DictItemNova;
 import xyz.nova.nova.DictNova;
+import xyz.nova.nova.MenuNova;
 import xyz.nova.nova.condition.DictItemCondition;
 import xyz.nova.service.data.DataProxy;
 import xyz.nova.utils.BeanCopyUtils;
@@ -43,12 +45,25 @@ public class DictItemServiceImpl extends ServiceImpl<DictItemMapper, DictItem> i
 
     @Override
     public void delete(List<DictItemNova> dictItemNova) {
-        DataProxy.super.delete(dictItemNova);
+        List<Long> ids = dictItemNova.stream().map(DictItemNova::getId).toList();
+        removeBatchByIds(ids);
     }
 
     @Override
     public void update(DictItemNova dictItemNova) {
-        DataProxy.super.update(dictItemNova);
+        DictItem dictItem = getById(dictItemNova.getId());
+        if (dictItemNova.getCode() != null) {
+            long count = count(new LambdaQueryWrapper<DictItem>()
+                    .eq(DictItem::getCode, dictItemNova.getCode())
+                    .eq(DictItem::getDictId, dictItem.getDictId())
+                    .ne(DictItem::getId, dictItemNova.getId())
+            );
+            if (count > 0) {
+                throw new NovaException("code已存在");
+            }
+        }
+        BeanCopyUtils.copy(dictItemNova, dictItem);
+        updateById(dictItem);
     }
 
     @Override
@@ -63,5 +78,11 @@ public class DictItemServiceImpl extends ServiceImpl<DictItemMapper, DictItem> i
         return new Fetch.Vo<DictItemNova>()
                 .setTotal(iPage.getTotal())
                 .setRecords(dictItemNovas);
+    }
+
+    @Override
+    public DictItemNova details(Details details) {
+        DictItem dictItem = getById(details.getValue());
+        return BeanCopyUtils.copy(dictItem, DictItemNova.class);
     }
 }

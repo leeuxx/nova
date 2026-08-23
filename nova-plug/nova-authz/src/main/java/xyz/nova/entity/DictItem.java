@@ -28,6 +28,8 @@ public class DictItem implements Serializable {
 
     private String msg;
 
+    private Boolean status;
+
     private LocalDateTime createTime;
 
 }
