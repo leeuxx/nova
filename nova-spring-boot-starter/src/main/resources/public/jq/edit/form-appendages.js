@@ -10,10 +10,11 @@ window.NovaTableJQ_appendages = (function () {
     for (const k in appendageMap) {
       if (appendageMap[k].referenceName === tab.tapNovaName) {
         const appInfo = appendageMap[k]
-        const storageField = appInfo.storageField
+        const storageField = appInfo.storageField     // 主表字段（取值用）
+        const referenceField = appInfo.referenceField  // 子表外键字段（条件 key）
         const pkVal = hostVm.currentRow && hostVm.currentRow[storageField]
         if (!pkVal) return {}
-        return { [storageField]: String(pkVal) }
+        return { [referenceField]: String(pkVal) }
       }
     }
     return {}
