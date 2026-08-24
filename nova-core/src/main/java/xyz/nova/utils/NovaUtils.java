@@ -150,7 +150,8 @@ public class NovaUtils {
         if (scanNova == null) {
             return 1D;
         }
-        return scanNova.getNova().dualShrink();
+        double dualShrink = scanNova.getNova().dualShrink();
+        return dualShrink <= 0 || dualShrink > 1 ? 1D : dualShrink;
     }
 
     public static boolean exprBool(boolean show, ExprBool exprBool) {
