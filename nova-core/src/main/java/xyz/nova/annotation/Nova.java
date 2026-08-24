@@ -48,7 +48,7 @@ public @interface Nova {
     @Comment("表格行系统按钮隐藏控制")
     SysBtnHide sysBtnHide() default @SysBtnHide;
 
-    @Comment("双表视图表列压缩系数（值越小列越窄, 不可小于0, 最大值为1表示原样）")
+    @Comment("双表视图表列宽度压缩系数（值越小列越窄, 不可小于0, 最大值为1表示原样）")
     double dualShrink() default 1;
 
 }
