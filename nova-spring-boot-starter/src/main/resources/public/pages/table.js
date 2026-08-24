@@ -548,7 +548,7 @@ const NovaTable = {
         ? 100 / specifiedPct
         : 1
 
-      return this.tableColumns.map(function(col) {
+      const widths = this.tableColumns.map(function(col) {
         if (!col.width) {
           // 弹性列：分到平均宽度
           return Math.round(flexPct / 100 * available)
@@ -557,6 +557,9 @@ const NovaTable = {
         if (w < 0) return -w // 固定像素列直接返回
         return Math.round(w * ratio / 100 * available)
       })
+
+      console.log('[colPixels]', this.novaName, 'width:', width, 'available:', available, 'flexCount:', flexCount, 'flexPct:', flexPct, 'widths:', widths)
+      return widths
     },
 
     treeSearchFieldTitle() {
@@ -3325,6 +3328,9 @@ const NovaTable = {
       this.dualTableCurrentKey = '__dual_' + item.id + '_v' + this._dualTableVersion
       this.buildDualTableSourceFields()
       this._syncDualTableClass()
+      // 双表视图激活后更新右表宽度
+      var self = this
+      setTimeout(function() { if (window.NovaTableJQ) window.NovaTableJQ.updateTableWidth() }, 100)
 
       // LINK 类型：尝试加载树模式
       if (item.type === 'link') {

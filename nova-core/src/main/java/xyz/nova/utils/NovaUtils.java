@@ -140,6 +140,19 @@ public class NovaUtils {
         return scanNova.getNova().power();
     }
 
+    /**
+     * 获取双表视图表列压缩系数
+     * @param className 类名
+     * @return 双表视图表列压缩系数
+     */
+    public static Double getDualShrink(String className) {
+        NovaApplication.ScanNova scanNova = NovaApplication.getScanNovas().get(className);
+        if (scanNova == null) {
+            return 1D;
+        }
+        return scanNova.getNova().dualShrink();
+    }
+
     public static boolean exprBool(boolean show, ExprBool exprBool) {
         if (!show || !exprBool.value()) {
             return false;

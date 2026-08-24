@@ -21,6 +21,9 @@ public class NovaTableBuild {
         @Comment("novaId属性名")
         private String novaIdFieldName;
 
+        @Comment("双表视图表列压缩系数")
+        private Double dualShrink;
+
         @Comment("查询条件")
         private List<Search> search;
 

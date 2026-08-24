@@ -37,7 +37,8 @@ import java.time.LocalDateTime;
                                 exprHandler = RowAuthExpr.class
                         )
                 )
-        }
+        },
+        dualShrink = 1
 )
 public class DictNova {
 
@@ -51,7 +52,7 @@ public class DictNova {
     private Long id;
 
     @NovaField(
-            views = @View(title = "名称"),
+            views = @View(title = "名称", width = "20%"),
             edit = @Edit(
                     title = "名称",
                     notNull = true,
@@ -61,7 +62,7 @@ public class DictNova {
     private String name;
 
     @NovaField(
-            views = @View(title = "编码"),
+            views = @View(title = "编码", width = "20%"),
             edit = @Edit(
                     title = "编码",
                     notNull = true,
@@ -71,7 +72,7 @@ public class DictNova {
     private String code;
 
     @NovaField(
-            views = @View(title = "字典数量"),
+            views = @View(title = "字典数量", width = "20%"),
             edit = @Edit(
                     title = "字典数量",
                     show = false
@@ -80,7 +81,7 @@ public class DictNova {
     private Integer itemSize;
 
     @NovaField(
-            views = @View(title = "说明", defaultValue = "-"),
+            views = @View(title = "说明", defaultValue = "-", width = "20%"),
             edit = @Edit(
                     title = "说明",
                     type = Edit.Type.TEXTAREA
@@ -89,7 +90,7 @@ public class DictNova {
     private String msg;
 
     @NovaField(
-            views = @View(title = "创建时间"),
+            views = @View(title = "创建时间", width = "20%"),
             edit = @Edit(
                     title = "创建时间",
                     type = Edit.Type.DATE,
@@ -111,4 +112,5 @@ public class DictNova {
             )
     )
     private DictItemNova dictItemNova;
+
 }

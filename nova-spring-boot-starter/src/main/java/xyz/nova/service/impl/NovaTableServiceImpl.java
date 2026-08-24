@@ -41,7 +41,10 @@ public class NovaTableServiceImpl implements NovaTableService {
         if (novaIdFieldName == null) {
             throw new NovaException("Nova读取异常");
         }
+        // 获取双表视图表列压缩系数
         vo.setNovaIdFieldName(novaIdFieldName);
+        Double dualShrink = NovaUtils.getDualShrink(novaTableBuild.getNovaName());
+        vo.setDualShrink(dualShrink);
         // 获取树结构信息
         TreeType treeType = NovaUtils.tree(novaTableBuild.getNovaName());
         NovaTableBuild.Vo.TreeInfo treeInfo = new NovaTableBuild.Vo.TreeInfo()

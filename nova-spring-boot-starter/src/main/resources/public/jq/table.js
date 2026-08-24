@@ -594,6 +594,16 @@ window.NovaTableJQ = (function ($) {
     if (!$wrapper.length) return
     var activeVm = window.vmMap && window.vmMap[window.activeNovaName]
     if (activeVm) activeVm.tableWrapperWidth = $wrapper[0].clientWidth
+    // 更新双表右表宽度（dualMode 实例用父容器 .dual-right-panel 宽度）
+    var $dualPanel = document.querySelector('.dual-right-panel')
+    if ($dualPanel) {
+      for (var key in window.vmMap) {
+        var vm = window.vmMap[key]
+        if (vm.dualMode) {
+          vm.tableWrapperWidth = $dualPanel.clientWidth
+        }
+      }
+    }
   }
 
   // ── 翻译 CHOICE 类型列 ────────────────────────────────────────
