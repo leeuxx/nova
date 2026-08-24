@@ -572,7 +572,15 @@ const NovaTable = {
       if (!this.tableColumns.length) return undefined
       const fixedPx = 50 + this.rowActionColWidth
       const total = fixedPx + this.colPixels.reduce((s, w) => s + w, 0)
-      const container = this.tableWrapperWidth || 0
+      // 双表视图激活时，用实际容器宽度判断滚动条（保持列宽不变）
+      let container = this.tableWrapperWidth || 0
+      if (this.dualTableViewActive) {
+        const $wrapper = document.querySelector('#table-wrapper')
+        if ($wrapper) container = $wrapper.clientWidth
+      } else if (this.dualMode) {
+        const $panel = document.querySelector('.dual-right-panel')
+        if ($panel) container = $panel.clientWidth
+      }
       return total > container ? total : undefined
     },
 

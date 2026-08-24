@@ -38,7 +38,7 @@ import java.time.LocalDateTime;
                         )
                 )
         },
-        dualShrink = 1
+        dualShrink = 0.5
 )
 public class DictNova {
 
