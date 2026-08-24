@@ -1,6 +1,7 @@
 package xyz.nova.authority;
 
 import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,7 @@ import xyz.nova.entity.authority.Login;
 import xyz.nova.entity.authority.Menu;
 import xyz.nova.service.*;
 import xyz.nova.service.authority.AuthorityProxy;
+import xyz.nova.utils.AuthorityUtils;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -180,4 +182,8 @@ public class AuthorityProxyImpl implements AuthorityProxy {
         return redisTemplate.opsForHash().hasKey(redisKeyMenu + token, code);
     }
 
+    public JSONObject getUser() {
+        String user = redisTemplate.opsForValue().get(redisKeyUser + AuthorityUtils.getToken());
+        return JSONUtil.parseObj(user);
+    }
 }

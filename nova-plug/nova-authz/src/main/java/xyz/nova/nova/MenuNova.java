@@ -24,9 +24,9 @@ import java.time.LocalDateTime;
         dataProxy = MenuServiceImpl.class,
         conditionClass = void.class,
         sysBtnHide = @SysBtnHide(
-                edit = @ShowBy("id <= 31"),
-                delete = @ShowBy("id <= 31"),
-                rowSelect = @ShowBy("id <= 31")
+                edit = @ShowBy("id <= 35"),
+                delete = @ShowBy("id <= 35"),
+                rowSelect = @ShowBy("id <= 35")
         ),
         tree = @TreeType(
                 label = "name",
@@ -37,7 +37,7 @@ import java.time.LocalDateTime;
                         title = "添加",
                         mode = RowOperation.Mode.SINGLE,
                         param = "menu_add",
-                        ifExpr = "id > 31",
+                        ifExpr = "id > 35",
                         novaClass = MenuNova.class,
                         operationHandler = MenuServiceImpl.class,
                         show = @ExprBool(
