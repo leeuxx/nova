@@ -559,7 +559,6 @@ const NovaTable = {
       })
 
       // 双表模式：列宽等比缩放（系数由各表 build 返回）
-      console.log('[colPixels]', this.novaName, 'dualMode:', this.dualMode, 'dualTableViewActive:', this.dualTableViewActive, 'dualShrink:', this.dualShrink)
       if ((this.dualMode || this.dualTableViewActive) && this.dualShrink && this.dualShrink !== 1) {
         return widths.map(function(w) { return Math.round(w * this.dualShrink) }.bind(this))
       }
@@ -1093,7 +1092,6 @@ const NovaTable = {
       ;(function() {
         var dvMap = {}
         vm.tableColumns.forEach(function(tc) { if (tc.defaultValue) dvMap[tc.field] = tc.defaultValue })
-        console.log('[dvMap]', dvMap)
         if (Object.keys(dvMap).length) {
           cols.forEach(function(c) {
             var dv = dvMap[c.key]
@@ -1101,7 +1099,6 @@ const NovaTable = {
             var origRender = c.render
             c.render = function(row) {
               var v = getFieldValue(row, c.key)
-              console.log('[dv]', c.key, v, dv)
               if (v === null || v === undefined || v === '') {
                 return h('span', { innerHTML: String(dv) })
               }

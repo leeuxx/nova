@@ -595,7 +595,6 @@ window.NovaTableJQ = (function ($) {
     if (!$wrapper.length) return
     var activeVm = window.vmMap && window.vmMap[window.activeNovaName]
     if (!activeVm) return
-    console.log('[updateTableWidth]', 'dualTableViewActive:', activeVm.dualTableViewActive, 'current width:', activeVm.tableWrapperWidth)
     // 双表视图激活时，左表宽度保持主表宽度（不更新），让列宽不变、滚动条出现
     if (activeVm.dualTableViewActive) {
       // 右表也用主表宽度计算列宽（保持和左表一致）
@@ -603,12 +602,10 @@ window.NovaTableJQ = (function ($) {
         var vm = window.vmMap[key]
         if (vm.dualMode) {
           vm.tableWrapperWidth = activeVm.tableWrapperWidth
-          console.log('[updateTableWidth] set dual vm width:', key, activeVm.tableWrapperWidth)
         }
       }
     } else {
       activeVm.tableWrapperWidth = $wrapper[0].clientWidth
-      console.log('[updateTableWidth] set active vm width:', activeVm.tableWrapperWidth)
     }
   }
 
