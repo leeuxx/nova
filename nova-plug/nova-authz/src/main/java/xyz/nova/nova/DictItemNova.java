@@ -22,7 +22,8 @@ import java.time.LocalDateTime;
         name = "字典项",
         dataProxy = DictItemServiceImpl.class,
         conditionClass = DictItemCondition.class,
-        orderBy = "create_time asc"
+        orderBy = "create_time asc",
+        dualShrink = 0.5
 )
 public class DictItemNova {
 

@@ -558,7 +558,11 @@ const NovaTable = {
         return Math.round(w * ratio / 100 * available)
       })
 
-      console.log('[colPixels]', this.novaName, 'width:', width, 'available:', available, 'flexCount:', flexCount, 'flexPct:', flexPct, 'widths:', widths)
+      // 双表模式：列宽等比缩放（系数由各表 build 返回）
+      console.log('[colPixels]', this.novaName, 'dualMode:', this.dualMode, 'dualTableViewActive:', this.dualTableViewActive, 'dualShrink:', this.dualShrink)
+      if ((this.dualMode || this.dualTableViewActive) && this.dualShrink && this.dualShrink !== 1) {
+        return widths.map(function(w) { return Math.round(w * this.dualShrink) }.bind(this))
+      }
       return widths
     },
 

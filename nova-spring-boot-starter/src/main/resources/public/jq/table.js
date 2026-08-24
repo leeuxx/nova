@@ -234,6 +234,7 @@ window.NovaTableJQ = (function ($) {
           })
         })
         if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
+        if (resp.data.dualShrink) target.dualShrink = resp.data.dualShrink
         var treeInfo = resp.data.tree || {}
         target.isTree = treeInfo.value === true
         target.treeSearchField = treeInfo.searchField || ''
@@ -1097,6 +1098,7 @@ window.NovaTableJQ = (function ($) {
           target.paginationConfig.pageSizes = layout.pageSizes.map(function (n) { return { label: n + ' 条/页', value: n } })
         }
         if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
+        if (resp.data.dualShrink) target.dualShrink = resp.data.dualShrink
         var treeInfo = resp.data.tree || {}
         target.isTree = treeInfo.value === true
         target.treeSearchField = treeInfo.searchField || ''
