@@ -221,6 +221,23 @@
   color: #999;
 }
 
+/* ─── 浏览器自动填充背景色覆盖 ───────────────────────── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  -webkit-text-fill-color: #1e293b !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #1e1e1e inset !important;
+  -webkit-text-fill-color: #e8e8e8 !important;
+}
+
 /* ─── 登录/注册切换左右切入动画 ───────────────────────── */
 .fade-enter-active,
 .fade-leave-active {
