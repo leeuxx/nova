@@ -85,4 +85,14 @@ public class DictItemServiceImpl extends ServiceImpl<DictItemMapper, DictItem> i
         DictItem dictItem = getById(details.getValue());
         return BeanCopyUtils.copy(dictItem, DictItemNova.class);
     }
+
+    /**
+     * 字典删除子项
+     */
+    public void dictDelete(List<Long> dictIds) {
+        remove(new LambdaQueryWrapper<DictItem>()
+                .in(DictItem::getDictId, dictIds)
+        );
+    }
+
 }

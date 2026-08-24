@@ -71,6 +71,15 @@ public class DictNova {
     private String code;
 
     @NovaField(
+            views = @View(title = "字典数量"),
+            edit = @Edit(
+                    title = "字典数量",
+                    show = false
+            )
+    )
+    private Integer itemSize;
+
+    @NovaField(
             views = @View(title = "说明", defaultValue = "-"),
             edit = @Edit(
                     title = "说明",
