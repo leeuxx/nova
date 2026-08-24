@@ -18,7 +18,8 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class AuthorityProxyImpl implements AuthorityProxy {
 
-    public static String redisKey = "nova:login:";
+    public static String redisKeyMenu = "nova:login:menu:";
+    public static String redisKeyUser = "nova:login:user:";
 
     private final NovaAuthorityConfig novaAuthorityConfig;
 
@@ -36,10 +37,11 @@ public class AuthorityProxyImpl implements AuthorityProxy {
 
     @Override
     public boolean checkToken(String token) {
-        boolean result = Boolean.TRUE.equals(redisTemplate.hasKey(redisKey + token));
+        boolean result = Boolean.TRUE.equals(redisTemplate.hasKey(redisKeyUser + token));
         // token续期
         if (result) {
-            redisTemplate.expire(redisKey + token, novaAuthorityConfig.getExpireTime(), TimeUnit.MINUTES);
+            redisTemplate.expire(redisKeyMenu + token, novaAuthorityConfig.getExpireTime(), TimeUnit.MINUTES);
+            redisTemplate.expire(redisKeyUser + token, novaAuthorityConfig.getExpireTime(), TimeUnit.MINUTES);
         }
         return result;
     }
@@ -113,9 +115,17 @@ public class AuthorityProxyImpl implements AuthorityProxy {
             }
             menuMap.put(menu.getCode(), menuObj.toString());
         }
-        // 存入Redis Hash
-        redisTemplate.opsForHash().putAll(redisKey + token, menuMap);
-        redisTemplate.expire(redisKey + token, novaAuthorityConfig.getExpireTime(), TimeUnit.MINUTES);
+        // 存入Redis Hash（菜单）
+        redisTemplate.opsForHash().putAll(redisKeyMenu + token, menuMap);
+        redisTemplate.expire(redisKeyMenu + token, novaAuthorityConfig.getExpireTime(), TimeUnit.MINUTES);
+        // 存入Redis String（用户信息）
+        JSONObject userObj = new JSONObject()
+                .set("id", user.getId())
+                .set("name", user.getName())
+                .set("account", user.getAccount())
+                .set("isAdmin", user.getIsAdmin())
+                .set("orgId", user.getOrgId());
+        redisTemplate.opsForValue().set(redisKeyUser + token, userObj.toString(), novaAuthorityConfig.getExpireTime(), TimeUnit.MINUTES);
         // 返回登录信息
         return new Login.User()
                 .setToken(token)
@@ -125,12 +135,13 @@ public class AuthorityProxyImpl implements AuthorityProxy {
 
     @Override
     public void logout(String token) {
-        redisTemplate.delete(redisKey + token);
+        redisTemplate.delete(redisKeyMenu + token);
+        redisTemplate.delete(redisKeyUser + token);
     }
 
     @Override
     public List<Menu> getMenu(String token) {
-        Map<Object, Object> entries = redisTemplate.opsForHash().entries(redisKey + token);
+        Map<Object, Object> entries = redisTemplate.opsForHash().entries(redisKeyMenu + token);
         if (entries.isEmpty()) {
             return List.of();
         }
@@ -166,7 +177,7 @@ public class AuthorityProxyImpl implements AuthorityProxy {
 
     @Override
     public boolean menuPermission(String token, String code) {
-        return redisTemplate.opsForHash().hasKey(redisKey + token, code);
+        return redisTemplate.opsForHash().hasKey(redisKeyMenu + token, code);
     }
 
 }
