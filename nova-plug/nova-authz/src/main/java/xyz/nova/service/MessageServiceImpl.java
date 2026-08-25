@@ -91,10 +91,12 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             MessageNova messageNova = BeanCopyUtils.copy(message, MessageNova.class);
             if (message.getUserId() != null) {
                 User user = userMap.get(message.getUserId());
-                messageNova.setUserNova(new UserNova()
-                        .setId(user.getId())
-                        .setName(user.getName())
-                );
+                if (user != null) {
+                    messageNova.setUserNova(new UserNova()
+                            .setId(user.getId())
+                            .setName(user.getName())
+                    );
+                }
             }
             messageNovas.add(messageNova);
         }
@@ -135,6 +137,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                         .or()
                         .isNull(Message::getUserId)
                 )
+                .orderByDesc(Message::getCreateTime)
         );
         List<xyz.nova.entity.message.Message> result = new ArrayList<>();
         for (Message message : messages) {
