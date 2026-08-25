@@ -92,8 +92,8 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 .msg-center-title { font-weight: 600; margin-bottom: 6px; font-size: 14px; color: #333; padding-right: 24px; }
 .msg-ring {
   display: inline-block;
-  vertical-align: -2px;
-  font-size: 14px;
+  vertical-align: -3px;
+  font-size: 18px;
   margin-right: 4px;
   color: inherit;
 }
