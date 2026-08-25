@@ -279,7 +279,7 @@ function mountApp(menuList, config, loginExpired) {
       const contextMenuTabKey = ref('')
 
       // 下拉/右键菜单项图标辅助
-      const mi = (icon) => () => h(NIcon, { size: 14 }, { default: () => h('iconify-icon', { icon }) })
+      const mi = (icon) => () => h(NIcon, { size: 16 }, { default: () => h('iconify-icon', { icon }) })
 
       const contextMenuOptions = computed(() => {
         const idx = openedTabs.value.findIndex(t => t.key === contextMenuTabKey.value)
@@ -525,7 +525,7 @@ function mountApp(menuList, config, loginExpired) {
           ...(t.icon ? { icon: mi(t.icon) } : {})
         })),
         ...(foldTools.length ? [{ type: 'divider', key: 'd2' }] : []),
-        { label: '个人中心', key: 'profile', icon: mi('material-symbols:person-outline') },
+        { label: '个人中心', key: 'profile', icon: mi('hugeicons:user-circle') },
         { label: '退出登录', key: 'logout', icon: mi('material-symbols:logout') }
       ]
 
@@ -745,7 +745,7 @@ function mountApp(menuList, config, loginExpired) {
                               round
                               style="width:28px;height:28px"
                             />
-                            <n-icon v-else size="22"><iconify-icon icon="material-symbols:account-circle"></iconify-icon></n-icon>
+                            <n-icon v-else size="22"><iconify-icon icon="la:user-circle"></iconify-icon></n-icon>
                             <span style="font-size:14px">{{ userName }}</span>
                           </div>
                         </n-dropdown>
