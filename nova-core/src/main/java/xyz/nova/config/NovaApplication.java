@@ -34,26 +34,21 @@ import java.util.stream.Stream;
 public class NovaApplication implements ImportBeanDefinitionRegistrar {
 
     @Getter
-    private static Class<?> primarySource;
-
-    @Getter
-    private static final Set<String> scanPackage = new HashSet<>();
-
-    @Getter
     private static final Map<String, ScanNova> scanNovas = new LinkedHashMap<>();
 
     @SneakyThrows
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
         Class<?> clazz = ClassUtils.forName(importingClassMetadata.getClassName(), ClassUtils.getDefaultClassLoader());
-        Optional.ofNullable(clazz.getAnnotation(SpringBootApplication.class)).ifPresent(it -> primarySource = clazz);
         // 获取扫描的包名
         NovaScan novaScan = clazz.getAnnotation(NovaScan.class);
+        Set<String> scanPackage = new HashSet<>();
         if (novaScan.value().length == 0) {
             scanPackage.add(clazz.getPackage().getName());
         } else {
-            Stream.of(novaScan.value()).filter(pack -> !pack.equals(NovaConst.BASE_PACKAGE)).forEach(scanPackage::add);
+            scanPackage.addAll(Arrays.asList(novaScan.value()));
         }
+        scanPackage.add(NovaConst.BASE_PACKAGE);
         // 创建 Reflections 实例
         Reflections reflections = new Reflections(
                 new ConfigurationBuilder()

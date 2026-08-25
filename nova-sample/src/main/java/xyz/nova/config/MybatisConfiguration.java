@@ -17,7 +17,6 @@ public class MybatisConfiguration {
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-        // 分页插件
         PaginationInnerInterceptor paginationInnerInterceptor = new PaginationInnerInterceptor(DbType.MYSQL);
         // 设置最大单页限制（默认 500 条，-1 表示不限制）
         paginationInnerInterceptor.setMaxLimit(-1L);

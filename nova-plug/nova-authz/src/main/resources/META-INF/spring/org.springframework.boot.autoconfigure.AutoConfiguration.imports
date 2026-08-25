@@ -1,0 +1,13 @@
+xyz.nova.authority.AuthorityProxyImpl
+xyz.nova.authority.MessageProxyImpl
+xyz.nova.config.NovaAuthorityConfig
+xyz.nova.config.NovaMyBatisPlusConfiguration
+xyz.nova.service.DictItemServiceImpl
+xyz.nova.service.DictServiceImpl
+xyz.nova.service.MenuServiceImpl
+xyz.nova.service.MessageServiceImpl
+xyz.nova.service.OrgServiceImpl
+xyz.nova.service.RoleMenuServiceImpl
+xyz.nova.service.RoleServiceImpl
+xyz.nova.service.UserRoleServiceImpl
+xyz.nova.service.UserServiceImpl
