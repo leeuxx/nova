@@ -6,18 +6,35 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 1;
-  width: 400px;
+  width: 840px;
   max-width: 90vw;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  text-align: left;
+}
+
+.notfound-img {
+  width: 400px;
+  height: auto;
+  flex-shrink: 0;
+  animation:
+    notfoundFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both,
+    notfoundFloat 3.5s ease-in-out 0.9s infinite;
+}
+
+.notfound-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .notfound-code {
-  font-size: 120px;
+  font-size: 52px;
   font-weight: 700;
   color: #2563eb;
   line-height: 1;
   margin-bottom: 8px;
   opacity: 0.15;
+  animation: notfoundFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .notfound-title {
@@ -25,18 +42,44 @@
   font-weight: 600;
   color: #1e293b;
   margin: 0 0 12px 0;
+  animation: notfoundFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
 }
 
 .notfound-desc {
   font-size: 14px;
   color: #94a3b8;
   margin: 0 0 32px 0;
+  animation: notfoundFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
 }
 
 .notfound-actions {
   display: flex;
   gap: 12px;
-  justify-content: center;
+  justify-content: flex-start;
+}
+
+.notfound-actions n-button {
+  animation: notfoundFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
+}
+
+@keyframes notfoundFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes notfoundFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
 }
 
 /* ─── 暗色模式 ─────────────────────────────────── */
