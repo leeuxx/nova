@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 @Accessors(chain = true)
 @Nova(
         name = "字典",
+        dataProxy = DictServiceImpl.class,
         conditionClass = DictCondition.class,
         orderBy = "create_time desc",
         rowOperation = {
