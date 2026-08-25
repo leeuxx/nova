@@ -7,19 +7,19 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yitter.idgen.YitIdHelper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import xyz.nova.authority.AuthorityProxyImpl;
 import xyz.nova.entity.Message;
+import xyz.nova.entity.MessageClose;
 import xyz.nova.entity.User;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Fetch;
 import xyz.nova.mapper.MessageCloseMapper;
 import xyz.nova.mapper.MessageMapper;
-import xyz.nova.nova.MenuNova;
 import xyz.nova.nova.MessageNova;
 import xyz.nova.nova.UserNova;
 import xyz.nova.nova.condition.MessageCondition;
 import xyz.nova.service.data.DataProxy;
-import xyz.nova.utils.AuthorityUtils;
 import xyz.nova.utils.BeanCopyUtils;
 import xyz.nova.utils.NovaMyBatisUtils;
 
@@ -50,8 +50,14 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(List<MessageNova> messageNova) {
         List<Long> ids = messageNova.stream().map(MessageNova::getId).toList();
+        // 删除用户关闭消息记录
+        messageCloseMapper.delete(new LambdaQueryWrapper<MessageClose>()
+                .in(MessageClose::getMessageId, ids)
+        );
+        // 删除消息
         removeByIds(ids);
     }
 
@@ -110,10 +116,22 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
     public List<xyz.nova.entity.message.Message> getMessages() {
         JSONObject user = authorityProxy.getUser();
+        Long userId = user.getLong("id");
+        List<MessageClose> messageCloses = messageCloseMapper.selectList(new LambdaQueryWrapper<MessageClose>()
+                .select(MessageClose::getMessageId)
+                .eq(MessageClose::getUserId, userId)
+        );
+        List<Long> messageIds = new ArrayList<>();
+        if (!messageCloses.isEmpty()) {
+            messageIds = messageCloses.stream().map(MessageClose::getMessageId).toList();
+        }
         List<Message> messages = list(new LambdaQueryWrapper<Message>()
-                .eq(Message::getUserId, user.getLong("id"))
-                .or()
-                .isNull(Message::getUserId)
+                .notIn(!messageIds.isEmpty(), Message::getId, messageIds)
+                .and(messageLambdaQueryWrapper -> messageLambdaQueryWrapper
+                        .eq(Message::getUserId, userId)
+                        .or()
+                        .isNull(Message::getUserId)
+                )
         );
         List<xyz.nova.entity.message.Message> result = new ArrayList<>();
         for (Message message : messages) {
@@ -134,4 +152,19 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         return result;
     }
 
+    public void closeMessages(List<String> messageIds) {
+        JSONObject user = authorityProxy.getUser();
+        Long userId = user.getLong("id");
+        LocalDateTime now = LocalDateTime.now();
+        List<MessageClose> messageCloses = new ArrayList<>();
+        for (String messageId : messageIds) {
+            MessageClose messageClose = new MessageClose()
+                    .setId(YitIdHelper.nextId())
+                    .setUserId(userId)
+                    .setMessageId(Long.valueOf(messageId))
+                    .setCreateTime(now);
+            messageCloses.add(messageClose);
+        }
+        messageCloseMapper.insert(messageCloses);
+    }
 }

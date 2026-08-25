@@ -24,4 +24,5 @@ public class MessageClose implements Serializable {
 
     private Long messageId;
 
+    private LocalDateTime createTime;
 }

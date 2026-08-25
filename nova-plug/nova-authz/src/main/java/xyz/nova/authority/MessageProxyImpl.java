@@ -21,6 +21,6 @@ public class MessageProxyImpl implements MessageProxy {
 
     @Override
     public void closeMessages(String token, List<String> ids) {
-
+        messageService.closeMessages(ids);
     }
 }
