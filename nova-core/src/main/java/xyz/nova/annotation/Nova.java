@@ -7,6 +7,7 @@ import xyz.nova.service.data.DataProxy;
 import xyz.nova.annotation.sub.nova.Layout;
 import xyz.nova.annotation.sub.nova.TreeType;
 import xyz.nova.annotation.sub.nova.row.RowOperation;
+import xyz.nova.service.data.DefaultDataProxy;
 
 import java.lang.annotation.*;
 
@@ -19,10 +20,10 @@ public @interface Nova {
     String name();
 
     @Comment("数据行为代理接口，对增、删、改、查等行为做逻辑处理")
-    Class<? extends DataProxy<?, ?>> dataProxy();
+    Class<? extends DataProxy<?, ?>> dataProxy() default DefaultDataProxy.class;
 
     @Comment("查询条件构造类")
-    Class<?> conditionClass();
+    Class<?> conditionClass() default void.class;
 
     @Comment("功能描述")
     String desc() default "";
