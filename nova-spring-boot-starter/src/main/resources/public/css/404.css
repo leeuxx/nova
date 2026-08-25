@@ -1,7 +1,10 @@
 /* 404 页面样式 */
 
 .notfound-wrap {
-  position: relative;
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 1;
   width: 400px;
   max-width: 90vw;
@@ -37,9 +40,13 @@
 }
 
 /* ─── 暗色模式 ─────────────────────────────────── */
+.dark .notfound-code {
+  color: #3b82f6;
+  opacity: 0.35;
+}
 .dark .notfound-title {
   color: #e8e8e8;
 }
 .dark .notfound-desc {
-  color: #888;
+  color: #a3a3a3;
 }

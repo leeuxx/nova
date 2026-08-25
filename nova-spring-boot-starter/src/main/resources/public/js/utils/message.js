@@ -22,6 +22,9 @@ window.NovaMessage = {
 
   created() {
     this._seq = 0
+    // 独立页面（登录/注册/404）不请求消息接口
+    var path = (window.location.hash || '').replace(/^#/, '') || (window.location.pathname || '')
+    if (path === '/login' || path === '/register' || path === '/404' || path.indexOf('/404') === 0) return
     // 未登录（登录页）时不请求消息接口
     if (localStorage.getItem('nova_token')) {
       this.fetchMessages()

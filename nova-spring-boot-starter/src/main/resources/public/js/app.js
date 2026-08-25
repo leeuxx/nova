@@ -187,8 +187,13 @@ window.__bootFadingOut = function () {
 }
 
 // ─── 挂载入口：未登录直接挂载（显示登录页），有 token 才拉菜单 ──
+// 404 页面纯静态展示，不依赖菜单数据：直达 404 时跳过 getMenu，避免无谓请求
+function _isDirect404() {
+  var h = window.location.hash || ''
+  return h === '#/404' || /^#\/404([/?#]|$)/.test(h)
+}
 var _startToken = localStorage.getItem('nova_token')
-if (_startToken) {
+if (_startToken && !_isDirect404()) {
   window.fetchApi.post('/nova/authority/getMenu', {}).then(function (resp) {
     mountApp(resp.data || [], window.nova.config)
   }).catch(function () { mountApp([], window.nova.config) })
