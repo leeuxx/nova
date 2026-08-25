@@ -64,6 +64,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     @Override
     public void update(MessageNova messageNova) {
         Message message = BeanCopyUtils.copy(messageNova, Message.class);
+        if (messageNova.getUserNova() != null) {
+            message.setUserId(messageNova.getUserNova().getId());
+        }
         updateById(message);
     }
 
