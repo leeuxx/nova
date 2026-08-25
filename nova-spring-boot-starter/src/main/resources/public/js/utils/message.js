@@ -99,9 +99,9 @@ window.NovaMessage = {
   },
 
   template: `
-    <div class="header-action">
+    <div class="header-action" style="cursor:pointer" @click="openDrawer">
       <n-badge :value="count" :max="99" :show="count > 0">
-        <n-icon size="20" :class="{ 'bell-ring': count > 0 }" style="cursor:pointer" @click="openDrawer">
+        <n-icon size="20" :class="{ 'bell-ring': count > 0 }">
           <iconify-icon icon="mdi:bell-outline"></iconify-icon>
         </n-icon>
       </n-badge>
