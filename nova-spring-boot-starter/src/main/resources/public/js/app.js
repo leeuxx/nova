@@ -726,9 +726,9 @@ function mountApp(menuList, config, loginExpired) {
                           </div>
                         </template>
                         <nova-message data-tip="消息中心" />
-                        <div class="header-action theme-switch" data-tip="切换主题">
+                        <div class="header-action theme-switch" data-tip="切换主题" style="cursor:pointer" @click="isDark = !isDark">
                           <n-icon size="18"><iconify-icon icon="material-symbols:dark-mode-outline"></iconify-icon></n-icon>
-                          <n-switch v-model:value="isDark" />
+                          <n-switch v-model:value="isDark" @click.stop />
                           <n-icon size="18"><iconify-icon icon="material-symbols:light-mode-outline"></iconify-icon></n-icon>
                         </div>
                         <n-dropdown :options="userDropdown" trigger="hover" @select="handleUserMenuSelect">
