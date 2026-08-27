@@ -1,11 +1,14 @@
 package xyz.nova.service;
 
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yitter.idgen.YitIdHelper;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.nova.annotation.sub.nova.row.OperationHandler;
@@ -24,15 +27,21 @@ import xyz.nova.utils.NovaMyBatisUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements DataProxy<DictNova, DictCondition>, OperationHandler<Long, Object> {
 
-    private DictItemServiceImpl dictItemService;
+    public static String redisKey = "nova:dict:";
+
+    private final StringRedisTemplate redisTemplate;
+
+    private final DictItemServiceImpl dictItemService;
 
     @Override
     public void add(DictNova dictNova) {
@@ -52,14 +61,21 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Da
     @Transactional(rollbackFor = Exception.class)
     public void delete(List<DictNova> dictNova) {
         List<Long> ids = dictNova.stream().map(DictNova::getId).toList();
+        List<Dict> dicts = listByIds(ids);
         // 删除字典子项
         dictItemService.dictDelete(ids);
         // 删除字典
         removeByIds(ids);
+
+        for (Dict dict : dicts) {
+            cache(dictService -> dict.getCode());
+        }
     }
 
     @Override
     public void update(DictNova dictNova) {
+        Dict dict = getById(dictNova.getId());
+        String code = dict.getCode();
         long count = count(new LambdaQueryWrapper<Dict>()
                 .eq(Dict::getCode, dictNova.getCode())
                 .ne(Dict::getId, dictNova.getId())
@@ -67,8 +83,13 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Da
         if (count > 0) {
             throw new NovaException("code已存在");
         }
-        Dict dict = BeanCopyUtils.copy(dictNova, Dict.class);
+        BeanCopyUtils.copy(dictNova, dict);
         updateById(dict);
+
+        cache(dictService -> code);
+        if (!code.equals(dictNova.getCode())) {
+            cache(dictService -> dictNova.getCode());
+        }
     }
 
     @Override
@@ -122,5 +143,31 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Da
                 .setId(dict.getId())
                 .setName(dict.getName())
         );
+    }
+
+    /**
+     * 缓存字典
+     */
+    public void cache(Function<DictServiceImpl, String> function) {
+        String code = function.apply(this);
+        Dict dict = getOne(new LambdaQueryWrapper<Dict>()
+                .eq(Dict::getCode, code)
+        );
+        String key = redisKey + code;
+        redisTemplate.delete(key);
+        if (dict != null) {
+            List<DictItem> dictItems = dictItemService.list(new LambdaQueryWrapper<DictItem>()
+                    .eq(DictItem::getDictId, dict.getId())
+                    .eq(DictItem::getStatus, true)
+            );
+            if (!dictItems.isEmpty()) {
+                Map<String, String> menuMap = new LinkedHashMap<>();
+                dictItems.forEach(dictItem -> {
+                    JSONObject jsonObject = JSONUtil.parseObj(dictItem);
+                    menuMap.put(dictItem.getCode(), jsonObject.toString());
+                });
+                redisTemplate.opsForHash().putAll(key, menuMap);
+            }
+        }
     }
 }

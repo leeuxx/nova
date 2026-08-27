@@ -3,7 +3,7 @@ package xyz.nova.authority;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import xyz.nova.config.NovaAuthorityConfig;
 import xyz.nova.entity.User;
@@ -35,7 +35,7 @@ public class AuthorityProxyImpl implements AuthorityProxy {
 
     private final MenuServiceImpl menuService;
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     @Override
     public boolean checkToken(String token) {

@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.yitter.idgen.YitIdHelper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import xyz.nova.entity.Dict;
 import xyz.nova.entity.DictItem;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Fetch;
@@ -13,17 +13,18 @@ import xyz.nova.error.NovaException;
 import xyz.nova.mapper.DictItemMapper;
 import xyz.nova.nova.DictItemNova;
 import xyz.nova.nova.DictNova;
-import xyz.nova.nova.MenuNova;
 import xyz.nova.nova.condition.DictItemCondition;
 import xyz.nova.service.data.DataProxy;
 import xyz.nova.utils.BeanCopyUtils;
 import xyz.nova.utils.NovaMyBatisUtils;
+import xyz.nova.utils.SpringBeanUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class DictItemServiceImpl extends ServiceImpl<DictItemMapper, DictItem> implements DataProxy<DictItemNova, DictItemCondition> {
 
     @Override
@@ -41,12 +42,17 @@ public class DictItemServiceImpl extends ServiceImpl<DictItemMapper, DictItem> i
                 .setDictId(dictNova.getId())
                 .setCreateTime(LocalDateTime.now());
         save(dictItem);
+
+        SpringBeanUtils.getBean(DictServiceImpl.class).cache(dictService -> dictService.getById(dictItem.getDictId()).getCode());
     }
 
     @Override
     public void delete(List<DictItemNova> dictItemNova) {
         List<Long> ids = dictItemNova.stream().map(DictItemNova::getId).toList();
+        DictItem dictItem = getById(ids.get(0));
         removeBatchByIds(ids);
+
+        SpringBeanUtils.getBean(DictServiceImpl.class).cache(dictService -> dictService.getById(dictItem.getDictId()).getCode());
     }
 
     @Override
@@ -64,6 +70,8 @@ public class DictItemServiceImpl extends ServiceImpl<DictItemMapper, DictItem> i
         }
         BeanCopyUtils.copy(dictItemNova, dictItem);
         updateById(dictItem);
+
+        SpringBeanUtils.getBean(DictServiceImpl.class).cache(dictService -> dictService.getById(dictItem.getDictId()).getCode());
     }
 
     @Override
