@@ -42,6 +42,9 @@
 }
 
 /* ─── 暗色模式适配 ─────────────────────────────────── */
+.dark .home-img {
+  filter: brightness(0.78) contrast(1.05);
+}
 .dark .home-title {
   color: #e8e8e8 !important;
 }
