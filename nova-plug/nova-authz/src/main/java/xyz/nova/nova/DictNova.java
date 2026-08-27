@@ -36,6 +36,14 @@ import java.time.LocalDateTime;
                                 param = "dict_add_item",
                                 exprHandler = RowAuthExpr.class
                         )
+                ),
+                @RowOperation(
+                        title = "刷新缓存",
+                        icon = "devicon-plain:redis-wordmark",
+                        callHint = "确定全量刷新缓存吗？",
+                        mode = RowOperation.Mode.BUTTON,
+                        param = "cache",
+                        operationHandler = DictServiceImpl.class
                 )
         },
         dualShrink = 0.6

@@ -1,6 +1,5 @@
 package xyz.nova.service;
 
-import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -26,10 +25,7 @@ import xyz.nova.utils.BeanCopyUtils;
 import xyz.nova.utils.NovaMyBatisUtils;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -133,6 +129,9 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Da
             DictItemNova dictItemNova = (DictItemNova) o;
             dictItemService.add(dictItemNova);
         }
+        if (param.equals("cache")) {
+            cache();
+        }
         return null;
     }
 
@@ -154,20 +153,73 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Da
                 .eq(Dict::getCode, code)
         );
         String key = redisKey + code;
-        redisTemplate.delete(key);
+        redisTemplate.unlink(key);
         if (dict != null) {
             List<DictItem> dictItems = dictItemService.list(new LambdaQueryWrapper<DictItem>()
                     .eq(DictItem::getDictId, dict.getId())
                     .eq(DictItem::getStatus, true)
             );
-            if (!dictItems.isEmpty()) {
-                Map<String, String> menuMap = new LinkedHashMap<>();
-                dictItems.forEach(dictItem -> {
-                    JSONObject jsonObject = JSONUtil.parseObj(dictItem);
-                    menuMap.put(dictItem.getCode(), jsonObject.toString());
-                });
-                redisTemplate.opsForHash().putAll(key, menuMap);
+            if (dictItems != null && !dictItems.isEmpty()) {
+                redisTemplate.opsForHash().putAll(key, buildMenuMap(dictItems));
             }
         }
+    }
+
+    /**
+     * 全量缓存
+     */
+    private void cache() {
+        // 获取所有字典
+        List<Dict> dicts = list();
+        if (dicts.isEmpty()) {
+            // 如果数据库没有字典，清空所有缓存
+            Set<String> keys = redisTemplate.keys(redisKey + "*");
+            if (keys != null && !keys.isEmpty()) {
+                redisTemplate.unlink(keys);
+            }
+            return;
+        }
+        Map<String, Dict> dictMap = dicts.stream().collect(Collectors.toMap(Dict::getCode, Function.identity()));
+        // 获取所有字典项（即使为空也要继续，为了清理残留缓存）
+        List<DictItem> dictItems = dictItemService.list(
+                new LambdaQueryWrapper<DictItem>().eq(DictItem::getStatus, true)
+        );
+        Map<Long, List<DictItem>> dictItemMap = dictItems.stream().collect(Collectors.groupingBy(DictItem::getDictId));
+        // 获取Redis中所有字典key
+        Set<String> redisKeys = redisTemplate.keys(redisKey + "*");
+        // 遍历Redis中的key，删除+更新
+        if (redisKeys != null && !redisKeys.isEmpty()) {
+            redisKeys.forEach(key -> {
+                // 先删除旧缓存（无论是更新还是废弃）
+                redisTemplate.unlink(key);
+                // 提取code
+                String code = key.substring(redisKey.length());
+                Dict dict = dictMap.remove(code);
+                // 如果字典存在且有子项，写入新缓存
+                if (dict != null) {
+                    List<DictItem> dictItemList = dictItemMap.get(dict.getId());
+                    if (dictItemList != null && !dictItemList.isEmpty()) {
+                        redisTemplate.opsForHash().putAll(key, buildMenuMap(dictItemList));
+                    }
+                }
+            });
+        }
+        // 处理Redis中不存在的字典
+        dictMap.forEach((code, dict) -> {
+            List<DictItem> dictItemList = dictItemMap.get(dict.getId());
+            if (dictItemList != null && !dictItemList.isEmpty()) {
+                redisTemplate.opsForHash().putAll(redisKey + code, buildMenuMap(dictItemList));
+            }
+        });
+    }
+
+    private Map<String, String> buildMenuMap(List<DictItem> dictItemList) {
+        return dictItemList.stream()
+                .collect(Collectors.toMap(
+                        DictItem::getCode,
+                        item -> JSONUtil.parseObj(item).toString(),
+                        (old, newVal) -> newVal,
+                        LinkedHashMap::new
+                ));
     }
 }
