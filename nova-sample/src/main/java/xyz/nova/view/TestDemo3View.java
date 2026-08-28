@@ -70,7 +70,8 @@ public class TestDemo3View {
                     type = Edit.Type.ATTACHMENT,
                     attachmentType = @AttachmentType(
                             type = AttachmentType.Type.IMAGE,
-                            maxLimit = 5
+                            maxLimit = 5,
+                            separator = "|"
                     )
             )
     )
