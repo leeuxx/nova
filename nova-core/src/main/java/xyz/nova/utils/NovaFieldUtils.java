@@ -758,6 +758,7 @@ public class NovaFieldUtils {
                 PopInfo popInfo = new PopInfo()
                         .setTitle(pop.title())
                         .setParam(pop.param())
+                        .setContext(Arrays.asList(pop.context()))
                         .setHandleClass(popHandler != PopHandler.class ? popHandler : null);
                 String fieldName = field;
                 if (isReference) {
@@ -1188,6 +1189,9 @@ public class NovaFieldUtils {
 
         @Comment("静态参数")
         private String param;
+
+        @Comment("额外传递的同一行属性")
+        private List<String> context;
 
         @Comment("弹窗处理类")
         private Class<? extends PopHandler> handleClass;

@@ -14,6 +14,9 @@ public @interface Pop {
     @Comment("可被popHandler接口获取到")
     String param() default "";
 
+    @Comment("额外传递的同一行属性，可被popHandler接口获取到")
+    String[] context() default {};
+
     @Comment("弹窗处理类")
     Class<? extends PopHandler> popHandler() default PopHandler.class;
 

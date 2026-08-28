@@ -4,12 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.stream.Collectors;
-
 import xyz.nova.annotation.sub.nova.TreeType;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.edit.ButtonHandle;
@@ -25,6 +20,7 @@ import xyz.nova.service.data.DataProxy;
 import xyz.nova.utils.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -352,6 +348,7 @@ public class NovaTableServiceImpl implements NovaTableService {
             NovaTableBuild.Vo.Pop pop = new NovaTableBuild.Vo.Pop()
                     .setTitle(popInfo.getTitle())
                     .setParam(popInfo.getParam())
+                    .setContext(popInfo.getContext())
                     .setHandleName(popInfo.getHandleClass() != null ? popInfo.getHandleClass().getName() : null);
             pops.put(field, pop);
         });
@@ -744,17 +741,23 @@ public class NovaTableServiceImpl implements NovaTableService {
     @Override
     @SneakyThrows
     public List<NovaTablePop.Vo> pop(NovaTablePop novaTablePop) {
+        Map<String, Object> context = novaTablePop.getContext();
+        if (context == null) {
+            context = new HashMap<>();
+        }
         Class<?> handleClass = Class.forName(novaTablePop.getHandleName());
         PopHandler popHandler = (PopHandler) SpringBeanUtils.getBean(handleClass);
-        List<PopHandler.PopModel> popModels = popHandler.getPopModel(novaTablePop.getParam(), novaTablePop.getValue());
+        List<PopHandler.PopModel> popModels = popHandler.getPopModel(novaTablePop.getParam(), novaTablePop.getValue(), context);
         List<NovaTablePop.Vo> vos = new ArrayList<>();
-        popModels.forEach(popModel -> {
-            NovaTablePop.Vo vo = new NovaTablePop.Vo()
-                    .setType(popModel.getType().name())
-                    .setName(popModel.getName())
-                    .setValue(popModel.getValue());
-            vos.add(vo);
-        });
+        if(popModels != null && !popModels.isEmpty()) {
+            popModels.forEach(popModel -> {
+                NovaTablePop.Vo vo = new NovaTablePop.Vo()
+                        .setType(popModel.getType().name())
+                        .setName(popModel.getName())
+                        .setValue(popModel.getValue());
+                vos.add(vo);
+            });
+        }
         return vos;
     }
 

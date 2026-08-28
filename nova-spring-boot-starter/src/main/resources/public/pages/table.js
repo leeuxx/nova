@@ -3,6 +3,18 @@
 const { h } = Vue
 const { NPopconfirm, NSpace, NTooltip, NTag, NRadio, NDropdown, NButtonGroup, NButton } = naive
 const NovaImagePreview = window.NovaImagePreview
+
+// 点路径取值，row 为普通 Map 时按 'a.b.c' 逐层下钻
+function getFieldValue(row, path) {
+  if (row == null) return undefined
+  var parts = String(path || '').split('.')
+  var val = row
+  for (var i = 0; i < parts.length; i++) {
+    if (val === null || val === undefined) return undefined
+    val = val[parts[i]]
+  }
+  return val
+}
 const NovaRollNumber   = window.NovaRollNumber
 
 // 解析列宽：百分比返回浮点数（0~100），像素返回负数表示固定像素
@@ -1022,7 +1034,7 @@ const NovaTable = {
                 onUpdateShow: (show) => {
                   if (show) {
                     vm.popActiveKey = myKey
-                    vm.handlePopClick(popCfg, text)
+                    vm.handlePopClick(popCfg, text, row)
                   } else {
                     vm.popActiveKey = ''
                   }
@@ -1065,15 +1077,6 @@ const NovaTable = {
       })
 
       // 兜底渲染：自动检测字符串是否含 HTML 标签
-      function getFieldValue(row, path) {
-        var parts = String(path).split('.')
-        var val = row
-        for (var i = 0; i < parts.length; i++) {
-          if (val === null || val === undefined) return undefined
-          val = val[parts[i]]
-        }
-        return val
-      }
       cols.forEach(function(c) {
         if (c.render) return
         c.render = function(row) {
@@ -1877,7 +1880,7 @@ const NovaTable = {
       if (btn.callHint && !skipConfirm) { window.modal.confirm(btn.callHint, { title: '确认操作', onConfirm: action }) }
       else { action() }
     },
-    handlePopClick(popCfg, value) {
+    handlePopClick(popCfg, value, row) {
       if (!popCfg || !popCfg.handleName) return
       if (!value) {
         if (window.$message) window.$message.warning('无可点击内容')
@@ -1887,11 +1890,28 @@ const NovaTable = {
       this.popTitle = popCfg.title || '详情'
       this.popList = []
       this.popLoading = true
+      // 按 popCfg.context 列出的字段名，从当前行取值（支持平铺 key 与点路径两种形态）；
+      // CHOICE 等列会被 translateRecords 翻译成 label，需从 _raw 取原始值
+      var context = {}
+      if (popCfg.context && popCfg.context.length && row) {
+        popCfg.context.forEach(function(key) {
+          var v
+          if (row._raw && row._raw[key] !== undefined) {
+            v = row._raw[key]
+          } else if (row[key] !== undefined) {
+            v = row[key]
+          } else {
+            v = getFieldValue(row, key)
+          }
+          if (v !== undefined) context[key] = v
+        })
+      }
       window.fetchApi.post('/nova/table/pop', {
         novaName: this.novaName,
         handleName: popCfg.handleName,
         value: value,
-        param: popCfg.param || ''
+        param: popCfg.param || '',
+        context: context
       }).then(function(resp) {
         self.popLoading = false
         self.popList = resp.data || []

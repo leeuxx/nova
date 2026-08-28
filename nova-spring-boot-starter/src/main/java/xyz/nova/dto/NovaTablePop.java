@@ -4,6 +4,9 @@ import xyz.nova.annotation.comment.Comment;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.List;
+import java.util.Map;
+
 @Data
 @Accessors(chain = true)
 public class NovaTablePop {
@@ -19,6 +22,9 @@ public class NovaTablePop {
 
     @Comment("静态参数")
     private String param;
+
+    @Comment("同一行其他属性值")
+    private Map<String, Object> context;
 
     @Data
     @Accessors(chain = true)

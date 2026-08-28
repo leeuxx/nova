@@ -21,10 +21,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import xyz.nova.view.query.Test2DemoCondition;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @Lazy)
@@ -98,7 +95,7 @@ public class TestDemo2Service extends ServiceImpl<TestDemo2Mapper, TestDemo2> im
     }
 
     @Override
-    public List<PopModel> getPopModel(String param, String value) {
+    public List<PopModel> getPopModel(String param, String value, Map<String, Object> context) {
         if (param.equals("1")) {
             TestDemo testDemo = testDemoService.getById(value);
             return Arrays.asList(

@@ -611,6 +611,9 @@ public class NovaTableBuild {
             @Comment("静态参数")
             private String param;
 
+            @Comment("额外传递的同一行属性")
+            private List<String> context;
+
             @Comment("弹窗处理的后端完全类名")
             private String handleName;
 

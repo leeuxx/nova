@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 @Nova(
         name = "菜单管理",
         dataProxy = MenuServiceImpl.class,
-        conditionClass = void.class,
         sysBtnHide = @SysBtnHide(
                 edit = @ShowBy("id <= 35"),
                 delete = @ShowBy("id <= 35"),

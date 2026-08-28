@@ -5,11 +5,12 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.util.List;
+import java.util.Map;
 
 public interface PopHandler {
 
-    @Comment("获取pop列表, param=透传参数 value=点击的数据")
-    List<PopModel> getPopModel(String param, String value);
+    @Comment("获取pop列表, param=透传参数 value=点击的数据 context=同一行其他属性值")
+    List<PopModel> getPopModel(String param, String value, Map<String, Object> context);
 
     @Data
     @Accessors(chain = true)

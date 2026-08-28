@@ -671,6 +671,9 @@ window.NovaTableJQ = (function ($) {
             raw = (row[col.field] === null || row[col.field] === undefined) ? '' : String(row[col.field])
           }
           if (!raw) return
+          // 保留翻译前的原始值，避免前端 pop context 等场景拿到渲染值
+          updated._raw = updated._raw || {}
+          updated._raw[col.field] = dotIdx > -1 ? row[base][propKey] : row[col.field]
           updated[col.field] = isMulti
             ? raw.split(',').map(function (v) { return lk[v.trim()] || v.trim() }).join(',')
             : (lk[raw] || raw)
