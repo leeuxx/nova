@@ -22,6 +22,9 @@ public @interface AttachmentType {
     @Comment("允许上传的文件类型（如：.jpg）")
     String[] fileTypes() default {};
 
+    @Comment("多文件分隔符")
+    String separator() default ",";
+
     enum Type {
         @Comment("任意文件")
         BASE,

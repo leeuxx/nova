@@ -50,7 +50,7 @@ import java.time.LocalDateTime;
                         param = "1",
                         show = @ExprBool(
                                 exprHandler = RowAuthExpr.class,
-                                param = "sendCmd"
+                                param = "8AQ66JQW5H"
                         )
                 ),
                 @RowOperation(
@@ -455,7 +455,8 @@ public class TestDemoView {
                     attachmentType = @AttachmentType(
                             type = AttachmentType.Type.IMAGE,
                             maxLimit = 7,
-                            tableShowType = AttachmentType.TableShowType.IMAGE
+                            tableShowType = AttachmentType.TableShowType.IMAGE,
+                            separator = "|"
                     ),
                     defaultValue = "https://cdn.ossfile.mxrvending.com/tyGoods/6902890255482.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890252771.png,https://cdn.ossfile.mxrvending.com/tyGoods/6901668934451.png,https://cdn.ossfile.mxrvending.com/tyGoods/6901668933232.png"
             )
@@ -470,7 +471,8 @@ public class TestDemoView {
                     attachmentType = @AttachmentType(
                             type = AttachmentType.Type.BASE,
                             maxLimit = 3,
-                            tableShowType = AttachmentType.TableShowType.VIDEO
+                            tableShowType = AttachmentType.TableShowType.VIDEO,
+                            separator = "|"
                     )
             )
     )

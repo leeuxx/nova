@@ -518,13 +518,15 @@ public class NovaFieldUtils {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
             if (novaFieldInfo.getType() == Edit.Type.ATTACHMENT) {
+                AttachmentType attachmentType = edit.attachmentType();
                 AttachmentTypeInfo attachmentTypeInfo = new AttachmentTypeInfo()
-                        .setType(edit.attachmentType().type())
-                        .setTableShowType(edit.attachmentType().tableShowType())
-                        .setMaxLimit(edit.attachmentType().maxLimit())
-                        .setMinSize(edit.attachmentType().minSize())
-                        .setMaxSize(edit.attachmentType().maxSize())
-                        .setFileTypes(Arrays.asList(edit.attachmentType().fileTypes()));
+                        .setType(attachmentType.type())
+                        .setTableShowType(attachmentType.tableShowType())
+                        .setMaxLimit(attachmentType.maxLimit())
+                        .setMinSize(attachmentType.minSize())
+                        .setMaxSize(attachmentType.maxSize())
+                        .setFileTypes(Arrays.asList(attachmentType.fileTypes()))
+                        .setSeparator(attachmentType.separator());
                 attachmentTypeInfos.put(field, attachmentTypeInfo);
             }
         });
@@ -1029,6 +1031,9 @@ public class NovaFieldUtils {
 
         @Comment("允许上传的文件类型")
         private List<String> fileTypes;
+
+        @Comment("多文件分隔符")
+        private String separator;
 
     }
 

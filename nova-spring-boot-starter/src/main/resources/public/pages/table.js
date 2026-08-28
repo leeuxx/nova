@@ -173,11 +173,24 @@ window.evalShowExpr = evalShowExpr
 // ────────────────────────────────────────────────────────────────
 
   // 工具函数：将表单字段 + 数据转为 List<FormInfo>
-  function _buildFormInfoList(fields, data, refMap) {
+  function _buildFormInfoList(fields, data, refMap, attachmentMap) {
     var fm = refMap || {}
+    var am = attachmentMap || {}
     return (fields || []).filter(function(f) { return f.type !== 'DIVIDE' && f.type !== 'EMPTY' }).map(function(f) {
       var val = data[f.field]
-      var strVal = (val === null || val === undefined || val === '') ? '' : (Array.isArray(val) ? val.join(',') : String(val))
+      var strVal
+      if (val === null || val === undefined || val === '') {
+        strVal = ''
+      } else if (Array.isArray(val)) {
+        if (f.type === 'ATTACHMENT') {
+          var sep = (am[f.field] || {}).separator
+          strVal = sep != null ? val.join(sep) : ''
+        } else {
+          strVal = val.join(',')
+        }
+      } else {
+        strVal = String(val)
+      }
       var item = { field: f.field, value: strVal, type: f.type }
       if (f.type === 'REFERENCE') {
         var refInfo = fm[f.field] || {}
@@ -922,11 +935,13 @@ const NovaTable = {
           colDef.render = (row) => {
             const val = getFieldValue(row, col.field)
             if (val === null || val === undefined || val === '') return ''
-            const urls = String(val).split(',').map(s => s.trim()).filter(Boolean)
-            if (!urls.length) return ''
             const cfg = col.refNovaName && subMeta
               ? ((subMeta.attachment || {})[propKey])
               : (vm.attachmentMap && vm.attachmentMap[col.field])
+            const sep = cfg && cfg.separator
+            if (!sep) return ''
+            const urls = String(val).split(sep).map(s => s.trim()).filter(Boolean)
+            if (!urls.length) return ''
             const tableShowType = cfg && cfg.tableShowType ? cfg.tableShowType : 'TEXT'
             const isMulti = urls.length > 1
             const open = function() { vm.openTableAttachPreview({ field: col.field, title: col.title }, urls, tableShowType) }
@@ -2231,7 +2246,7 @@ const NovaTable = {
           // 初始化表单数据（应用 defaultValue）
           var fd = {}
           editFields.forEach(function(f) {
-            var dv = window.NovaTableJQ_form.convertDefaultValue(f, cm)
+            var dv = window.NovaTableJQ_form.convertDefaultValue(f, cm, d.attachment || {})
             if (dv !== undefined) {
               fd[f.field] = dv
               if (f.type === 'REFERENCE') fd[f.field + '_display'] = ''
@@ -2247,21 +2262,22 @@ const NovaTable = {
           // 应用待处理的 rowOperationLoad 返回的附属表单初始值
           var pendingLoad = self._opLoadPending && self._opLoadPending[appNovaName]
           if (pendingLoad) {
-            self._applyOpLoadData(pendingLoad, fd, editFields, d.reference || {}, cm)
+            self._applyOpLoadData(pendingLoad, fd, editFields, d.reference || {}, cm, d.attachment || {})
             delete self._opLoadPending[appNovaName]
           }
         })
     },
-    _applyOpLoadData(source, targetData, fields, refMap, choiceMap) {
+    _applyOpLoadData(source, targetData, fields, refMap, choiceMap, attachmentMap) {
       var rm = refMap || {}
       var cm = choiceMap || {}
+      var am = attachmentMap || {}
       var self = this
       fields.forEach(function(f) {
         if (f.type === 'DIVIDE' || f.type === 'EMPTY') return
         var val = source[f.field]
         // 后端没返回值（undefined/null）时，应用 defaultValue
         if ((val === undefined || val === null)) {
-          var dv = window.NovaTableJQ_form.convertDefaultValue(f, choiceMap)
+          var dv = window.NovaTableJQ_form.convertDefaultValue(f, choiceMap, am)
           if (dv !== undefined) {
             targetData[f.field] = dv
             if (f.type === 'REFERENCE') targetData[f.field + '_display'] = ''
@@ -2272,8 +2288,12 @@ const NovaTable = {
         if (f.type === 'CHOICE') {
           var ci = cm[f.field]
           targetData[f.field] = (ci && ci.selectType === 'MULTI' && val != null && String(val).length > 0) ? String(val).split(',') : (val === null || val === undefined ? null : val)
-        } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
+        } else if (f.type === 'TAG') {
           targetData[f.field] = (val != null && String(val).length > 0) ? String(val).split(',') : []
+        } else if (f.type === 'ATTACHMENT') {
+          var attCfg = am[f.field] || {}
+          var attSep = attCfg.separator
+          targetData[f.field] = (val != null && String(val).length > 0 && attSep != null) ? String(val).split(attSep) : []
         } else if (f.type === 'DATE') {
           var ts = val !== null && val !== undefined ? Number(val) : null
           targetData[f.field] = (ts && !isNaN(ts)) ? ts : null
@@ -2314,7 +2334,7 @@ const NovaTable = {
           // 基本表单数据
           var mainData = data[self.opFormNovaName]
           if (mainData) {
-            self._applyOpLoadData(mainData, self.opFormData, self.opFormFields, self.opFormRefMap, self.opFormChoiceMap)
+            self._applyOpLoadData(mainData, self.opFormData, self.opFormFields, self.opFormRefMap, self.opFormChoiceMap, self.attachmentMap)
           }
           // APPENDAGE 数据：已加载的立即应用，未加载的缓存
           self._opLoadPending = self._opLoadPending || {}
@@ -2324,7 +2344,7 @@ const NovaTable = {
             if (!appData) return
             var build = self.opFormAppTabBuild[key]
             if (build && build.editFields) {
-              self._applyOpLoadData(appData, self.opFormAppFormData[key], build.editFields, build.referenceMap || {}, build.choiceMap || {})
+              self._applyOpLoadData(appData, self.opFormAppFormData[key], build.editFields, build.referenceMap || {}, build.choiceMap || {}, build.attachmentMap || {})
             } else {
               self._opLoadPending[key] = appData
             }
@@ -2382,14 +2402,14 @@ const NovaTable = {
         novaIds = this.checkedRowKeys.map(function(k) { return String(k) })
       }
       // 组装主表单数据
-      var formInfo = _buildFormInfoList(this.opFormFields, this.opFormData, this.opFormRefMap)
+      var formInfo = _buildFormInfoList(this.opFormFields, this.opFormData, this.opFormRefMap, this.attachmentMap)
       // 组装附属表单数据
       var appendageFormInfo = {}
       ;(this.opFormExtraTabs || []).forEach(function(tab) {
         var n = tab.tapNovaName
         var build = self.opFormAppTabBuild[n] || {}
         var fd = self.opFormAppFormData[n] || {}
-        appendageFormInfo[n] = _buildFormInfoList(build.editFields || [], fd, build.referenceMap || {})
+        appendageFormInfo[n] = _buildFormInfoList(build.editFields || [], fd, build.referenceMap || {}, build.attachmentMap || {})
       })
       window.fetchApi.post('/nova/table/rowOperationSubmit', {
           novaName: this.novaName,

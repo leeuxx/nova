@@ -768,7 +768,8 @@ window.NovaTableJQ = (function ($) {
     var formData = window.NovaTableJQ_form.initFormData(
       target.editFields || [],
       target.choiceMap || {},
-      addSourceFields
+      addSourceFields,
+      target.attachmentMap || {}
     )
     target.currentRow              = null
     target.rawDetailRow           = null
@@ -783,8 +784,9 @@ window.NovaTableJQ = (function ($) {
       var bd = appBuild[appTab.tapNovaName] || {}
       var fd = {}
       var cm = bd.choiceMap || {}
+      var am = bd.attachmentMap || {}
       ;(bd.editFields || []).forEach(function(f) {
-        var dv = window.NovaTableJQ_form.convertDefaultValue(f, cm)
+        var dv = window.NovaTableJQ_form.convertDefaultValue(f, cm, am)
         if (dv !== undefined) {
           fd[f.field] = dv
           if (f.type === 'REFERENCE') fd[f.field + '_display'] = ''
@@ -828,7 +830,8 @@ window.NovaTableJQ = (function ($) {
           t.editFields || [],
           t.choiceMap || {},
           t.referenceMap || {},
-          { [novaIdField]: pkVal }
+          { [novaIdField]: pkVal },
+          t.attachmentMap || {}
         )
 
         t.currentRow            = $.extend({}, source)
@@ -939,9 +942,22 @@ window.NovaTableJQ = (function ($) {
       var build = (target.appendageTabBuild || {})[n] || {}
       var fd = (target.appendageFormData || {})[n] || {}
       var refMap = build.referenceMap || {}
+      var am = build.attachmentMap || {}
       appendageFormInfo[n] = (build.editFields || []).filter(function(f) { return f.type !== 'DIVIDE' && f.type !== 'EMPTY' }).map(function(f) {
         var val = fd[f.field]
-        var strVal = (val === null || val === undefined || val === '') ? '' : (Array.isArray(val) ? val.join(',') : String(val))
+        var strVal
+        if (val === null || val === undefined || val === '') {
+          strVal = ''
+        } else if (Array.isArray(val)) {
+          if (f.type === 'ATTACHMENT') {
+            var sep = (am[f.field] || {}).separator
+            strVal = sep != null ? val.join(sep) : ''
+          } else {
+            strVal = val.join(',')
+          }
+        } else {
+          strVal = String(val)
+        }
         var item = { field: f.field, value: strVal, type: f.type }
         if (f.type === 'REFERENCE') {
           var refInfo = refMap[f.field] || {}
@@ -980,7 +996,7 @@ window.NovaTableJQ = (function ($) {
         if (refRefKeyEdit) return { field: refRefKeyEdit, referenceField: rf.referenceField, value: rf.value }
         return rf
       })
-      var formInfo = window.NovaTableJQ_form.buildFormInfo(editFields, formData, target.referenceMap, {
+      var formInfo = window.NovaTableJQ_form.buildFormInfo(editFields, formData, target.referenceMap, target.attachmentMap || {}, {
         currentRow: target.currentRow,
         novaIdField: novaIdField,
         sourceRefFields: sourceRefFieldsEdit
@@ -1003,7 +1019,7 @@ window.NovaTableJQ = (function ($) {
         if (refRefKey) return { field: refRefKey, referenceField: rf.referenceField, value: rf.value }
         return rf
       })
-      var formInfo = window.NovaTableJQ_form.buildFormInfo(editFields, formData, target.referenceMap, {
+      var formInfo = window.NovaTableJQ_form.buildFormInfo(editFields, formData, target.referenceMap, target.attachmentMap || {}, {
         skipEmpty: true,
         sourceRefFields: sourceRefFields
       })
@@ -1128,14 +1144,18 @@ window.NovaTableJQ = (function ($) {
     var editFields = target.editFields || []
     var choiceMap = target.choiceMap || {}
     var referenceMap = target.referenceMap || {}
+    var attachmentMap = target.attachmentMap || {}
     var fd = {}
     editFields.forEach(function(f) {
       var val = rawRow[f.field]
       var choice = choiceMap[f.field]
       if (choice && choice.selectType === 'MULTI') {
         fd[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
-      } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
+      } else if (f.type === 'TAG') {
         fd[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+      } else if (f.type === 'ATTACHMENT') {
+        var sep = (attachmentMap[f.field] || {}).separator
+        fd[f.field] = (val && String(val).length > 0 && sep != null) ? String(val).split(sep) : []
       } else if (f.type === 'DATE') {
         var ts = val !== null && val !== undefined ? Number(val) : null
         fd[f.field] = (ts && !isNaN(ts)) ? ts : null

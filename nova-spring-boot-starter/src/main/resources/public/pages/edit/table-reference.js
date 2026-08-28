@@ -208,7 +208,9 @@ var NovaRefForm = {
     getAttachUrls: function(col, row) {
       var val = row[col.field]
       if (!val) return []
-      return String(val).split(',').map(function(u) { return u.trim() }).filter(Boolean)
+      var sep = ((this.attachmentMap || {})[col.field] || {}).separator
+      if (!sep) return []
+      return String(val).split(sep).map(function(u) { return u.trim() }).filter(Boolean)
     },
 
     // CHOICE 颜色

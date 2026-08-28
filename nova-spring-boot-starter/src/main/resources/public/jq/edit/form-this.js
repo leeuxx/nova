@@ -7,10 +7,10 @@ window.NovaTableJQ_form = (function () {
   // choiceMap:    Object CHOICE 字段配置 { fieldName: { values, selectType, showType } }
   // sourceFields: Object 嵌入模式外键预填值 { fieldName: value }
   // 返回: formData Object
-  function initFormData(editFields, choiceMap, sourceFields) {
+  function initFormData(editFields, choiceMap, sourceFields, attachmentMap) {
     var formData = {}
     editFields.forEach(function (f) {
-      var dv = window.NovaTableJQ_form.convertDefaultValue(f, choiceMap)
+      var dv = window.NovaTableJQ_form.convertDefaultValue(f, choiceMap, attachmentMap)
       if (dv !== undefined) {
         formData[f.field] = dv
         if (f.type === 'REFERENCE') formData[f.field + '_display'] = ''
@@ -35,16 +35,21 @@ window.NovaTableJQ_form = (function () {
   // choiceMap:    Object CHOICE 配置
   // referenceMap: Object REFERENCE 配置
   // extraFields:  Object 额外字段（如 PK）{ field: value }
+  // attachmentMap:Object ATTACHMENT 配置（提供 separator）
   // 返回: formData Object（含 _display 值）
-  function mapDetailToFormData(detailRow, editFields, choiceMap, referenceMap, extraFields) {
+  function mapDetailToFormData(detailRow, editFields, choiceMap, referenceMap, extraFields, attachmentMap) {
+    var am = attachmentMap || {}
     var source = Object.assign({}, extraFields || {})
     editFields.forEach(function(f) {
       var val = detailRow[f.field]
       var choice = choiceMap[f.field]
       if (choice && choice.selectType === 'MULTI') {
         source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
-      } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
+      } else if (f.type === 'TAG') {
         source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+      } else if (f.type === 'ATTACHMENT') {
+        var sep = (am[f.field] || {}).separator
+        source[f.field] = (val && String(val).length > 0 && sep != null) ? String(val).split(sep) : []
       } else if (f.type === 'DATE') {
         var ts = val !== null && val !== undefined ? Number(val) : null
         source[f.field] = (ts && !isNaN(ts)) ? ts : null
@@ -89,21 +94,28 @@ window.NovaTableJQ_form = (function () {
   // editFields:     Array  字段定义
   // formData:       Object 当前数据
   // referenceMap:   Object REFERENCE 配置
+  // attachmentMap:  Object ATTACHMENT 配置（提供 separator）
   // options:        Object { currentRow, novaIdField, sourceRefFields, skipEmpty }
   //   skipEmpty=true  新增模式（空值字段不上传）
   //   skipEmpty=false 编辑模式（上传所有字段，含空值）
   //   currentRow + novaIdField  编辑模式自动添加 PK
   //   sourceRefFields           嵌入模式自动添加外键 REFERENCE 字段
   // 返回: formInfo Array { field, value, type, reference? }
-  function buildFormInfo(editFields, formData, referenceMap, options) {
+  function buildFormInfo(editFields, formData, referenceMap, attachmentMap, options) {
     var opts = options || {}
+    var am = attachmentMap || {}
     var formInfo = editFields.filter(function (f) { return f.type !== 'DIVIDE' && f.type !== 'EMPTY' }).map(function (f) {
       var val = formData[f.field]
       var strVal
       if (val === null || val === undefined || val === '') {
         strVal = ''
       } else if (Array.isArray(val)) {
-        strVal = val.join(',')
+        if (f.type === 'ATTACHMENT') {
+          var sep = (am[f.field] || {}).separator
+          strVal = sep != null ? val.join(sep) : ''
+        } else {
+          strVal = val.join(',')
+        }
       } else {
         strVal = String(val)
       }
@@ -128,13 +140,16 @@ window.NovaTableJQ_form = (function () {
 
   // ── 将 defaultValue 按字段类型转换 ──────────────────────────────
   // 返回该字段应填充的默认值，无默认值时返回 undefined
-  function convertDefaultValue(f, choiceMap) {
+  function convertDefaultValue(f, choiceMap, attachmentMap) {
     if (f.defaultValue == null || f.defaultValue === '') return undefined
     if (f.type === 'NUMBER') {
       var num = Number(f.defaultValue)
       return isNaN(num) ? null : num
-    } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
+    } else if (f.type === 'TAG') {
       return String(f.defaultValue).split(',')
+    } else if (f.type === 'ATTACHMENT') {
+      var sep = ((attachmentMap || {})[f.field] || {}).separator
+      return sep != null ? String(f.defaultValue).split(sep) : []
     } else if (f.type === 'BOOLEAN') {
       return String(f.defaultValue)
     } else if (f.type === 'DATE') {

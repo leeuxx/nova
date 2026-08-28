@@ -8,14 +8,18 @@ window.NovaTableJQ_app = (function () {
     var curBuild = (t.appendageTabBuild || {})[appNovaName] || {}
     var fields = curBuild.editFields || []
     var cm = curBuild.choiceMap || {}
+    var am = curBuild.attachmentMap || {}
     var fd = {}
     fields.forEach(function(f) {
       var val = rec[f.field]
       var ci = cm[f.field]
       if (f.type === 'CHOICE' && ci && ci.selectType === 'MULTI') {
         fd[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
-      } else if (f.type === 'TAG' || f.type === 'ATTACHMENT') {
+      } else if (f.type === 'TAG') {
         fd[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+      } else if (f.type === 'ATTACHMENT') {
+        var sep = (am[f.field] || {}).separator
+        fd[f.field] = (val && String(val).length > 0 && sep != null) ? String(val).split(sep) : []
       } else if (f.type === 'DATE') {
         var ts = val !== null && val !== undefined ? Number(val) : null
         fd[f.field] = (ts && !isNaN(ts)) ? ts : null
@@ -97,7 +101,7 @@ window.NovaTableJQ_app = (function () {
           if (existingFd[f.field] !== undefined) {
             fd[f.field] = existingFd[f.field]
           } else {
-            var dv = window.NovaTableJQ_form.convertDefaultValue(f, cm)
+            var dv = window.NovaTableJQ_form.convertDefaultValue(f, cm, am)
             if (dv !== undefined) {
               fd[f.field] = dv
             } else {

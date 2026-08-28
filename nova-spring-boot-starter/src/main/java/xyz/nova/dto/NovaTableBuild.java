@@ -346,6 +346,9 @@ public class NovaTableBuild {
             @Comment("允许上传的文件类型")
             private List<String> fileTypes;
 
+            @Comment("多文件分隔符")
+            private String separator;
+
         }
 
         @Data

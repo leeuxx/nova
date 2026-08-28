@@ -201,7 +201,8 @@ public class NovaTableServiceImpl implements NovaTableService {
                     .setMaxLimit(attachmentInfo.getMaxLimit())
                     .setMinSize(attachmentInfo.getMinSize())
                     .setMaxSize(attachmentInfo.getMaxSize())
-                    .setFileTypes(attachmentInfo.getFileTypes());
+                    .setFileTypes(attachmentInfo.getFileTypes())
+                    .setSeparator(attachmentInfo.getSeparator());
             attachmentMap.put(field, attachment);
         });
         vo.setAttachment(attachmentMap);
