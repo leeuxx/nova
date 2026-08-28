@@ -54,18 +54,37 @@ window.NovaTableJQ_app = (function () {
     Object.keys(appendageMap).forEach(function(k) {
       if (appendageMap[k].referenceName === appNovaName) appField = k
     })
-    if (!appField) return
+    if (!appField) {
+      var rdyEmpty = Object.assign({}, target.appendageTabReady || {})
+      rdyEmpty[appNovaName] = true
+      target.appendageTabReady = rdyEmpty
+      return
+    }
     var storageField = appendageMap[appField].storageField
     var storageVal = target.formData && target.formData[storageField]
     var loaded = Object.assign({}, target.appendageDetailsLoaded)
     loaded[appNovaName] = true
     target.appendageDetailsLoaded = loaded
-    if (!storageVal) return
+    if (!storageVal) {
+      var rdyNoVal = Object.assign({}, target.appendageTabReady || {})
+      rdyNoVal[appNovaName] = true
+      target.appendageTabReady = rdyNoVal
+      return
+    }
     window.fetchApi.post('/nova/table/details', { novaName: appNovaName, storageFieldValue: String(storageVal) }).then(function(resp) {
-      if (!resp.data) return
       var t = window.vmMap && window.vmMap[key]
       if (!t) return
-      fillAppendageData(t, appNovaName, resp.data)
+      if (resp.data) fillAppendageData(t, appNovaName, resp.data)
+      // /details 完成（无论有无数据）才标记 ready，badge 基于最终 formData 渲染
+      var rdyDone = Object.assign({}, t.appendageTabReady || {})
+      rdyDone[appNovaName] = true
+      t.appendageTabReady = rdyDone
+    }).catch(function() {
+      var t2 = window.vmMap && window.vmMap[key]
+      if (!t2) return
+      var rdyErr = Object.assign({}, t2.appendageTabReady || {})
+      rdyErr[appNovaName] = true
+      t2.appendageTabReady = rdyErr
     })
   }
 
@@ -123,10 +142,7 @@ window.NovaTableJQ_app = (function () {
           Object.keys(appendageMap).forEach(function(k) { if (appendageMap[k].referenceName === appNovaName) appFieldKey = k })
           if (appFieldKey) fillAppendageData(t2, appNovaName, rowData[appFieldKey])
         }
-        // build + 同源 fillAppendageData 已完成，标记 ready 让 badge 可以渲染
-        var readyMap = Object.assign({}, t2.appendageTabReady || {})
-        readyMap[appNovaName] = true
-        t2.appendageTabReady = readyMap
+        // ready 由 loadAppendageDetails 在 /details 完成（或 storageVal 缺失）后设置
         // APPENDAGE 组件的 /details 立即加载
         loadAppendageDetails(novaName, appNovaName, key)
       })
