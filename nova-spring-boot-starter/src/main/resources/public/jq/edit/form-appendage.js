@@ -85,6 +85,7 @@ window.NovaTableJQ_app = (function () {
         var editFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
         var newBuild = Object.assign({}, t2.appendageTabBuild)
         var cm = bd.choice || {}
+        var am = bd.attachment || {}
         newBuild[appNovaName] = {
           editFields: editFields, choiceMap: cm, numberMap: bd.number || {},
           dateMap: bd.date || {}, booleanMap: bd.booleanInfo || {},
@@ -122,6 +123,10 @@ window.NovaTableJQ_app = (function () {
           Object.keys(appendageMap).forEach(function(k) { if (appendageMap[k].referenceName === appNovaName) appFieldKey = k })
           if (appFieldKey) fillAppendageData(t2, appNovaName, rowData[appFieldKey])
         }
+        // build + 同源 fillAppendageData 已完成，标记 ready 让 badge 可以渲染
+        var readyMap = Object.assign({}, t2.appendageTabReady || {})
+        readyMap[appNovaName] = true
+        t2.appendageTabReady = readyMap
         // APPENDAGE 组件的 /details 立即加载
         loadAppendageDetails(novaName, appNovaName, key)
       })

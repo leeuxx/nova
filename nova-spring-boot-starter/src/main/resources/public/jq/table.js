@@ -775,6 +775,7 @@ window.NovaTableJQ = (function ($) {
     target.rawDetailRow           = null
     // appendageDetailsLoaded 需清空：让切换 tab 时能按需重新请求 /details
     target.appendageDetailsLoaded  = {}
+    target.appendageTabReady       = {}
     target.formMode                = 'add'
     target.formData   = formData
     target.formErrors = {}
@@ -838,6 +839,7 @@ window.NovaTableJQ = (function ($) {
         t.rawDetailRow         = detailRow
         // appendageDetailsLoaded 需清空：让切换 tab 时能按需重新请求 /details
         t.appendageDetailsLoaded = {}
+        t.appendageTabReady      = {}
         t.formMode              = 'edit'
         t.formData   = $.extend({}, source)
         t.formErrors = {}

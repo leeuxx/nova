@@ -255,11 +255,11 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
                         )
                         .setName("随机名称" + YitIdHelper.nextId())
                         .setMsg("测试内容")
-                        .setFile("https://cdn.ossfile.mxrvending.com/tyGoods/6902890238345.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890235156.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890234562.png")
+                        .setFile("https://cdn.ossfile.mxrvending.com/tyGoods/6902890238345.png|https://cdn.ossfile.mxrvending.com/tyGoods/6902890235156.png|https://cdn.ossfile.mxrvending.com/tyGoods/6902890234562.png")
                 )
                 .setSex("1")
                 .setHobby("1")
-                .setFile("https://pic.rmb.bdstatic.com/bjh/bc1178073846/250713/6c653fba298a0dbb91dc600e620e1813.jpeg,https://cdn.ossfile.mxrvending.com/tyGoods/6902890249603.png")
+                .setFile("https://pic.rmb.bdstatic.com/bjh/bc1178073846/250713/6c653fba298a0dbb91dc600e620e1813.jpeg|https://cdn.ossfile.mxrvending.com/tyGoods/6902890249603.png")
                 .setCreateTime(LocalDateTime.now());
     }
 

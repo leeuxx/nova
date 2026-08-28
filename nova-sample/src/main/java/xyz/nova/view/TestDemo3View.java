@@ -49,8 +49,7 @@ public class TestDemo3View {
             edit = @Edit(
                     title = "岗位名称",
                     notNull = true,
-                    search = @Search,
-                    defaultValue = "上午我去"
+                    search = @Search
             )
     )
     private String name;
@@ -72,8 +71,7 @@ public class TestDemo3View {
                     attachmentType = @AttachmentType(
                             type = AttachmentType.Type.IMAGE,
                             maxLimit = 5
-                    ),
-                    defaultValue = "https://cdn.ossfile.mxrvending.com/tyGoods/6902890255482.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890252771.png,https://cdn.ossfile.mxrvending.com/tyGoods/6901668934451.png,https://cdn.ossfile.mxrvending.com/tyGoods/6901668933232.png"
+                    )
             )
     )
     private String file;
