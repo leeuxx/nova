@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 @Nova(
         name = "组织架构",
         dataProxy = OrgServiceImpl.class,
-        conditionClass = void.class,
         tree = @TreeType(
                 label = "name",
                 level = 1

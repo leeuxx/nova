@@ -14,8 +14,7 @@ import xyz.nova.service.RoleMenuServiceImpl;
 @Accessors(chain = true)
 @Nova(
         name = "角色菜单",
-        dataProxy = RoleMenuServiceImpl.class,
-        conditionClass = void.class
+        dataProxy = RoleMenuServiceImpl.class
 )
 public class RoleMenuNova {
 

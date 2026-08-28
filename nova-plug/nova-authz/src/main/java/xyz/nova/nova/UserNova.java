@@ -15,7 +15,6 @@ import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.nova.condition.UserCondition;
 import xyz.nova.service.RoleServiceImpl;
 import xyz.nova.service.UserServiceImpl;
-import xyz.nova.service.data.DefaultDataProxy;
 import xyz.nova.utils.RowAuthExpr;
 
 import java.time.LocalDateTime;
@@ -201,8 +200,6 @@ public class UserNova {
             layout = @Layout(
                     editLayout = Layout.EditLayout.FULL_LINE
             ),
-            dataProxy = DefaultDataProxy.class,
-            conditionClass = void.class,
             power = false
     )
     public static class UserResetPwdNova {
