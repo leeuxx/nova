@@ -247,7 +247,6 @@ public class TestDemoService extends ServiceImpl<TestDemoMapper, TestDemo> imple
     @Override
     public Object novaFormValue(List<Long> novaIds, String param) {
         return new TestDemoView.TestRow()
-                .setName("张三")
                 .setTestDemo2View(new TestDemo2View().setId(1L).setName("财务部"))
                 .setTestDemo3View(new TestDemo3View()
                         .setTestDemoView(new TestDemoView()

@@ -2214,6 +2214,32 @@ const NovaTable = {
       }
       return 0
     },
+    opFormTabTotalRequired(tabName) {
+      var self = this
+      if (tabName === 'form') {
+        return (self.visibleOpFormFields || []).filter(function(item) {
+          return item.visible && item.field.notNull
+        }).length
+      }
+      if (tabName.startsWith('app_')) {
+        var n = tabName.slice(4)
+        var build = self.opFormAppTabBuild[n] || {}
+        var refMap = build.referenceMap || {}
+        var fd = self.opFormAppFormData[n] || {}
+        var evalFd = Object.assign({}, fd)
+        for (var k in refMap) {
+          var rf = refMap[k] && refMap[k].referenceField
+          if (rf) evalFd[k] = fd[rf] !== undefined ? fd[rf] : null
+        }
+        return (build.editFields || []).filter(function(f) {
+          if (!f.notNull) return false
+          if (f.type === 'REFERENCE' && refMap[f.field] && refMap[f.field].referenceName === self.opFormNovaName) return false
+          if (f.showByExpr && !evalShowExpr(f.showByExpr, evalFd)) return false
+          return true
+        }).length
+      }
+      return 0
+    },
     onOpFormTabChange(tab) {
       this.opFormTab = tab
       if (tab.startsWith('app_')) {
@@ -4476,7 +4502,7 @@ const NovaTable = {
           <n-tab-pane name="form" style="padding:16px 0 20px 0">
             <template #tab>
               <iconify-icon icon="mdi:pencil-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>基本信息
-              <span v-if="opFormTabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ opFormTabRequiredCount('form') }}</span>
+              <span v-if="opFormTabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ opFormTabRequiredCount('form') }}</span><span v-else-if="opFormTabTotalRequired('form') > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span>
             </template>
             <div :key="'opTab_' + opFormTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
             <n-card v-for="sec in opFormSections" :key="sec.key" class="form-panel" size="small" :bordered="true">
@@ -4604,7 +4630,7 @@ const NovaTable = {
             :name="'app_' + tab.tapNovaName" style="padding:16px 0 20px 0">
             <template #tab>
               <iconify-icon icon="mdi:note-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>{{ tab.tapTitle || tab.tapNovaName }}
-              <span v-if="opFormTabRequiredCount('app_' + tab.tapNovaName) > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ opFormTabRequiredCount('app_' + tab.tapNovaName) }}</span>
+              <span v-if="opFormTabRequiredCount('app_' + tab.tapNovaName) > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ opFormTabRequiredCount('app_' + tab.tapNovaName) }}</span><span v-else-if="opFormTabTotalRequired('app_' + tab.tapNovaName) > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span>
             </template>
             <div :key="'opAppTab_' + opFormTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
             <div v-if="!(opFormAppBuild(tab.tapNovaName).editFields || []).length" style="text-align:center;padding:40px;color:#aaa;font-size:13px">加载中…</div>
