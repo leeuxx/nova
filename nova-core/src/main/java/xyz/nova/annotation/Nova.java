@@ -50,6 +50,6 @@ public @interface Nova {
     SysBtnHide sysBtnHide() default @SysBtnHide;
 
     @Comment("双表视图表列宽度压缩系数（值越小列越窄, 不可小于0, 最大值为1表示原样）")
-    double dualShrink() default 1;
+    double dualShrink() default 0.8;
 
 }
