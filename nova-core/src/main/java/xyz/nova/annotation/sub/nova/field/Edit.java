@@ -97,6 +97,9 @@ public @interface Edit {
         @Comment("文件上传组件")
         ATTACHMENT,
 
+        @Comment("富文本编辑器")
+        EDITOR,
+
 
         @Comment("对象引用组件")
         REFERENCE,

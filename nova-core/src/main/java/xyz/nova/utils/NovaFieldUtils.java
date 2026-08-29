@@ -21,7 +21,7 @@ public class NovaFieldUtils {
 
     // 搜索条件过滤组件类型
     private static final Set<Edit.Type> SEARCH_SKIP_TYPES = EnumSet.of(
-            Edit.Type.ATTACHMENT, Edit.Type.BUTTON, Edit.Type.ICON, Edit.Type.DIVIDE, Edit.Type.EMPTY
+            Edit.Type.ATTACHMENT, Edit.Type.EDITOR, Edit.Type.BUTTON, Edit.Type.ICON, Edit.Type.DIVIDE, Edit.Type.EMPTY
     );
 
     /**
