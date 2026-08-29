@@ -12,11 +12,17 @@ import xyz.nova.annotation.sub.nova.field.view.Pop;
 import xyz.nova.annotation.sub.nova.field.view.PopHandler;
 import xyz.nova.annotation.sub.nova.row.ExprBool;
 import xyz.nova.config.NovaApplication;
+import xyz.nova.error.NovaException;
 
 import java.lang.reflect.Field;
 import java.util.*;
 
 public class NovaFieldUtils {
+
+    // 搜索条件过滤组件类型
+    private static final Set<Edit.Type> SEARCH_SKIP_TYPES = EnumSet.of(
+            Edit.Type.ATTACHMENT, Edit.Type.BUTTON, Edit.Type.ICON, Edit.Type.DIVIDE, Edit.Type.EMPTY
+    );
 
     /**
      * 获取novaId属性参数
@@ -25,11 +31,7 @@ public class NovaFieldUtils {
      * @return novaId属性
      */
     public static String getNovaIdFieldName(String className) {
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return null;
-        }
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         return scanNova.getNovaIdFieldName();
     }
 
@@ -40,11 +42,7 @@ public class NovaFieldUtils {
      * @return novaId属性类型
      */
     public static Class<?> getNovaIdClass(String className) {
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return null;
-        }
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         return scanNova.getNovaIdClass();
     }
 
@@ -55,17 +53,14 @@ public class NovaFieldUtils {
      * @return 搜索条件信息
      */
     public static List<SearchInfo> getSearch(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         List<SearchInfo> searchInfos = new ArrayList<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return searchInfos;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         final TapSearch[] tapSearch = {null};
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
+            Edit.Type type = novaFieldInfo.getType();
             Search search = edit.search();
             if (!search.value()) {
                 return;
@@ -83,14 +78,17 @@ public class NovaFieldUtils {
                     return;
                 }
             }
+            if (SEARCH_SKIP_TYPES.contains(type)) {
+                return;
+            }
             SearchInfo searchInfo = new SearchInfo()
                     .setField(field)
                     .setTitle(edit.title())
-                    .setType(novaFieldInfo.getType())
+                    .setType(type)
                     .setVague(search.vague())
                     .setSort(search.sort());
             // 选择组件tap级搜索处理
-            if (novaFieldInfo.getType() == Edit.Type.CHOICE) {
+            if (type == Edit.Type.CHOICE) {
                 TapSearch tapSearchInfo = edit.choiceType().tapSearch();
                 if (tapSearch[0] == null && tapSearchInfo.value()) {
                     tapSearch[0] = tapSearchInfo;
@@ -110,12 +108,8 @@ public class NovaFieldUtils {
      * @return 表头列信息
      */
     public static List<TableColumnInfo> getTableColumn(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         List<TableColumnInfo> tableColumnInfos = new ArrayList<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return tableColumnInfos;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
@@ -145,7 +139,7 @@ public class NovaFieldUtils {
                 String fieldName = field;
                 String refNovaName = null;
                 if (isReference) {
-                    NovaApplication.ScanNova referenceScanNova = scanNovas.get(novaFieldInfo.getFieldClass().getSimpleName());
+                    NovaApplication.ScanNova referenceScanNova = getScanNova(novaFieldInfo.getFieldClass().getSimpleName());
                     Map<String, NovaApplication.ScanNova.NovaFieldInfo> referenceNovaFields = referenceScanNova.getNovaFields();
                     NovaApplication.ScanNova.NovaFieldInfo referenceNovaFieldInfo = referenceNovaFields.get(view.column());
                     findType = referenceNovaFieldInfo.getType();
@@ -178,12 +172,8 @@ public class NovaFieldUtils {
      * @return 编辑信息
      */
     public static List<EditInfo> getEdit(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         List<EditInfo> editInfos = new ArrayList<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return editInfos;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         List<EditInfo.ThisForm> thisForms = new ArrayList<>();
         novaFields.forEach((field, novaFieldInfo) -> {
@@ -298,38 +288,14 @@ public class NovaFieldUtils {
     }
 
     /**
-     * 获取指定字段的选择类型（SINGLE / MULTI）
-     *
-     * @param className 类名
-     * @param fieldName 字段名（驼峰）
-     * @return SelectType，找不到返回 null
-     */
-    public static ChoiceType.SelectType getChoiceSelectType(String className, String fieldName) {
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return null;
-        }
-        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
-        NovaApplication.ScanNova.NovaFieldInfo novaFieldInfo = novaFields.get(fieldName);
-        NovaField novaField = novaFieldInfo.getNovaField();
-        Edit edit = novaField.edit();
-        return edit.choiceType().selectType();
-    }
-
-    /**
      * 获取选择参数信息
      *
      * @param className 类名
      * @return 选择参数信息
      */
     public static Map<String, ChoiceInfo> getChoice(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, ChoiceInfo> choiceValues = new LinkedHashMap<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return choiceValues;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
@@ -380,12 +346,8 @@ public class NovaFieldUtils {
      * @return 标签参数信息
      */
     public static Map<String, TagInfo> getTag(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, TagInfo> tagInfos = new LinkedHashMap<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return tagInfos;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
@@ -420,12 +382,8 @@ public class NovaFieldUtils {
      * @return 日期参数信息
      */
     public static Map<String, DateInfo> getDate(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, DateInfo> dateInfos = new LinkedHashMap<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return dateInfos;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
@@ -448,12 +406,8 @@ public class NovaFieldUtils {
      * @return 数值参数信息
      */
     public static Map<String, NumberInfo> getNumber(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, NumberInfo> numberInfos = new LinkedHashMap<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return numberInfos;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
@@ -479,12 +433,8 @@ public class NovaFieldUtils {
      * @return 布尔参数信息
      */
     public static Map<String, BooleanInfo> getBoolean(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, BooleanInfo> booleanInfos = new LinkedHashMap<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return booleanInfos;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
@@ -507,12 +457,8 @@ public class NovaFieldUtils {
      * @return 文件上传参数信息
      */
     public static Map<String, AttachmentTypeInfo> getAttachment(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, AttachmentTypeInfo> attachmentTypeInfos = new LinkedHashMap<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return attachmentTypeInfos;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
@@ -540,12 +486,8 @@ public class NovaFieldUtils {
      * @return 关联参数信息
      */
     public static Map<String, ReferenceTypeInfo> getReference(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, ReferenceTypeInfo> referenceTypeInfos = new LinkedHashMap<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return referenceTypeInfos;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
@@ -572,12 +514,8 @@ public class NovaFieldUtils {
      * @return 附件参数信息
      */
     public static Map<String, AppendageTypeInfo> getAppendage(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, AppendageTypeInfo> appendageTypeInfos = new LinkedHashMap<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return appendageTypeInfos;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
@@ -605,12 +543,8 @@ public class NovaFieldUtils {
      * @return 集合引用参数信息
      */
     public static Map<String, LinkInfo> getLink(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, LinkInfo> linkInfos = new LinkedHashMap<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return linkInfos;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
@@ -659,12 +593,8 @@ public class NovaFieldUtils {
      * @return 集合引用目标参数信息
      */
     public static LinkTargetInfo getLinkTarget(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         LinkTargetInfo linkTargetInfo = new LinkTargetInfo();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return linkTargetInfo;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
@@ -676,7 +606,7 @@ public class NovaFieldUtils {
                             .setLinkFieldName(novaFieldInfo.getFieldName())
                             .setLinkReferenceField(linkTargetType.ref())
                             .setLinkStorageField(linkTargetType.by());
-                    NovaApplication.ScanNova linkTargetScanNova = scanNovas.get(novaFieldInfo.getFieldClass().getSimpleName());
+                    NovaApplication.ScanNova linkTargetScanNova = getScanNova(novaFieldInfo.getFieldClass().getSimpleName());
                     linkTargetInfo.setLinkTree(linkTargetScanNova.getNova().tree().value());
                 } else {
                     linkTargetInfo.setThisReferenceClass(novaFieldInfo.getFieldClass())
@@ -696,12 +626,8 @@ public class NovaFieldUtils {
      * @return 按钮参数信息
      */
     public static Map<String, ButtonInfo> getButton(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, ButtonInfo> buttonInfos = new LinkedHashMap<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return buttonInfos;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
@@ -729,12 +655,8 @@ public class NovaFieldUtils {
      * @return 弹窗参数信息
      */
     public static Map<String, PopInfo> getPop(String className) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, PopInfo> popInfoMaps = new LinkedHashMap<>();
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return popInfoMaps;
-        }
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
@@ -779,16 +701,21 @@ public class NovaFieldUtils {
      * @return 表格行系统按钮显隐控制信息
      */
     public static SysBtnHideInfo getSysBtnShow(String className) {
-        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
-        NovaApplication.ScanNova scanNova = scanNovas.get(className);
-        if (scanNova == null) {
-            return new SysBtnHideInfo();
-        }
+        NovaApplication.ScanNova scanNova = getScanNova(className);
         SysBtnHide sysBtnHide = scanNova.getNova().sysBtnHide();
         return new SysBtnHideInfo()
                 .setEdit(sysBtnHide.edit())
                 .setDelete(sysBtnHide.delete())
                 .setRowSelect(sysBtnHide.rowSelect());
+    }
+
+    private static NovaApplication.ScanNova getScanNova(String className) {
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(className);
+        if (scanNova == null) {
+            throw new NovaException("Nova类不存在：" + className);
+        }
+        return scanNova;
     }
 
     @Data
