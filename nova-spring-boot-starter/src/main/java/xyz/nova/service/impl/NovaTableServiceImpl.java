@@ -34,11 +34,8 @@ public class NovaTableServiceImpl implements NovaTableService {
         NovaTableBuild.Vo vo = new NovaTableBuild.Vo();
         // 获取novaId属性名称
         String novaIdFieldName = NovaFieldUtils.getNovaIdFieldName(novaTableBuild.getNovaName());
-        if (novaIdFieldName == null) {
-            throw new NovaException("Nova读取异常");
-        }
-        // 获取双表视图表列压缩系数
         vo.setNovaIdFieldName(novaIdFieldName);
+        // 获取双表视图表列压缩系数
         Double dualShrink = NovaUtils.getDualShrink(novaTableBuild.getNovaName());
         vo.setDualShrink(dualShrink);
         // 获取树结构信息
@@ -50,8 +47,8 @@ public class NovaTableServiceImpl implements NovaTableService {
                 .setLevel(treeType.level());
         vo.setTree(treeInfo);
         // 获取搜索条件
-        List<NovaTableBuild.Vo.Search> searchList = new ArrayList<>();
         if (!treeInfo.getValue()) {
+            List<NovaTableBuild.Vo.Search> searchList = new ArrayList<>();
             List<NovaFieldUtils.SearchInfo> searchs = NovaFieldUtils.getSearch(novaTableBuild.getNovaName());
             for (NovaFieldUtils.SearchInfo search : searchs) {
                 NovaTableBuild.Vo.Search searchVo = new NovaTableBuild.Vo.Search()
