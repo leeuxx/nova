@@ -4494,7 +4494,7 @@ const NovaTable = {
         :title="(opFormBtn && opFormBtn.title) || '操作'"
         style="width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column"
         :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}"
-        :header-style="{paddingBottom:'8px',borderBottom:'1px solid var(--n-border-color)'}">
+        :header-style="{paddingBottom:'8px'}">
         <n-tabs v-model:value="opFormTab" type="line"
           style="padding:0 20px;margin-top:-4px"
           @update:value="onOpFormTabChange">
@@ -4783,13 +4783,13 @@ const NovaTable = {
       </n-modal>
 
       <!-- TPL 对话框模式：宽高为 vw/vh 视口单位，100% = 撑满页面 -->
-      <n-modal v-model:show="tplModalShow" display-directive="if" preset="card" :title="tplTitle" :style="'width:' + tplWidth + ';height:' + tplHeight + ';display:flex;flex-direction:column'" :content-style="{padding:'0',overflow:'hidden',flex:'1',minHeight:'0',borderTop:'1px solid var(--n-border-color)'}" :header-style="{paddingBottom:'8px'}">
+      <n-modal v-model:show="tplModalShow" display-directive="if" preset="card" :title="tplTitle" :style="'width:' + tplWidth + ';height:' + tplHeight + ';display:flex;flex-direction:column'" :content-style="{padding:'0',overflow:'hidden',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
         <iframe v-if="tplUrl" :src="tplUrl" style="width:100%;height:100%;border:none;flex:1"></iframe>
       </n-modal>
 
       <!-- TPL 抽屉模式 -->
       <n-drawer v-model:show="tplDrawerShow" :placement="tplDrawerPlacement" display-directive="if" :style="tplDrawerPlacement === 'top' || tplDrawerPlacement === 'bottom' ? 'height:' + tplDrawerSize : 'width:' + tplDrawerSize">
-        <n-drawer-content :title="tplTitle" :body-content-style="{padding:'0',overflow:'hidden',display:'flex',flexDirection:'column'}">
+        <n-drawer-content :title="tplTitle" :header-style="{borderBottom:'none'}" :body-content-style="{padding:'0',overflow:'hidden',display:'flex',flexDirection:'column'}">
           <iframe v-if="tplUrl" :src="tplUrl" style="width:100%;height:100%;border:none;flex:1"></iframe>
         </n-drawer-content>
       </n-drawer>
