@@ -45,6 +45,8 @@ window.NovaTableJQ_form = (function () {
       var choice = choiceMap[f.field]
       if (choice && choice.selectType === 'MULTI') {
         source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+      } else if (f.type === 'CHOICE') {
+        source[f.field] = (val === null || val === undefined) ? null : String(val)
       } else if (f.type === 'TAG') {
         source[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
       } else if (f.type === 'ATTACHMENT') {

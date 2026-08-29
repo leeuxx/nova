@@ -15,6 +15,8 @@ window.NovaTableJQ_app = (function () {
       var ci = cm[f.field]
       if (f.type === 'CHOICE' && ci && ci.selectType === 'MULTI') {
         fd[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
+      } else if (f.type === 'CHOICE') {
+        fd[f.field] = (val === null || val === undefined) ? null : String(val)
       } else if (f.type === 'TAG') {
         fd[f.field] = (val && String(val).length > 0) ? String(val).split(',') : []
       } else if (f.type === 'ATTACHMENT') {

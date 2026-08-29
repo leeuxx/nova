@@ -2315,7 +2315,11 @@ const NovaTable = {
         if (val === undefined) return
         if (f.type === 'CHOICE') {
           var ci = cm[f.field]
-          targetData[f.field] = (ci && ci.selectType === 'MULTI' && val != null && String(val).length > 0) ? String(val).split(',') : (val === null || val === undefined ? null : val)
+          if (ci && ci.selectType === 'MULTI' && val != null && String(val).length > 0) {
+            targetData[f.field] = String(val).split(',')
+          } else {
+            targetData[f.field] = (val === null || val === undefined) ? null : String(val)
+          }
         } else if (f.type === 'TAG') {
           targetData[f.field] = (val != null && String(val).length > 0) ? String(val).split(',') : []
         } else if (f.type === 'ATTACHMENT') {
