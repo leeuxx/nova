@@ -21,7 +21,13 @@ window.NovaAppForm = {
   emits: ['field-change', 'reference-click', 'preview-click', 'attachment-change'],
 
   data() {
-    return {}
+    return {
+      _editorHosts: {},
+      _editorToolbars: {},
+      _editors: {},
+      _toolbars: {},
+      _editorLastSynced: {}
+    }
   },
 
   computed: {
@@ -143,7 +149,100 @@ window.NovaAppForm = {
     triggerFileUpload(fieldKey) {
       var input = document.getElementById('upload-app-' + this.appNovaName + '-' + fieldKey)
       if (input) input.click()
+    },
+
+    // ── 富文本编辑器：注册 host + 挂载/同步/销毁 ─────────────────
+    registerEditorHost(field, el) {
+      if (!field) return
+      if (el) {
+        this._editorHosts[field] = el
+        this.maybeMountEditor(field)
+      } else {
+        if (this._editors[field] && window.NovaWangEditor) {
+          window.NovaWangEditor.destroy(this._editors[field])
+        }
+        if (this._toolbars[field] && window.NovaWangEditor) {
+          window.NovaWangEditor.destroy(this._toolbars[field])
+        }
+        delete this._editorHosts[field]
+        delete this._editorToolbars[field]
+        delete this._editors[field]
+        delete this._toolbars[field]
+        delete this._editorLastSynced[field]
+      }
+    },
+    registerEditorToolbar(field, el) {
+      if (!field) return
+      this._editorToolbars[field] = el
+      if (!el) return
+      this.maybeMountEditor(field)
+    },
+    maybeMountEditor(field) {
+      if (this._editors[field]) return
+      var host = this._editorHosts[field]
+      var toolbarEl = this._editorToolbars[field]
+      if (!host || !toolbarEl) return
+      if (!window.NovaWangEditor) return
+      var self = this
+      var initialHtml = (self.formData && self.formData[field]) || ''
+      window.NovaWangEditor.ensureLoaded().then(function (wEditor) {
+        if (self._editors[field] || !self._editorHosts[field] || !self._editorToolbars[field]) return
+        self._editors[field] = wEditor.createEditor({
+          selector: self._editorHosts[field],
+          html: initialHtml,
+          config: {
+            onChange: function (editor) {
+              var html = editor.getHtml()
+              self._editorLastSynced[field] = html
+              self.$emit('field-change', { field: field, value: html })
+            }
+          }
+        })
+        self._toolbars[field] = wEditor.createToolbar({
+          editor: self._editors[field],
+          selector: self._editorToolbars[field]
+        })
+        self._editorLastSynced[field] = initialHtml
+      }).catch(function (err) {
+        console.error('[NovaAppForm] wangeditor load failed:', err)
+      })
+    },
+    destroyAllEditors() {
+      var self = this
+      Object.keys(this._editors).forEach(function (k) {
+        if (self._editors[k] && window.NovaWangEditor) {
+          window.NovaWangEditor.destroy(self._editors[k])
+        }
+        if (self._toolbars[k] && window.NovaWangEditor) {
+          window.NovaWangEditor.destroy(self._toolbars[k])
+        }
+      })
+      this._editors = {}
+      this._toolbars = {}
+      this._editorHosts = {}
+      this._editorToolbars = {}
+      this._editorLastSynced = {}
     }
+  },
+
+  // ── 生命周期 ──────────────────────────────────────────────────
+  mounted() {
+    // editor hosts are registered via :ref callbacks after mount
+  },
+  updated() {
+    var self = this
+    Object.keys(this._editorHosts).forEach(function (field) {
+      var editor = self._editors[field]
+      if (!editor) return
+      var external = (self.formData && self.formData[field]) || ''
+      if (external !== self._editorLastSynced[field]) {
+        editor.setHtml(external)
+        self._editorLastSynced[field] = external
+      }
+    })
+  },
+  beforeUnmount() {
+    this.destroyAllEditors()
   },
 
   template: `
@@ -167,7 +266,7 @@ window.NovaAppForm = {
     </div>
     <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON' && !(f.type === 'REFERENCE' && (buildData.referenceMap || {})[f.field] && (buildData.referenceMap || {})[f.field].referenceName === parentNovaName)"
       v-show="fieldVisible(f)"
-      :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+      :style="'display:flex;flex-direction:column;gap:4px' + ((f.type === 'TEXTAREA' || f.type === 'EDITOR') ? ';grid-column:1/-1' : '')">
       <span class="edit-form-label">
         <span v-if="f.notNull && !isReadonly(f)" class="form-label-required">*</span>{{ f.title }}
         <n-tooltip v-if="f.desc" trigger="hover" placement="top"><template #trigger><span class="form-label-help"><iconify-icon icon="material-symbols:help-outline" style="font-size:15px"></iconify-icon></span></template>{{ f.desc }}</n-tooltip>
@@ -256,6 +355,11 @@ window.NovaAppForm = {
           :multiple="(buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].maxLimit > 1"
           :accept="(buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].fileTypes && (buildData.attachmentMap||{})[f.field].fileTypes.length ? (buildData.attachmentMap||{})[f.field].fileTypes.join(',') : undefined"
           @change="$emit('attachment-change', f, $event)" />
+      </div>
+      <div v-else-if="f.type === 'EDITOR'" class="form-field-editor"
+        :class="formErrors[f.field] ? 'has-error' : ''">
+        <div :ref="el => registerEditorToolbar(f.field, el)" class="wang-editor-toolbar"></div>
+        <div :ref="el => registerEditorHost(f.field, el)" :data-editor-field="f.field" class="wang-editor-host"></div>
       </div>
       <n-input v-else
         :value="formData[f.field]" :placeholder="'请输入'+f.title"

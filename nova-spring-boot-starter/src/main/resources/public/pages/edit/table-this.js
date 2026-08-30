@@ -29,7 +29,14 @@ window.NovaFieldThis = {
   emits: ['field-change', 'reference-click', 'preview-click', 'attachment-change'],
 
   data() {
-    return {}
+    return {
+      _editorHost: null,
+      _editorToolbar: null,
+      _editor: null,
+      _toolbar: null,
+      _editorReady: false,
+      _editorLastSyncedHtml: ''
+    }
   },
 
   computed: {
@@ -40,6 +47,60 @@ window.NovaFieldThis = {
     // ── 字段事件 ──────────────────────────────────────────────────
     onFieldUpdate(field, value) {
       this.$emit('field-change', { field: field, value: value })
+    },
+
+    // ── 富文本编辑器：注册 host + 挂载/同步/销毁 ─────────────────
+    registerEditorHost(el) {
+      this._editorHost = el
+      if (!el) return
+      this.maybeMountEditor()
+    },
+    registerEditorToolbar(el) {
+      this._editorToolbar = el
+      if (!el) return
+      this.maybeMountEditor()
+    },
+    maybeMountEditor() {
+      if (this._editorReady) return
+      if (!this._editorHost || !this._editorToolbar) return
+      if (!this.f || this.f.type !== 'EDITOR') return
+      if (!window.NovaWangEditor) return
+      var self = this
+      window.NovaWangEditor.ensureLoaded().then(function (wEditor) {
+        if (self._editorReady || !self._editorHost || !self._editorToolbar) return
+        var initialHtml = (self.formData && self.formData[self.f.field]) || ''
+        self._editor = wEditor.createEditor({
+          selector: self._editorHost,
+          html: initialHtml,
+          config: {
+            onChange: function (editor) {
+              var html = editor.getHtml()
+              self._editorLastSyncedHtml = html
+              self.$emit('field-change', { field: self.f.field, value: html })
+            }
+          }
+        })
+        self._toolbar = wEditor.createToolbar({
+          editor: self._editor,
+          selector: self._editorToolbar
+        })
+        self._editorLastSyncedHtml = initialHtml
+        self._editorReady = true
+      }).catch(function (err) {
+        console.error('[NovaFieldThis] wangeditor load failed:', err)
+      })
+    },
+    destroyEditor() {
+      if (this._toolbar && window.NovaWangEditor) {
+        window.NovaWangEditor.destroy(this._toolbar)
+      }
+      if (this._editor && window.NovaWangEditor) {
+        window.NovaWangEditor.destroy(this._editor)
+      }
+      this._editor = null
+      this._toolbar = null
+      this._editorReady = false
+      this._editorLastSyncedHtml = ''
     },
 
     // ── 字段辅助方法 ──────────────────────────────────────────────
@@ -94,6 +155,7 @@ window.NovaFieldThis = {
       var input = document.getElementById('upload-dd-' + fieldKey)
       if (input) input.click()
     },
+
     handleFormButton(field) {
       var cfg = this.buttons[field.field]
       if (!cfg) return
@@ -138,6 +200,22 @@ window.NovaFieldThis = {
     },
   },
 
+  // ── 生命周期 ──────────────────────────────────────────────────
+  mounted() {
+    this.maybeMountEditor()
+  },
+  updated() {
+    if (!this._editor || !this.f || this.f.type !== 'EDITOR') return
+    var external = (this.formData && this.formData[this.f.field]) || ''
+    if (external !== this._editorLastSyncedHtml) {
+      this._editor.setHtml(external)
+      this._editorLastSyncedHtml = external
+    }
+  },
+  beforeUnmount() {
+    this.destroyEditor()
+  },
+
   template: `
   <n-divider v-if="f.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" v-show="visible" style="grid-column:1/-1;margin:0">{{ f.title }}</n-divider>
   <div v-else-if="f.type === 'EMPTY' && editLayout !== 'FULL_LINE'" v-show="visible"></div>
@@ -148,7 +226,7 @@ window.NovaFieldThis = {
       {{ f.title }}
     </n-button>
   </div>
-  <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON'" v-show="visible" :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')"
+  <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON'" v-show="visible" :style="'display:flex;flex-direction:column;gap:4px' + ((f.type === 'TEXTAREA' || f.type === 'EDITOR') ? ';grid-column:1/-1' : '')"
        :aria-hidden="!visible ? 'true' : undefined">
     <span class="edit-form-label">
       <span v-if="f.notNull && !isReadonly(f)" class="form-label-required">*</span>{{ f.title }}
@@ -285,6 +363,11 @@ window.NovaFieldThis = {
         :multiple="attachmentMap[f.field] && attachmentMap[f.field].maxLimit > 1"
         :accept="attachmentMap[f.field] && attachmentMap[f.field].fileTypes && attachmentMap[f.field].fileTypes.length ? attachmentMap[f.field].fileTypes.join(',') : undefined"
         @change="$emit('attachment-change', f, $event)" />
+    </div>
+    <div v-else-if="f.type === 'EDITOR'" class="form-field-editor"
+      :class="formErrors[f.field] ? 'has-error' : ''">
+      <div :ref="el => registerEditorToolbar(el)" class="wang-editor-toolbar"></div>
+      <div :ref="el => registerEditorHost(el)" :data-editor-field="f.field" class="wang-editor-host"></div>
     </div>
     <n-input
       v-else

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>富文本预览</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    body { padding: 24px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f7fa; margin: 0; }
+    body.dark { background: #101014; }
+    .preview-wrap { max-width: 880px; margin: 0 auto; background: #fff; padding: 20px 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    body.dark .preview-wrap { background: #18181c; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+
+    .editor {
+      padding: 14px 18px;
+      border: 1px solid #e0e0e6;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #333;
+      min-height: 120px;
+    }
+    body.dark .editor { border-color: #2a2a2e; background: #1f1f23; color: #d0d0d0; }
+
+    .editor :first-child { margin-top: 0; }
+    .editor p { margin: 0 0 8px; }
+    .editor h1, .editor h2, .editor h3, .editor h4, .editor h5, .editor h6 { margin: 16px 0 8px; font-weight: 600; }
+    .editor h1 { font-size: 22px; } .editor h2 { font-size: 19px; } .editor h3 { font-size: 16px; }
+    .editor h4 { font-size: 15px; } .editor h5 { font-size: 14px; } .editor h6 { font-size: 13px; }
+    .editor ul, .editor ol { padding-left: 22px; margin: 8px 0; }
+    .editor blockquote { border-left: 3px solid #18a058; padding-left: 12px; color: #666; margin: 8px 0; }
+    body.dark .editor blockquote { color: #aaa; border-left-color: #36ad6a; }
+    .editor code { background: #ececec; padding: 2px 6px; border-radius: 3px; font-family: Consolas, Monaco, monospace; font-size: 13px; }
+    body.dark .editor code { background: #2a2a2e; color: #d0d0d0; }
+    .editor pre { background: #1e1e1e; color: #f8f8f2; padding: 12px; border-radius: 4px; overflow-x: auto; }
+    .editor pre code { background: transparent; padding: 0; color: inherit; }
+    .editor a { color: #18a058; text-decoration: underline; }
+    body.dark .editor a { color: #36ad6a; }
+
+    .empty { color: #999; font-style: italic; text-align: center; padding: 30px 0; }
+    body.dark .empty { color: #666; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="js/lib/vue.global.prod.js"></script>
+  <script>
+    ;(function () {
+      function decode() {
+        var hash = location.hash || ''
+        if (hash.startsWith('#')) hash = hash.slice(1)
+        if (!hash) return ''
+        try {
+          return decodeURIComponent(escape(atob(hash)))
+        } catch (e) {
+          console.error('[editor-preview] decode error:', e)
+          return ''
+        }
+      }
+
+      function readParentDark() {
+        try {
+          var p = window.parent
+          if (!p || p === window) return false
+          var ref = p.__appDarkMode
+          if (!ref) return false
+          return !!ref.value
+        } catch (e) {
+          return false
+        }
+      }
+
+      function applyDark(v) {
+        document.body.classList.toggle('dark', !!v)
+      }
+
+      var Vue = window.Vue
+      var app = Vue.createApp({
+        setup: function () {
+          var isDark = Vue.ref(readParentDark())
+          var html = Vue.ref(decode())
+          applyDark(isDark.value)
+
+          setInterval(function () {
+            var v = readParentDark()
+            if (v !== isDark.value) {
+              isDark.value = v
+              applyDark(v)
+            }
+          }, 400)
+
+          return { html: html }
+        },
+        template: '<div class="preview-wrap"><div v-if="html" class="editor" v-html="html"></div><div v-else class="empty">无内容</div></div>'
+      })
+
+      app.mount('#app')
+    })()
+  </script>
+</body>
+</html>

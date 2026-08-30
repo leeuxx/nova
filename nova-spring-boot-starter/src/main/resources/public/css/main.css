@@ -1047,3 +1047,34 @@ body.dark { background: #151515 !important; }
   background: #94a3b8;
 }
 
+/* 表格富文本列预览图标 */
+.cell-editor-preview { transition: color 0.15s; }
+.cell-editor-preview:hover { color: #36ad6a !important; }
+
+/* 操作表单 EDITOR (WangEditor) 容器 */
+.form-field-editor {
+  width: 100%;
+  border: 1px solid #e0e0e6;
+  border-radius: 6px;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  overflow: hidden;
+}
+body.dark .form-field-editor { border-color: #2a2a2e; background: #1f1f23; }
+.form-field-editor:focus-within,
+.form-field-editor:hover { border-color: #18a058; box-shadow: 0 0 0 3px rgba(24,160,88,0.10); }
+body.dark .form-field-editor:focus-within,
+body.dark .form-field-editor:hover { border-color: #36ad6a; box-shadow: 0 0 0 3px rgba(54,173,106,0.16); }
+.form-field-editor.has-error { border-color: #d03050; box-shadow: 0 0 0 3px rgba(208,48,80,0.10); }
+
+.wang-editor-toolbar {
+  border-bottom: 1px solid #e0e0e6;
+  background: #fafafa;
+}
+body.dark .wang-editor-toolbar { border-bottom-color: #2a2a2e; background: #232328; }
+
+.wang-editor-host {
+  min-height: 240px;
+  background: transparent;
+}
+

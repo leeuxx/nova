@@ -478,6 +478,15 @@ public class TestDemoView {
     )
     private String file2;
 
+    @NovaField(
+            views = @View(title = "富文本", width = "10%"),
+            edit = @Edit(
+                    title = "富文本",
+                    type = Edit.Type.EDITOR
+            )
+    )
+    private String editor;
+
 
     @Data
     @Accessors(chain = true)

@@ -385,6 +385,10 @@ const NovaTable = {
       opFormAppTabBuild:  {},      // 附属表单 build 数据
       opFormAppFormData:  {},      // 附属表单数据
       opFormAppFormErrors:{},      // 附属表单校验错误
+      // EDITOR (WangEditor) 实例管理
+      _opEditorHosts:     new Map(),     // key 'main:field' / 'app:<nova>:field' -> DOM element
+      _opEditorToolbars:  new Map(),     // key -> toolbar DOM element
+      _opEditorInstances: new Map(),     // key -> { editor, toolbar }
       formErrors:     {},
       striped:        localStorage.getItem('nova-table-striped') !== null
                         ? localStorage.getItem('nova-table-striped') === 'true'
@@ -994,6 +998,27 @@ const NovaTable = {
           }
         }
 
+        if (col.type === 'EDITOR') {
+          colDef.render = (row) => {
+            const val = getFieldValue(row, col.field)
+            if (val === null || val === undefined || val === '') return ''
+            return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
+              default: () => '点击查看富文本',
+              trigger: () => h('span', {
+                class: 'cell-editor-preview',
+                style: 'cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:#18a058',
+                onClick: (e) => {
+                  e.stopPropagation()
+                  vm.openTableEditorPreview(col.title, val)
+                }
+              }, [
+                h('iconify-icon', { icon: 'mdi:file-document-outline', width: 18 }),
+                h('span', { style: 'font-size:12px' }, '预览')
+              ])
+            })
+          }
+        }
+
         if (col.type === 'NUMBER') {
           const numInfo = vm.numberMap[col.field] || {}
           // roll=true：加载时滚动动画，挂载/值变化时从 0 递增到目标值
@@ -1279,6 +1304,20 @@ const NovaTable = {
       }
     },
 
+    opFormShow(val) {
+      if (!val) {
+        this.destroyOpEditors()
+        this._opEditorHosts.clear()
+      } else {
+        var self = this
+        this.$nextTick(function() {
+          self.$nextTick(function() {
+            self.mountOpEditors()
+          })
+        })
+      }
+    },
+
     'sourceFieldsProp': {
       handler(newVal) {
         if (this._dualReloading) return
@@ -1437,6 +1476,18 @@ const NovaTable = {
       window.removeEventListener('resize', this._onDualResize)
       this._onDualResize = null
     }
+  },
+
+  updated() {
+    if (!this.opFormShow) return
+    if (this._opEditorMountingPending) return
+    if (this._opEditorHosts.size === 0) return
+    var self = this
+    this._opEditorMountingPending = true
+    this.$nextTick(function() {
+      self._opEditorMountingPending = false
+      self.mountOpEditors()
+    })
   },
 
   methods: {
@@ -2293,6 +2344,8 @@ const NovaTable = {
             self._applyOpLoadData(pendingLoad, fd, editFields, d.reference || {}, cm, d.attachment || {})
             delete self._opLoadPending[appNovaName]
           }
+          // 触发一次 mount（适用于 openOpForm 预加载完成的情况）
+          self.$nextTick(function() { self.syncOpEditorsContent() })
         })
     },
     _applyOpLoadData(source, targetData, fields, refMap, choiceMap, attachmentMap) {
@@ -2381,6 +2434,8 @@ const NovaTable = {
               self._opLoadPending[key] = appData
             }
           })
+          // 已挂载的 EDITOR 实例内容同步到最新的 formData
+          self.$nextTick(function() { self.syncOpEditorsContent() })
         })
     },
     submitOpForm() {
@@ -2611,6 +2666,157 @@ const NovaTable = {
       this.tableAttachPreviewType = type
       this.tableAttachPreviewIndex = 0
       this.tableAttachPreviewShow = true
+    },
+    // 打开表格富文本预览弹窗
+    openTableEditorPreview(title, html) {
+      var encoded
+      try {
+        encoded = btoa(unescape(encodeURIComponent(html || '')))
+      } catch (e) {
+        encoded = ''
+      }
+      if (!window.popup || !window.popup.modal) {
+        window.alert('popup 工具未就绪，无法预览')
+        return
+      }
+      window.popup.modal('/editor-preview.html#' + encoded, {
+        title: title || '富文本预览',
+        width: '60%',
+        height: '60%'
+      })
+    },
+    // ── 操作表单 EDITOR (WangEditor) 生命周期 ──
+    registerOpEditorHost(section, field, el) {
+      var key = section + ':' + field
+      if (el) {
+        this._opEditorHosts.set(key, el)
+      } else {
+        this._opEditorHosts.delete(key)
+        var inst = this._opEditorInstances.get(key)
+        if (inst) {
+          try { window.NovaWangEditor && window.NovaWangEditor.destroy(inst.editor) } catch (e) {}
+          try { window.NovaWangEditor && window.NovaWangEditor.destroy(inst.toolbar) } catch (e) {}
+          this._opEditorInstances.delete(key)
+        }
+      }
+    },
+    registerOpEditorToolbar(section, field, el) {
+      var key = section + ':' + field
+      if (el) {
+        this._opEditorToolbars.set(key, el)
+      } else {
+        this._opEditorToolbars.delete(key)
+      }
+    },
+    _mountOpEditor(key, el) {
+      if (!window.NovaWangEditor) return
+      if (this._opEditorInstances.has(key)) return
+      var sep = key.indexOf(':')
+      var section = key.slice(0, sep)
+      var field = key.slice(sep + 1)
+      var self = this
+      var initialVal = ''
+      if (section === 'main') {
+        initialVal = self.opFormData[field]
+      } else if (section.indexOf('app:') === 0) {
+        var appName = section.slice(4)
+        initialVal = (self.opFormAppFormData[appName] || {})[field]
+      }
+      if (initialVal === null || initialVal === undefined) initialVal = ''
+      var toolbarEl = self._opEditorToolbars.get(key)
+      var p
+      if (toolbarEl && window.NovaWangEditor.createEditorWithToolbar) {
+        p = window.NovaWangEditor.createEditorWithToolbar(el, toolbarEl, {
+          html: initialVal,
+          config: {
+            placeholder: '请输入内容...',
+            onChange: function(ed) {
+              if (self._opEditorSyncing) return
+              var html = ed.getHtml()
+              if (section === 'main') {
+                self.$set(self.opFormData, field, html)
+              } else if (section.indexOf('app:') === 0) {
+                var appName2 = section.slice(4)
+                if (!self.opFormAppFormData[appName2]) self.$set(self.opFormAppFormData, appName2, {})
+                self.$set(self.opFormAppFormData[appName2], field, html)
+              }
+            }
+          }
+        })
+      } else {
+        p = window.NovaWangEditor.createEditor(el, {
+          html: initialVal,
+          config: {
+            placeholder: '请输入内容...',
+            onChange: function(ed) {
+              if (self._opEditorSyncing) return
+              var html = ed.getHtml()
+              if (section === 'main') {
+                self.$set(self.opFormData, field, html)
+              } else if (section.indexOf('app:') === 0) {
+                var appName2 = section.slice(4)
+                if (!self.opFormAppFormData[appName2]) self.$set(self.opFormAppFormData, appName2, {})
+                self.$set(self.opFormAppFormData[appName2], field, html)
+              }
+            }
+          }
+        }).then(function(editor) { return { editor: editor, toolbar: null } })
+      }
+      p.then(function(rec) {
+        self._opEditorInstances.set(key, rec)
+      }).catch(function(err) {
+        console.error('[opEditor] create error', key, err)
+      })
+    },
+    syncOpEditorsContent() {
+      if (!window.NovaWangEditor) return
+      var self = this
+      this._opEditorSyncing = true
+      this._opEditorInstances.forEach(function(rec, key) {
+        var sep = key.indexOf(':')
+        var section = key.slice(0, sep)
+        var field = key.slice(sep + 1)
+        var val = ''
+        if (section === 'main') {
+          val = self.opFormData[field]
+        } else if (section.indexOf('app:') === 0) {
+          var appName = section.slice(4)
+          val = (self.opFormAppFormData[appName] || {})[field]
+        }
+        if (val === null || val === undefined) val = ''
+        try {
+          var current = rec.editor.getHtml()
+          if (current !== val) rec.editor.setHtml(val)
+        } catch (e) {}
+      })
+      this._opEditorSyncing = false
+    },
+    mountOpEditors() {
+      if (!this.opFormShow) return
+      if (this._opEditorHosts.size === 0) return
+      var self = this
+      var start = function() {
+        if (!window.NovaWangEditor) return
+        self._opEditorHosts.forEach(function(el, key) {
+          self._mountOpEditor(key, el)
+        })
+      }
+      if (window.NovaWangEditor) {
+        start()
+      } else if (window.NovaWangEditor) {
+        // placeholder not yet defined but loader is — call ensureLoaded
+        window.NovaWangEditor.ensureLoaded().then(function() { start() })
+      }
+      // else NovaWangEditor isn't loaded yet; updated() will retry on next render
+    },
+    destroyOpEditors() {
+      var self = this
+      this._opEditorInstances.forEach(function(rec) {
+        try { window.NovaWangEditor && window.NovaWangEditor.destroy(rec.editor) } catch (e) {}
+        try { window.NovaWangEditor && window.NovaWangEditor.destroy(rec.toolbar) } catch (e) {}
+      })
+      this._opEditorInstances.clear()
+      this._opEditorToolbars.clear()
     },
     closeTableAttachPreview() {
       this.tableAttachPreviewShow = false
@@ -4525,7 +4731,7 @@ const NovaTable = {
                 </n-button>
               </div>
               <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY'" v-show="_vis"
-                :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+                :style="'display:flex;flex-direction:column;gap:4px' + ((f.type === 'TEXTAREA' || f.type === 'EDITOR') ? ';grid-column:1/-1' : '')">
                 <span class="edit-form-label">
                   <span v-if="f.notNull" class="form-label-required">*</span>{{ f.title }}
                   <n-tooltip v-if="f.desc" trigger="hover" placement="top">
@@ -4621,6 +4827,13 @@ const NovaTable = {
                     :multiple="opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit > 1"
                     @change="handleOpAttachmentChange(f, $event)" />
                 </div>
+                <div v-else-if="f.type === 'EDITOR'" class="form-field-editor"
+                  :class="opFormErrors[f.field] ? 'has-error' : ''">
+                  <div :ref="el => registerOpEditorToolbar('main', f.field, el)" class="wang-editor-toolbar"></div>
+                  <div :ref="el => registerOpEditorHost('main', f.field, el)"
+                    :data-editor-field="f.field"
+                    class="wang-editor-host"></div>
+                </div>
                 <n-input v-else v-model:value="opFormData[f.field]" :placeholder="'请输入' + f.title" clearable />
                 <span v-if="opFormErrors[f.field]" class="form-error-tip">{{ opFormErrors[f.field] }}</span>
               </div>
@@ -4656,7 +4869,7 @@ const NovaTable = {
                   </n-button>
                 </div>
                 <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON'"
-                  :style="'display:flex;flex-direction:column;gap:4px' + (f.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+                  :style="'display:flex;flex-direction:column;gap:4px' + ((f.type === 'TEXTAREA' || f.type === 'EDITOR') ? ';grid-column:1/-1' : '')">
                   <span class="edit-form-label">
                     <span v-if="f.notNull" class="form-label-required">*</span>{{ f.title }}
                     <n-tooltip v-if="f.desc" trigger="hover" placement="top">
@@ -4762,6 +4975,13 @@ const NovaTable = {
                     <input :id="'upload-opApp-' + tab.tapNovaName + '-' + f.field" type="file" style="display:none"
                       :multiple="((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit > 1"
                       @change="handleOpAppAttachmentChange(tab.tapNovaName, f, $event)" />
+                  </div>
+                  <div v-else-if="f.type === 'EDITOR'" class="form-field-editor"
+                    :class="opFormAppErrors(tab.tapNovaName)[f.field] ? 'has-error' : ''">
+                    <div :ref="el => registerOpEditorToolbar('app:' + tab.tapNovaName, f.field, el)" class="wang-editor-toolbar"></div>
+                    <div :ref="el => registerOpEditorHost('app:' + tab.tapNovaName, f.field, el)"
+                      :data-editor-field="f.field"
+                      class="wang-editor-host"></div>
                   </div>
                   <n-input
                     v-else
