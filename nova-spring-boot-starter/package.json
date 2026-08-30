@@ -1,0 +1,41 @@
+{
+  "name": "nova-tiptap-bundle",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Tiptap local bundle build (output: src/main/resources/public/js/lib/tiptap.mjs)",
+  "scripts": {
+    "build": "esbuild tiptap-build.js --bundle --format=esm --outfile=src/main/resources/public/js/lib/tiptap.mjs --target=es2020 --minify"
+  },
+  "dependencies": {
+    "@tiptap/core": "2.10.3",
+    "@tiptap/starter-kit": "2.10.3",
+    "@tiptap/extension-underline": "2.10.3",
+    "@tiptap/extension-link": "2.10.3",
+    "@tiptap/extension-placeholder": "2.10.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0"
+  },
+  "overrides": {
+    "@tiptap/extension-blockquote": "2.10.3",
+    "@tiptap/extension-bold": "2.10.3",
+    "@tiptap/extension-bullet-list": "2.10.3",
+    "@tiptap/extension-code": "2.10.3",
+    "@tiptap/extension-code-block": "2.10.3",
+    "@tiptap/extension-document": "2.10.3",
+    "@tiptap/extension-dropcursor": "2.10.3",
+    "@tiptap/extension-gapcursor": "2.10.3",
+    "@tiptap/extension-hard-break": "2.10.3",
+    "@tiptap/extension-heading": "2.10.3",
+    "@tiptap/extension-history": "2.10.3",
+    "@tiptap/extension-horizontal-rule": "2.10.3",
+    "@tiptap/extension-italic": "2.10.3",
+    "@tiptap/extension-list-item": "2.10.3",
+    "@tiptap/extension-ordered-list": "2.10.3",
+    "@tiptap/extension-paragraph": "2.10.3",
+    "@tiptap/extension-strike": "2.10.3",
+    "@tiptap/extension-text": "2.10.3",
+    "@tiptap/extension-text-style": "2.10.3",
+    "@tiptap/pm": "2.10.3"
+  }
+}

@@ -1,6 +1,5 @@
 ;(function () {
-  var TT_VERSION = '2.10.3'
-  var ESM = 'https://esm.sh/'
+  var BUNDLE_URL = '/js/lib/tiptap.mjs'
   var loadingPromise = null
   var loaded = null
 
@@ -8,17 +7,13 @@
     if (loaded) return Promise.resolve(loaded)
     if (loadingPromise) return loadingPromise
     loadingPromise = (async function () {
-      var core = await import(ESM + '@tiptap/core@' + TT_VERSION)
-      var sk = await import(ESM + '@tiptap/starter-kit@' + TT_VERSION)
-      var ul = await import(ESM + '@tiptap/extension-underline@' + TT_VERSION)
-      var lk = await import(ESM + '@tiptap/extension-link@' + TT_VERSION)
-      var ph = await import(ESM + '@tiptap/extension-placeholder@' + TT_VERSION)
+      var mod = await import(BUNDLE_URL)
       loaded = {
-        Editor: core.Editor,
-        StarterKit: sk.StarterKit || sk.default,
-        Underline: ul.Underline || ul.default,
-        Link: lk.Link || lk.default,
-        Placeholder: ph.Placeholder || ph.default
+        Editor: mod.Editor,
+        StarterKit: mod.StarterKit,
+        Underline: mod.Underline,
+        Link: mod.Link,
+        Placeholder: mod.Placeholder
       }
       return loaded
     })()
@@ -83,14 +78,10 @@
 
       b.addEventListener('click', function (e) {
         e.preventDefault()
-        b.classList.add('nova-tiptap-toolbar-btn-click')
-        setTimeout(function () { b.classList.remove('nova-tiptap-toolbar-btn-click') }, 180)
-        console.log('[NovaTiptap] click:', def.title, '| chain:', typeof editor.chain, '| commands.toggleBold:', typeof (editor.commands && editor.commands.toggleBold), '| isDestroyed:', typeof editor.isDestroyed === 'boolean' ? editor.isDestroyed : 'n/a')
         try {
           def.run(editor)
         } catch (err) {
           console.error('[NovaTiptap] toolbar action failed:', def.title, err)
-          alert('[NovaTiptap] ' + def.title + ' failed: ' + err.message)
         }
       })
 
@@ -154,7 +145,6 @@
 
   function destroy(rec) {
     if (rec && typeof rec.destroy === 'function') {
-      console.log('[NovaTiptap] destroying editor', rec.editor && rec.editor.isDestroyed !== undefined ? '(was isDestroyed=' + rec.editor.isDestroyed + ')' : '')
       try { rec.destroy() } catch (e) {}
     }
   }

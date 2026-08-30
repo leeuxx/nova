@@ -2691,7 +2691,6 @@ const NovaTable = {
       if (el) {
         this._opEditorHosts.set(key, el)
       } else {
-        console.log('[opEditor] host unmounted, destroying:', key)
         this._opEditorHosts.delete(key)
         var inst = this._opEditorInstances.get(key)
         if (inst) {
@@ -2746,7 +2745,6 @@ const NovaTable = {
         if (!rec) return
         if (self._opEditorInstances.has(key)) {
           // 已挂载过，重复触发 → 直接销毁后到的实例
-          console.log('[opEditor] duplicate mount resolved for', key, '— destroying new instance')
           try { rec.destroy() } catch (e) {}
           return
         }

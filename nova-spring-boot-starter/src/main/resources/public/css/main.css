@@ -1093,7 +1093,6 @@ body.dark .nova-tiptap-toolbar { border-bottom-color: #2a2a2e; background: #2323
   transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 .nova-tiptap-toolbar-btn:hover { background: rgba(24,160,88,0.08); border-color: rgba(24,160,88,0.2); }
-.nova-tiptap-toolbar-btn.nova-tiptap-toolbar-btn-click { background: rgba(24,160,88,0.28); border-color: rgba(24,160,88,0.5); }
 .nova-tiptap-toolbar-btn.is-active { background: rgba(24,160,88,0.14); color: #18a058; }
 body.dark .nova-tiptap-toolbar-btn { color: #d0d0d6; }
 body.dark .nova-tiptap-toolbar-btn:hover { background: rgba(54,173,106,0.16); border-color: rgba(54,173,106,0.3); }
