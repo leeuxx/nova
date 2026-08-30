@@ -28,7 +28,7 @@
     { sep: true },
     { dropdown: true,
       icon: 'mdi:format-font',
-      title: '字体',
+      title: '',
       defaultLabel: '默认字体',
       menuWidth: '150px',
       currentLabel: function (e) {
@@ -60,7 +60,7 @@
     },
     { dropdown: true,
       icon: 'mdi:format-size',
-      title: '字号',
+      title: '',
       defaultLabel: '默认字号',
       menuWidth: '90px',
       currentLabel: function (e) {
@@ -94,6 +94,8 @@
     { icon: 'mdi:format-list-numbered', title: '有序列表', run: function (e) { e.chain().focus().toggleOrderedList().run() }, isActive: function (e) { return e.isActive('orderedList') } },
     { icon: 'mdi:format-quote-close',   title: '引用',     run: function (e) { e.chain().focus().toggleBlockquote().run() },  isActive: function (e) { return e.isActive('blockquote') } },
     { icon: 'mdi:code-tags',            title: '代码块',   run: function (e) { e.chain().focus().toggleCodeBlock().run() },   isActive: function (e) { return e.isActive('codeBlock') } },
+    { sep: true },
+    { icon: 'icon-park-outline:dividing-line',      title: '分割线',   run: function (e) { e.chain().focus().setHorizontalRule().run() }, isActive: function () { return false } },
     { sep: true },
     { dropdown: true,
       icon: 'mdi:format-align-left',
