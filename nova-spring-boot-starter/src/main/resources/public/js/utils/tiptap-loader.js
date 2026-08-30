@@ -26,28 +26,39 @@
   }
 
   var TOOLBAR = [
-    { cmd: 'toggleBold',       icon: 'mdi:format-bold',              title: '粗体',     mark: 'bold' },
-    { cmd: 'toggleItalic',     icon: 'mdi:format-italic',            title: '斜体',     mark: 'italic' },
-    { cmd: 'toggleUnderline',  icon: 'mdi:format-underline',         title: '下划线',   mark: 'underline' },
-    { cmd: 'toggleStrike',     icon: 'mdi:format-strikethrough',     title: '删除线',   mark: 'strike' },
     { sep: true },
-    { cmd: 'toggleHeading',    icon: 'mdi:format-header-1',          title: '一级标题', attrs: { level: 1 } },
-    { cmd: 'toggleHeading',    icon: 'mdi:format-header-2',          title: '二级标题', attrs: { level: 2 } },
-    { cmd: 'toggleHeading',    icon: 'mdi:format-header-3',          title: '三级标题', attrs: { level: 3 } },
-    { cmd: 'setParagraph',     icon: 'mdi:format-paragraph',         title: '正文' },
+    { icon: 'mdi:format-bold',          title: '粗体',     run: function (e) { e.chain().focus().toggleBold().run() },       isActive: function (e) { return e.isActive('bold') } },
+    { icon: 'mdi:format-italic',        title: '斜体',     run: function (e) { e.chain().focus().toggleItalic().run() },     isActive: function (e) { return e.isActive('italic') } },
+    { icon: 'mdi:format-underline',     title: '下划线',   run: function (e) { e.chain().focus().toggleUnderline().run() },  isActive: function (e) { return e.isActive('underline') } },
+    { icon: 'mdi:format-strikethrough', title: '删除线',   run: function (e) { e.chain().focus().toggleStrike().run() },     isActive: function (e) { return e.isActive('strike') } },
     { sep: true },
-    { cmd: 'toggleBulletList', icon: 'mdi:format-list-bulleted',     title: '无序列表' },
-    { cmd: 'toggleOrderedList',icon: 'mdi:format-list-numbered',     title: '有序列表' },
-    { cmd: 'toggleBlockquote', icon: 'mdi:format-quote-close',       title: '引用' },
-    { cmd: 'toggleCodeBlock',  icon: 'mdi:code-tags',                title: '代码块' },
+    { icon: 'mdi:format-header-1',      title: '一级标题', run: function (e) { e.chain().focus().toggleHeading({ level: 1 }).run() }, isActive: function (e) { return e.isActive('heading', { level: 1 }) } },
+    { icon: 'mdi:format-header-2',      title: '二级标题', run: function (e) { e.chain().focus().toggleHeading({ level: 2 }).run() }, isActive: function (e) { return e.isActive('heading', { level: 2 }) } },
+    { icon: 'mdi:format-header-3',      title: '三级标题', run: function (e) { e.chain().focus().toggleHeading({ level: 3 }).run() }, isActive: function (e) { return e.isActive('heading', { level: 3 }) } },
+    { icon: 'mdi:format-paragraph',     title: '正文',     run: function (e) { e.chain().focus().setParagraph().run() },    isActive: function (e) { return e.isActive('paragraph') } },
     { sep: true },
-    { cmd: 'setLink',          icon: 'mdi:link-variant',             title: '链接' },
-    { cmd: 'unsetLink',        icon: 'mdi:link-variant-off',         title: '取消链接' },
+    { icon: 'mdi:format-list-bulleted', title: '无序列表', run: function (e) { e.chain().focus().toggleBulletList().run() },  isActive: function (e) { return e.isActive('bulletList') } },
+    { icon: 'mdi:format-list-numbered', title: '有序列表', run: function (e) { e.chain().focus().toggleOrderedList().run() }, isActive: function (e) { return e.isActive('orderedList') } },
+    { icon: 'mdi:format-quote-close',   title: '引用',     run: function (e) { e.chain().focus().toggleBlockquote().run() },  isActive: function (e) { return e.isActive('blockquote') } },
+    { icon: 'mdi:code-tags',            title: '代码块',   run: function (e) { e.chain().focus().toggleCodeBlock().run() },   isActive: function (e) { return e.isActive('codeBlock') } },
     { sep: true },
-    { cmd: 'undo',             icon: 'mdi:undo',                     title: '撤销' },
-    { cmd: 'redo',             icon: 'mdi:redo',                     title: '重做' },
+    { icon: 'mdi:link-variant',         title: '链接',
+      run: function (e) {
+        var prev = e.getAttributes('link').href || ''
+        var url = window.prompt('链接地址（留空清除）', prev)
+        if (url === null) return
+        if (url === '') e.chain().focus().extendMarkRange('link').unsetLink().run()
+        else e.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+      },
+      isActive: function (e) { return e.isActive('link') } },
+    { icon: 'mdi:link-variant-off',     title: '取消链接',
+      run: function (e) { e.chain().focus().unsetLink().run() },
+      isActive: function () { return false } },
     { sep: true },
-    { cmd: 'clearFormatting',  icon: 'mdi:format-clear',             title: '清除格式' }
+    { icon: 'mdi:undo',                 title: '撤销',     run: function (e) { e.chain().focus().undo().run() },             isActive: function () { return false } },
+    { icon: 'mdi:redo',                 title: '重做',     run: function (e) { e.chain().focus().redo().run() },             isActive: function () { return false } },
+    { sep: true },
+    { icon: 'mdi:format-clear',         title: '清除格式', run: function (e) { e.chain().focus().unsetAllMarks().clearNodes().run() }, isActive: function () { return false } }
   ]
 
   function buildToolbar(container, editor) {
@@ -72,18 +83,15 @@
 
       b.addEventListener('click', function (e) {
         e.preventDefault()
-        if (def.cmd === 'setLink') {
-          var prev = editor.getAttributes('link').href || ''
-          var url = window.prompt('链接地址（留空清除）', prev)
-          if (url === null) return
-          if (url === '') editor.chain().focus().extendMarkRange('link').unsetLink().run()
-          else editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
-          return
+        b.classList.add('nova-tiptap-toolbar-btn-click')
+        setTimeout(function () { b.classList.remove('nova-tiptap-toolbar-btn-click') }, 180)
+        console.log('[NovaTiptap] click:', def.title, '| chain:', typeof editor.chain, '| commands.toggleBold:', typeof (editor.commands && editor.commands.toggleBold), '| isDestroyed:', typeof editor.isDestroyed === 'boolean' ? editor.isDestroyed : 'n/a')
+        try {
+          def.run(editor)
+        } catch (err) {
+          console.error('[NovaTiptap] toolbar action failed:', def.title, err)
+          alert('[NovaTiptap] ' + def.title + ' failed: ' + err.message)
         }
-        var chain = editor.chain().focus()
-        if (def.cmd === 'toggleHeading') chain = chain.toggleHeading({ level: def.attrs.level })
-        else chain = chain[def.cmd]()
-        chain.run()
       })
 
       container.appendChild(b)
@@ -92,12 +100,11 @@
 
     function refresh() {
       btns.forEach(function (it) {
-        var d = it.def
         var active = false
-        if (d.mark) active = editor.isActive(d.mark)
-        else if (d.attrs && d.attrs.level != null) active = editor.isActive('heading', d.attrs)
-        else if (d.cmd === 'setParagraph') active = editor.isActive('paragraph')
-        it.b.classList.toggle('is-active', !!active)
+        try {
+          active = !!(it.def.isActive && it.def.isActive(editor))
+        } catch (err) {}
+        it.b.classList.toggle('is-active', active)
       })
     }
     editor.on('selectionUpdate', refresh)
@@ -133,7 +140,6 @@
           if (typeof opts.onChange === 'function') opts.onChange(ctx.editor.getHTML())
         }
       })
-
       var dt = buildToolbar(toolbarEl, editor)
 
       return {
@@ -148,6 +154,7 @@
 
   function destroy(rec) {
     if (rec && typeof rec.destroy === 'function') {
+      console.log('[NovaTiptap] destroying editor', rec.editor && rec.editor.isDestroyed !== undefined ? '(was isDestroyed=' + rec.editor.isDestroyed + ')' : '')
       try { rec.destroy() } catch (e) {}
     }
   }

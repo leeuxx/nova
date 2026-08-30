@@ -2691,6 +2691,7 @@ const NovaTable = {
       if (el) {
         this._opEditorHosts.set(key, el)
       } else {
+        console.log('[opEditor] host unmounted, destroying:', key)
         this._opEditorHosts.delete(key)
         var inst = this._opEditorInstances.get(key)
         if (inst) {
@@ -2709,7 +2710,11 @@ const NovaTable = {
     },
     _mountOpEditor(key, el) {
       if (!window.NovaTiptap) return
-      if (this._opEditorInstances.has(key)) return
+      if (this._opEditorInstances.has(key)) { console.log('[opEditor] skip, already mounted:', key); return }
+      if (!this._opEditorMounting) this._opEditorMounting = new Set()
+      if (this._opEditorMounting.has(key)) { console.log('[opEditor] skip, mounting in-flight:', key); return }
+      console.log('[opEditor] mounting:', key)
+      this._opEditorMounting.add(key)
       var sep = key.indexOf(':')
       var section = key.slice(0, sep)
       var field = key.slice(sep + 1)
@@ -2737,14 +2742,17 @@ const NovaTable = {
           }
         }
       }).then(function(rec) {
+        self._opEditorMounting.delete(key)
         if (!rec) return
         if (self._opEditorInstances.has(key)) {
           // 已挂载过，重复触发 → 直接销毁后到的实例
+          console.log('[opEditor] duplicate mount resolved for', key, '— destroying new instance')
           try { rec.destroy() } catch (e) {}
           return
         }
         self._opEditorInstances.set(key, rec)
       }).catch(function(err) {
+        self._opEditorMounting.delete(key)
         console.error('[opEditor] create error', key, err)
       })
     },

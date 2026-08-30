@@ -175,6 +175,9 @@ window.NovaAppForm = {
     },
     maybeMountEditor(field) {
       if (this._editors[field]) return
+      if (!this._editorMounting) this._editorMounting = {}
+      if (this._editorMounting[field]) return
+      this._editorMounting[field] = true
       var host = this._editorHosts[field]
       var toolbarEl = this._editorToolbars[field]
       if (!host || !toolbarEl) return
@@ -189,15 +192,18 @@ window.NovaAppForm = {
           self.$emit('field-change', { field: field, value: html })
         }
       }).then(function (rec) {
+        delete self._editorMounting[field]
         if (!rec) return
         if (self._editors[field]) {
           // 已挂载过，重复触发 → 直接销毁后到的实例
+          console.log('[NovaAppForm] duplicate mount for', field, '— destroying new instance')
           try { rec.destroy() } catch (e) {}
           return
         }
         self._editors[field] = rec
         self._editorLastSynced[field] = initialHtml
       }).catch(function (err) {
+        delete self._editorMounting[field]
         console.error('[NovaAppForm] tiptap load failed:', err)
       })
     },

@@ -62,9 +62,12 @@ window.NovaFieldThis = {
     },
     maybeMountEditor() {
       if (this._editorReady) return
+      if (this._editorMounting) return
       if (!this._editorHost || !this._editorToolbar) return
       if (!this.f || this.f.type !== 'EDITOR') return
       if (!window.NovaTiptap) return
+      this._editorMounting = true
+      console.log('[NovaFieldThis] maybeMountEditor: mounting', this.f && this.f.field)
       var self = this
       var initialHtml = (self.formData && self.formData[self.f.field]) || ''
       window.NovaTiptap.createEditor(self._editorHost, self._editorToolbar, {
@@ -75,20 +78,25 @@ window.NovaFieldThis = {
           self.$emit('field-change', { field: self.f.field, value: html })
         }
       }).then(function (rec) {
+        self._editorMounting = false
         if (!rec) return
         if (self._editorReady) {
           // 已挂载过，重复触发 → 直接销毁后到的实例
+          console.log('[NovaFieldThis] duplicate mount resolved, destroying new instance for', self.f && self.f.field)
           try { rec.destroy() } catch (e) {}
           return
         }
         self._editor = rec
         self._editorLastSyncedHtml = initialHtml
         self._editorReady = true
+        console.log('[NovaFieldThis] mount success for', self.f && self.f.field)
       }).catch(function (err) {
+        self._editorMounting = false
         console.error('[NovaFieldThis] tiptap load failed:', err)
       })
     },
     destroyEditor() {
+      console.log('[NovaFieldThis] destroyEditor called', this.f && this.f.field, 'editor present:', !!this._editor)
       if (this._editor && window.NovaTiptap) {
         window.NovaTiptap.destroy(this._editor)
       }
