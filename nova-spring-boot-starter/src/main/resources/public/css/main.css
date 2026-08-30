@@ -1107,6 +1107,38 @@ body.dark .nova-tiptap-toolbar-btn.is-active { background: rgba(54,173,106,0.22)
 }
 body.dark .nova-tiptap-toolbar-sep { background: #2a2a2e; }
 
+.nova-tiptap-toolbar-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+.nova-tiptap-toolbar-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  flex-direction: column;
+  padding: 2px;
+  min-width: 110px;
+  background: #ffffff;
+  border: 1px solid #e0e0e6;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  z-index: 10;
+}
+.nova-tiptap-toolbar-dropdown:hover .nova-tiptap-toolbar-dropdown-menu,
+.nova-tiptap-toolbar-dropdown.open .nova-tiptap-toolbar-dropdown-menu { display: flex; }
+.nova-tiptap-toolbar-menu-item {
+  width: auto !important;
+  height: 28px !important;
+  padding: 0 8px !important;
+  gap: 6px;
+  justify-content: flex-start !important;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.nova-tiptap-toolbar-menu-item span { line-height: 1; }
+body.dark .nova-tiptap-toolbar-dropdown-menu { background: #2a2a2e; border-color: #3a3a3e; }
+
 .nova-tiptap-content {
   padding: 8px 12px;
   min-height: 240px;

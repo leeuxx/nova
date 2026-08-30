@@ -13,7 +13,8 @@
         StarterKit: mod.StarterKit,
         Underline: mod.Underline,
         Link: mod.Link,
-        Placeholder: mod.Placeholder
+        Placeholder: mod.Placeholder,
+        TextAlign: mod.TextAlign
       }
       return loaded
     })()
@@ -36,6 +37,24 @@
     { icon: 'mdi:format-list-numbered', title: '有序列表', run: function (e) { e.chain().focus().toggleOrderedList().run() }, isActive: function (e) { return e.isActive('orderedList') } },
     { icon: 'mdi:format-quote-close',   title: '引用',     run: function (e) { e.chain().focus().toggleBlockquote().run() },  isActive: function (e) { return e.isActive('blockquote') } },
     { icon: 'mdi:code-tags',            title: '代码块',   run: function (e) { e.chain().focus().toggleCodeBlock().run() },   isActive: function (e) { return e.isActive('codeBlock') } },
+    { sep: true },
+    { dropdown: true,
+      icon: 'mdi:format-align-left',
+      title: '对齐方式',
+      currentIcon: function (e) {
+        if (e.isActive({ textAlign: 'center' }))  return 'mdi:format-align-center'
+        if (e.isActive({ textAlign: 'right' }))   return 'mdi:format-align-right'
+        if (e.isActive({ textAlign: 'justify' })) return 'mdi:format-align-justify'
+        return 'mdi:format-align-left'
+      },
+      isActive: function (e) { return e.isActive('textAlign') },
+      items: [
+        { icon: 'mdi:format-align-left',    title: '左对齐',   run: function (e) { e.chain().focus().setTextAlign('left').run() },    isActive: function (e) { return e.isActive({ textAlign: 'left' }) } },
+        { icon: 'mdi:format-align-center',  title: '居中',     run: function (e) { e.chain().focus().setTextAlign('center').run() },  isActive: function (e) { return e.isActive({ textAlign: 'center' }) } },
+        { icon: 'mdi:format-align-right',   title: '右对齐',   run: function (e) { e.chain().focus().setTextAlign('right').run() },   isActive: function (e) { return e.isActive({ textAlign: 'right' }) } },
+        { icon: 'mdi:format-align-justify', title: '两端对齐', run: function (e) { e.chain().focus().setTextAlign('justify').run() }, isActive: function (e) { return e.isActive({ textAlign: 'justify' }) } }
+      ]
+    },
     { sep: true },
     { icon: 'mdi:link-variant',         title: '链接',
       run: function (e) {
@@ -61,6 +80,25 @@
     container.className = 'nova-tiptap-toolbar'
     var btns = []
 
+    function makeBtn(def) {
+      var b = document.createElement('button')
+      b.type = 'button'
+      b.className = 'nova-tiptap-toolbar-btn'
+      b.title = def.title
+      b.innerHTML = '<iconify-icon icon="' + def.icon + '" width="16"></iconify-icon>'
+      b.addEventListener('mousedown', function (e) { e.preventDefault() })
+      b.addEventListener('click', function (e) {
+        e.preventDefault()
+        e.stopPropagation()
+        try {
+          def.run(editor)
+        } catch (err) {
+          console.error('[NovaTiptap] toolbar action failed:', def.title, err)
+        }
+      })
+      return b
+    }
+
     TOOLBAR.forEach(function (def) {
       if (def.sep) {
         var s = document.createElement('span')
@@ -68,25 +106,60 @@
         container.appendChild(s)
         return
       }
-      var b = document.createElement('button')
-      b.type = 'button'
-      b.className = 'nova-tiptap-toolbar-btn'
-      b.title = def.title
-      b.innerHTML = '<iconify-icon icon="' + def.icon + '" width="16"></iconify-icon>'
 
-      b.addEventListener('mousedown', function (e) { e.preventDefault() })
+      if (def.dropdown) {
+        var wrap = document.createElement('div')
+        wrap.className = 'nova-tiptap-toolbar-dropdown'
 
-      b.addEventListener('click', function (e) {
-        e.preventDefault()
-        try {
-          def.run(editor)
-        } catch (err) {
-          console.error('[NovaTiptap] toolbar action failed:', def.title, err)
-        }
-      })
+        var trigger = makeBtn({
+          title: def.title,
+          icon: def.icon,
+          run: function () { wrap.classList.toggle('open') }
+        })
+        trigger.classList.add('nova-tiptap-toolbar-dropdown-trigger')
 
-      container.appendChild(b)
-      btns.push({ b: b, def: def })
+        var menu = document.createElement('div')
+        menu.className = 'nova-tiptap-toolbar-dropdown-menu'
+        var itemRefs = []
+        def.items.forEach(function (it) {
+          var ib = document.createElement('button')
+          ib.type = 'button'
+          ib.className = 'nova-tiptap-toolbar-btn nova-tiptap-toolbar-menu-item'
+          ib.title = it.title
+          ib.innerHTML = '<iconify-icon icon="' + it.icon + '" width="16"></iconify-icon><span>' + it.title + '</span>'
+          ib.addEventListener('mousedown', function (e) { e.preventDefault() })
+          ib.addEventListener('click', function (e) {
+            e.preventDefault()
+            e.stopPropagation()
+            try { it.run(editor) } catch (err) {
+              console.error('[NovaTiptap] toolbar action failed:', it.title, err)
+            }
+            wrap.classList.remove('open')
+          })
+          menu.appendChild(ib)
+          itemRefs.push({ b: ib, def: it })
+        })
+
+        wrap.appendChild(trigger)
+        wrap.appendChild(menu)
+        container.appendChild(wrap)
+
+        btns.push({
+          b: trigger,
+          def: def,
+          items: itemRefs,
+          updateIcon: function () {
+            var ico = def.currentIcon ? def.currentIcon(editor) : def.icon
+            var ic = trigger.querySelector('iconify-icon')
+            if (ic) ic.setAttribute('icon', ico)
+          }
+        })
+        return
+      }
+
+      var btn = makeBtn(def)
+      container.appendChild(btn)
+      btns.push({ b: btn, def: def })
     })
 
     function refresh() {
@@ -96,14 +169,32 @@
           active = !!(it.def.isActive && it.def.isActive(editor))
         } catch (err) {}
         it.b.classList.toggle('is-active', active)
+        if (typeof it.updateIcon === 'function') it.updateIcon()
+        if (it.items) {
+          it.items.forEach(function (sub) {
+            var a = false
+            try { a = !!(sub.def.isActive && sub.def.isActive(editor)) } catch (err) {}
+            sub.b.classList.toggle('is-active', a)
+          })
+        }
       })
     }
     editor.on('selectionUpdate', refresh)
     editor.on('transaction', refresh)
 
+    function onDocClick(e) {
+      btns.forEach(function (it) {
+        if (it.def.dropdown && it.b.parentNode && !it.b.parentNode.contains(e.target)) {
+          it.b.parentNode.classList.remove('open')
+        }
+      })
+    }
+    document.addEventListener('click', onDocClick)
+
     return function destroyToolbar() {
       editor.off('selectionUpdate', refresh)
       editor.off('transaction', refresh)
+      document.removeEventListener('click', onDocClick)
     }
   }
 
@@ -121,6 +212,9 @@
             openOnClick: false,
             autolink: true,
             HTMLAttributes: { rel: 'noopener noreferrer nofollow', target: '_blank' }
+          }),
+          api.TextAlign.configure({
+            types: ['heading', 'paragraph']
           }),
           api.Placeholder.configure({
             placeholder: opts.placeholder || '请输入内容...'
