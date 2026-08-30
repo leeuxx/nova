@@ -200,7 +200,8 @@ window.NovaAppForm = {
         })
         self._toolbars[field] = wEditor.createToolbar({
           editor: self._editors[field],
-          selector: self._editorToolbars[field]
+          selector: self._editorToolbars[field],
+          config: { excludeKeys: ['fullScreen'] }
         })
         self._editorLastSynced[field] = initialHtml
       }).catch(function (err) {

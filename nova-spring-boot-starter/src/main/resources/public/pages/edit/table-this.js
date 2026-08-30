@@ -82,7 +82,8 @@ window.NovaFieldThis = {
         })
         self._toolbar = wEditor.createToolbar({
           editor: self._editor,
-          selector: self._editorToolbar
+          selector: self._editorToolbar,
+          config: { excludeKeys: ['fullScreen'] }
         })
         self._editorLastSyncedHtml = initialHtml
         self._editorReady = true

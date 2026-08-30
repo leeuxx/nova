@@ -23,12 +23,24 @@
   }
 
   // 同时创建 editor + toolbar，返回 Promise<{ editor, toolbar }>
+  // 默认隐藏全屏按钮；可通过 options.toolbarConfig 追加 excludeKeys
   function createEditorWithToolbar(hostEl, toolbarEl, options) {
     return ensureLoaded().then(function (wEditor) {
+      var opts = options || {}
       var editor = wEditor.createEditor(
-        Object.assign({ selector: hostEl }, options || {})
+        Object.assign({ selector: hostEl }, opts)
       )
-      var toolbar = wEditor.createToolbar({ editor: editor, selector: toolbarEl })
+      var userToolbarConfig = opts.toolbarConfig || {}
+      var toolbarConfig = Object.assign(
+        { excludeKeys: ['fullScreen'] },
+        userToolbarConfig,
+        { excludeKeys: (userToolbarConfig.excludeKeys || ['fullScreen']).slice() }
+      )
+      var toolbar = wEditor.createToolbar({
+        editor: editor,
+        selector: toolbarEl,
+        config: toolbarConfig
+      })
       return { editor: editor, toolbar: toolbar }
     })
   }
