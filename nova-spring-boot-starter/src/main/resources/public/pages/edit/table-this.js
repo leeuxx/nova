@@ -64,42 +64,35 @@ window.NovaFieldThis = {
       if (this._editorReady) return
       if (!this._editorHost || !this._editorToolbar) return
       if (!this.f || this.f.type !== 'EDITOR') return
-      if (!window.NovaWangEditor) return
+      if (!window.NovaTiptap) return
       var self = this
-      window.NovaWangEditor.ensureLoaded().then(function (wEditor) {
-        if (self._editorReady || !self._editorHost || !self._editorToolbar) return
-        var initialHtml = (self.formData && self.formData[self.f.field]) || ''
-        self._editor = wEditor.createEditor({
-          selector: self._editorHost,
-          html: initialHtml,
-          config: {
-            onChange: function (editor) {
-              var html = editor.getHtml()
-              self._editorLastSyncedHtml = html
-              self.$emit('field-change', { field: self.f.field, value: html })
-            }
-          }
-        })
-        self._toolbar = wEditor.createToolbar({
-          editor: self._editor,
-          selector: self._editorToolbar,
-          config: { excludeKeys: ['fullScreen'] }
-        })
+      var initialHtml = (self.formData && self.formData[self.f.field]) || ''
+      window.NovaTiptap.createEditor(self._editorHost, self._editorToolbar, {
+        html: initialHtml,
+        placeholder: '请输入内容...',
+        onChange: function (html) {
+          self._editorLastSyncedHtml = html
+          self.$emit('field-change', { field: self.f.field, value: html })
+        }
+      }).then(function (rec) {
+        if (!rec) return
+        if (self._editorReady) {
+          // 已挂载过，重复触发 → 直接销毁后到的实例
+          try { rec.destroy() } catch (e) {}
+          return
+        }
+        self._editor = rec
         self._editorLastSyncedHtml = initialHtml
         self._editorReady = true
       }).catch(function (err) {
-        console.error('[NovaFieldThis] wangeditor load failed:', err)
+        console.error('[NovaFieldThis] tiptap load failed:', err)
       })
     },
     destroyEditor() {
-      if (this._toolbar && window.NovaWangEditor) {
-        window.NovaWangEditor.destroy(this._toolbar)
-      }
-      if (this._editor && window.NovaWangEditor) {
-        window.NovaWangEditor.destroy(this._editor)
+      if (this._editor && window.NovaTiptap) {
+        window.NovaTiptap.destroy(this._editor)
       }
       this._editor = null
-      this._toolbar = null
       this._editorReady = false
       this._editorLastSyncedHtml = ''
     },
@@ -207,9 +200,11 @@ window.NovaFieldThis = {
   },
   updated() {
     if (!this._editor || !this.f || this.f.type !== 'EDITOR') return
+    var editorApi = this._editor.editor
+    if (!editorApi || typeof editorApi.commands.setContent !== 'function') return
     var external = (this.formData && this.formData[this.f.field]) || ''
     if (external !== this._editorLastSyncedHtml) {
-      this._editor.setHtml(external)
+      editorApi.commands.setContent(external || '', false)
       this._editorLastSyncedHtml = external
     }
   },
@@ -367,8 +362,8 @@ window.NovaFieldThis = {
     </div>
     <div v-else-if="f.type === 'EDITOR'" class="form-field-editor"
       :class="formErrors[f.field] ? 'has-error' : ''">
-      <div :ref="el => registerEditorToolbar(el)" class="wang-editor-toolbar"></div>
-      <div :ref="el => registerEditorHost(el)" :data-editor-field="f.field" class="wang-editor-host"></div>
+      <div :ref="el => registerEditorToolbar(el)" class="nova-tiptap-toolbar"></div>
+      <div :ref="el => registerEditorHost(el)" :data-editor-field="f.field" class="nova-tiptap-content"></div>
     </div>
     <n-input
       v-else

@@ -385,10 +385,10 @@ const NovaTable = {
       opFormAppTabBuild:  {},      // 附属表单 build 数据
       opFormAppFormData:  {},      // 附属表单数据
       opFormAppFormErrors:{},      // 附属表单校验错误
-      // EDITOR (WangEditor) 实例管理
+      // EDITOR (Tiptap) 实例管理
       _opEditorHosts:     new Map(),     // key 'main:field' / 'app:<nova>:field' -> DOM element
       _opEditorToolbars:  new Map(),     // key -> toolbar DOM element
-      _opEditorInstances: new Map(),     // key -> { editor, toolbar }
+      _opEditorInstances: new Map(),     // key -> rec { editor, destroy }
       formErrors:     {},
       striped:        localStorage.getItem('nova-table-striped') !== null
                         ? localStorage.getItem('nova-table-striped') === 'true'
@@ -2685,7 +2685,7 @@ const NovaTable = {
         height: '60%'
       })
     },
-    // ── 操作表单 EDITOR (WangEditor) 生命周期 ──
+    // ── 操作表单 EDITOR (Tiptap) 生命周期 ──
     registerOpEditorHost(section, field, el) {
       var key = section + ':' + field
       if (el) {
@@ -2694,8 +2694,7 @@ const NovaTable = {
         this._opEditorHosts.delete(key)
         var inst = this._opEditorInstances.get(key)
         if (inst) {
-          try { window.NovaWangEditor && window.NovaWangEditor.destroy(inst.editor) } catch (e) {}
-          try { window.NovaWangEditor && window.NovaWangEditor.destroy(inst.toolbar) } catch (e) {}
+          try { window.NovaTiptap && window.NovaTiptap.destroy(inst) } catch (e) {}
           this._opEditorInstances.delete(key)
         }
       }
@@ -2709,7 +2708,7 @@ const NovaTable = {
       }
     },
     _mountOpEditor(key, el) {
-      if (!window.NovaWangEditor) return
+      if (!window.NovaTiptap) return
       if (this._opEditorInstances.has(key)) return
       var sep = key.indexOf(':')
       var section = key.slice(0, sep)
@@ -2724,52 +2723,33 @@ const NovaTable = {
       }
       if (initialVal === null || initialVal === undefined) initialVal = ''
       var toolbarEl = self._opEditorToolbars.get(key)
-      var p
-      if (toolbarEl && window.NovaWangEditor.createEditorWithToolbar) {
-        p = window.NovaWangEditor.createEditorWithToolbar(el, toolbarEl, {
-          html: initialVal,
-          config: {
-            placeholder: '请输入内容...',
-            onChange: function(ed) {
-              if (self._opEditorSyncing) return
-              var html = ed.getHtml()
-              if (section === 'main') {
-                self.$set(self.opFormData, field, html)
-              } else if (section.indexOf('app:') === 0) {
-                var appName2 = section.slice(4)
-                if (!self.opFormAppFormData[appName2]) self.$set(self.opFormAppFormData, appName2, {})
-                self.$set(self.opFormAppFormData[appName2], field, html)
-              }
-            }
+      window.NovaTiptap.createEditor(el, toolbarEl, {
+        html: initialVal,
+        placeholder: '请输入内容...',
+        onChange: function(html) {
+          if (self._opEditorSyncing) return
+          if (section === 'main') {
+            self.$set(self.opFormData, field, html)
+          } else if (section.indexOf('app:') === 0) {
+            var appName2 = section.slice(4)
+            if (!self.opFormAppFormData[appName2]) self.$set(self.opFormAppFormData, appName2, {})
+            self.$set(self.opFormAppFormData[appName2], field, html)
           }
-        })
-      } else {
-        p = window.NovaWangEditor.createEditor(el, {
-          html: initialVal,
-          config: {
-            placeholder: '请输入内容...',
-            onChange: function(ed) {
-              if (self._opEditorSyncing) return
-              var html = ed.getHtml()
-              if (section === 'main') {
-                self.$set(self.opFormData, field, html)
-              } else if (section.indexOf('app:') === 0) {
-                var appName2 = section.slice(4)
-                if (!self.opFormAppFormData[appName2]) self.$set(self.opFormAppFormData, appName2, {})
-                self.$set(self.opFormAppFormData[appName2], field, html)
-              }
-            }
-          }
-        }).then(function(editor) { return { editor: editor, toolbar: null } })
-      }
-      p.then(function(rec) {
+        }
+      }).then(function(rec) {
+        if (!rec) return
+        if (self._opEditorInstances.has(key)) {
+          // 已挂载过，重复触发 → 直接销毁后到的实例
+          try { rec.destroy() } catch (e) {}
+          return
+        }
         self._opEditorInstances.set(key, rec)
       }).catch(function(err) {
         console.error('[opEditor] create error', key, err)
       })
     },
     syncOpEditorsContent() {
-      if (!window.NovaWangEditor) return
+      if (!window.NovaTiptap) return
       var self = this
       this._opEditorSyncing = true
       this._opEditorInstances.forEach(function(rec, key) {
@@ -2785,8 +2765,9 @@ const NovaTable = {
         }
         if (val === null || val === undefined) val = ''
         try {
-          var current = rec.editor.getHtml()
-          if (current !== val) rec.editor.setHtml(val)
+          var editorApi = rec.editor
+          var current = editorApi.getHTML()
+          if (current !== val) editorApi.commands.setContent(val || '', false)
         } catch (e) {}
       })
       this._opEditorSyncing = false
@@ -2796,24 +2777,22 @@ const NovaTable = {
       if (this._opEditorHosts.size === 0) return
       var self = this
       var start = function() {
-        if (!window.NovaWangEditor) return
+        if (!window.NovaTiptap) return
         self._opEditorHosts.forEach(function(el, key) {
           self._mountOpEditor(key, el)
         })
       }
-      if (window.NovaWangEditor) {
+      if (window.NovaTiptap && window.NovaTiptap.createEditor) {
         start()
-      } else if (window.NovaWangEditor) {
-        // placeholder not yet defined but loader is — call ensureLoaded
-        window.NovaWangEditor.ensureLoaded().then(function() { start() })
+      } else if (window.NovaTiptap && window.NovaTiptap.ensureLoaded) {
+        window.NovaTiptap.ensureLoaded().then(function() { start() })
       }
-      // else NovaWangEditor isn't loaded yet; updated() will retry on next render
+      // else NovaTiptap isn't loaded yet; updated() will retry on next render
     },
     destroyOpEditors() {
       var self = this
       this._opEditorInstances.forEach(function(rec) {
-        try { window.NovaWangEditor && window.NovaWangEditor.destroy(rec.editor) } catch (e) {}
-        try { window.NovaWangEditor && window.NovaWangEditor.destroy(rec.toolbar) } catch (e) {}
+        try { window.NovaTiptap && window.NovaTiptap.destroy(rec) } catch (e) {}
       })
       this._opEditorInstances.clear()
       this._opEditorToolbars.clear()
@@ -4829,10 +4808,10 @@ const NovaTable = {
                 </div>
                 <div v-else-if="f.type === 'EDITOR'" class="form-field-editor"
                   :class="opFormErrors[f.field] ? 'has-error' : ''">
-                  <div :ref="el => registerOpEditorToolbar('main', f.field, el)" class="wang-editor-toolbar"></div>
+                  <div :ref="el => registerOpEditorToolbar('main', f.field, el)" class="nova-tiptap-toolbar"></div>
                   <div :ref="el => registerOpEditorHost('main', f.field, el)"
                     :data-editor-field="f.field"
-                    class="wang-editor-host"></div>
+                    class="nova-tiptap-content"></div>
                 </div>
                 <n-input v-else v-model:value="opFormData[f.field]" :placeholder="'请输入' + f.title" clearable />
                 <span v-if="opFormErrors[f.field]" class="form-error-tip">{{ opFormErrors[f.field] }}</span>
@@ -4978,10 +4957,10 @@ const NovaTable = {
                   </div>
                   <div v-else-if="f.type === 'EDITOR'" class="form-field-editor"
                     :class="opFormAppErrors(tab.tapNovaName)[f.field] ? 'has-error' : ''">
-                    <div :ref="el => registerOpEditorToolbar('app:' + tab.tapNovaName, f.field, el)" class="wang-editor-toolbar"></div>
+                    <div :ref="el => registerOpEditorToolbar('app:' + tab.tapNovaName, f.field, el)" class="nova-tiptap-toolbar"></div>
                     <div :ref="el => registerOpEditorHost('app:' + tab.tapNovaName, f.field, el)"
                       :data-editor-field="f.field"
-                      class="wang-editor-host"></div>
+                      class="nova-tiptap-content"></div>
                   </div>
                   <n-input
                     v-else

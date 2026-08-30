@@ -1067,14 +1067,98 @@ body.dark .form-field-editor:focus-within,
 body.dark .form-field-editor:hover { border-color: #36ad6a; box-shadow: 0 0 0 3px rgba(54,173,106,0.16); }
 .form-field-editor.has-error { border-color: #d03050; box-shadow: 0 0 0 3px rgba(208,48,80,0.10); }
 
-.wang-editor-toolbar {
+.nova-tiptap-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  align-items: center;
+  padding: 4px 6px;
   border-bottom: 1px solid #e0e0e6;
   background: #fafafa;
 }
-body.dark .wang-editor-toolbar { border-bottom-color: #2a2a2e; background: #232328; }
+body.dark .nova-tiptap-toolbar { border-bottom-color: #2a2a2e; background: #232328; }
 
-.wang-editor-host {
+.nova-tiptap-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+.nova-tiptap-toolbar-btn:hover { background: rgba(24,160,88,0.08); border-color: rgba(24,160,88,0.2); }
+.nova-tiptap-toolbar-btn.is-active { background: rgba(24,160,88,0.14); color: #18a058; }
+body.dark .nova-tiptap-toolbar-btn { color: #d0d0d6; }
+body.dark .nova-tiptap-toolbar-btn:hover { background: rgba(54,173,106,0.16); border-color: rgba(54,173,106,0.3); }
+body.dark .nova-tiptap-toolbar-btn.is-active { background: rgba(54,173,106,0.22); color: #36ad6a; }
+
+.nova-tiptap-toolbar-sep {
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: #e0e0e6;
+}
+body.dark .nova-tiptap-toolbar-sep { background: #2a2a2e; }
+
+.nova-tiptap-content {
+  padding: 8px 12px;
   min-height: 240px;
   background: transparent;
 }
+.nova-tiptap-content .ProseMirror {
+  outline: none;
+  min-height: 220px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+.nova-tiptap-content .ProseMirror > * + * { margin-top: 0.75em; }
+.nova-tiptap-content .ProseMirror h1 { font-size: 1.8em; font-weight: 600; }
+.nova-tiptap-content .ProseMirror h2 { font-size: 1.5em; font-weight: 600; }
+.nova-tiptap-content .ProseMirror h3 { font-size: 1.25em; font-weight: 600; }
+.nova-tiptap-content .ProseMirror p { margin: 0; }
+.nova-tiptap-content .ProseMirror ul,
+.nova-tiptap-content .ProseMirror ol { padding-left: 1.5em; }
+.nova-tiptap-content .ProseMirror blockquote {
+  border-left: 3px solid #d0d0d6;
+  padding-left: 0.9em;
+  color: #666;
+  margin: 0;
+}
+body.dark .nova-tiptap-content .ProseMirror blockquote { border-left-color: #3a3a3e; color: #aaa; }
+.nova-tiptap-content .ProseMirror code {
+  background: rgba(135,131,120,0.15);
+  border-radius: 3px;
+  padding: 0.1em 0.3em;
+  font-size: 0.9em;
+}
+.nova-tiptap-content .ProseMirror pre {
+  background: #1f1f23;
+  color: #f0f0f0;
+  padding: 10px 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.9em;
+}
+.nova-tiptap-content .ProseMirror pre code { background: transparent; padding: 0; }
+.nova-tiptap-content .ProseMirror a {
+  color: #18a058;
+  text-decoration: underline;
+  cursor: pointer;
+}
+body.dark .nova-tiptap-content .ProseMirror a { color: #36ad6a; }
+.nova-tiptap-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #999;
+  pointer-events: none;
+  height: 0;
+}
+body.dark .nova-tiptap-content .ProseMirror p.is-editor-empty:first-child::before { color: #666; }
 

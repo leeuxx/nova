@@ -158,16 +158,12 @@ window.NovaAppForm = {
         this._editorHosts[field] = el
         this.maybeMountEditor(field)
       } else {
-        if (this._editors[field] && window.NovaWangEditor) {
-          window.NovaWangEditor.destroy(this._editors[field])
-        }
-        if (this._toolbars[field] && window.NovaWangEditor) {
-          window.NovaWangEditor.destroy(this._toolbars[field])
+        if (this._editors[field] && window.NovaTiptap) {
+          window.NovaTiptap.destroy(this._editors[field])
         }
         delete this._editorHosts[field]
         delete this._editorToolbars[field]
         delete this._editors[field]
-        delete this._toolbars[field]
         delete this._editorLastSynced[field]
       }
     },
@@ -182,44 +178,37 @@ window.NovaAppForm = {
       var host = this._editorHosts[field]
       var toolbarEl = this._editorToolbars[field]
       if (!host || !toolbarEl) return
-      if (!window.NovaWangEditor) return
+      if (!window.NovaTiptap) return
       var self = this
       var initialHtml = (self.formData && self.formData[field]) || ''
-      window.NovaWangEditor.ensureLoaded().then(function (wEditor) {
-        if (self._editors[field] || !self._editorHosts[field] || !self._editorToolbars[field]) return
-        self._editors[field] = wEditor.createEditor({
-          selector: self._editorHosts[field],
-          html: initialHtml,
-          config: {
-            onChange: function (editor) {
-              var html = editor.getHtml()
-              self._editorLastSynced[field] = html
-              self.$emit('field-change', { field: field, value: html })
-            }
-          }
-        })
-        self._toolbars[field] = wEditor.createToolbar({
-          editor: self._editors[field],
-          selector: self._editorToolbars[field],
-          config: { excludeKeys: ['fullScreen'] }
-        })
+      window.NovaTiptap.createEditor(host, toolbarEl, {
+        html: initialHtml,
+        placeholder: '请输入内容...',
+        onChange: function (html) {
+          self._editorLastSynced[field] = html
+          self.$emit('field-change', { field: field, value: html })
+        }
+      }).then(function (rec) {
+        if (!rec) return
+        if (self._editors[field]) {
+          // 已挂载过，重复触发 → 直接销毁后到的实例
+          try { rec.destroy() } catch (e) {}
+          return
+        }
+        self._editors[field] = rec
         self._editorLastSynced[field] = initialHtml
       }).catch(function (err) {
-        console.error('[NovaAppForm] wangeditor load failed:', err)
+        console.error('[NovaAppForm] tiptap load failed:', err)
       })
     },
     destroyAllEditors() {
       var self = this
       Object.keys(this._editors).forEach(function (k) {
-        if (self._editors[k] && window.NovaWangEditor) {
-          window.NovaWangEditor.destroy(self._editors[k])
-        }
-        if (self._toolbars[k] && window.NovaWangEditor) {
-          window.NovaWangEditor.destroy(self._toolbars[k])
+        if (self._editors[k] && window.NovaTiptap) {
+          window.NovaTiptap.destroy(self._editors[k])
         }
       })
       this._editors = {}
-      this._toolbars = {}
       this._editorHosts = {}
       this._editorToolbars = {}
       this._editorLastSynced = {}
@@ -233,11 +222,13 @@ window.NovaAppForm = {
   updated() {
     var self = this
     Object.keys(this._editorHosts).forEach(function (field) {
-      var editor = self._editors[field]
-      if (!editor) return
+      var rec = self._editors[field]
+      if (!rec) return
+      var editorApi = rec.editor
+      if (!editorApi || typeof editorApi.commands.setContent !== 'function') return
       var external = (self.formData && self.formData[field]) || ''
       if (external !== self._editorLastSynced[field]) {
-        editor.setHtml(external)
+        editorApi.commands.setContent(external || '', false)
         self._editorLastSynced[field] = external
       }
     })
@@ -359,8 +350,8 @@ window.NovaAppForm = {
       </div>
       <div v-else-if="f.type === 'EDITOR'" class="form-field-editor"
         :class="formErrors[f.field] ? 'has-error' : ''">
-        <div :ref="el => registerEditorToolbar(f.field, el)" class="wang-editor-toolbar"></div>
-        <div :ref="el => registerEditorHost(f.field, el)" :data-editor-field="f.field" class="wang-editor-host"></div>
+        <div :ref="el => registerEditorToolbar(f.field, el)" class="nova-tiptap-toolbar"></div>
+        <div :ref="el => registerEditorHost(f.field, el)" :data-editor-field="f.field" class="nova-tiptap-content"></div>
       </div>
       <n-input v-else
         :value="formData[f.field]" :placeholder="'请输入'+f.title"
