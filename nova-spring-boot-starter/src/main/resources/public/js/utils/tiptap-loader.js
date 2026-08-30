@@ -2,6 +2,8 @@
   var BUNDLE_URL = '/js/lib/tiptap.mjs'
   var loadingPromise = null
   var loaded = null
+  var forceShowLinkBubble = false
+  var linkBubbleControls = new Map()
 
   function ensureLoaded() {
     if (loaded) return Promise.resolve(loaded)
@@ -116,6 +118,19 @@
       ]
     },
     { sep: true },
+    { icon: 'mdi:link-variant',         title: '链接',     run: function (e) {
+      var ctrl = linkBubbleControls.get(e)
+      if (!ctrl) return
+      if (forceShowLinkBubble) {
+        forceShowLinkBubble = false
+        ctrl.hide()
+        return
+      }
+      var sel = e.state.selection
+      if (sel.empty && !e.isActive('link')) return
+      forceShowLinkBubble = true
+      ctrl.show()
+    }, isActive: function (e) { return forceShowLinkBubble || e.isActive('link') } },
     { icon: 'mdi:undo',                 title: '撤销',     run: function (e) { e.chain().focus().undo().run() },             isActive: function () { return false } },
     { icon: 'mdi:redo',                 title: '重做',     run: function (e) { e.chain().focus().redo().run() },             isActive: function () { return false } },
     { sep: true },
@@ -298,6 +313,7 @@
 
       var bubbleEl = document.createElement('div')
       bubbleEl.className = 'nova-tiptap-link-bubble'
+      bubbleEl.style.display = 'none'
 
       var bubbleInput = document.createElement('input')
       bubbleInput.type = 'text'
@@ -310,6 +326,7 @@
 
       bubbleEl.appendChild(bubbleInput)
       bubbleEl.appendChild(bubbleHint)
+      document.body.appendChild(bubbleEl)
 
       var editor = new api.Editor({
         element: hostEl,
@@ -329,24 +346,6 @@
           }),
           api.FontFamily,
           api.FontSize,
-          api.BubbleMenu.configure({
-            element: bubbleEl,
-            pluginKey: 'novaLinkBubble',
-            tippyOptions: {
-              placement: 'top',
-              maxWidth: 'none',
-              onShow: function () {
-                requestAnimationFrame(function () {
-                  bubbleInput.focus()
-                  bubbleInput.select()
-                })
-              }
-            },
-            shouldShow: function (props) {
-              if (props.from !== props.to) return true
-              return props.editor.isActive('link')
-            }
-          }),
           api.Placeholder.configure({
             placeholder: opts.placeholder || '请输入内容...'
           })
@@ -357,8 +356,51 @@
         }
       })
 
+      function positionBubble() {
+        var sel = editor.state.selection
+        var fromRect = editor.view.coordsAtPos(sel.from)
+        var toRect = editor.view.coordsAtPos(sel.to)
+        var top = Math.min(fromRect.top, toRect.top)
+        var left = Math.min(fromRect.left, toRect.left)
+        var right = Math.max(fromRect.right, toRect.right)
+        var bottom = Math.max(fromRect.bottom, toRect.bottom)
+        var bubbleRect = bubbleEl.getBoundingClientRect()
+        var topAbove = window.scrollY + top - bubbleRect.height - 8
+        var topBelow = window.scrollY + bottom + 8
+        var topPos = topAbove < window.scrollY + 4 ? topBelow : topAbove
+        var leftPos = window.scrollX + (left + right) / 2 - bubbleRect.width / 2
+        var minLeft = window.scrollX + 4
+        var maxLeft = window.scrollX + window.innerWidth - bubbleRect.width - 4
+        leftPos = Math.max(minLeft, Math.min(maxLeft, leftPos))
+        bubbleEl.style.top = topPos + 'px'
+        bubbleEl.style.left = leftPos + 'px'
+      }
+
+      function showLinkBubble() {
+        if (editor.isActive('link')) {
+          bubbleInput.value = editor.getAttributes('link').href || ''
+        } else {
+          bubbleInput.value = ''
+        }
+        bubbleEl.style.display = 'flex'
+        positionBubble()
+        requestAnimationFrame(function () {
+          bubbleInput.focus()
+          bubbleInput.select()
+        })
+      }
+
+      function hideLinkBubble() {
+        bubbleEl.style.display = 'none'
+        if (document.activeElement === bubbleInput) {
+          editor.commands.focus()
+        }
+      }
+
       function applyLink() {
         var url = bubbleInput.value.trim()
+        forceShowLinkBubble = false
+        hideLinkBubble()
         if (url === '') {
           editor.chain().focus().extendMarkRange('link').unsetLink().run()
         } else {
@@ -370,34 +412,46 @@
         if (e.key === 'Enter') {
           e.preventDefault()
           applyLink()
-          editor.commands.focus()
         } else if (e.key === 'Escape') {
           e.preventDefault()
-          editor.commands.focus()
-          editor.view.dispatch(editor.state.tr)
+          forceShowLinkBubble = false
+          hideLinkBubble()
         }
       })
 
-      function syncBubbleInput() {
-        if (document.activeElement === bubbleInput) return
-        if (editor.isActive('link')) {
-          bubbleInput.value = editor.getAttributes('link').href || ''
-        } else {
-          bubbleInput.value = ''
-        }
+      function onSelectionUpdate() {
+        if (forceShowLinkBubble) positionBubble()
       }
-      editor.on('selectionUpdate', syncBubbleInput)
-      editor.on('transaction', syncBubbleInput)
+      editor.on('selectionUpdate', onSelectionUpdate)
+
+      function onDocMouseDown(e) {
+        if (!forceShowLinkBubble) return
+        if (bubbleEl.contains(e.target)) return
+        if (hostEl.contains(e.target)) return
+        if (toolbarEl && toolbarEl.contains(e.target)) return
+        forceShowLinkBubble = false
+        hideLinkBubble()
+      }
+      document.addEventListener('mousedown', onDocMouseDown)
+
+      linkBubbleControls.set(editor, {
+        show: showLinkBubble,
+        hide: hideLinkBubble
+      })
 
       var dt = buildToolbar(toolbarEl, editor)
 
       return {
         editor: editor,
         destroy: function () {
-          editor.off('selectionUpdate', syncBubbleInput)
-          editor.off('transaction', syncBubbleInput)
+          forceShowLinkBubble = false
+          hideLinkBubble()
+          linkBubbleControls.delete(editor)
+          editor.off('selectionUpdate', onSelectionUpdate)
+          document.removeEventListener('mousedown', onDocMouseDown)
           dt()
           try { editor.destroy() } catch (e) {}
+          if (bubbleEl.parentNode) bubbleEl.parentNode.removeChild(bubbleEl)
         }
       }
     })
