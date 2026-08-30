@@ -40,7 +40,7 @@
     { sep: true },
     { dropdown: true,
       icon: 'mdi:format-align-left',
-      title: '对齐方式',
+      title: '',
       currentIcon: function (e) {
         if (e.isActive({ textAlign: 'center' }))  return 'mdi:format-align-center'
         if (e.isActive({ textAlign: 'right' }))   return 'mdi:format-align-right'
@@ -75,6 +75,37 @@
     { icon: 'mdi:format-clear',         title: '清除格式', run: function (e) { e.chain().focus().unsetAllMarks().clearNodes().run() }, isActive: function () { return false } }
   ]
 
+  var tooltipEl = null
+  var tooltipTimer = null
+
+  function showTooltip(target, text) {
+    if (!text) return
+    if (tooltipTimer) { clearTimeout(tooltipTimer); tooltipTimer = null }
+    tooltipTimer = setTimeout(function () {
+      if (!target.isConnected) return
+      if (!tooltipEl) {
+        tooltipEl = document.createElement('div')
+        tooltipEl.className = 'nova-tiptap-tooltip'
+        document.body.appendChild(tooltipEl)
+      }
+      tooltipEl.textContent = text
+      var rect = target.getBoundingClientRect()
+      tooltipEl.style.visibility = 'hidden'
+      tooltipEl.classList.add('show')
+      var tipRect = tooltipEl.getBoundingClientRect()
+      var top = window.scrollY + rect.top - tipRect.height - 8
+      var left = window.scrollX + rect.left + (rect.width - tipRect.width) / 2
+      tooltipEl.style.top = top + 'px'
+      tooltipEl.style.left = left + 'px'
+      tooltipEl.style.visibility = 'visible'
+    }, 200)
+  }
+
+  function hideTooltip() {
+    if (tooltipTimer) { clearTimeout(tooltipTimer); tooltipTimer = null }
+    if (tooltipEl) { tooltipEl.remove(); tooltipEl = null }
+  }
+
   function buildToolbar(container, editor) {
     container.innerHTML = ''
     container.className = 'nova-tiptap-toolbar'
@@ -84,9 +115,11 @@
       var b = document.createElement('button')
       b.type = 'button'
       b.className = 'nova-tiptap-toolbar-btn'
-      b.title = def.title
       b.innerHTML = '<iconify-icon icon="' + def.icon + '" width="16"></iconify-icon>'
       b.addEventListener('mousedown', function (e) { e.preventDefault() })
+      b.addEventListener('mouseenter', function () { showTooltip(b, def.title) })
+      b.addEventListener('mouseleave', hideTooltip)
+      b.addEventListener('click', function () { hideTooltip() })
       b.addEventListener('click', function (e) {
         e.preventDefault()
         e.stopPropagation()
@@ -125,7 +158,6 @@
           var ib = document.createElement('button')
           ib.type = 'button'
           ib.className = 'nova-tiptap-toolbar-btn nova-tiptap-toolbar-menu-item'
-          ib.title = it.title
           ib.innerHTML = '<iconify-icon icon="' + it.icon + '" width="16"></iconify-icon><span>' + it.title + '</span>'
           ib.addEventListener('mousedown', function (e) { e.preventDefault() })
           ib.addEventListener('click', function (e) {
@@ -195,6 +227,7 @@
       editor.off('selectionUpdate', refresh)
       editor.off('transaction', refresh)
       document.removeEventListener('click', onDocClick)
+      hideTooltip()
     }
   }
 

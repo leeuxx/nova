@@ -1139,6 +1139,26 @@ body.dark .nova-tiptap-toolbar-sep { background: #2a2a2e; }
 .nova-tiptap-toolbar-menu-item span { line-height: 1; }
 body.dark .nova-tiptap-toolbar-dropdown-menu { background: #2a2a2e; border-color: #3a3a3e; }
 
+.nova-tiptap-tooltip {
+  position: absolute;
+  z-index: 9999;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.nova-tiptap-tooltip.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .nova-tiptap-content {
   padding: 8px 12px;
   min-height: 240px;
