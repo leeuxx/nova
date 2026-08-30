@@ -17,7 +17,8 @@
         TextStyle: mod.TextStyle,
         TextAlign: mod.TextAlign,
         FontFamily: mod.FontFamily,
-        FontSize: mod.FontSize
+        FontSize: mod.FontSize,
+        BubbleMenu: mod.BubbleMenu
       }
       return loaded
     })()
@@ -114,19 +115,6 @@
         { icon: 'mdi:format-align-justify', title: '两端对齐', run: function (e) { e.chain().focus().setTextAlign('justify').run() }, isActive: function (e) { return e.isActive({ textAlign: 'justify' }) } }
       ]
     },
-    { sep: true },
-    { icon: 'mdi:link-variant',         title: '链接',
-      run: function (e) {
-        var prev = e.getAttributes('link').href || ''
-        var url = window.prompt('链接地址（留空清除）', prev)
-        if (url === null) return
-        if (url === '') e.chain().focus().extendMarkRange('link').unsetLink().run()
-        else e.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
-      },
-      isActive: function (e) { return e.isActive('link') } },
-    { icon: 'mdi:link-variant-off',     title: '取消链接',
-      run: function (e) { e.chain().focus().unsetLink().run() },
-      isActive: function () { return false } },
     { sep: true },
     { icon: 'mdi:undo',                 title: '撤销',     run: function (e) { e.chain().focus().undo().run() },             isActive: function () { return false } },
     { icon: 'mdi:redo',                 title: '重做',     run: function (e) { e.chain().focus().redo().run() },             isActive: function () { return false } },
@@ -306,6 +294,23 @@
   function createEditor(hostEl, toolbarEl, options) {
     return ensureLoaded().then(function (api) {
       var opts = options || {}
+      injectBubbleStyles()
+
+      var bubbleEl = document.createElement('div')
+      bubbleEl.className = 'nova-tiptap-link-bubble'
+
+      var bubbleInput = document.createElement('input')
+      bubbleInput.type = 'text'
+      bubbleInput.placeholder = '链接地址（留空清除）'
+      bubbleInput.className = 'nova-tiptap-link-bubble-input'
+
+      var bubbleHint = document.createElement('span')
+      bubbleHint.className = 'nova-tiptap-link-bubble-hint'
+      bubbleHint.textContent = '回车确认'
+
+      bubbleEl.appendChild(bubbleInput)
+      bubbleEl.appendChild(bubbleHint)
+
       var editor = new api.Editor({
         element: hostEl,
         extensions: [
@@ -324,6 +329,24 @@
           }),
           api.FontFamily,
           api.FontSize,
+          api.BubbleMenu.configure({
+            element: bubbleEl,
+            pluginKey: 'novaLinkBubble',
+            tippyOptions: {
+              placement: 'top',
+              maxWidth: 'none',
+              onShow: function () {
+                requestAnimationFrame(function () {
+                  bubbleInput.focus()
+                  bubbleInput.select()
+                })
+              }
+            },
+            shouldShow: function (props) {
+              if (props.from !== props.to) return true
+              return props.editor.isActive('link')
+            }
+          }),
           api.Placeholder.configure({
             placeholder: opts.placeholder || '请输入内容...'
           })
@@ -333,16 +356,65 @@
           if (typeof opts.onChange === 'function') opts.onChange(ctx.editor.getHTML())
         }
       })
+
+      function applyLink() {
+        var url = bubbleInput.value.trim()
+        if (url === '') {
+          editor.chain().focus().extendMarkRange('link').unsetLink().run()
+        } else {
+          editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+        }
+      }
+
+      bubbleInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          applyLink()
+          editor.commands.focus()
+        } else if (e.key === 'Escape') {
+          e.preventDefault()
+          editor.commands.focus()
+          editor.view.dispatch(editor.state.tr)
+        }
+      })
+
+      function syncBubbleInput() {
+        if (document.activeElement === bubbleInput) return
+        if (editor.isActive('link')) {
+          bubbleInput.value = editor.getAttributes('link').href || ''
+        } else {
+          bubbleInput.value = ''
+        }
+      }
+      editor.on('selectionUpdate', syncBubbleInput)
+      editor.on('transaction', syncBubbleInput)
+
       var dt = buildToolbar(toolbarEl, editor)
 
       return {
         editor: editor,
         destroy: function () {
+          editor.off('selectionUpdate', syncBubbleInput)
+          editor.off('transaction', syncBubbleInput)
           dt()
           try { editor.destroy() } catch (e) {}
         }
       }
     })
+  }
+
+  var bubbleStylesInjected = false
+
+  function injectBubbleStyles() {
+    if (bubbleStylesInjected) return
+    var css = '.nova-tiptap-link-bubble{display:flex;align-items:center;gap:8px;background:#fff;padding:6px 8px}'
+    css += '.nova-tiptap-link-bubble input.nova-tiptap-link-bubble-input{border:1px solid #ccc;border-radius:3px;padding:4px 8px;font-size:13px;width:240px;outline:none;font-family:inherit}'
+    css += '.nova-tiptap-link-bubble input.nova-tiptap-link-bubble-input:focus{border-color:#18a058}'
+    css += '.nova-tiptap-link-bubble .nova-tiptap-link-bubble-hint{font-size:12px;color:#999;white-space:nowrap}'
+    var s = document.createElement('style')
+    s.textContent = css
+    document.head.appendChild(s)
+    bubbleStylesInjected = true
   }
 
   function destroy(rec) {

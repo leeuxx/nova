@@ -47,3 +47,4 @@ export { TextStyle } from '@tiptap/extension-text-style'
 export { TextAlign } from '@tiptap/extension-text-align'
 export { FontFamily } from '@tiptap/extension-font-family'
 export { FontSize }
+export { BubbleMenu } from '@tiptap/extension-bubble-menu'

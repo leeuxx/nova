@@ -13,7 +13,9 @@
     "@tiptap/extension-link": "2.10.3",
     "@tiptap/extension-placeholder": "2.10.3",
     "@tiptap/extension-text-align": "2.10.3",
-    "@tiptap/extension-font-family": "2.10.3"
+    "@tiptap/extension-font-family": "2.10.3",
+    "@tiptap/extension-bubble-menu": "2.10.3",
+    "tippy.js": "^6.3.7"
   },
   "devDependencies": {
     "esbuild": "^0.20.0"
@@ -40,6 +42,7 @@
     "@tiptap/extension-text-style": "2.10.3",
     "@tiptap/extension-text-align": "2.10.3",
     "@tiptap/extension-font-family": "2.10.3",
+    "@tiptap/extension-bubble-menu": "2.10.3",
     "@tiptap/pm": "2.10.3"
   }
 }
