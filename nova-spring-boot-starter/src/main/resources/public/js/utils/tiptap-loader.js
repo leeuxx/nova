@@ -14,7 +14,10 @@
         Underline: mod.Underline,
         Link: mod.Link,
         Placeholder: mod.Placeholder,
-        TextAlign: mod.TextAlign
+        TextStyle: mod.TextStyle,
+        TextAlign: mod.TextAlign,
+        FontFamily: mod.FontFamily,
+        FontSize: mod.FontSize
       }
       return loaded
     })()
@@ -22,6 +25,60 @@
   }
 
   var TOOLBAR = [
+    { sep: true },
+    { dropdown: true,
+      icon: 'mdi:format-font',
+      title: '字体',
+      defaultLabel: '默认字体',
+      menuWidth: '150px',
+      currentLabel: function (e) {
+        var ff = e.getAttributes('textStyle').fontFamily
+        if (!ff) return '默认字体'
+        var map = {
+          'SimSun': '宋体', 'SimHei': '黑体', 'Microsoft YaHei': '微软雅黑',
+          'KaiTi': '楷体', 'FangSong': '仿宋',
+          'Arial': 'Arial', 'Times New Roman': 'Times',
+          'Courier New': 'Courier', 'Verdana': 'Verdana',
+          'Tahoma': 'Tahoma', 'Georgia': 'Georgia'
+        }
+        return map[ff] || ff
+      },
+      items: [
+        { icon: 'mdi:format-text',       title: '默认字体', run: function (e) { e.chain().focus().unsetFontFamily().run() }, isActive: function (e) { return !e.getAttributes('textStyle').fontFamily } },
+        { icon: 'mdi:format-text',       title: '宋体',     fontStyle: 'SimSun',          run: function (e) { e.chain().focus().setFontFamily('SimSun').run() },          isActive: function (e) { return e.getAttributes('textStyle').fontFamily === 'SimSun' } },
+        { icon: 'mdi:format-text',       title: '黑体',     fontStyle: 'SimHei',          run: function (e) { e.chain().focus().setFontFamily('SimHei').run() },          isActive: function (e) { return e.getAttributes('textStyle').fontFamily === 'SimHei' } },
+        { icon: 'mdi:format-text',       title: '微软雅黑', fontStyle: 'Microsoft YaHei', run: function (e) { e.chain().focus().setFontFamily('Microsoft YaHei').run() }, isActive: function (e) { return e.getAttributes('textStyle').fontFamily === 'Microsoft YaHei' } },
+        { icon: 'mdi:format-text',       title: '楷体',     fontStyle: 'KaiTi',           run: function (e) { e.chain().focus().setFontFamily('KaiTi').run() },           isActive: function (e) { return e.getAttributes('textStyle').fontFamily === 'KaiTi' } },
+        { icon: 'mdi:format-text',       title: '仿宋',     fontStyle: 'FangSong',        run: function (e) { e.chain().focus().setFontFamily('FangSong').run() },        isActive: function (e) { return e.getAttributes('textStyle').fontFamily === 'FangSong' } },
+        { icon: 'mdi:format-text',       title: 'Arial',    fontStyle: 'Arial',           run: function (e) { e.chain().focus().setFontFamily('Arial').run() },           isActive: function (e) { return e.getAttributes('textStyle').fontFamily === 'Arial' } },
+        { icon: 'mdi:format-text',       title: 'Times',    fontStyle: 'Times New Roman', run: function (e) { e.chain().focus().setFontFamily('Times New Roman').run() }, isActive: function (e) { return e.getAttributes('textStyle').fontFamily === 'Times New Roman' } },
+        { icon: 'mdi:format-text',       title: 'Courier',  fontStyle: 'Courier New',     run: function (e) { e.chain().focus().setFontFamily('Courier New').run() },     isActive: function (e) { return e.getAttributes('textStyle').fontFamily === 'Courier New' } },
+        { icon: 'mdi:format-text',       title: 'Verdana',  fontStyle: 'Verdana',         run: function (e) { e.chain().focus().setFontFamily('Verdana').run() },         isActive: function (e) { return e.getAttributes('textStyle').fontFamily === 'Verdana' } },
+        { icon: 'mdi:format-text',       title: 'Tahoma',   fontStyle: 'Tahoma',          run: function (e) { e.chain().focus().setFontFamily('Tahoma').run() },          isActive: function (e) { return e.getAttributes('textStyle').fontFamily === 'Tahoma' } },
+        { icon: 'mdi:format-text',       title: 'Georgia',  fontStyle: 'Georgia',         run: function (e) { e.chain().focus().setFontFamily('Georgia').run() },         isActive: function (e) { return e.getAttributes('textStyle').fontFamily === 'Georgia' } }
+      ]
+    },
+    { dropdown: true,
+      icon: 'mdi:format-size-w',
+      title: '字号',
+      defaultLabel: '默认字号',
+      menuWidth: '90px',
+      currentLabel: function (e) {
+        var fs = e.getAttributes('textStyle').fontSize
+        return fs || '默认字号'
+      },
+      items: [
+        { icon: 'mdi:format-size-w', title: '默认字号', run: function (e) { e.chain().focus().unsetFontSize().run() }, isActive: function (e) { return !e.getAttributes('textStyle').fontSize } },
+        { icon: 'mdi:format-size-w', title: '12px',   run: function (e) { e.chain().focus().setFontSize('12px').run() }, isActive: function (e) { return e.getAttributes('textStyle').fontSize === '12px' } },
+        { icon: 'mdi:format-size-w', title: '14px',   run: function (e) { e.chain().focus().setFontSize('14px').run() }, isActive: function (e) { return e.getAttributes('textStyle').fontSize === '14px' } },
+        { icon: 'mdi:format-size-w', title: '16px',   run: function (e) { e.chain().focus().setFontSize('16px').run() }, isActive: function (e) { return e.getAttributes('textStyle').fontSize === '16px' } },
+        { icon: 'mdi:format-size-w', title: '18px',   run: function (e) { e.chain().focus().setFontSize('18px').run() }, isActive: function (e) { return e.getAttributes('textStyle').fontSize === '18px' } },
+        { icon: 'mdi:format-size-w', title: '20px',   run: function (e) { e.chain().focus().setFontSize('20px').run() }, isActive: function (e) { return e.getAttributes('textStyle').fontSize === '20px' } },
+        { icon: 'mdi:format-size-w', title: '24px',   run: function (e) { e.chain().focus().setFontSize('24px').run() }, isActive: function (e) { return e.getAttributes('textStyle').fontSize === '24px' } },
+        { icon: 'mdi:format-size-w', title: '28px',   run: function (e) { e.chain().focus().setFontSize('28px').run() }, isActive: function (e) { return e.getAttributes('textStyle').fontSize === '28px' } },
+        { icon: 'mdi:format-size-w', title: '32px',   run: function (e) { e.chain().focus().setFontSize('32px').run() }, isActive: function (e) { return e.getAttributes('textStyle').fontSize === '32px' } }
+      ]
+    },
     { sep: true },
     { icon: 'mdi:format-bold',          title: '粗体',     run: function (e) { e.chain().focus().toggleBold().run() },       isActive: function (e) { return e.isActive('bold') } },
     { icon: 'mdi:format-italic',        title: '斜体',     run: function (e) { e.chain().focus().toggleItalic().run() },     isActive: function (e) { return e.isActive('italic') } },
@@ -115,7 +172,9 @@
       var b = document.createElement('button')
       b.type = 'button'
       b.className = 'nova-tiptap-toolbar-btn'
-      b.innerHTML = '<iconify-icon icon="' + def.icon + '" width="16"></iconify-icon>'
+      var html = '<iconify-icon icon="' + def.icon + '" width="16"></iconify-icon>'
+      if (def.label) html += '<span class="trigger-label">' + def.label + '</span>'
+      b.innerHTML = html
       b.addEventListener('mousedown', function (e) { e.preventDefault() })
       b.addEventListener('mouseenter', function () { showTooltip(b, def.title) })
       b.addEventListener('mouseleave', hideTooltip)
@@ -147,17 +206,21 @@
         var trigger = makeBtn({
           title: def.title,
           icon: def.icon,
+          label: def.defaultLabel || '',
           run: function () { wrap.classList.toggle('open') }
         })
         trigger.classList.add('nova-tiptap-toolbar-dropdown-trigger')
+        if (def.menuWidth) trigger.classList.add('nova-tiptap-dropdown-wide')
 
         var menu = document.createElement('div')
         menu.className = 'nova-tiptap-toolbar-dropdown-menu'
+        if (def.menuWidth) menu.style.minWidth = def.menuWidth
         var itemRefs = []
         def.items.forEach(function (it) {
           var ib = document.createElement('button')
           ib.type = 'button'
           ib.className = 'nova-tiptap-toolbar-btn nova-tiptap-toolbar-menu-item'
+          if (it.fontStyle) ib.style.fontFamily = it.fontStyle
           ib.innerHTML = '<iconify-icon icon="' + it.icon + '" width="16"></iconify-icon><span>' + it.title + '</span>'
           ib.addEventListener('mousedown', function (e) { e.preventDefault() })
           ib.addEventListener('click', function (e) {
@@ -181,9 +244,15 @@
           def: def,
           items: itemRefs,
           updateIcon: function () {
-            var ico = def.currentIcon ? def.currentIcon(editor) : def.icon
+            if (!def.currentIcon) return
+            var ico = def.currentIcon(editor)
             var ic = trigger.querySelector('iconify-icon')
             if (ic) ic.setAttribute('icon', ico)
+          },
+          updateLabel: function () {
+            if (!def.currentLabel) return
+            var sp = trigger.querySelector('.trigger-label')
+            if (sp) sp.textContent = def.currentLabel(editor)
           }
         })
         return
@@ -202,6 +271,7 @@
         } catch (err) {}
         it.b.classList.toggle('is-active', active)
         if (typeof it.updateIcon === 'function') it.updateIcon()
+        if (typeof it.updateLabel === 'function') it.updateLabel()
         if (it.items) {
           it.items.forEach(function (sub) {
             var a = false
@@ -246,9 +316,12 @@
             autolink: true,
             HTMLAttributes: { rel: 'noopener noreferrer nofollow', target: '_blank' }
           }),
+          api.TextStyle,
           api.TextAlign.configure({
             types: ['heading', 'paragraph']
           }),
+          api.FontFamily,
+          api.FontSize,
           api.Placeholder.configure({
             placeholder: opts.placeholder || '请输入内容...'
           })

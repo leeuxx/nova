@@ -1159,6 +1159,23 @@ body.dark .nova-tiptap-toolbar-dropdown-menu { background: #2a2a2e; border-color
   transform: translateY(0);
 }
 
+.nova-tiptap-toolbar-dropdown-trigger .trigger-label {
+  display: inline-block;
+  margin-left: 4px;
+  max-width: 70px;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+.nova-tiptap-toolbar-dropdown-trigger {
+  width: auto !important;
+  padding: 0 8px !important;
+  gap: 2px;
+}
+
 .nova-tiptap-content {
   padding: 8px 12px;
   min-height: 240px;

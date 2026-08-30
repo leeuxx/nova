@@ -5,6 +5,13 @@ spring:
     username: root
     password: '#Xynet2022'
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      max-lifetime: 600000  # 单位毫秒
+      keepalive-time: 300000  # 单位毫秒，5分钟
+      connection-timeout: 5000  # 5秒
+      idle-timeout: 300000  # 5分钟
+      minimum-idle: 5
+      maximum-pool-size: 20
   # Redis 配置
   data:
     redis:
