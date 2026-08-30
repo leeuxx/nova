@@ -59,7 +59,7 @@
       ]
     },
     { dropdown: true,
-      icon: 'mdi:format-size-w',
+      icon: 'mdi:format-size',
       title: '字号',
       defaultLabel: '默认字号',
       menuWidth: '90px',
@@ -107,7 +107,7 @@
       isActive: function (e) { return e.isActive('textAlign') },
       items: [
         { icon: 'mdi:format-align-left',    title: '左对齐',   run: function (e) { e.chain().focus().setTextAlign('left').run() },    isActive: function (e) { return e.isActive({ textAlign: 'left' }) } },
-        { icon: 'mdi:format-align-center',  title: '居中',     run: function (e) { e.chain().focus().setTextAlign('center').run() },  isActive: function (e) { return e.isActive({ textAlign: 'center' }) } },
+        { icon: 'mdi:format-align-center',  title: '居中对齐',     run: function (e) { e.chain().focus().setTextAlign('center').run() },  isActive: function (e) { return e.isActive({ textAlign: 'center' }) } },
         { icon: 'mdi:format-align-right',   title: '右对齐',   run: function (e) { e.chain().focus().setTextAlign('right').run() },   isActive: function (e) { return e.isActive({ textAlign: 'right' }) } },
         { icon: 'mdi:format-align-justify', title: '两端对齐', run: function (e) { e.chain().focus().setTextAlign('justify').run() }, isActive: function (e) { return e.isActive({ textAlign: 'justify' }) } }
       ]
