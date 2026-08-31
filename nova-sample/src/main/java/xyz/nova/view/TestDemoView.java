@@ -482,7 +482,8 @@ public class TestDemoView {
             views = @View(title = "富文本", width = "10%"),
             edit = @Edit(
                     title = "富文本",
-                    type = Edit.Type.EDITOR
+                    type = Edit.Type.EDITOR,
+                    readonly = @Readonly(edit = true)
             )
     )
     private String editor;

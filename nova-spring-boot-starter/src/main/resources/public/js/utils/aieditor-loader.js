@@ -39,6 +39,7 @@
       placeholder: '请输入内容...',
       contentRetention: false,
       theme: opts.theme || detectTheme(),
+      editable: opts.editable !== false,
       image: {
         defaultSize: 120,
         uploadFormName: 'image',
@@ -81,6 +82,11 @@
     try { editor.changeTheme(theme || detectTheme()) } catch (e) {}
   }
 
+  function setEditable(editor, editable) {
+    if (!editor || typeof editor.setEditable !== 'function') return
+    try { editor.setEditable(editable !== false) } catch (e) {}
+  }
+
   function setContent(editor, html) {
     if (!editor || editor.isDestroyed && editor.isDestroyed()) return
     try {
@@ -103,6 +109,7 @@
   window.NovaAiEditor = {
     createEditor: createEditor,
     changeTheme: changeTheme,
+    setEditable: setEditable,
     setContent: setContent,
     destroy: destroy
   }

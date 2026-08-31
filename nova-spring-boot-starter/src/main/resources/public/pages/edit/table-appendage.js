@@ -185,7 +185,8 @@ window.NovaAppForm = {
           self._editorLastSynced[field] = html
           self.$emit('field-change', { field: field, value: html })
         }, {
-          uploadNovaName: self.appNovaName
+          uploadNovaName: self.appNovaName,
+          editable: !self.isReadonly(f)
         })
         if (self._editors[field]) {
           try { window.NovaAiEditor.destroy(editor) } catch (e) {}

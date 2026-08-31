@@ -72,7 +72,8 @@ window.NovaFieldThis = {
           self._editorLastSyncedHtml = html
           self.$emit('field-change', { field: self.f.field, value: html })
         }, {
-          uploadNovaName: self.novaName
+          uploadNovaName: self.novaName,
+          editable: !self.isReadonly(self.f)
         })
         if (self._editorReady) {
           try { window.NovaAiEditor.destroy(editor) } catch (e) {}
