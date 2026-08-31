@@ -312,6 +312,23 @@ var NovaRefForm = {
       return /<[a-z]+[\s>]/i.test(String(str))
     },
 
+    // 打开富文本预览弹窗（与表格 cell 同款）
+    openEditorPreview: function(f) {
+      var html = (this.viewData || {})[f.field]
+      if (html === null || html === undefined || html === '') return
+      if (!window.popup || !window.popup.modal) {
+        window.alert('popup 工具未就绪，无法预览')
+        return
+      }
+      var encoded = ''
+      try { encoded = btoa(unescape(encodeURIComponent(String(html)))) } catch (e) { encoded = '' }
+      window.popup.modal('/editor-preview.html#' + encoded, {
+        title: f.title || '富文本预览',
+        width: '60%',
+        height: '60%'
+      })
+    },
+
     // 日期格式化
     _formatDateTs: function(ts, type) {
       var d = new Date(ts)
@@ -363,6 +380,12 @@ var NovaRefForm = {
             </n-button-group>
             <div v-else-if="item.field.type === 'ATTACHMENT' && isImageAttach(item.field) && getAttachUrls(item.field, viewData).length > 0" class="ref-attach-wrap" style="display:inline-flex;gap:6px;align-items:center">
               <NovaImagePreview :src-list="getAttachUrls(item.field, viewData)" :width="36" :height="36" :showAll="true" />
+            </div>
+            <div v-else-if="item.field.type === 'EDITOR' && displayText(item.field) !== ''" class="ref-desc-value">
+              <span class="cell-editor-preview" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:#2563eb;font-size:13px" @click="openEditorPreview(item.field)">
+                <iconify-icon icon="bi:filetype-html" style="font-size:16px"></iconify-icon>
+                <span>预览</span>
+              </span>
             </div>
             <div v-else class="ref-desc-value" :style="item.field.type === 'TEXTAREA' ? 'display:block;width:100%;min-width:0' : ''">
               <div v-if="item.field.type === 'TEXTAREA'" class="ref-textarea-box" style="background:rgba(0,0,0,0.02);border-left:3px solid #2563eb;padding:8px 12px;border-radius:4px;font-family:monospace;font-size:13px;white-space:pre-wrap;word-break:break-word;line-height:1.6;max-height:150px;overflow-y:auto">{{ displayText(item.field) || '-' }}</div>

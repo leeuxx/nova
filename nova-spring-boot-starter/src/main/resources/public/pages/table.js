@@ -1006,13 +1006,13 @@ const NovaTable = {
               default: () => '点击查看富文本',
               trigger: () => h('span', {
                 class: 'cell-editor-preview',
-                style: 'cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:#18a058',
+                style: 'cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:#2563eb',
                 onClick: (e) => {
                   e.stopPropagation()
                   vm.openTableEditorPreview(col.title, val)
                 }
               }, [
-                h('iconify-icon', { icon: 'mdi:file-document-outline', width: 18 }),
+                h('iconify-icon', { icon: 'bi:filetype-html', width: 18 }),
                 h('span', { style: 'font-size:12px' }, '预览')
               ])
             })
@@ -2679,10 +2679,9 @@ const NovaTable = {
         window.alert('popup 工具未就绪，无法预览')
         return
       }
-      window.popup.modal('/editor-preview.html#' + encoded, {
+      window.popup.drawer('/editor-preview.html#' + encoded, {
         title: title || '富文本预览',
-        width: '60%',
-        height: '80%'
+        size: '35%'
       })
     },
     // ── 操作表单 EDITOR (Tiptap) 生命周期 ──
