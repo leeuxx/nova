@@ -1062,11 +1062,12 @@ body.dark { background: #151515 !important; }
 }
 body.dark .form-field-editor { border-color: #2a2a2e; background: #1f1f23; }
 .form-field-editor:focus-within,
-.form-field-editor:hover { border-color: #18a058; box-shadow: 0 0 0 3px rgba(24,160,88,0.10); }
+.form-field-editor:hover { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.10); }
 body.dark .form-field-editor:focus-within,
-body.dark .form-field-editor:hover { border-color: #36ad6a; box-shadow: 0 0 0 3px rgba(54,173,106,0.16); }
+body.dark .form-field-editor:hover { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.16); }
 .form-field-editor.has-error { border-color: #d03050; box-shadow: 0 0 0 3px rgba(208,48,80,0.10); }
 .nova-aieditor-host { height: 300px; }
+.nova-aieditor-host .aie-container { border: none; }
 .nova-aieditor-host .aie-content { flex: 1; min-height: 0; }
 
 .nova-tiptap-toolbar {
