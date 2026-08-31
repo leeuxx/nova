@@ -17,7 +17,7 @@ window.HomePage = {
   template: `
 <div class="home-wrap">
   <img class="home-img" src="images/home.png" />
-  <p class="home-title">欢迎使用 {{ homeLogText }}</p>
+  <p class="home-title">{{ __t('home.welcome', { name: homeLogText }) }}</p>
   <p class="home-subtitle">{{ homeDesc }}</p>
 </div>
 `

@@ -133,7 +133,7 @@ var NovaRefForm = {
 
       // BOOLEAN
       if (col.type === 'BOOLEAN') {
-        return s.toLowerCase() === 'true' ? '是' : '否'
+        return s.toLowerCase() === 'true' ? window.__t('common.yes') : window.__t('common.no')
       }
 
       // CHOICE
@@ -180,7 +180,7 @@ var NovaRefForm = {
     formatBoolean: function(col, row) {
       var val = row[col.field]
       if (val === null || val === undefined || val === '') return ''
-      return String(val).toLowerCase() === 'true' ? '是' : '否'
+      return String(val).toLowerCase() === 'true' ? window.__t('common.yes') : window.__t('common.no')
     },
 
     // BOOLEAN 禁用开关取值
@@ -317,13 +317,13 @@ var NovaRefForm = {
       var html = (this.viewData || {})[f.field]
       if (html === null || html === undefined || html === '') return
       if (!window.popup || !window.popup.modal) {
-        window.alert('popup 工具未就绪，无法预览')
+        window.alert(window.__t('table.popup_not_ready'))
         return
       }
       var encoded = ''
       try { encoded = btoa(unescape(encodeURIComponent(String(html)))) } catch (e) { encoded = '' }
       window.popup.modal('/editor-preview.html#' + encoded, {
-        title: f.title || '富文本预览',
+        title: f.title || window.__t('table.rich_preview'),
         width: '60%',
         height: '60%'
       })
@@ -375,8 +375,8 @@ var NovaRefForm = {
             :style="'display:flex;align-items:' + (item.field.type === 'BOOLEAN' ? 'center' : 'baseline') + ';gap:8px;min-width:0;overflow:hidden;padding:6px;border-radius:4px' + (item.field.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
             <span class="ref-desc-label">{{ item.field.title }}:</span>
             <n-button-group v-if="item.field.type === 'BOOLEAN' && displayText(item.field) !== ''" size="small" style="pointer-events:none">
-              <n-button :type="booleanValue(item.field) ? 'primary' : 'default'">是</n-button>
-              <n-button :type="!booleanValue(item.field) ? 'primary' : 'default'">否</n-button>
+              <n-button :type="booleanValue(item.field) ? 'primary' : 'default'">{{ __t('common.yes') }}</n-button>
+              <n-button :type="!booleanValue(item.field) ? 'primary' : 'default'">{{ __t('common.no') }}</n-button>
             </n-button-group>
             <div v-else-if="item.field.type === 'ATTACHMENT' && isImageAttach(item.field) && getAttachUrls(item.field, viewData).length > 0" class="ref-attach-wrap" style="display:inline-flex;gap:6px;align-items:center">
               <NovaImagePreview :src-list="getAttachUrls(item.field, viewData)" :width="36" :height="36" :showAll="true" />
@@ -384,7 +384,7 @@ var NovaRefForm = {
             <div v-else-if="item.field.type === 'EDITOR' && displayText(item.field) !== ''" class="ref-desc-value">
               <span class="cell-editor-preview" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:#2563eb;font-size:13px" @click="openEditorPreview(item.field)">
                 <iconify-icon icon="bi:filetype-html" style="font-size:16px"></iconify-icon>
-                <span>预览</span>
+                <span>{{ __t('common.preview') }}</span>
               </span>
             </div>
             <div v-else class="ref-desc-value" :style="item.field.type === 'TEXTAREA' ? 'display:block;width:100%;min-width:0' : ''">

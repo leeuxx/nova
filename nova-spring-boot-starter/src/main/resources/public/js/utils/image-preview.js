@@ -79,7 +79,7 @@
         if (t.showDelete) {
           parts.push(h('button', {
             style: 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;border-radius:50%;background:#d03050;color:#fff;cursor:pointer;padding:0',
-            title: '删除',
+            title: window.__t('common.delete'),
             onClick: t.handleDelete
           }, [ h('iconify-icon', { icon: 'mdi:delete-outline', style: 'font-size:16px;line-height:1' }) ]))
         }

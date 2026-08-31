@@ -217,7 +217,7 @@ window.NovaTableJQ = (function ($) {
         if (layout.pageSize)  { target.pageSize = layout.pageSize; target.paginationConfig.pageSize = layout.pageSize }
         if (layout.pageSizes) {
           target.pageSizes = layout.pageSizes
-          target.paginationConfig.pageSizes = layout.pageSizes.map(function (n) { return { label: n + ' 条/页', value: n } })
+          target.paginationConfig.pageSizes = layout.pageSizes.map(function (n) { return { label: window.__t('table.items_per_page', { n: n }), value: n } })
         }
         if (layout.editLayout) target.editLayout = layout.editLayout
         var allEdit = resp.data.edit || []
@@ -885,8 +885,8 @@ window.NovaTableJQ = (function ($) {
     if (!target) return
     var novaIdField = target.novaIdFieldName
     var keys = target.checkedRowKeys.map(function (k) { return String(k) })
-    window.modal.confirm('确定删除选中的 ' + keys.length + ' 条数据吗？', {
-      title: '确认删除',
+    window.modal.confirm(window.__t('table.confirm_delete_n_items', { n: keys.length }), {
+      title: window.__t('common.confirm_delete'),
       onConfirm: function () {
         doDelete(target.novaName, novaIdField, keys, vmKey)
       }
@@ -899,7 +899,7 @@ window.NovaTableJQ = (function ($) {
       var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
       if (!t) return
       t.checkedRowKeys = []
-      if (window.$message) window.$message.success('删除成功')
+      if (window.$message) window.$message.success(window.__t('common.delete_success'))
       loadData(vmKey || novaName)
     }).catch(function () {
       console.info('[Nova] delete接口请求失败，novaName:', novaName)
@@ -926,7 +926,7 @@ window.NovaTableJQ = (function ($) {
         if (f.showByExpr && window.evalShowExpr && !window.evalShowExpr(f.showByExpr, evalFd)) return
         var val = fd[f.field]
         var empty = val === null || val === undefined || val === '' || (Array.isArray(val) && val.length === 0)
-        if (empty) errs[f.field] = f.title + '不能为空'
+        if (empty) errs[f.field] = window.__t('table.field_required', { name: f.title })
       })
       appErrors[n] = errs
       if (!firstErrAppTab && Object.keys(errs).length > 0) firstErrAppTab = n
@@ -1007,7 +1007,7 @@ window.NovaTableJQ = (function ($) {
         var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
         if (!t) return
         t.showForm = false
-        if (window.$message) window.$message.success('修改成功')
+        if (window.$message) window.$message.success(window.__t('common.update_success'))
         loadData(vmKey || novaName)
       }).catch(function () {
         console.info('[Nova] update接口请求失败，novaName:', novaName)
@@ -1029,7 +1029,7 @@ window.NovaTableJQ = (function ($) {
         var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
         if (!t) return
         t.showForm = false
-        if (window.$message) window.$message.success('新增成功')
+        if (window.$message) window.$message.success(window.__t('common.create_success'))
         loadData(vmKey || novaName)
       }).catch(function () {
         console.info('[Nova] add接口请求失败，novaName:', novaName)
@@ -1113,7 +1113,7 @@ window.NovaTableJQ = (function ($) {
         if (layout.pageSize)  { target.pageSize = layout.pageSize; target.paginationConfig.pageSize = layout.pageSize }
         if (layout.pageSizes) {
           target.pageSizes = layout.pageSizes
-          target.paginationConfig.pageSizes = layout.pageSizes.map(function (n) { return { label: n + ' 条/页', value: n } })
+          target.paginationConfig.pageSizes = layout.pageSizes.map(function (n) { return { label: window.__t('table.items_per_page', { n: n }), value: n } })
         }
         if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
         if (resp.data.dualShrink) target.dualShrink = resp.data.dualShrink

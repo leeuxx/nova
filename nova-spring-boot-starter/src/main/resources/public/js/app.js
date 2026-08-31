@@ -25,7 +25,7 @@ const {
   NBreadcrumb, NBreadcrumbItem, NBadge,
   NMessageProvider, NDialogProvider, NNotificationProvider, NAvatar,
   useDialog, useMessage, useLoadingBar,
-  darkTheme, zhCN, dateZhCN
+  darkTheme, zhCN, dateZhCN, enUS, dateEnUS
 } = naive
 
 // 登录页面组件
@@ -287,16 +287,20 @@ function mountApp(menuList, config, loginExpired) {
         const hasRight = idx >= 0 && idx < openedTabs.value.length - 1
         const hasOther = openedTabs.value.length > 1
         return [
-          { label: '关闭', key: 'close', icon: mi('material-symbols:close'), disabled: !hasOther },
-          { label: '重新加载', key: 'reload', icon: mi('material-symbols:refresh') },
+          { label: window.__t('tabs.close'), key: 'close', icon: mi('material-symbols:close'), disabled: !hasOther },
+          { label: window.__t('tabs.reload'), key: 'reload', icon: mi('material-symbols:refresh') },
           { type: 'divider', key: 'd1' },
-          { label: '关闭左侧标签页', key: 'closeLeft', icon: mi('material-symbols:chevron-left'), disabled: !hasLeft },
-          { label: '关闭右侧标签页', key: 'closeRight', icon: mi('material-symbols:chevron-right'), disabled: !hasRight },
-          { label: '关闭其他标签页', key: 'closeOther', icon: mi('material-symbols:close'), disabled: !hasOther },
+          { label: window.__t('tabs.close_left'), key: 'closeLeft', icon: mi('material-symbols:chevron-left'), disabled: !hasLeft },
+          { label: window.__t('tabs.close_right'), key: 'closeRight', icon: mi('material-symbols:chevron-right'), disabled: !hasRight },
+          { label: window.__t('tabs.close_other'), key: 'closeOther', icon: mi('material-symbols:close'), disabled: !hasOther },
         ]
       })
 
       const theme = computed(() => isDark.value ? darkTheme : null)
+      // Naive UI locale：跟随前端 locale（zh/en），切换语言通过整页刷新触发，无需响应式
+      const naiveLocale = window.__appLocale && window.__appLocale.value === 'en'
+        ? { locale: enUS, dateLocale: dateEnUS }
+        : { locale: zhCN, dateLocale: dateZhCN }
       // 是否为独立页面（登录/注册/404 等，无布局）
       const isStandaloneRoute = computed(() => route.path === '/login' || route.path === '/register' || route.path === '/404')
 
@@ -525,9 +529,22 @@ function mountApp(menuList, config, loginExpired) {
           ...(t.icon ? { icon: mi(t.icon) } : {})
         })),
         ...(foldTools.length ? [{ type: 'divider', key: 'd2' }] : []),
-        { label: '个人中心', key: 'profile', icon: mi('hugeicons:user-circle') },
-        { label: '退出登录', key: 'logout', icon: mi('material-symbols:logout') }
+        { label: window.__t('profile.title'), key: 'profile', icon: mi('hugeicons:user-circle') },
+        { label: window.__t('profile.logout'), key: 'logout', icon: mi('material-symbols:logout') }
       ]
+
+      // 右上角语言切换：hover 下拉，选中后由 i18n.setLocale 写 localStorage + 刷新页面
+      const currentLocale = window.__appLocale || { value: 'zh' }
+      const localeDropdown = [
+        { label: '中文', key: 'zh', icon: mi('circle-flags:cn') },
+        { label: 'English', key: 'en', icon: mi('circle-flags:us') }
+      ]
+      const handleLocaleSelect = (key) => {
+        if (!key || key === currentLocale.value) return
+        if (window.__i18n && typeof window.__i18n.setLocale === 'function') {
+          window.__i18n.setLocale(key)
+        }
+      }
 
       // 个人中心弹窗状态
       const showProfile = ref(false)
@@ -536,7 +553,7 @@ function mountApp(menuList, config, loginExpired) {
       const profileForm = ref({ token: '', avatar: '', name: '', alias: '' })
       const avatarFileList = ref([])
       const profileRules = {
-        name: { required: true, message: '请输入名称', trigger: ['blur', 'input'] }
+        name: { required: true, message: window.__t('profile.name_required'), trigger: ['blur', 'input'] }
       }
 
       // 右上角用户菜单
@@ -561,8 +578,8 @@ function mountApp(menuList, config, loginExpired) {
           showProfile.value = true
         }
         if (key === 'logout') {
-          window.modal.confirm('确定要退出登录吗？', {
-            title: '退出登录',
+          window.modal.confirm(window.__t('profile.logout_confirm'), {
+            title: window.__t('profile.logout_title'),
             onConfirm: () => {
               window.fetchApi.post('/nova/authority/logout').finally(() => {
                 // 清空本地登录态
@@ -596,7 +613,7 @@ function mountApp(menuList, config, loginExpired) {
             userName.value = profileForm.value.name
             userAlias.value = profileForm.value.alias || ''
             userAvatar.value = profileForm.value.avatar || ''
-            if (window.$message) window.$message.success('更新成功')
+            if (window.$message) window.$message.success(window.__t('profile.update_success'))
             showProfile.value = false
           }).finally(() => {
             profileSaving.value = false
@@ -612,14 +629,14 @@ function mountApp(menuList, config, loginExpired) {
         window.fetchApi.upload('/nova/attachment/upload', formData).then(function(resp) {
           if (resp.data && resp.data.length) {
             profileForm.value.avatar = resp.data[0]
-            if (window.$message) window.$message.success('上传成功')
+            if (window.$message) window.$message.success(window.__t('common.upload_success'))
             onFinish()
           } else {
-            if (window.$message) window.$message.error('上传失败')
+            if (window.$message) window.$message.error(window.__t('common.upload_failed'))
             onError()
           }
         }).catch(function() {
-          if (window.$message) window.$message.error('上传失败')
+          if (window.$message) window.$message.error(window.__t('common.upload_failed'))
           onError()
         })
       }
@@ -656,9 +673,10 @@ function mountApp(menuList, config, loginExpired) {
 
       return {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
-        menuTree, breadcrumbItems, zhCN, dateZhCN, routeKey, isStandaloneRoute, pageTransitionName, menuSelectedKey, route,
+        menuTree, breadcrumbItems, naiveLocale, routeKey, isStandaloneRoute, pageTransitionName, menuSelectedKey, route,
         pageComponent, cachedNames,
         handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, userToolButtons, handleUserMenuSelect,
+        localeDropdown, handleLocaleSelect, currentLocale,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
         barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText, logoImg,
         showProfile, profileSaving, profileFormRef, profileForm, profileRules, submitProfile,
@@ -668,7 +686,7 @@ function mountApp(menuList, config, loginExpired) {
     },
 
     template: `
-      <n-config-provider :theme="theme" :theme-overrides="themeOverrides" :locale="zhCN" :date-locale="dateZhCN">
+      <n-config-provider :theme="theme" :theme-overrides="themeOverrides" :locale="naiveLocale.locale" :date-locale="naiveLocale.dateLocale">
         <n-loading-bar-provider>
         <n-message-provider>
           <n-dialog-provider>
@@ -730,8 +748,13 @@ function mountApp(menuList, config, loginExpired) {
                             <n-icon size="20"><iconify-icon :icon="btn.icon"></iconify-icon></n-icon>
                           </div>
                         </template>
-                        <nova-message data-tip="消息中心" />
-                        <div class="header-action theme-switch" data-tip="切换主题" style="cursor:pointer" @click="isDark = !isDark">
+                        <nova-message :data-tip="__t('tabs.message_center')" />
+                        <n-dropdown :options="localeDropdown" trigger="hover" @select="handleLocaleSelect" key-field="key">
+                          <div class="header-action lang-switch" style="cursor:pointer">
+                            <n-icon size="20"><iconify-icon icon="material-symbols:translate"></iconify-icon></n-icon>
+                          </div>
+                        </n-dropdown>
+                        <div class="header-action theme-switch" :data-tip="__t('tabs.theme_tip')" style="cursor:pointer" @click="isDark = !isDark">
                           <n-icon size="18"><iconify-icon icon="material-symbols:dark-mode-outline"></iconify-icon></n-icon>
                           <n-switch v-model:value="isDark" @click.stop />
                           <n-icon size="18"><iconify-icon icon="material-symbols:light-mode-outline"></iconify-icon></n-icon>
@@ -794,13 +817,13 @@ function mountApp(menuList, config, loginExpired) {
         </n-loading-bar-provider>
 
         <!-- 个人中心弹窗 -->
-        <n-modal v-model:show="showProfile" preset="card" title="个人中心" style="width:420px;margin-top:60px">
+        <n-modal v-model:show="showProfile" preset="card" :title="__t('profile.title')" style="width:420px;margin-top:60px">
           <n-form ref="profileFormRef" :model="profileForm" :rules="profileRules"
             label-placement="left" label-width="70" style="margin-top:4px">
-            <n-form-item label="Token" path="token">
+            <n-form-item :label="__t('profile.token')" path="token">
               <n-input v-model:value="profileForm.token" disabled />
             </n-form-item>
-            <n-form-item label="头像" path="avatar">
+            <n-form-item :label="__t('profile.avatar')" path="avatar">
               <n-upload
                 v-model:file-list="avatarFileList"
                 :max="1"
@@ -810,16 +833,16 @@ function mountApp(menuList, config, loginExpired) {
                 @remove="onAvatarRemove"
               />
             </n-form-item>
-            <n-form-item label="昵称" path="alias">
-              <n-input v-model:value="profileForm.alias" placeholder="请输入昵称" />
+            <n-form-item :label="__t('profile.alias')" path="alias">
+              <n-input v-model:value="profileForm.alias" :placeholder="__t('profile.alias_placeholder')" />
             </n-form-item>
-            <n-form-item label="名称" path="name">
-              <n-input v-model:value="profileForm.name" placeholder="请输入名称" />
+            <n-form-item :label="__t('profile.name')" path="name">
+              <n-input v-model:value="profileForm.name" :placeholder="__t('profile.name_placeholder')" />
             </n-form-item>
           </n-form>
           <template #footer>
             <div style="display:flex;justify-content:center">
-              <n-button v-if="userEdit" type="primary" style="width:80%" :loading="profileSaving" @click="submitProfile">更新信息</n-button>
+              <n-button v-if="userEdit" type="primary" style="width:80%" :loading="profileSaving" @click="submitProfile">{{ __t('profile.update') }}</n-button>
             </div>
           </template>
         </n-modal>

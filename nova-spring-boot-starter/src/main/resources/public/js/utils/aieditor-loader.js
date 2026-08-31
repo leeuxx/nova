@@ -10,7 +10,7 @@
   function uploadFile(file, novaName) {
     return new Promise(function (resolve) {
       if (!window.fetchApi || !window.fetchApi.upload) {
-        resolve({ errorCode: 1, message: 'fetchApi 未就绪' })
+        resolve({ errorCode: 1, message: window.__t('common.fetch_api_not_ready') })
         return
       }
       var formData = new FormData()
@@ -20,23 +20,23 @@
         if (resp && resp.data && resp.data.length) {
           resolve({ errorCode: 0, data: { src: resp.data[0] } })
         } else {
-          resolve({ errorCode: 1, message: '上传失败' })
+          resolve({ errorCode: 1, message: window.__t('common.upload_failed') })
         }
       }).catch(function () {
-        resolve({ errorCode: 1, message: '请求失败' })
+        resolve({ errorCode: 1, message: window.__t('common.request_failed') })
       })
     })
   }
 
   function createEditor(hostEl, html, onChange, options) {
     var AiEditor = getClass()
-    if (!AiEditor) throw new Error('AiEditor 未加载')
+    if (!AiEditor) throw new Error(window.__t('common.aieditor_not_loaded'))
     var opts = options || {}
     var initialContent = html || ''
     return new AiEditor({
       element: hostEl,
       content: initialContent,
-      placeholder: '请输入内容...',
+      placeholder: window.__t('common.input_content'),
       contentRetention: false,
       theme: opts.theme || detectTheme(),
       editable: opts.editable !== false,

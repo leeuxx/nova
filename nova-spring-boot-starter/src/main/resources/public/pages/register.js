@@ -22,17 +22,17 @@ window.RegisterPage = {
       formRules: {
         username: {
           required: true,
-          message: '请输入账号',
+          message: window.__t('login.username_placeholder'),
           trigger: 'blur'
         },
         password: {
           required: true,
-          message: '请输入密码',
+          message: window.__t('login.password_placeholder'),
           trigger: 'blur'
         },
         name: {
           required: true,
-          message: '请输入名称',
+          message: window.__t('register.name_placeholder'),
           trigger: 'blur'
         }
       }
@@ -51,12 +51,12 @@ window.RegisterPage = {
             localStorage.setItem('nova_user', data.name || '')
             localStorage.setItem('nova_alias', data.alias || '')
             localStorage.setItem('nova_avatar', data.avatar || '')
-            if (window.$message) window.$message.success('注册成功，欢迎 ' + (data.name || ''))
+            if (window.$message) window.$message.success(window.__t('register.success', { name: data.name || '' }))
             history.replaceState(null, '', '#/home')
             window.location.reload()
           } else {
             // 返回为空或 token 为空：跳转登录页
-            if (window.$message) window.$message.warning(resp.message || '注册未返回有效登录信息，请前往登录')
+            if (window.$message) window.$message.warning(resp.message || window.__t('register.invalid_response'))
             this.$router.push('/login')
           }
         }).finally(() => {
@@ -105,10 +105,10 @@ window.RegisterPage = {
         size="large"
         style="position:relative"
       >
-        <n-form-item label="账号" path="username">
+        <n-form-item :label="__t('login.username')" path="username">
           <n-input
             v-model:value="formData.username"
-            placeholder="请输入账号"
+            :placeholder="__t('login.username_placeholder')"
             clearable
             @keyup.enter="handleKeyPress"
             :bordered="true"
@@ -119,11 +119,11 @@ window.RegisterPage = {
           </n-input>
         </n-form-item>
 
-        <n-form-item label="密码" path="password">
+        <n-form-item :label="__t('login.password')" path="password">
           <n-input
             v-model:value="formData.password"
             type="password"
-            placeholder="请输入密码"
+            :placeholder="__t('login.password_placeholder')"
             show-password-on="click"
             @keyup.enter="handleKeyPress"
             :bordered="true"
@@ -134,10 +134,10 @@ window.RegisterPage = {
           </n-input>
         </n-form-item>
 
-        <n-form-item label="名称" path="name">
+        <n-form-item :label="__t('register.name')" path="name">
           <n-input
             v-model:value="formData.name"
-            placeholder="请输入名称"
+            :placeholder="__t('register.name_placeholder')"
             clearable
             @keyup.enter="handleKeyPress"
             :bordered="true"
@@ -148,10 +148,10 @@ window.RegisterPage = {
           </n-input>
         </n-form-item>
 
-        <n-form-item label="别名" path="alias">
+        <n-form-item :label="__t('register.alias')" path="alias">
           <n-input
             v-model:value="formData.alias"
-            placeholder="请输入别名（可选）"
+            :placeholder="__t('register.alias_placeholder')"
             clearable
             @keyup.enter="handleKeyPress"
             :bordered="true"
@@ -170,15 +170,15 @@ window.RegisterPage = {
             :loading="loading"
             @click="handleRegister"
           >
-            注 册
+            {{ __t('register.submit') }}
           </n-button>
         </n-form-item>
 
         <!-- 返回登录：相对 n-form 绝对定位，从注册按钮下方开始，不占文档流，注册信息保持垂直居中 -->
         <n-form-item :show-label="false" style="position:absolute;top:100%;left:0;right:0;margin:0">
           <div style="width:100%;text-align:center;font-size:13px;margin-top:6px">
-            <span style="color:#94a3b8">已有账号？</span>
-            <span class="login-remember-text" style="color:#2563eb" @click="goLogin">返回登录</span>
+            <span style="color:#94a3b8">{{ __t('register.has_account') }}</span>
+            <span class="login-remember-text" style="color:#2563eb" @click="goLogin">{{ __t('register.go_login') }}</span>
           </div>
         </n-form-item>
       </n-form>

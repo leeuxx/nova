@@ -8,16 +8,19 @@ var NDropdown = naive.NDropdown
 
 // ─── 标准按钮定义元数据 ──────────────────────────────────────
 var STANDARD = {
-  ADD:          { key: 'add',         label: '新 增', icon: 'material-symbols:add',            btnType: 'primary' },
-  BATCH_DELETE: { key: 'batchDelete', label: '删 除', icon: 'material-symbols:delete-outline', btnType: 'error'   },
-  LINK_ADD:     { key: 'linkAdd',     label: '新增',   icon: 'material-symbols:add',            btnType: 'primary' },
-  EDIT:         { key: 'edit',        label: '编辑' },
-  DELETE:       { key: 'delete',      label: '删除' },
+  ADD:          { key: 'add',         labelKey: 'common.add.spaced', icon: 'material-symbols:add',            btnType: 'primary' },
+  BATCH_DELETE: { key: 'batchDelete', labelKey: 'common.delete.spaced', icon: 'material-symbols:delete-outline', btnType: 'error'   },
+  LINK_ADD:     { key: 'linkAdd',     labelKey: 'common.add',         icon: 'material-symbols:add',            btnType: 'primary' },
+  EDIT:         { key: 'edit',        labelKey: 'common.edit' },
+  DELETE:       { key: 'delete',      labelKey: 'common.delete' },
 }
 
 // ─── 行操作区 VNode 构建 ────────────────────────────────────
 function buildRowActions(vm, row) {
   var buttons = []
+  var editLabel = window.__t('common.edit')
+  var deleteLabel = window.__t('common.delete')
+  var unavailableSuffix = window.__t('common.unavailable')
 
   // 编辑（只读模式不显示，sysBtnHide.edit表达式满足则禁用）
   var sysBtnHide = vm.sysBtnHide || {}
@@ -27,14 +30,14 @@ function buildRowActions(vm, row) {
       buttons.push(h('span', {
         class: 'row-action-btn',
         style: { color: '#ccc', cursor: 'not-allowed', fontSize: '13px' },
-        title: '不可编辑'
-      }, '编辑'))
+        title: window.__t('table.edit_unavailable')
+      }, editLabel))
     } else {
       buttons.push(h('span', {
         class: 'row-action-btn',
         style: { color: '#2080f0', cursor: 'pointer', fontSize: '13px' },
         onClick: function() { vm.handleEdit(row) }
-      }, '编辑'))
+      }, editLabel))
     }
   }
 
@@ -45,18 +48,18 @@ function buildRowActions(vm, row) {
       buttons.push(h('span', {
         class: 'row-action-btn',
         style: { color: '#ccc', cursor: 'not-allowed', fontSize: '13px' },
-        title: '不可删除'
-      }, '删除'))
+        title: window.__t('table.delete_unavailable')
+      }, deleteLabel))
     } else {
       buttons.push(h(NPopconfirm, {
         onPositiveClick: function() { vm.handleDelete(row) },
         onNegativeClick: function() {},
-        positiveText: '确定',
-        negativeText: '取消'
+        positiveText: window.__t('common.confirm'),
+        negativeText: window.__t('common.cancel')
       }, {
-        default: function() { return '确定删除吗？' },
+        default: function() { return window.__t('common.confirm_delete') },
         trigger: function() {
-          return h('span', { class: 'row-action-btn', style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, '删除')
+          return h('span', { class: 'row-action-btn', style: { color: '#d03050', cursor: 'pointer', fontSize: '13px' } }, deleteLabel)
         }
       }))
     }
@@ -74,7 +77,7 @@ function buildRowActions(vm, row) {
       cursor: enabled ? 'pointer' : 'not-allowed',
       fontSize: '13px'
     }
-    var btnTitle = enabled ? (btn.tip || btn.title) : (btn.tip || btn.title) + ' (不可用)'
+    var btnTitle = enabled ? (btn.tip || btn.title) : (btn.tip || btn.title) + unavailableSuffix
     var triggerEl = h('span', { class: 'row-action-btn', style: btnStyle, title: btnTitle }, btn.title)
     var handler = function() {
       if (btn.type === 'NOVA' && btn.novaClassName) { vm.openOpForm(btn, row); return }
@@ -85,8 +88,8 @@ function buildRowActions(vm, row) {
       buttons.push(h(NPopconfirm, {
         onPositiveClick: function() { handler() },
         onNegativeClick: function() {},
-        positiveText: '确定',
-        negativeText: '取消'
+        positiveText: window.__t('common.confirm'),
+        negativeText: window.__t('common.cancel')
       }, {
         default: function() { return btn.callHint },
         trigger: function() { return triggerEl }
@@ -114,7 +117,7 @@ function buildRowActions(vm, row) {
           if (btn.type === 'TPL') { vm.openTpl(btn, row); return }
           vm.submitCustomBtn(btn, row)
         }
-        if (btn.callHint) { window.modal.confirm(btn.callHint, { title: '确认操作', onConfirm: action }) }
+        if (btn.callHint) { window.modal.confirm(btn.callHint, { title: window.__t('dialog.confirm_action_title'), onConfirm: action }) }
         else { action() }
       }
     }, {

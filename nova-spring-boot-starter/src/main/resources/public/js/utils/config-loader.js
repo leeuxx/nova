@@ -4,7 +4,7 @@
     // 系统名称
     name: 'Nova UI Admin',
     // 描述
-    desc: '简洁高效的后台管理系统',
+    desc: window.__t('app.system_desc'),
     // 版权信息
     copyrightTxt: '© 2026 Nova UI Admin. All Rights Reserved.',
     // logo 图片

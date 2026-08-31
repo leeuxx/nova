@@ -87,7 +87,7 @@ window.NovaTableJQ_form = (function () {
       if (!visibleSet.has(f.field)) return
       var val = formData[f.field]
       var empty = val === null || val === undefined || val === '' || (Array.isArray(val) && val.length === 0)
-      if (empty) errors[f.field] = f.title + '不能为空'
+      if (empty) errors[f.field] = window.__t('table.field_required', { name: f.title })
     })
     return errors
   }

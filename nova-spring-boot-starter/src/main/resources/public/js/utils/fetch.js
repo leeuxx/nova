@@ -46,8 +46,9 @@ window.fetchApi = {
 function errorHandle(resp) {
     // token无效，清空本地并跳登录页
     if (resp.code === 520) {
-      window.modal.confirm('登录状态已过期，您可以继续留在该页面，或者重新登录', {
-        title: '系统提示',
+      window.modal.confirm(window.__t('dialog.token_expired'), {
+        title: window.__t('dialog.system_tip'),
+        positiveText: window.__t('dialog.token_expired_action'),
         onConfirm: () => {
           localStorage.removeItem('nova_token')
           localStorage.removeItem('nova_user')
@@ -68,7 +69,7 @@ function errorHandle(resp) {
     // 接口异常
     if (resp.code === 500) {
         if (window.$message) {
-            window.$message.error(resp.msg || '服务器异常')
+            window.$message.error(resp.msg || window.__t('dialog.server_error'))
         }
         return true
     }

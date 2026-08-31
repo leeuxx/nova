@@ -61,7 +61,7 @@ window.NovaMessage = {
           this.count = this.messages.length
         })
         .catch(() => {
-          if (window.$message) window.$message.error('关闭消息失败')
+          if (window.$message) window.$message.error(window.__t('message.close_failed'))
         })
     },
 
@@ -69,7 +69,7 @@ window.NovaMessage = {
       // 只关闭有 x 按钮（close=true）的消息
       const ids = this.messages.filter((m) => m.close).map((m) => m.id)
       if (ids.length === 0) {
-        if (window.$message) window.$message.info('没有可关闭的消息')
+        if (window.$message) window.$message.info(window.__t('message.clear_nothing'))
         return
       }
       window.fetchApi.post('/nova/message/closeMessages', { ids })
@@ -78,7 +78,7 @@ window.NovaMessage = {
           this.count = this.messages.length
         })
         .catch(() => {
-          if (window.$message) window.$message.error('清除失败')
+          if (window.$message) window.$message.error(window.__t('message.clear_failed'))
         })
     },
 
@@ -113,12 +113,12 @@ window.NovaMessage = {
         <n-drawer-content>
           <template #header>
             <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
-              <span>消息中心</span>
-              <span v-if="clearableCount > 0" class="msg-clear-link" @click="clearAll">一键清除</span>
+              <span>{{ __t('message.center_title') }}</span>
+              <span v-if="clearableCount > 0" class="msg-clear-link" @click="clearAll">{{ __t('message.clear_all') }}</span>
             </div>
           </template>
-          <div v-if="loading" class="msg-center-loading">加载中...</div>
-          <div v-else-if="messages.length === 0" class="msg-center-empty">暂无消息</div>
+          <div v-if="loading" class="msg-center-loading">{{ __t('message.loading') }}</div>
+          <div v-else-if="messages.length === 0" class="msg-center-empty">{{ __t('message.empty') }}</div>
           <transition-group v-else tag="div" name="msg" class="msg-center-list">
             <div v-for="(msg, i) in messages" :key="msg._key" class="msg-center-item" :class="{ expanded: expandedMap[i] }" @click="toggleExpand(i, $event)">
               <n-button v-if="msg.close" class="msg-center-x" size="tiny" text @click.stop="removeMessage(i)">

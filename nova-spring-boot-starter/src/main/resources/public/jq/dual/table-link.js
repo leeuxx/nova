@@ -72,7 +72,7 @@ window.NovaDualLinkJQ = (function () {
     const checkedIds = Array.from(hostVm.linkTreeCheckedKeys['__dual__'] || [])
 
     if (checkedIds.length === 0) {
-      if (window.$message) window.$message.warning('请至少选择一个节点')
+      if (window.$message) window.$message.warning(window.__t('table.select_at_least_one_node'))
       return
     }
 
@@ -82,18 +82,18 @@ window.NovaDualLinkJQ = (function () {
     const storageField = lt.thisStorageField || refField
 
     if (!sourceField || !targetField) {
-      if (window.$message) window.$message.error('关联参数不完整: 缺少字段名')
+      if (window.$message) window.$message.error(window.__t('table.link_param_missing_field'))
       return
     }
 
     const row = hostVm._dualSelectedRow
     if (!row) {
-      if (window.$message) window.$message.error('请先选择一行主表数据')
+      if (window.$message) window.$message.error(window.__t('table.select_master_row_first'))
       return
     }
     const sourceValue = row[storageField]
     if (sourceValue == null) {
-      if (window.$message) window.$message.error('关联参数不完整: 缺少源记录ID')
+      if (window.$message) window.$message.error(window.__t('table.link_param_missing_source_id'))
       return
     }
 
@@ -113,14 +113,14 @@ window.NovaDualLinkJQ = (function () {
     var lt = dualVm.linkTargetInfo || {}
     var targetNova = lt.linkReferenceName
     if (!targetNova) {
-      if (window.$message) window.$message.warning('未找到目标表')
+      if (window.$message) window.$message.warning(window.__t('table.target_table_not_found'))
       return
     }
     hostVm.linkPickerTargetNova = targetNova
     hostVm.linkPickerCurrentTab = hostVm.dualTableCurrentNova
     hostVm.linkPickerSelectedKeys = []
     hostVm.linkPickerSourceFields = {}
-    hostVm.linkPickerTitle = '选择 ' + (hostVm.dualTableCurrentLabel || '关联数据')
+    hostVm.linkPickerTitle = window.__t('table.link_picker_title', { name: hostVm.dualTableCurrentLabel || window.__t('table.link_data') })
     hostVm.linkPickerShow = true
   }
 

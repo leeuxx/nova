@@ -49,15 +49,15 @@ window.NovaLinkForm = {
   methods: {
     linkTreeSearchPlaceholder() {
       const config = (this.linkTabBuild[this.linkNovaName] || {}).linkTreeTargetConfig
-      if (!config) return '搜索...'
+      if (!config) return window.__t('table.search_placeholder')
       const cols = config.tableColumns || []
       const searchField = config.treeSearchField
       for (var i = 0; i < cols.length; i++) {
         if (cols[i].field === searchField) {
-          return '请输入' + (cols[i].title || searchField)
+          return window.__t('table.search_field_placeholder', { name: cols[i].title || searchField })
         }
       }
-      return '请输入' + searchField
+      return window.__t('table.search_field_placeholder', { name: searchField })
     },
 
     linkTreeRenderLabel() {
@@ -152,7 +152,7 @@ window.NovaLinkForm = {
         />
       </div>
       <div style="flex-shrink:0;padding:8px 0;display:flex;justify-content:flex-end;border-top:1px solid #eee">
-        <n-button v-if="hasAddPermission" type="primary" @click="onSave">保 存</n-button>
+        <n-button v-if="hasAddPermission" type="primary" @click="onSave">{{ __t('common.save') }}</n-button>
       </div>
     </template>
   </div>

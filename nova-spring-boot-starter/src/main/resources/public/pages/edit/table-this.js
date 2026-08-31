@@ -165,7 +165,7 @@ window.NovaFieldThis = {
       if (handleJs) {
         // handleJs 优先：fetch js 文件，注入 param + transmitParams + $btn 执行
         window.fetch(handleJs).then(function(resp) {
-          if (!resp.ok) throw new Error('加载 JS 失败: ' + handleJs)
+          if (!resp.ok) throw new Error(window.__t('table.template_load_failed') + ': ' + handleJs)
           return resp.text()
         }).then(function(code) {
           var $btn = cfg.id ? $(window.parent.document).find('#' + cfg.id) : null
@@ -181,12 +181,12 @@ window.NovaFieldThis = {
         }).then(function(resp) {
           var data = resp.data || {}
           if (data.status !== false) {
-            if (window.$message) window.$message.success(data.message || '操作成功')
+            if (window.$message) window.$message.success(data.message || window.__t('table.op_success'))
           } else {
-            if (window.$message) window.$message.error(data.message || '操作失败')
+            if (window.$message) window.$message.error(data.message || window.__t('table.op_failed'))
           }
         }).catch(function(err) {
-          if (!err || !err.code) { if (window.$message) window.$message.error('请求失败') }
+          if (!err || !err.code) { if (window.$message) window.$message.error(window.__t('table.request_failed')) }
         })
       }
     },
@@ -258,7 +258,7 @@ window.NovaFieldThis = {
       v-else-if="f.type === 'CHOICE' && choiceMap[f.field] && choiceMap[f.field].selectType === 'MULTI'"
       :value="formData[f.field]"
       :options="editFieldOptions(f)"
-      :placeholder="'请选择' + f.title"
+      :placeholder="__t('table.select_field_placeholder', { name: f.title })"
       :status="formErrors[f.field] ? 'error' : undefined"
       :disabled="isReadonly(f)"
       multiple clearable
@@ -267,7 +267,7 @@ window.NovaFieldThis = {
       v-else-if="f.type === 'CHOICE'"
       :value="formData[f.field]"
       :options="editFieldOptions(f)"
-      :placeholder="'请选择' + f.title"
+      :placeholder="__t('table.select_field_placeholder', { name: f.title })"
       :status="formErrors[f.field] ? 'error' : undefined"
       :disabled="isReadonly(f)"
       clearable
@@ -278,17 +278,17 @@ window.NovaFieldThis = {
         :value="formData[f.field] === 'true'"
         :disabled="isReadonly(f)"
         @update:value="(v) => onFieldUpdate(f.field, v ? 'true' : 'false')" />
-      <span style="font-size:13px;color:#666">{{ formData[f.field] === 'true' ? '是' : '否' }}</span>
+      <span style="font-size:13px;color:#666">{{ formData[f.field] === 'true' ? __t('common.yes') : __t('common.no') }}</span>
     </div>
     <n-button-group v-else-if="f.type === 'BOOLEAN' && (booleanMap[f.field] || {}).type === 'SEGMENT'" size="small">
-      <n-button :type="formData[f.field] === 'true' ? 'primary' : 'default'" :disabled="isReadonly(f)" @click="onFieldUpdate(f.field, 'true')">是</n-button>
-      <n-button :type="formData[f.field] === 'true' ? 'default' : 'primary'" :disabled="isReadonly(f)" @click="onFieldUpdate(f.field, 'false')">否</n-button>
+      <n-button :type="formData[f.field] === 'true' ? 'primary' : 'default'" :disabled="isReadonly(f)" @click="onFieldUpdate(f.field, 'true')">{{ __t('common.yes') }}</n-button>
+      <n-button :type="formData[f.field] === 'true' ? 'default' : 'primary'" :disabled="isReadonly(f)" @click="onFieldUpdate(f.field, 'false')">{{ __t('common.no') }}</n-button>
     </n-button-group>
     <n-select
       v-else-if="f.type === 'BOOLEAN'"
       :value="formData[f.field]"
-      :options="[{label:'\\u662f',value:'true'},{label:'\\u5426',value:'false'}]"
-      :placeholder="'请选择' + f.title"
+      :options="[{label:__t('common.yes'),value:'true'},{label:__t('common.no'),value:'false'}]"
+      :placeholder="__t('table.select_field_placeholder', { name: f.title })"
       :status="formErrors[f.field] ? 'error' : undefined"
       :disabled="isReadonly(f)"
       clearable
@@ -296,7 +296,7 @@ window.NovaFieldThis = {
     <n-input-number
       v-else-if="f.type === 'NUMBER'"
       :value="formData[f.field]"
-      :placeholder="'请输入' + f.title"
+      :placeholder="__t('table.search_field_placeholder', { name: f.title })"
       :min="numberMap[f.field] && numberMap[f.field].min"
       :max="numberMap[f.field] && numberMap[f.field].max"
       :precision="numberMap[f.field] && numberMap[f.field].type === 'DECIMAL' ? (numberMap[f.field].decimal || 2) : 0"
@@ -310,7 +310,7 @@ window.NovaFieldThis = {
       :value="formData[f.field]"
       :type="datePickerType(f.field, false, true)"
       :is-date-disabled="datePickerDisabled(f.field, true)"
-      :placeholder="'请选择' + f.title"
+      :placeholder="__t('table.select_field_placeholder', { name: f.title })"
       :status="formErrors[f.field] ? 'error' : undefined"
       :disabled="isReadonly(f)"
       clearable style="width:100%"
@@ -319,7 +319,7 @@ window.NovaFieldThis = {
       v-else-if="f.type === 'TAG'"
       :value="formData[f.field]"
       :options="tagOptions(f.field)"
-      :placeholder="'请输入或选择' + f.title"
+      :placeholder="__t('table.input_or_select_field_placeholder', { name: f.title })"
       :status="formErrors[f.field] ? 'error' : undefined"
       :disabled="isReadonly(f)"
       :max-tag-count="tagMap[f.field] && tagMap[f.field].maxTagCount"
@@ -331,7 +331,7 @@ window.NovaFieldThis = {
       :value="formData[f.field]"
       type="textarea"
       :autosize="{ minRows: 3 }"
-      :placeholder="'请输入' + f.title"
+      :placeholder="__t('table.search_field_placeholder', { name: f.title })"
       :status="formErrors[f.field] ? 'error' : undefined"
       :disabled="isReadonly(f)"
       @update:value="onFieldUpdate(f.field, $event)" />
@@ -340,7 +340,7 @@ window.NovaFieldThis = {
       style="cursor:pointer">
       <n-input
         :value="referenceDisplayLabel(f.field)"
-        :placeholder="'请选择' + f.title"
+        :placeholder="__t('table.select_field_placeholder', { name: f.title })"
         readonly
         clearable
         :status="formErrors[f.field] ? 'error' : undefined"
@@ -355,11 +355,11 @@ window.NovaFieldThis = {
           :disabled="isReadonly(f) || (attachmentMap[f.field] && attachmentMap[f.field].maxLimit && (formData[f.field] || []).length >= attachmentMap[f.field].maxLimit)"
           @click="triggerFileUpload(f.field)">
           <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
-          上传<span style="font-size:12px;opacity:0.7">{{ attachmentMap[f.field] && attachmentMap[f.field].maxLimit ? '（共' + Math.max(0, attachmentMap[f.field].maxLimit - (formData[f.field] || []).length) + '个）' : '（共0个）' }}</span>
+          {{ __t('common.upload') }}<span style="font-size:12px;opacity:0.7">{{ attachmentMap[f.field] && attachmentMap[f.field].maxLimit ? __t('common.count_n', { n: Math.max(0, attachmentMap[f.field].maxLimit - (formData[f.field] || []).length) }) : __t('common.count_n', { n: 0 }) }}</span>
         </n-button>
         <n-button style="flex:1" :disabled="!(formData[f.field] || []).length" @click="$emit('preview-click', f)">
           <iconify-icon icon="mdi:eye-outline" style="font-size:14px;margin-right:4px"></iconify-icon>
-          查看<span style="font-size:12px;opacity:0.7">（共{{ (formData[f.field] || []).length }}个）</span>
+          {{ __t('common.view') }}<span style="font-size:12px;opacity:0.7">{{ __t('common.count_n', { n: (formData[f.field] || []).length }) }}</span>
         </n-button>
       </n-button-group>
       <input :id="'upload-dd-' + f.field" type="file" style="display:none"
@@ -374,7 +374,7 @@ window.NovaFieldThis = {
     <n-input
       v-else
       :value="formData[f.field]"
-      :placeholder="'请输入' + f.title"
+      :placeholder="__t('table.search_field_placeholder', { name: f.title })"
       :status="formErrors[f.field] ? 'error' : undefined"
       :disabled="isReadonly(f)"
       clearable

@@ -27,12 +27,12 @@ window.LoginPage = {
       formRules: {
         username: {
           required: true,
-          message: '请输入账号',
+          message: window.__t('login.username_placeholder'),
           trigger: 'blur'
         },
         password: {
           required: true,
-          message: '请输入密码',
+          message: window.__t('login.password_placeholder'),
           trigger: 'blur'
         }
       }
@@ -91,12 +91,12 @@ window.LoginPage = {
             localStorage.setItem('nova_user', resp.data.name)
             localStorage.setItem('nova_alias', resp.data.alias || '')
             localStorage.setItem('nova_avatar', resp.data.avatar || '')
-            if (window.$message) window.$message.success('登录成功，欢迎 ' + resp.data.name)
+            if (window.$message) window.$message.success(window.__t('login.success', { name: resp.data.name }))
             // 登录成功后重新加载页面以拉取菜单（replaceState 改 hash 不触发 SPA 导航，避免先闪主页元素再出动画）
             history.replaceState(null, '', '#/home')
             window.location.reload()
           } else {
-            if (window.$message) window.$message.error(resp.message || '登录失败，请检查账号密码')
+            if (window.$message) window.$message.error(resp.message || window.__t('login.failed'))
           }
         }).catch(() => {
         }).finally(() => {
@@ -115,7 +115,7 @@ window.LoginPage = {
       if (this.registerEnabled) {
         this.$router.push('/register')
       } else {
-        if (window.$message) window.$message.warning('未开放注册')
+        if (window.$message) window.$message.warning(window.__t('login.register_disabled'))
       }
     }
   },
@@ -150,10 +150,10 @@ window.LoginPage = {
         size="large"
         style="position:relative"
       >
-        <n-form-item label="账号" path="username">
+        <n-form-item :label="__t('login.username')" path="username">
           <n-input
             v-model:value="formData.username"
-            placeholder="请输入账号"
+            :placeholder="__t('login.username_placeholder')"
             clearable
             @keyup.enter="handleKeyPress"
             :bordered="true"
@@ -164,11 +164,11 @@ window.LoginPage = {
           </n-input>
         </n-form-item>
 
-        <n-form-item label="密码" path="password">
+        <n-form-item :label="__t('login.password')" path="password">
           <n-input
             v-model:value="formData.password"
             type="password"
-            placeholder="请输入密码"
+            :placeholder="__t('login.password_placeholder')"
             show-password-on="click"
             @keyup.enter="handleKeyPress"
             :bordered="true"
@@ -182,7 +182,7 @@ window.LoginPage = {
         <n-form-item :show-label="false" style="margin-top:-20px;margin-bottom:-20px">
           <div style="display:flex;align-items:center;gap:6px;margin-left:12px">
             <n-checkbox v-model:checked="rememberMe" size="small" />
-            <span class="login-remember-text" @click="rememberMe=!rememberMe">记住账号</span>
+            <span class="login-remember-text" @click="rememberMe=!rememberMe">{{ __t('login.remember') }}</span>
           </div>
         </n-form-item>
 
@@ -194,15 +194,15 @@ window.LoginPage = {
             :loading="loading"
             @click="handleLogin"
           >
-            登 录
+            {{ __t('login.submit') }}
           </n-button>
         </n-form-item>
 
         <!-- 注册入口：始终显示，点击时按 register 配置判断是否跳转 -->
         <n-form-item :show-label="false" style="position:absolute;top:100%;left:0;right:0;margin:0">
           <div style="width:100%;text-align:center;font-size:13px;margin-top:10px">
-            <span style="color:#94a3b8">还没有账号？</span>
-            <span class="login-remember-text" style="color:#2563eb" @click="goRegister">立即注册</span>
+            <span style="color:#94a3b8">{{ __t('login.no_account') }}</span>
+            <span class="login-remember-text" style="color:#2563eb" @click="goRegister">{{ __t('login.go_register') }}</span>
           </div>
         </n-form-item>
       </n-form>

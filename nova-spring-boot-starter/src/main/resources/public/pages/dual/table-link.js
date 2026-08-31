@@ -80,15 +80,15 @@ window.DualLinkTable = {
   methods: {
     linkTreeSearchPlaceholder: function() {
       var config = this.linkTreeTargetConfig
-      if (!config) return '搜索...'
+      if (!config) return window.__t('table.search_placeholder')
       var cols = config.tableColumns || []
       var searchField = config.treeSearchField
       for (var i = 0; i < cols.length; i++) {
         if (cols[i].field === searchField) {
-          return '请输入' + (cols[i].title || searchField)
+          return window.__t('table.search_field_placeholder', { name: cols[i].title || searchField })
         }
       }
-      return '请输入' + searchField
+      return window.__t('table.search_field_placeholder', { name: searchField })
     },
 
     onSearchUpdate: function(val) {
@@ -161,9 +161,9 @@ window.DualLinkTable = {
       style="flex:1;min-height:0;display:flex;flex-direction:column"
       content-style="display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:4px">
       <div class="table-card-header" style="flex-shrink:0;padding:0 16px">
-        <span style="font-size:16px;font-weight:500">数据节点</span>
+        <span style="font-size:16px;font-weight:500">{{ __t('table.data_nodes') }}</span>
         <div style="display:flex;gap:8px">
-          <n-button v-if="hasAddPermission" type="primary" @click="onSave">保 存</n-button>
+          <n-button v-if="hasAddPermission" type="primary" @click="onSave">{{ __t('common.save') }}</n-button>
         </div>
       </div>
       <div class="link-tree-scroll" style="flex:1;overflow:auto;min-height:0;padding:0 12px 4px">

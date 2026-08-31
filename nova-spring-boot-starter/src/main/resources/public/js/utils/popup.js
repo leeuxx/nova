@@ -51,7 +51,7 @@
           ' v-model:show="show"' +
           ' display-directive="if"' +
           ' preset="card"' +
-          ' :title="payload.title || \'无标题\'"' +
+          ' :title="payload.title || window.__t(\'common.no_title\')"' +
           ' :style="modalStyle"' +
           ' :content-style="{padding:\'0\',overflow:\'hidden\',flex:\'1\',minHeight:\'0\'}"' +
           ' :header-style="{paddingBottom:\'8px\'}"' +
@@ -77,7 +77,7 @@
           ' :close-on-esc="true"' +
         '>' +
           '<n-drawer-content' +
-            ' :title="payload.title || \'无标题\'"' +
+            ' :title="payload.title || window.__t(\'common.no_title\')"' +
             ' :header-style="{borderBottom:\'none\'}"' +
             ' :body-content-style="{padding:\'0\',overflow:\'hidden\',display:\'flex\',flexDirection:\'column\'}"' +
           '>' +

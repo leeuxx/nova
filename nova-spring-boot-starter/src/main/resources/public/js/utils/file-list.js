@@ -40,7 +40,7 @@
       watch(function () { return props.fileList }, function (v) { list.value = (v || []).slice() }, { deep: true })
 
       var copy = function (text) {
-        var done = function () { if (window.$message) window.$message.success('链接已复制') }
+        var done = function () { if (window.$message) window.$message.success(window.__t('common.copy_success')) }
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text).then(done).catch(function () { fallbackCopy(text); done() })
         } else {
@@ -58,7 +58,7 @@
     render: function () {
       var t = this
       if (!t.list.length) {
-        return h('div', { style: 'padding:20px 0;color:var(--n-text-color-3);text-align:center;font-size:13px' }, '暂无文件')
+        return h('div', { style: 'padding:20px 0;color:var(--n-text-color-3);text-align:center;font-size:13px' }, window.__t('table.no_file'))
       }
       var NList = naive.NList
       var NListItem = naive.NListItem
@@ -68,10 +68,10 @@
           return t.list.map(function (url, idx) {
             var suffix = []
             if (t.showCopy) {
-              suffix.push(h(NButton, { size: 'tiny', onClick: function () { t.copy(url) } }, { default: function () { return '复制' } }))
+              suffix.push(h(NButton, { size: 'tiny', onClick: function () { t.copy(url) } }, { default: function () { return window.__t('common.copy') } }))
             }
             if (t.showDelete) {
-              suffix.push(h(NButton, { size: 'tiny', type: 'error', onClick: function () { t.handleDelete(idx) } }, { default: function () { return '删除' } }))
+              suffix.push(h(NButton, { size: 'tiny', type: 'error', onClick: function () { t.handleDelete(idx) } }, { default: function () { return window.__t('common.delete') } }))
             }
             return h(NListItem, { key: idx }, {
               prefix: function () { return h('iconify-icon', { icon: 'mdi:file-outline', style: 'font-size:18px;color:#888' }) },

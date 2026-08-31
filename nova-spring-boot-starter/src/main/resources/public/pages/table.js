@@ -427,7 +427,7 @@ const NovaTable = {
         pageSize:        10,
         pageSlot:        9,
         showSizePicker:  false,
-        pageSizes:       [10, 20, 50, 100].map(n => ({ label: n + ' 条/页', value: n })),
+        pageSizes:       [10, 20, 50, 100].map(n => ({ label: window.__t('table.items_per_page', { n: n }), value: n })),
         showQuickJumper: false,
         showPageSize:    false,
         showPrev:        false,
@@ -453,7 +453,7 @@ const NovaTable = {
       const info = this.choiceMap[f.field] || {}
       const vals = info.values || []
       const opts = vals.map(v => ({ value: v.value, label: v.label }))
-      if (f.tapSearch && f.tapSearch.showAll) opts.unshift({ value: null, label: '全部' })
+      if (f.tapSearch && f.tapSearch.showAll) opts.unshift({ value: null, label: window.__t('table.all') })
       return opts
     },
     isEmbTab() {
@@ -596,9 +596,9 @@ const NovaTable = {
     },
 
     treeSearchFieldTitle() {
-      if (!this.treeSearchField || !this.tableColumns.length) return '搜索'
+      if (!this.treeSearchField || !this.tableColumns.length) return window.__t('table.search')
       var col = this.tableColumns.find(function(c) { return c.field === this.treeSearchField }, this)
-      return col ? col.title : '搜索'
+      return col ? col.title : window.__t('table.search')
     },
 
     scrollX() {
@@ -827,12 +827,12 @@ const NovaTable = {
               if (bInfo.tableType === 'SEGMENT') {
                 const loadKey = (vm.embeddedMode || vm.dualMode) ? vm._vmKey : novaName
                 const segSet = disabled ? undefined : (newVal) => {
-                  window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: newVal, type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success('修改成功'); window.NovaTableJQ.loadData(loadKey) })
+                  window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: newVal, type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success(window.__t('table.update_success')); window.NovaTableJQ.loadData(loadKey) })
                 }
                 return h(NButtonGroup, { size: 'small' }, {
                   default: () => [
-                    h(NButton, { type: isTrue ? 'primary' : 'default', disabled, onClick: () => segSet && segSet('true') }, { default: () => '是' }),
-                    h(NButton, { type: isTrue ? 'default' : 'primary', disabled, onClick: () => segSet && segSet('false') }, { default: () => '否' })
+                    h(NButton, { type: isTrue ? 'primary' : 'default', disabled, onClick: () => segSet && segSet('true') }, { default: () => window.__t('common.yes') }),
+                    h(NButton, { type: isTrue ? 'default' : 'primary', disabled, onClick: () => segSet && segSet('false') }, { default: () => window.__t('common.no') })
                   ]
                 })
               }
@@ -842,22 +842,22 @@ const NovaTable = {
               if (col.refNovaName) {
                 // 嵌套开关：禁用、不可点击
                 return h('span', { style: `display:inline-block;vertical-align:middle;width:44px;height:22px;border-radius:11px;background:${isTrue ? '#006be6' : offBg};position:relative;cursor:not-allowed;opacity:0.5;flex-shrink:0` }, [
-                  h('span', { style: `position:absolute;top:0;${isTrue ? 'left:0;right:20px' : 'right:0;left:20px'};bottom:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;user-select:none` }, isTrue ? '是' : '否'),
+                  h('span', { style: `position:absolute;top:0;${isTrue ? 'left:0;right:20px' : 'right:0;left:20px'};bottom:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;user-select:none` }, isTrue ? window.__t('common.yes') : window.__t('common.no')),
                   h('span', { style: `position:absolute;top:3px;left:${isTrue ? '26px' : '3px'};width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)` })
                 ])
               }
               const newVal = isTrue ? 'false' : 'true'
               const loadKey = (vm.embeddedMode || vm.dualMode) ? vm._vmKey : novaName
               const onClick = disabled ? undefined : () => {
-                window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: newVal, type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success('修改成功'); window.NovaTableJQ.loadData(loadKey) })
+                window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: newVal, type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success(window.__t('table.update_success')); window.NovaTableJQ.loadData(loadKey) })
               }
               return h('span', { style: `display:inline-block;vertical-align:middle;width:44px;height:22px;border-radius:11px;background:${isTrue ? '#006be6' : offBg};position:relative;cursor:${disabled ? 'not-allowed' : 'pointer'};opacity:${disabled ? '0.5' : '1'};flex-shrink:0;transition:background .2s`, onClick }, [
-                h('span', { style: `position:absolute;top:0;${isTrue ? 'left:0;right:20px' : 'right:0;left:20px'};bottom:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;user-select:none` }, isTrue ? '是' : '否'),
+                h('span', { style: `position:absolute;top:0;${isTrue ? 'left:0;right:20px' : 'right:0;left:20px'};bottom:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;user-select:none` }, isTrue ? window.__t('common.yes') : window.__t('common.no')),
                 h('span', { style: `position:absolute;top:3px;left:${isTrue ? '26px' : '3px'};width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)` })
               ])
             }
             const color = isTrue ? '#18a058' : '#d03050'
-            return h('span', { style: 'display:inline-block;padding:1px 6px;border-radius:3px;font-size:12px;background:' + color + '20;color:' + darkenHex(color, 0.15) }, isTrue ? '是' : '否')
+            return h('span', { style: 'display:inline-block;padding:1px 6px;border-radius:3px;font-size:12px;background:' + color + '20;color:' + darkenHex(color, 0.15) }, isTrue ? window.__t('common.yes') : window.__t('common.no'))
           }
         }
 
@@ -953,7 +953,7 @@ const NovaTable = {
             if (tableShowType === 'IMAGE') {
               // 图片预览：封装组件（首图缩略图 + N 徽标 + 内建预览 + 可选右上角删除按钮）
               return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
-                default: () => '点击查看详情',
+                default: () => window.__t('table.click_view_detail'),
                 trigger: () => h(NovaImagePreview, {
                   srcList: urls,
                   width: 20,
@@ -966,7 +966,7 @@ const NovaTable = {
             if (tableShowType === 'QR_CODE') {
               const badge = isMulti ? h('span', { style: 'flex-shrink:0;cursor:pointer;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px', onClick: open }, '+' + (urls.length - 1)) : null
               return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
-                default: () => '点击查看详情',
+                default: () => window.__t('table.click_view_detail'),
                 trigger: () => h('span', { style: 'display:inline-flex;align-items:center;gap:4px;cursor:pointer', onClick: open }, [
                   h(QrCodeCell, { text: urls[0], size: 20 }),
                   badge
@@ -976,7 +976,7 @@ const NovaTable = {
             if (tableShowType === 'VIDEO') {
               const badge = isMulti ? h('span', { style: 'flex-shrink:0;cursor:pointer;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px', onClick: open }, '+' + (urls.length - 1)) : null
               return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
-                default: () => '点击查看详情',
+                default: () => window.__t('table.click_view_detail'),
                 trigger: () => h('span', { style: 'display:inline-flex;align-items:center;gap:4px;cursor:pointer', onClick: open }, [
                   h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:3px;background:#f0f0f0;font-size:14px' }, [
                     h('iconify-icon', { icon: 'mdi:play-circle-outline', style: 'color:#555' })
@@ -987,7 +987,7 @@ const NovaTable = {
             }
             if (tableShowType === 'DIALOG') {
               return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
-                default: () => '点击查看详情',
+                default: () => window.__t('table.click_view_detail'),
                 trigger: () => h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:3px;background:#f0f0f0;font-size:16px;cursor:pointer', onClick: open }, [
                   h('iconify-icon', { icon: 'mdi:paperclip', style: 'color:#888' })
                 ])
@@ -1003,7 +1003,7 @@ const NovaTable = {
             const val = getFieldValue(row, col.field)
             if (val === null || val === undefined || val === '') return ''
             return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
-              default: () => '点击查看富文本',
+              default: () => window.__t('table.preview_rich'),
               trigger: () => h('span', {
                 class: 'cell-editor-preview',
                 style: 'cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:#2563eb',
@@ -1013,7 +1013,7 @@ const NovaTable = {
                 }
               }, [
                 h('iconify-icon', { icon: 'bi:filetype-html', width: 18 }),
-                h('span', { style: 'font-size:12px' }, '预览')
+                h('span', { style: 'font-size:12px' }, window.__t('common.preview'))
               ])
             })
           }
@@ -1154,7 +1154,7 @@ const NovaTable = {
 
       if (!vm.pickerMode && window.NovaTableButtons.hasRowActions(vm)) {
         cols.push({
-          title: '操作', key: 'actions', width: vm.rowActionColWidth, fixed: 'right',
+          title: window.__t('table.actions'), key: 'actions', width: vm.rowActionColWidth, fixed: 'right',
           render(row) {
             return window.NovaTableButtons.buildRowActions(vm, row)
           }
@@ -1386,7 +1386,7 @@ const NovaTable = {
       window.vmMap[this._vmKey] = this
       this.paginationConfig.onUpdatePage     = this.handlePageChange
       this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
-      this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
+      this.paginationConfig.suffix           = ({ itemCount }) => window.__t('table.total_n', { n: itemCount })
       if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onPickerMounted(this.novaName, this._vmKey, this.sourceNovaNameProp || this.novaName, this.sourceFieldsProp || {})
     } else if (this.viewMode) {
       this.novaName = this.novaNameProp || ''
@@ -1401,7 +1401,7 @@ const NovaTable = {
       this.paginationConfig.showQuickJumper = false
       this.paginationConfig.onUpdatePage     = this.handlePageChange
       this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
-      this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
+      this.paginationConfig.suffix           = ({ itemCount }) => window.__t('table.total_n', { n: itemCount })
       // _dualReloadPending 为 true 说明 reloadDual 会接管，跳过初始加载
       var _drp = window._dualReloadPending
       window._dualReloadPending = false
@@ -1412,7 +1412,7 @@ const NovaTable = {
       window.vmMap[this._vmKey] = this
       this.paginationConfig.onUpdatePage     = this.handlePageChange
       this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
-      this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
+      this.paginationConfig.suffix           = ({ itemCount }) => window.__t('table.total_n', { n: itemCount })
       if (this.novaName && window.NovaTableJQ) window.NovaTableJQ.onEmbeddedMounted(this.novaName, this._vmKey, this.sourceNovaNameProp || this.novaName, this.sourceFieldsProp || {}, this.linkMode)
     } else {
       this.novaName = this.$route.params.novaName || ''
@@ -1420,7 +1420,7 @@ const NovaTable = {
       window.activeNovaName = this.novaName
       this.paginationConfig.onUpdatePage     = this.handlePageChange
       this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
-      this.paginationConfig.suffix           = ({ itemCount }) => `共 ${itemCount} 条`
+      this.paginationConfig.suffix           = ({ itemCount }) => window.__t('table.total_n', { n: itemCount })
       if (window.NovaTableJQ) window.NovaTableJQ.onMounted(this.novaName)
     }
     // 双表视图高度同步：resize 时重新同步
@@ -1601,7 +1601,7 @@ const NovaTable = {
       var allowed = maxLimit - currentList.length
       if (allowed <= 0) return
       if (files.length > allowed) {
-        if (window.$message) window.$message.error('最多还能上传 ' + allowed + ' 个文件')
+        if (window.$message) window.$message.error(window.__t('table.upload_max', { n: allowed }))
         return
       }
       var toUpload = files.slice(0, allowed)
@@ -1610,13 +1610,13 @@ const NovaTable = {
         if (cfg.fileTypes && cfg.fileTypes.length) {
           var ext = '.' + file.name.split('.').pop().toLowerCase()
           if (!cfg.fileTypes.some(function(t) { return t.toLowerCase() === ext })) {
-            if (window.$message) window.$message.error('不支持的文件类型：' + ext)
+            if (window.$message) window.$message.error(window.__t('table.upload_type_unsupported') + '：' + ext)
             return
           }
         }
         var kb = file.size / 1024
-        if (cfg.minSize > 0 && kb < cfg.minSize) { if (window.$message) window.$message.error('文件不能小于 ' + cfg.minSize + ' KB'); return }
-        if (cfg.maxSize > 0 && kb > cfg.maxSize) { if (window.$message) window.$message.error('文件不能超过 ' + cfg.maxSize + ' KB'); return }
+        if (cfg.minSize > 0 && kb < cfg.minSize) { if (window.$message) window.$message.error(window.__t('table.file_too_small') + ' ' + cfg.minSize + ' KB'); return }
+        if (cfg.maxSize > 0 && kb > cfg.maxSize) { if (window.$message) window.$message.error(window.__t('table.file_too_large') + ' ' + cfg.maxSize + ' KB'); return }
       }
       var formData = new FormData()
       formData.append('novaName', this.opFormNovaName)
@@ -1627,7 +1627,7 @@ const NovaTable = {
         if (!self.opFormAppFormData[appNovaName]) self.opFormAppFormData[appNovaName] = {}
         if (!self.opFormAppFormData[appNovaName][field]) self.opFormAppFormData[appNovaName][field] = []
         ;(resp.data || []).forEach(function(url) { self.opFormAppFormData[appNovaName][field].push(url) })
-        if (window.$message) window.$message.success('上传成功')
+        if (window.$message) window.$message.success(window.__t('table.upload_success'))
       }).catch(function() {})
     },
     // ── appendageForm helpers ───────────────────────────────────
@@ -1926,13 +1926,13 @@ const NovaTable = {
           formInfo: [],
           appendageFormInfo: {}
         }).then(function(resp) {
-          if (window.$message) window.$message.success('操作成功')
+          if (window.$message) window.$message.success(window.__t('table.op_success'))
           if (resp.data && resp.data.jsExpression) {
             try { new Function(resp.data.jsExpression)() } catch(e) { console.error('[CustomBtn] jsExpression error:', e) }
           } else {
             if (window.NovaTableJQ) window.NovaTableJQ.loadData(self.vmKey || self.novaName)
           }
-        }).catch(function(err) { if (!err || !err.code) { if (window.$message) window.$message.error('请求失败') } })
+        }).catch(function(err) { if (!err || !err.code) { if (window.$message) window.$message.error(window.__t('table.request_failed')) } })
     },
     handleCustomBtnClick(btn, skipConfirm) {
       if (btn.type === 'NOVA' && btn.novaClassName) {
@@ -1945,17 +1945,17 @@ const NovaTable = {
       }
       var self = this
       var action = function() { self.submitCustomBtn(btn, null) }
-      if (btn.callHint && !skipConfirm) { window.modal.confirm(btn.callHint, { title: '确认操作', onConfirm: action }) }
+      if (btn.callHint && !skipConfirm) { window.modal.confirm(btn.callHint, { title: window.__t('table.confirm_action'), onConfirm: action }) }
       else { action() }
     },
     handlePopClick(popCfg, value, row) {
       if (!popCfg || !popCfg.handleName) return
       if (!value) {
-        if (window.$message) window.$message.warning('无可点击内容')
+        if (window.$message) window.$message.warning(window.__t('table.no_clickable_content'))
         return
       }
       var self = this
-      this.popTitle = popCfg.title || '详情'
+      this.popTitle = popCfg.title || window.__t('common.detail')
       this.popList = []
       this.popLoading = true
       // 按 popCfg.context 列出的字段名，从当前行取值（支持平铺 key 与点路径两种形态）；
@@ -1986,7 +1986,7 @@ const NovaTable = {
       }).catch(function() {
         self.popLoading = false
         self.popList = []
-        if (window.$message) window.$message.error('弹窗加载失败')
+        if (window.$message) window.$message.error(window.__t('table.popup_load_failed'))
       })
     },
     // popover 内容：title + getPopModel 返回的 name/value 列表（TAG 拆标签、BOOLEAN 转是/否）
@@ -1995,9 +1995,9 @@ const NovaTable = {
       const vm = this
       let body
       if (this.popLoading) {
-        body = h('div', { style: 'padding:12px 0;text-align:center;color:#888' }, '加载中...')
+        body = h('div', { style: 'padding:12px 0;text-align:center;color:#888' }, window.__t('common.loading'))
       } else if (!this.popList || this.popList.length === 0) {
-        body = h('div', { style: 'padding:12px 0;text-align:center;color:#888' }, '暂无数据')
+        body = h('div', { style: 'padding:12px 0;text-align:center;color:#888' }, window.__t('table.no_data'))
       } else {
         body = h('div', { style: 'max-height:60vh;overflow:auto;min-width:220px' }, this.popList.map((item) => {
           let valueNode
@@ -2006,7 +2006,7 @@ const NovaTable = {
             valueNode = h('span', { style: 'display:inline-flex;flex-wrap:wrap;gap:4px' }, tags.map((t) => h(naive.NTag, { size: 'small', bordered: false }, { default: () => t })))
           } else if (item.type === 'BOOLEAN') {
             const isTrue = String(item.value) === 'true' || item.value === true
-            valueNode = h(naive.NTag, { size: 'small', bordered: false, type: isTrue ? 'success' : 'error' }, { default: () => (isTrue ? '是' : '否') })
+            valueNode = h(naive.NTag, { size: 'small', bordered: false, type: isTrue ? 'success' : 'error' }, { default: () => (isTrue ? window.__t('common.yes') : window.__t('common.no')) })
           } else {
             valueNode = h('span', { style: 'word-break:break-all' }, String(item.value ?? ''))
           }
@@ -2018,9 +2018,9 @@ const NovaTable = {
       }
       return h('div', { style: 'min-width:220px' }, [
         h('div', { style: 'display:flex;align-items:center;justify-content:space-between;gap:16px;font-weight:600' }, [
-          h('span', {}, this.popTitle || '详情'),
+          h('span', {}, this.popTitle || window.__t('common.detail')),
           h('span', {
-            title: '关闭',
+            title: window.__t('common.close'),
             style: 'cursor:pointer;color:#888;display:inline-flex;flex-shrink:0',
             onClick: () => { vm.popActiveKey = '' }
           }, [ h('iconify-icon', { icon: 'material-symbols:close', style: 'font-size:16px' }) ])
@@ -2061,7 +2061,7 @@ const NovaTable = {
           self.tplHeight = self._pctToVh(tpl.height)
           self.tplModalShow = true
         }
-      }).catch(function() { if (window.$message) window.$message.error('获取模板地址失败') })
+      }).catch(function() { if (window.$message) window.$message.error(window.__t('table.template_load_failed')) })
     },
     // 百分比转 vh（后端配 '80%' → '80vh'，fixed 元素百分比高度失效，改用视口单位）
     _pctToVh(value) {
@@ -2092,7 +2092,7 @@ const NovaTable = {
 
       if (handleJs) {
         window.fetch(handleJs).then(function(resp) {
-          if (!resp.ok) throw new Error('加载 JS 失败: ' + handleJs)
+          if (!resp.ok) throw new Error(window.__t('table.template_load_failed') + ': ' + handleJs)
           return resp.text()
         }).then(function(code) {
           var $btn = cfg.id ? $(window.parent.document).find('#' + cfg.id) : null
@@ -2108,12 +2108,12 @@ const NovaTable = {
         }).then(function(resp) {
           var data = resp.data || {}
           if (data.status !== false) {
-            if (window.$message) window.$message.success(data.message || '操作成功')
+            if (window.$message) window.$message.success(data.message || window.__t('table.op_success'))
           } else {
-            if (window.$message) window.$message.error(data.message || '操作失败')
+            if (window.$message) window.$message.error(data.message || window.__t('table.op_failed'))
           }
         }).catch(function(err) {
-          if (!err || !err.code) { if (window.$message) window.$message.error('请求失败') }
+          if (!err || !err.code) { if (window.$message) window.$message.error(window.__t('table.request_failed')) }
         })
       }
     },
@@ -2169,7 +2169,7 @@ const NovaTable = {
           self.loadOpFormInitialValues()
         }).catch(function(err) {
           self.opFormLoading = false
-          if (!err || !err.code) { if (window.$message) window.$message.error('请求失败') }
+          if (!err || !err.code) { if (window.$message) window.$message.error(window.__t('table.request_failed')) }
         })
     },
     closeOpForm() {
@@ -2448,7 +2448,7 @@ const NovaTable = {
         if (!visibleSet.has(f.field)) return
         var val = formData[f.field]
         var empty = val === null || val === undefined || val === '' || (Array.isArray(val) && val.length === 0)
-        if (empty) errors[f.field] = f.title + '不能为空'
+        if (empty) errors[f.field] = f.title + window.__t('common.required')
       })
       this.opFormErrors = errors
       if (Object.keys(errors).length > 0) { this.opFormTab = 'form'; return }
@@ -2471,7 +2471,7 @@ const NovaTable = {
           if (f.showByExpr && !evalShowExpr(f.showByExpr, evalFd)) return
           var val = fd[f.field]
           var empty = val === null || val === undefined || val === '' || (Array.isArray(val) && val.length === 0)
-          if (empty) errs[f.field] = f.title + '不能为空'
+          if (empty) errs[f.field] = f.title + window.__t('common.required')
         })
         appErrors[n] = errs
         if (!firstErrAppTab && Object.keys(errs).length > 0) firstErrAppTab = n
@@ -2509,13 +2509,13 @@ const NovaTable = {
           appendageFormInfo: appendageFormInfo
         }).then(function(resp) {
           self.closeOpForm()
-          if (window.$message) window.$message.success('操作成功')
+          if (window.$message) window.$message.success(window.__t('table.op_success'))
           if (resp.data && resp.data.jsExpression) {
             try { new Function(resp.data.jsExpression)() } catch(e) { console.error('[OpForm] jsExpression error:', e) }
           } else {
             if (window.NovaTableJQ) window.NovaTableJQ.loadData(self.vmKey || self.novaName)
           }
-        }).catch(function(err) { if (!err || !err.code) { if (window.$message) window.$message.error('请求失败') } })
+        }).catch(function(err) { if (!err || !err.code) { if (window.$message) window.$message.error(window.__t('table.request_failed')) } })
     },
     handleOpAttachmentChange(f, event) {
       var files = Array.from(event.target.files || [])
@@ -2527,7 +2527,7 @@ const NovaTable = {
       var allowed = maxLimit - currentList.length
       if (allowed <= 0) return
       if (files.length > allowed) {
-        if (window.$message) window.$message.error('最多还能上传 ' + allowed + ' 个文件')
+        if (window.$message) window.$message.error(window.__t('table.upload_max', { n: allowed }))
         return
       }
       var toUpload = files.slice(0, allowed)
@@ -2536,13 +2536,13 @@ const NovaTable = {
         if (cfg.fileTypes && cfg.fileTypes.length) {
           var ext = '.' + file.name.split('.').pop().toLowerCase()
           if (!cfg.fileTypes.some(function(t) { return t.toLowerCase() === ext })) {
-            if (window.$message) window.$message.error('不支持的文件类型：' + ext)
+            if (window.$message) window.$message.error(window.__t('table.upload_type_unsupported') + '：' + ext)
             return
           }
         }
         var kb = file.size / 1024
-        if (cfg.minSize > 0 && kb < cfg.minSize) { if (window.$message) window.$message.error('文件不能小于 ' + cfg.minSize + ' KB'); return }
-        if (cfg.maxSize > 0 && kb > cfg.maxSize) { if (window.$message) window.$message.error('文件不能超过 ' + cfg.maxSize + ' KB'); return }
+        if (cfg.minSize > 0 && kb < cfg.minSize) { if (window.$message) window.$message.error(window.__t('table.file_too_small') + ' ' + cfg.minSize + ' KB'); return }
+        if (cfg.maxSize > 0 && kb > cfg.maxSize) { if (window.$message) window.$message.error(window.__t('table.file_too_large') + ' ' + cfg.maxSize + ' KB'); return }
       }
       var formData = new FormData()
       formData.append('novaName', this.opFormNovaName)
@@ -2552,7 +2552,7 @@ const NovaTable = {
       window.fetchApi.upload('/nova/attachment/upload', formData).then(function(resp) {
         if (!self.opFormData[field]) self.opFormData[field] = []
         ;(resp.data || []).forEach(function(url) { self.opFormData[field].push(url) })
-        if (window.$message) window.$message.success('上传成功')
+        if (window.$message) window.$message.success(window.__t('table.upload_success'))
       }).catch(function() {})
     },
     handleFormSubmit()  { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleFormSubmit(this._vmKey); else window.NovaTableJQ.handleFormSubmit() },
@@ -2566,7 +2566,7 @@ const NovaTable = {
       const allowed = maxLimit - currentList.length
       if (allowed <= 0) return
       if (files.length > allowed) {
-        if (window.$message) window.$message.error('最多还能上传 ' + allowed + ' 个文件')
+        if (window.$message) window.$message.error(window.__t('table.upload_max', { n: allowed }))
         return
       }
       const toUpload = files.slice(0, allowed)
@@ -2574,13 +2574,13 @@ const NovaTable = {
         if (cfg.fileTypes && cfg.fileTypes.length) {
           const ext = '.' + file.name.split('.').pop().toLowerCase()
           if (!cfg.fileTypes.some(t => t.toLowerCase() === ext)) {
-            if (window.$message) window.$message.error('不支持的文件类型：' + ext)
+            if (window.$message) window.$message.error(window.__t('table.upload_type_unsupported') + '：' + ext)
             return
           }
         }
         const kb = file.size / 1024
-        if (cfg.minSize > 0 && kb < cfg.minSize) { if (window.$message) window.$message.error('文件不能小于 ' + cfg.minSize + ' KB'); return }
-        if (cfg.maxSize > 0 && kb > cfg.maxSize) { if (window.$message) window.$message.error('文件不能超过 ' + cfg.maxSize + ' KB'); return }
+        if (cfg.minSize > 0 && kb < cfg.minSize) { if (window.$message) window.$message.error(window.__t('table.file_too_small') + ' ' + cfg.minSize + ' KB'); return }
+        if (cfg.maxSize > 0 && kb > cfg.maxSize) { if (window.$message) window.$message.error(window.__t('table.file_too_large') + ' ' + cfg.maxSize + ' KB'); return }
       }
       const formData = new FormData()
       formData.append('novaName', this.novaName)
@@ -2596,7 +2596,7 @@ const NovaTable = {
           if (!vm.formData[field]) vm.formData[field] = []
           ;(resp.data || []).forEach(url => vm.formData[field].push(url))
         }
-        if (window.$message) window.$message.success('上传成功')
+        if (window.$message) window.$message.success(window.__t('table.upload_success'))
         vm.openPreview(f, appNovaName || null)
       }).catch(() => {})
     },
@@ -2618,7 +2618,7 @@ const NovaTable = {
     copyText(text) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(function () {
-          if (window.$message) window.$message.success('链接已复制')
+          if (window.$message) window.$message.success(window.__t('table.link_copied'))
         }).catch(function () {
           var input = document.createElement('textarea')
           input.value = text
@@ -2626,7 +2626,7 @@ const NovaTable = {
           input.select()
           try { document.execCommand('copy') } catch (e) {}
           document.body.removeChild(input)
-          if (window.$message) window.$message.success('链接已复制')
+          if (window.$message) window.$message.success(window.__t('table.link_copied'))
         })
       } else {
         var input = document.createElement('textarea')
@@ -2635,7 +2635,7 @@ const NovaTable = {
         input.select()
         try { document.execCommand('copy') } catch (e) {}
         document.body.removeChild(input)
-        if (window.$message) window.$message.success('链接已复制')
+        if (window.$message) window.$message.success(window.__t('table.link_copied'))
       }
     },
     closePreview() {
@@ -2676,11 +2676,11 @@ const NovaTable = {
         encoded = ''
       }
       if (!window.popup || !window.popup.modal) {
-        window.alert('popup 工具未就绪，无法预览')
+        window.alert(window.__t('table.popup_not_ready'))
         return
       }
       window.popup.drawer('/editor-preview.html#' + encoded, {
-        title: title || '富文本预览',
+        title: title || window.__t('table.rich_preview'),
         size: '35%'
       })
     },
@@ -2944,7 +2944,7 @@ const NovaTable = {
       if (!picker) return
 
       if (!picker.selectedRow) {
-        if (window.$message) window.$message.warning('请先选择一行')
+        if (window.$message) window.$message.warning(window.__t('table.select_row_first'))
         return
       }
 
@@ -3011,10 +3011,10 @@ const NovaTable = {
       const lt = build.linkTarget || {}
       const targetNova = lt.linkReferenceName
       if (!targetNova) {
-        if (window.$message) window.$message.warning('未找到目标表')
+        if (window.$message) window.$message.warning(window.__t('table.target_table_not_found'))
         return
       }
-      this.linkPickerTitle = '选择 ' + (tapTitle || '关联数据')
+      this.linkPickerTitle = window.__t('table.link_picker_title', { name: tapTitle || window.__t('table.link_picker_title_default') })
       // 从 linkMap 中查找对应字段的 referenceTransmitField 并构建透传参数
       const srcFields = {}
       const linkMap = this.linkMap || {}
@@ -3055,7 +3055,7 @@ const NovaTable = {
     },
     confirmLinkPickerSelect() {
       if (!this.linkPickerSelectedKeys.length) {
-        if (window.$message) window.$message.warning('请至少选择一行')
+        if (window.$message) window.$message.warning(window.__t('table.select_one_first'))
         return
       }
       var linkNovaName = this.linkPickerCurrentTab
@@ -3065,9 +3065,9 @@ const NovaTable = {
       var targetField = build.targetFieldName
       var sourceRow = this.dualTableViewActive ? this._dualSelectedRow : this.currentRow
       var sourceValue = sourceRow && sourceRow[this.novaIdFieldName]
-      if (!sourceField) { console.error('[Nova] 缺少 sourceField', build); if (window.$message) window.$message.error('关联参数不完整: 缺少源字段名'); return }
-      if (!targetField) { console.error('[Nova] 缺少 targetField', build); if (window.$message) window.$message.error('关联参数不完整: 缺少目标字段名'); return }
-      if (sourceValue == null) { console.error('[Nova] 缺少 sourceValue', this.currentRow, this.novaIdFieldName); if (window.$message) window.$message.error('关联参数不完整: 缺少源记录ID'); return }
+      if (!sourceField) { console.error('[Nova] 缺少 sourceField', build); if (window.$message) window.$message.error(window.__t('table.link_param_missing_basic', { name: 'sourceField' })); return }
+      if (!targetField) { console.error('[Nova] 缺少 targetField', build); if (window.$message) window.$message.error(window.__t('table.link_param_missing_basic', { name: 'targetField' })); return }
+      if (sourceValue == null) { console.error('[Nova] 缺少 sourceValue', this.currentRow, this.novaIdFieldName); if (window.$message) window.$message.error(window.__t('table.link_param_missing_basic', { name: 'sourceValue' })); return }
 
       // 获取目标表格 vmKey，传给 handleLinkAdd 用于刷新
       var targetVmKey = null
@@ -3122,7 +3122,7 @@ const NovaTable = {
           // 普通模式：linkTabBuild 已填充，模板自动渲染内嵌表格
         }).catch(function() {
           self.linkTreeLoading[tapNovaName] = false
-          if (window.$message) window.$message.error('获取中间表配置失败')
+          if (window.$message) window.$message.error(window.__t('table.link_get_mid_failed'))
         })
     },
     submitDualLinkTree() {
@@ -3149,7 +3149,7 @@ const NovaTable = {
       const targetNovaName = lt.linkReferenceName
       if (!targetNovaName) {
         this.linkTreeLoading[stateKey] = false
-        if (window.$message) window.$message.error('未找到目标表')
+        if (window.$message) window.$message.error(window.__t('table.target_table_not_found'))
         return
       }
 
@@ -3164,7 +3164,7 @@ const NovaTable = {
             if (stateKey === '__dual__' && self.dualTableCurrentNova !== tapNovaName) return
             if (buildResp.code !== 200) {
               self.linkTreeLoading[stateKey] = false
-              if (window.$message) window.$message.error('获取目标表配置失败')
+              if (window.$message) window.$message.error(window.__t('table.link_get_target_failed'))
               return
             }
             const buildData = buildResp.data || {}
@@ -3176,7 +3176,7 @@ const NovaTable = {
 
             if (!treeSearchField) {
               self.linkTreeLoading[stateKey] = false
-              if (window.$message) window.$message.error('目标表配置缺少树搜索字段')
+              if (window.$message) window.$message.error(window.__t('table.target_tree_field_missing'))
               return
             }
 
@@ -3196,7 +3196,7 @@ const NovaTable = {
             const linkStorageField = lt.linkStorageField || ''
             if (!linkStorageField) {
               self.linkTreeLoading[stateKey] = false
-              if (window.$message) window.$message.error('中间表 linkTarget 缺少 linkStorageField')
+              if (window.$message) window.$message.error(window.__t('table.mid_storage_missing'))
               return
             }
 
@@ -3214,7 +3214,7 @@ const NovaTable = {
             self._startLinkTreeLoad(tapNovaName, stateKey, row, lt, targetNovaName)
           }).catch(function() {
             self.linkTreeLoading[stateKey] = false
-            if (window.$message) window.$message.error('获取目标表配置失败')
+            if (window.$message) window.$message.error(window.__t('table.link_get_target_failed'))
           })
     },
     // 目标表 tree 配置已就绪后，发起两个并行 tree 请求并渲染（点击左表行复用缓存配置，不重复 build）
@@ -3292,7 +3292,7 @@ const NovaTable = {
       window.fetchApi.post('/nova/table/tree', { novaName: targetNovaName, sourceNovaName: self.novaName, sourceFields: srcFields }, window.__novaMenuCode(targetNovaName)).then(function(treeResp) {
           if (treeResp.code !== 200) {
             self.linkTreeLoading[stateKey] = false
-            if (window.$message) window.$message.error('加载树数据失败')
+            if (window.$message) window.$message.error(window.__t('table.tree_load_failed'))
             return
           }
           const rootList = treeResp.data.rootList || []
@@ -3352,7 +3352,7 @@ const NovaTable = {
           renderTree()
         }).catch(function() {
           self.linkTreeLoading[stateKey] = false
-          if (window.$message) window.$message.error('加载树数据失败')
+          if (window.$message) window.$message.error(window.__t('table.tree_load_failed'))
         })
 
       // Step 2b: 反显接口（返回已勾选的 key 列表，直接回显）
@@ -3468,15 +3468,15 @@ const NovaTable = {
     },
     linkTreeSearchPlaceholder(tapNovaName) {
       const config = (this.linkTabBuild[tapNovaName] || {}).linkTreeTargetConfig
-      if (!config) return '搜索...'
+      if (!config) return window.__t('common.loading')
       const cols = config.tableColumns || []
       const searchField = config.treeSearchField
       for (var i = 0; i < cols.length; i++) {
         if (cols[i].field === searchField) {
-          return '请输入' + (cols[i].title || searchField)
+          return window.__t('table.search_field_placeholder', { name: (cols[i].title || searchField) })
         }
       }
-      return '请输入' + searchField
+      return window.__t('table.search_field_placeholder', { name: searchField })
     },
     linkTreeRenderLabel(tapNovaName) {
       var self = this
@@ -3524,7 +3524,7 @@ const NovaTable = {
       const checkedIds = Array.from(this.linkTreeCheckedKeys[tapNovaName] || [])
 
       if (checkedIds.length === 0) {
-        if (window.$message) window.$message.warning('请至少选择一个节点')
+        if (window.$message) window.$message.warning(window.__t('table.select_node_first'))
         return
       }
 
@@ -3534,11 +3534,11 @@ const NovaTable = {
       const sourceValue = sourceFields[lt.thisReferenceField]
 
       if (!sourceField || !targetField) {
-        if (window.$message) window.$message.error('关联参数不完整: 缺少字段名')
+        if (window.$message) window.$message.error(window.__t('table.link_param_missing_basic', { name: 'field' }))
         return
       }
       if (!sourceValue) {
-        if (window.$message) window.$message.error('关联参数不完整: 缺少源记录ID')
+        if (window.$message) window.$message.error(window.__t('table.link_param_missing_basic', { name: 'sourceValue' }))
         return
       }
 
@@ -3932,7 +3932,7 @@ const NovaTable = {
         const d = new Date(ts)
         return this.formatDateTs(ts, dateInfo && dateInfo.type)
       }
-      if (f.type === 'BOOLEAN') return (val === 'true' || val === true) ? '是' : '否'
+      if (f.type === 'BOOLEAN') return (val === 'true' || val === true) ? window.__t('common.yes') : window.__t('common.no')
       if (f.type === 'TAG') return Array.isArray(val) ? val.join('、') : String(val).split(',').filter(Boolean).join('、')
       if (f.type === 'REFERENCE') return String(this.formData[f.field + '_display'] || val)
       return String(val)
@@ -3953,7 +3953,7 @@ const NovaTable = {
 
   template: `
     <div v-if="viewMode">
-      <div v-if="editFields.length === 0" style="text-align:center;padding:60px;color:#aaa;font-size:14px">加载中…</div>
+      <div v-if="editFields.length === 0" style="text-align:center;padding:60px;color:#aaa;font-size:14px">{{ __t('common.loading') }}</div>
       <div v-else style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0px 24px">
         <template v-for="f in editFields.filter(f => f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON')" :key="f.field">
           <div :style="f.type === 'ATTACHMENT' ? 'grid-column: 1 / -1' : ''" style="padding:12px 0;border-bottom:1px dashed var(--n-border-color)">
@@ -3977,7 +3977,7 @@ const NovaTable = {
                   style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--n-border-color)">
                   <iconify-icon icon="mdi:paperclip" width="13" style="color:var(--n-primary-color);flex-shrink:0"></iconify-icon>
                   <span style="flex:1;font-size:14px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--n-text-color-1)" :title="url">{{ url }}</span>
-                  <span style="font-size:12px;color:var(--n-primary-color);cursor:pointer;flex-shrink:0" @click="copyText(url)">复制</span>
+                  <span style="font-size:12px;color:var(--n-primary-color);cursor:pointer;flex-shrink:0" @click="copyText(url)">{{ __t('common.copy') }}</span>
                 </div>
               </template>
             </div>
@@ -3994,7 +3994,7 @@ const NovaTable = {
       <n-modal v-model:show="previewModalShow" preset="card" style="width:760px;margin-top:60px;padding:0">
         <template #header>
           <div class="gallery-header">
-            <span class="gallery-title">{{ previewField ? (previewField.title || '附件预览') : '附件预览' }}</span>
+            <span class="gallery-title">{{ previewField ? (previewField.title || __t('table.attach_preview')) : __t('table.attach_preview') }}</span>
           </div>
         </template>
         <div v-if="previewField && attachmentMap[previewField.field] && attachmentMap[previewField.field].type === 'IMAGE'" class="gallery-wrap">
@@ -4013,20 +4013,20 @@ const NovaTable = {
               </transition>
             </div>
           </div>
-          <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-url-wrap" :title="'点击复制: ' + (formData[previewField.field] || [])[previewIndex]" @click="copyText((formData[previewField.field] || [])[previewIndex])">
-            <div class="gallery-url-label">图片地址</div>
+          <div v-if="(formData[previewField.field] || []).length > 0" class="gallery-url-wrap" :title="__t('table.click_copy') + ': ' + (formData[previewField.field] || [])[previewIndex]" @click="copyText((formData[previewField.field] || [])[previewIndex])">
+            <div class="gallery-url-label">{{ __t('table.image_url') }}</div>
             <div class="gallery-url-text">{{ (formData[previewField.field] || [])[previewIndex] }}</div>
           </div>
-          <div v-if="(formData[previewField.field] || []).length === 0" class="gallery-empty">暂无图片</div>
+          <div v-if="(formData[previewField.field] || []).length === 0" class="gallery-empty">{{ __t('table.no_image') }}</div>
         </div>
         <div v-else-if="previewField" class="preview-file-list">
           <template v-for="(url, idx) in (formData[previewField.field] || [])" :key="idx">
             <div class="preview-file-row">
               <span class="preview-file-url">{{ url }}</span>
-              <n-button size="tiny" @click="copyText(url)">复制</n-button>
+              <n-button size="tiny" @click="copyText(url)">{{ __t('common.copy') }}</n-button>
             </div>
           </template>
-          <div v-if="(formData[previewField.field] || []).length === 0" class="preview-empty">暂无文件</div>
+          <div v-if="(formData[previewField.field] || []).length === 0" class="preview-empty">{{ __t('table.no_file') }}</div>
         </div>
       </n-modal>
     </div>
@@ -4043,7 +4043,7 @@ const NovaTable = {
           <span class="form-label" :title="treeSearchFieldTitle">{{ treeSearchFieldTitle }}</span>
           <n-input
             v-model:value="treeSearchKeyword"
-            :placeholder="'请输入' + treeSearchFieldTitle"
+            :placeholder="__t('table.search_field_placeholder', { name: treeSearchFieldTitle })"
             clearable
             :size="embSize"
             style="flex:1;max-width:300px"
@@ -4054,13 +4054,13 @@ const NovaTable = {
             </template>
           </n-input>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto">
-            <n-button :size="embSize" @click="handleTreeSearchReset">重 置</n-button>
-            <n-button :size="embSize" type="primary" @click="handleQuery">查 询</n-button>
+            <n-button :size="embSize" @click="handleTreeSearchReset">{{ __t('common.reset') }}</n-button>
+            <n-button :size="embSize" type="primary" @click="handleQuery">{{ __t('common.query') }}</n-button>
             <n-button :size="embSize" dashed @click="toggleFilter" :disabled="true">
               <template #icon>
                 <n-icon><iconify-icon :icon="filterExpanded ? 'material-symbols:keyboard-arrow-up' : 'material-symbols:keyboard-arrow-down'"></iconify-icon></n-icon>
               </template>
-              {{ filterExpanded ? '收 起' : '展 开' }}
+              {{ filterExpanded ? __t('common.collapse') : __t('common.expand') }}
             </n-button>
           </div>
         </div>
@@ -4075,7 +4075,7 @@ const NovaTable = {
                 v-model:value="filterForm[field.field]"
                 @update:value="onFilterChoiceUpdate(field.field)"
                 :options="fieldOptions(field)"
-                :placeholder="'请选择' + field.title"
+                :placeholder="__t('table.select_field_placeholder', { name: field.title })"
                 :size="embSize"
                 clearable style="flex:1"
               />
@@ -4083,14 +4083,14 @@ const NovaTable = {
                 v-model:value="filterForm[field.field]"
                 @update:value="onFilterChoiceUpdate(field.field)"
                 :options="fieldOptions(field)"
-                :placeholder="'请选择' + field.title"
+                :placeholder="__t('table.select_field_placeholder', { name: field.title })"
                 :size="embSize"
                 multiple clearable style="flex:1"
               />
               <n-select v-else-if="field.type === 'TAG'"
                 v-model:value="filterForm[field.field]"
                 :options="tagOptions(field.field)"
-                :placeholder="'请选择' + field.title"
+                :placeholder="__t('table.select_field_placeholder', { name: field.title })"
                 :size="embSize"
                 multiple clearable filterable
                 :tag="tagMap[field.field] && tagMap[field.field].allowExtension"
@@ -4098,15 +4098,15 @@ const NovaTable = {
               />
               <n-select v-else-if="field.type === 'BOOLEAN'"
                 v-model:value="filterForm[field.field]"
-                :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"
-                :placeholder="'请选择' + field.title"
+                :options="[{label:__t('table.yes'),value:'true'},{label:__t('table.no'),value:'false'}]"
+                :placeholder="__t('table.select_field_placeholder', { name: field.title })"
                 :size="embSize"
                 clearable style="flex:1"
               />
               <div v-else-if="field.type === 'NUMBER' && field.vague" class="number-vague-field">
                 <n-input-number
                   v-model:value="filterForm[field.field][0]"
-                  placeholder="最小值"
+                  placeholder="{{ __t('table.min_value') }}"
                   :min="numberMap[field.field] && numberMap[field.field].min"
                   :max="numberMap[field.field] && numberMap[field.field].max"
                   :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
@@ -4115,7 +4115,7 @@ const NovaTable = {
                 <span class="number-vague-sep">—</span>
                 <n-input-number
                   v-model:value="filterForm[field.field][1]"
-                  placeholder="最大值"
+                  placeholder="{{ __t('table.max_value') }}"
                   :min="numberMap[field.field] && numberMap[field.field].min"
                   :max="numberMap[field.field] && numberMap[field.field].max"
                   :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
@@ -4124,7 +4124,7 @@ const NovaTable = {
               </div>
               <n-input-number v-else-if="field.type === 'NUMBER'"
                 v-model:value="filterForm[field.field]"
-                :placeholder="'请输入' + field.title"
+                :placeholder="__t('table.search_field_placeholder', { name: field.title })"
                 :min="numberMap[field.field] && numberMap[field.field].min"
                 :max="numberMap[field.field] && numberMap[field.field].max"
                 :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
@@ -4136,7 +4136,7 @@ const NovaTable = {
                 v-model:value="filterForm[field.field]"
                 :type="datePickerType(field.field, field.vague, false)"
                 :is-date-disabled="datePickerDisabled(field.field, false)"
-                :placeholder="field.vague ? ['开始时间', '结束时间'] : '请选择' + field.title"
+                :placeholder="field.vague ? [__t('table.start_time'), __t('table.end_time')] : __t('table.select_field_placeholder', { name: field.title })"
                 :size="embSize"
                 clearable style="flex:1"
               />
@@ -4146,7 +4146,7 @@ const NovaTable = {
                 :value="filterForm[field.field] || null"
                 :options="refSelectOptions['_f_' + field.field] || []"
                 :loading="!!refSelectLoading['_f_' + field.field]"
-                :placeholder="'输入关键词搜索'"
+                :placeholder="__t('table.search_input_tip')"
                 :size="embSize"
                 filterable
                 remote
@@ -4159,7 +4159,7 @@ const NovaTable = {
               >
                 <template #empty>
                   <div style="padding:12px;text-align:center;color:#aaa;font-size:13px">
-                    {{ refSelectLoading['_f_' + field.field] ? '搜索中…' : '输入关键词开始搜索' }}
+                    {{ refSelectLoading['_f_' + field.field] ? __t('table.searching') : __t('table.search_input_tip') }}
                   </div>
                 </template>
                 <template #action>
@@ -4170,10 +4170,10 @@ const NovaTable = {
                       @mouseleave="$event.currentTarget.style.background='transparent'"
                       @click.stop="loadMoreRefSelect('_f_' + field.field, field.field)">
                       <iconify-icon icon="mdi:chevron-down" style="font-size:14px"></iconify-icon>
-                      加载更多({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
+                      {{ __t('table.load_more') }}({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
                     </div>
                     <span v-else-if="(refSelectOptions['_f_' + field.field] || []).length > 0" style="font-size:12px;color:#aaa">
-                      已全部加载({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
+                      {{ __t('table.loaded_all') }}({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
                     </span>
                   </div>
                 </template>
@@ -4182,7 +4182,7 @@ const NovaTable = {
               <div v-else-if="field.type === 'REFERENCE' && referenceMap[field.field]" @click="openReferenceModalForFilter(field)" style="flex:1;cursor:pointer">
                 <n-input
                   :value="filterForm[field.field + '_display'] || filterForm[field.field] || ''"
-                  :placeholder="'请选择' + field.title"
+                  :placeholder="__t('table.select_field_placeholder', { name: field.title })"
                   :size="embSize"
                   readonly
                   clearable
@@ -4199,7 +4199,7 @@ const NovaTable = {
                 :value="filterForm[field.field] || null"
                 :options="refSelectOptions['_f_' + field.field] || []"
                 :loading="!!refSelectLoading['_f_' + field.field]"
-                :placeholder="'输入关键词搜索'"
+                :placeholder="__t('table.search_input_tip')"
                 :size="embSize"
                 filterable
                 remote
@@ -4212,7 +4212,7 @@ const NovaTable = {
               >
                 <template #empty>
                   <div style="padding:12px;text-align:center;color:#aaa;font-size:13px">
-                    {{ refSelectLoading['_f_' + field.field] ? '搜索中…' : '输入关键词开始搜索' }}
+                    {{ refSelectLoading['_f_' + field.field] ? __t('table.searching') : __t('table.search_input_tip') }}
                   </div>
                 </template>
                 <template #action>
@@ -4223,10 +4223,10 @@ const NovaTable = {
                       @mouseleave="$event.currentTarget.style.background='transparent'"
                       @click.stop="loadMoreRefSelect('_f_' + field.field, field.field)">
                       <iconify-icon icon="mdi:chevron-down" style="font-size:14px"></iconify-icon>
-                      加载更多({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
+                      {{ __t('table.load_more') }}({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
                     </div>
                     <span v-else-if="(refSelectOptions['_f_' + field.field] || []).length > 0" style="font-size:12px;color:#aaa">
-                      已全部加载({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
+                      {{ __t('table.loaded_all') }}({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
                     </span>
                   </div>
                 </template>
@@ -4235,7 +4235,7 @@ const NovaTable = {
               <div v-else-if="(field.type === 'APPENDAGE' || field.type === 'APPENDAGES') && appendageMap && appendageMap[field.field]" @click="openAppendageModalForFilter(field)" style="flex:1;cursor:pointer">
                 <n-input
                   :value="filterForm[field.field + '_display'] || filterForm[field.field] || ''"
-                  :placeholder="'请选择' + field.title"
+                  :placeholder="__t('table.select_field_placeholder', { name: field.title })"
                   :size="embSize"
                   readonly
                   clearable
@@ -4252,7 +4252,7 @@ const NovaTable = {
                 :value="filterForm[field.field] || null"
                 :options="refSelectOptions['_f_' + field.field] || []"
                 :loading="!!refSelectLoading['_f_' + field.field]"
-                :placeholder="'输入关键词搜索'"
+                :placeholder="__t('table.search_input_tip')"
                 :size="embSize"
                 filterable
                 remote
@@ -4265,7 +4265,7 @@ const NovaTable = {
               >
                 <template #empty>
                   <div style="padding:12px;text-align:center;color:#aaa;font-size:13px">
-                    {{ refSelectLoading['_f_' + field.field] ? '搜索中…' : '输入关键词开始搜索' }}
+                    {{ refSelectLoading['_f_' + field.field] ? __t('table.searching') : __t('table.search_input_tip') }}
                   </div>
                 </template>
                 <template #action>
@@ -4276,10 +4276,10 @@ const NovaTable = {
                       @mouseleave="$event.currentTarget.style.background='transparent'"
                       @click.stop="loadMoreRefSelect('_f_' + field.field, field.field)">
                       <iconify-icon icon="mdi:chevron-down" style="font-size:14px"></iconify-icon>
-                      加载更多({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
+                      {{ __t('table.load_more') }}({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
                     </div>
                     <span v-else-if="(refSelectOptions['_f_' + field.field] || []).length > 0" style="font-size:12px;color:#aaa">
-                      已全部加载({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
+                      {{ __t('table.loaded_all') }}({{ (refSelectOptions['_f_' + field.field] || []).length }}/{{ refSelectTotal['_f_' + field.field] || 0 }})
                     </span>
                   </div>
                 </template>
@@ -4288,7 +4288,7 @@ const NovaTable = {
               <div v-else-if="field.type === 'LINK' && linkMap && linkMap[field.field]" @click="openLinkModalForFilter(field)" style="flex:1;cursor:pointer">
                 <n-input
                   :value="filterForm[field.field + '_display'] || filterForm[field.field] || ''"
-                  :placeholder="'请选择' + field.title"
+                  :placeholder="__t('table.select_field_placeholder', { name: field.title })"
                   :size="embSize"
                   readonly
                   clearable
@@ -4301,20 +4301,20 @@ const NovaTable = {
               </div>
               <n-input v-else
                 v-model:value="filterForm[field.field]"
-                :placeholder="'请输入' + field.title"
+                :placeholder="__t('table.search_field_placeholder', { name: field.title })"
                 :size="embSize"
                 clearable style="flex:1"
               />
             </div>
           </template>
           <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px" :style="(dualMode || dualTableViewActive) ? 'grid-column:2' : 'grid-column:4'">
-            <n-button :size="embSize" @click="handleReset">重 置</n-button>
-            <n-button :size="embSize" type="primary" @click="handleQuery">查 询</n-button>
+            <n-button :size="embSize" @click="handleReset">{{ __t('common.reset') }}</n-button>
+            <n-button :size="embSize" type="primary" @click="handleQuery">{{ __t('common.query') }}</n-button>
             <n-button :size="embSize" dashed @click="toggleFilter" :disabled="searchFields.length <= ((dualMode || dualTableViewActive) ? 1 : 3)">
               <template #icon>
                 <n-icon><iconify-icon :icon="filterExpanded ? 'material-symbols:keyboard-arrow-up' : 'material-symbols:keyboard-arrow-down'"></iconify-icon></n-icon>
               </template>
-              {{ filterExpanded ? '收 起' : '展 开' }}
+              {{ filterExpanded ? __t('common.collapse') : __t('common.expand') }}
             </n-button>
           </div>
         </div>
@@ -4333,19 +4333,19 @@ const NovaTable = {
                 {{ opt.label }}
               </n-tab>
             </n-tabs>
-            <span v-else style="font-size:16px;font-weight:500">数据列表</span>
+            <span v-else style="font-size:16px;font-weight:500">{{ __t('table.data_list') }}</span>
             <div style="display:flex;gap:8px">
             <!-- ── 自定义按钮：MULTI / MULTI_ONLY / BUTTON（工具栏）─── -->
             <n-dropdown v-if="toolbarFoldedButtons.length > 0"
               trigger="hover"
               :options="toolbarFoldedOptions"
               @select="(key) => { var btn = toolbarFoldedButtons.find(function(b) { return b.title === key }); if (btn) handleCustomBtnClick(btn) }">
-              <n-button :size="embSize" circle style="background:transparent" title="更多操作">
+              <n-button :size="embSize" circle style="background:transparent" :title="__t('table.more_actions')">
                 <template #icon><n-icon size="16"><iconify-icon icon="material-symbols:more-horiz"></iconify-icon></n-icon></template>
               </n-button>
             </n-dropdown>
             <template v-for="btn in toolbarUnfoldedButtons" :key="btn.title">
-              <n-popconfirm v-if="btn.callHint" positive-text="确定" negative-text="取消" @positive-click="handleCustomBtnClick(btn, true)">
+              <n-popconfirm v-if="btn.callHint" :positive-text="__t('common.confirm')" :negative-text="__t('common.cancel')" @positive-click="handleCustomBtnClick(btn, true)">
                 <template #trigger>
                   <n-button :size="embSize" type="default"
                     :disabled="(btn.mode === 'MULTI' || btn.mode === 'MULTI_ONLY') && checkedRowKeys.length === 0"
@@ -4366,15 +4366,15 @@ const NovaTable = {
             </template>
             <n-button v-if="tbStandardShow.batchDelete" :size="embSize" type="error" @click="handleBatchDelete">
               <template #icon><n-icon><iconify-icon icon="material-symbols:delete-outline"></iconify-icon></n-icon></template>
-              删 除
+              {{ __t('common.delete.spaced') }}
             </n-button>
             <n-button v-if="tbStandardShow.linkAdd" :size="embSize" type="primary" @click="$emit('link-add')">
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
-              新增
+              {{ __t('common.add') }}
             </n-button>
             <n-button v-if="tbStandardShow.add" :size="embSize" type="primary" @click="handleAdd">
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
-              新 增
+              {{ __t('common.add.spaced') }}
             </n-button>
             <n-tooltip trigger="hover">
               <template #trigger>
@@ -4382,7 +4382,7 @@ const NovaTable = {
                   <template #icon><n-icon size="15"><iconify-icon icon="lucide:refresh-cw" style="font-size:15px"></iconify-icon></n-icon></template>
                 </n-button>
               </template>
-              刷新
+              {{ __t('table.refresh') }}
             </n-tooltip>
             <!-- 多子表：带悬浮下拉 -->
             <n-popover v-if="dualTableEnabled && !dualMode && dualTableSubTables.length > 1" trigger="hover" placement="bottom" :show-arrow="false">
@@ -4395,7 +4395,7 @@ const NovaTable = {
                     <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
                   </n-button>
                   </template>
-                  {{ dualTableViewActive ? '关闭双表视图' : '开启双表视图' }}
+                  {{ dualTableViewActive ? __t('table.close_dual_view') : __t('table.open_dual_view') }}
                 </n-tooltip>
               </template>
               <div style="display:flex;flex-direction:column;gap:2px;font-size:13px;min-width:120px;padding:4px 0">
@@ -4418,7 +4418,7 @@ const NovaTable = {
                   <template #icon><n-icon size="15"><iconify-icon icon="material-symbols:table-outline" style="font-size:15px"></iconify-icon></n-icon></template>
                 </n-button>
               </template>
-              {{ dualTableViewActive ? '关闭双表视图' : '开启双表视图' }}
+              {{ dualTableViewActive ? __t('table.close_dual_view') : __t('table.open_dual_view') }}
             </n-tooltip>
             <n-popover trigger="click" placement="bottom-end">
               <template #trigger>
@@ -4428,39 +4428,39 @@ const NovaTable = {
                       <template #icon><n-icon size="15"><iconify-icon icon="lucide:settings" style="font-size:15px"></iconify-icon></n-icon></template>
                     </n-button>
                   </template>
-                  设置
+                  {{ __t('table.settings') }}
                 </n-tooltip>
               </template>
               <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;min-width:160px">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
-                  <span>斑马纹</span>
+                  <span>{{ __t('table.zebra') }}</span>
                   <n-switch v-model:value="striped" />
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
-                  <span>双击编辑</span>
+                  <span>{{ __t('table.dblclick_edit') }}</span>
                   <n-switch v-model:value="rowDblclickEdit" />
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
-                  <span>文字溢出</span>
+                  <span>{{ __t('table.text_overflow') }}</span>
                   <n-radio-group v-model:value="cellOverflow" size="small">
-                    <n-radio-button value="ellipsis">省略</n-radio-button>
-                    <n-radio-button value="wrap">换行</n-radio-button>
+                    <n-radio-button value="ellipsis">{{ __t('table.ellipsis') }}</n-radio-button>
+                    <n-radio-button value="wrap">{{ __t('table.wrap') }}</n-radio-button>
                   </n-radio-group>
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
-                  <span>加载动画</span>
+                  <span>{{ __t('table.loading_animation') }}</span>
                   <n-radio-group v-model:value="loadingStyle" size="small">
-                    <n-radio-button value="wave">波浪</n-radio-button>
-                    <n-radio-button value="spinner">默认</n-radio-button>
-                    <n-radio-button value="dots">跳点</n-radio-button>
+                    <n-radio-button value="wave">{{ __t('table.wave') }}</n-radio-button>
+                    <n-radio-button value="spinner">{{ __t('table.spinner') }}</n-radio-button>
+                    <n-radio-button value="dots">{{ __t('table.dots') }}</n-radio-button>
                   </n-radio-group>
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
-                  <span>表格大小</span>
+                  <span>{{ __t('table.table_size') }}</span>
                   <n-radio-group v-model:value="tableSize" size="small">
-                    <n-radio-button value="small">紧凑</n-radio-button>
-                    <n-radio-button value="medium">默认</n-radio-button>
-                    <n-radio-button value="large">宽松</n-radio-button>
+                    <n-radio-button value="small">{{ __t('table.compact') }}</n-radio-button>
+                    <n-radio-button value="medium">{{ __t('table.medium') }}</n-radio-button>
+                    <n-radio-button value="large">{{ __t('table.large') }}</n-radio-button>
                   </n-radio-group>
                 </div>
               </div>
@@ -4511,7 +4511,7 @@ const NovaTable = {
       </component>
 
       <!-- 新增/编辑弹窗 -->
-      <n-modal v-model:show="showForm" display-directive="if" preset="card" :title="formMode === 'add' ? '新增' : '编辑'" :style="isEmbTab ? 'width:calc(100vw - 80px);max-width:1600px;margin-top:40px;max-height:calc(100vh - 80px);display:flex;flex-direction:column;transition:width 0.3s ease,max-height 0.3s ease,margin-top 0.3s ease' : 'width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column'" :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
+      <n-modal v-model:show="showForm" display-directive="if" preset="card" :title="formMode === 'add' ? __t('common.add') : __t('common.edit')" :style="isEmbTab ? 'width:calc(100vw - 80px);max-width:1600px;margin-top:40px;max-height:calc(100vh - 80px);display:flex;flex-direction:column;transition:width 0.3s ease,max-height 0.3s ease,margin-top 0.3s ease' : 'width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column'" :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
         <n-tabs v-model:value="formTab" type="line"
           style="padding:0 20px;margin-top:-4px"
           :class="''"
@@ -4519,7 +4519,7 @@ const NovaTable = {
 
           <!-- Tab 1: 表单 -->
           <n-tab-pane name="form" style="padding:16px 0 20px 0">
-            <template #tab><iconify-icon icon="mdi:pencil-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>基本信息<span v-if="tabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('form') }}</span><span v-else-if="tabTotalRequired('form') > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template>
+            <template #tab><iconify-icon icon="mdi:pencil-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>{{ __t('table.basic_info') }}<span v-if="tabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('form') }}</span><span v-else-if="tabTotalRequired('form') > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template>
             <nova-form-this
               :form-data="formData"
               :form-errors="formErrors"
@@ -4618,8 +4618,8 @@ const NovaTable = {
         </n-tabs>
         <template #footer>
           <n-space v-if="!formTab.startsWith('emb_') && !formTab.startsWith('ref_') && !formTab.startsWith('link_')" justify="end">
-            <n-button @click="showForm = false">取 消</n-button>
-            <n-button type="primary" @click="handleFormSubmit">确 定</n-button>
+            <n-button @click="showForm = false">{{ __t('common.cancel') }}</n-button>
+            <n-button type="primary" @click="handleFormSubmit">{{ __t('common.confirm') }}</n-button>
           </n-space>
         </template>
       </n-modal>
@@ -4639,7 +4639,7 @@ const NovaTable = {
       <n-modal v-model:show="previewModalShow" preset="card" style="width:760px;margin-top:60px;padding:0">
         <template #header>
           <div class="gallery-header">
-            <span class="gallery-title">{{ previewField ? (previewField.title || '附件预览') : '附件预览' }}</span>
+            <span class="gallery-title">{{ previewField ? (previewField.title || __t('table.attach_preview')) : __t('table.attach_preview') }}</span>
           </div>
         </template>
         <div v-if="previewField">
@@ -4651,34 +4651,34 @@ const NovaTable = {
       </n-modal>
 
       <!-- 关联引用选择弹窗 -->
-      <n-modal v-for="picker in refPickerStack" :key="picker.level" :show="picker.visible" @update:show="(v) => { if (!v) closePickerAtLevel(picker.level) }" preset="card" class="ref-picker-modal" :title="'选择 ' + picker.field.title" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="3000 + picker.level">
+      <n-modal v-for="picker in refPickerStack" :key="picker.level" :show="picker.visible" @update:show="(v) => { if (!v) closePickerAtLevel(picker.level) }" preset="card" class="ref-picker-modal" :title="__t('table.picker_title', { name: picker.field.title })" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="3000 + picker.level">
         <div :style="{ height: 'calc(100vh - 180px)', maxHeight: '700px', overflow: 'hidden' }">
           <nova-table :picker-mode="true" :nova-name-prop="picker.novaName" :source-nova-name-prop="novaName" :source-fields-prop="buildPickerSourceFields(picker)" @pick="onPickerPick(picker.level, $event)" />
         </div>
         <template #footer>
           <div style="display:flex;justify-content:flex-end;gap:8px;width:100%">
-            <n-button @click="closePickerAtLevel(picker.level)">关闭 (Esc)</n-button>
-            <n-button type="primary" @click="confirmPickerSelect(picker.level)">选 择</n-button>
+            <n-button @click="closePickerAtLevel(picker.level)">{{ __t('common.close') }} (Esc)</n-button>
+            <n-button type="primary" @click="confirmPickerSelect(picker.level)">{{ __t('common.confirm') }}</n-button>
           </div>
         </template>
       </n-modal>
 
       <!-- LINK 多选关联弹窗 -->
-      <n-modal v-model:show="linkPickerShow" preset="card" class="ref-picker-modal" :title="linkPickerTitle || '选择关联数据'" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="3500">
+      <n-modal v-model:show="linkPickerShow" preset="card" class="ref-picker-modal" :title="linkPickerTitle || __t('table.link_picker_title_default')" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="3500">
         <div :style="{ height: 'calc(100vh - 180px)', maxHeight: '700px', overflow: 'hidden' }">
           <nova-table v-if="linkPickerShow" :picker-mode="true" :picker-multi="true" :nova-name-prop="linkPickerTargetNova" :source-nova-name-prop="novaName" :source-fields-prop="linkPickerSourceFields" @check="onLinkPickerPick" />
         </div>
         <template #footer>
           <div style="display:flex;justify-content:flex-end;gap:8px;width:100%">
-            <n-button @click="closeLinkPicker">关闭 (Esc)</n-button>
-            <n-button type="primary" @click="confirmLinkPickerSelect">选 择</n-button>
+            <n-button @click="closeLinkPicker">{{ __t('common.close') }} (Esc)</n-button>
+            <n-button type="primary" @click="confirmLinkPickerSelect">{{ __t('common.confirm') }}</n-button>
           </div>
         </template>
       </n-modal>
 
       <!-- 操作表单弹窗（novaClassName） — 独立状态，不干扰主表单 -->
       <n-modal v-model:show="opFormShow" display-directive="if" preset="card"
-        :title="(opFormBtn && opFormBtn.title) || '操作'"
+        :title="(opFormBtn && opFormBtn.title) || __t('table.actions')"
         style="width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column"
         :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}"
         :header-style="{paddingBottom:'8px'}">
@@ -4688,7 +4688,7 @@ const NovaTable = {
           <!-- Tab 1: 基本信息 -->
           <n-tab-pane name="form" style="padding:16px 0 20px 0">
             <template #tab>
-              <iconify-icon icon="mdi:pencil-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>基本信息
+              <iconify-icon icon="mdi:pencil-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>{{ __t('table.basic_info') }}
               <span v-if="opFormTabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ opFormTabRequiredCount('form') }}</span><span v-else-if="opFormTabTotalRequired('form') > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span>
             </template>
             <div :key="'opTab_' + opFormTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
@@ -4732,32 +4732,32 @@ const NovaTable = {
                 <n-select
                   v-else-if="f.type === 'CHOICE' && opFormChoiceMap[f.field] && opFormChoiceMap[f.field].selectType === 'MULTI'"
                   v-model:value="opFormData[f.field]" :options="opFieldOpts(f)"
-                  :placeholder="'请选择' + f.title" multiple clearable
+                  :placeholder="__t('table.select_field_placeholder', { name: f.title })" multiple clearable
                   @update:value="onOpChoiceUpdate(f.field)" />
                 <n-select
                   v-else-if="f.type === 'CHOICE'"
                   v-model:value="opFormData[f.field]" :options="opFieldOpts(f)"
-                  :placeholder="'请选择' + f.title" clearable
+                  :placeholder="__t('table.select_field_placeholder', { name: f.title })" clearable
                   @update:value="onOpChoiceUpdate(f.field)" />
                 <div v-else-if="f.type === 'BOOLEAN' && (opFormBooleanMap[f.field] || {}).type === 'SWITCH'"
                   style="display:flex;align-items:center;gap:8px;padding-top:2px">
                   <n-switch
                     :value="opFormData[f.field] === 'true'"
                     @update:value="(v) => opFormData[f.field] = v ? 'true' : 'false'" />
-                  <span style="font-size:13px;color:#666">{{ opFormData[f.field] === 'true' ? '是' : '否' }}</span>
+                  <span style="font-size:13px;color:#666">{{ opFormData[f.field] === 'true' ? __t('common.yes') : __t('common.no') }}</span>
                 </div>
                 <n-button-group v-else-if="f.type === 'BOOLEAN' && (opFormBooleanMap[f.field] || {}).type === 'SEGMENT'" size="small">
-                  <n-button :type="opFormData[f.field] === 'true' ? 'primary' : 'default'" @click="opFormData[f.field] = 'true'">是</n-button>
-                  <n-button :type="opFormData[f.field] === 'true' ? 'default' : 'primary'" @click="opFormData[f.field] = 'false'">否</n-button>
+                  <n-button :type="opFormData[f.field] === 'true' ? 'primary' : 'default'" @click="opFormData[f.field] = 'true'">{{ __t('common.yes') }}</n-button>
+                  <n-button :type="opFormData[f.field] === 'true' ? 'default' : 'primary'" @click="opFormData[f.field] = 'false'">{{ __t('common.no') }}</n-button>
                 </n-button-group>
                 <n-select
                   v-else-if="f.type === 'BOOLEAN'"
                   v-model:value="opFormData[f.field]"
-                  :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"
-                  :placeholder="'请选择' + f.title" clearable />
+                  :options="[{label:__t('table.yes'),value:'true'},{label:__t('table.no'),value:'false'}]"
+                  :placeholder="__t('table.select_field_placeholder', { name: f.title })" clearable />
                 <n-input-number
                   v-else-if="f.type === 'NUMBER'"
-                  v-model:value="opFormData[f.field]" :placeholder="'请输入' + f.title"
+                  v-model:value="opFormData[f.field]" :placeholder="__t('table.search_field_placeholder', { name: f.title })"
                   :min="opFormNumberMap[f.field] && opFormNumberMap[f.field].min"
                   :max="opFormNumberMap[f.field] && opFormNumberMap[f.field].max"
                   :precision="opFormNumberMap[f.field] && opFormNumberMap[f.field].type === 'DECIMAL' ? (opFormNumberMap[f.field].decimal || 2) : 0"
@@ -4765,24 +4765,24 @@ const NovaTable = {
                 <n-date-picker
                   v-else-if="f.type === 'DATE'"
                   v-model:value="opFormData[f.field]"
-                  :type="opDateType(f.field)" :placeholder="'请选择' + f.title"
+                  :type="opDateType(f.field)" :placeholder="__t('table.select_field_placeholder', { name: f.title })"
                   clearable style="width:100%" />
                 <n-select
                   v-else-if="f.type === 'TAG'"
                   v-model:value="opFormData[f.field]" :options="opTagOpts(f.field)"
-                  :placeholder="'请输入或选择' + f.title"
+                  :placeholder="__t('table.input_or_select_field_placeholder', { name: f.title })"
                   :max-tag-count="opFormTagMap[f.field] && opFormTagMap[f.field].maxTagCount"
                   :tag="opFormTagMap[f.field] && opFormTagMap[f.field].allowExtension"
                   filterable multiple clearable />
                 <n-input
                   v-else-if="f.type === 'TEXTAREA'"
                   v-model:value="opFormData[f.field]" type="textarea"
-                  :autosize="{ minRows: 3 }" :placeholder="'请输入' + f.title" />
+                  :autosize="{ minRows: 3 }" :placeholder="__t('table.search_field_placeholder', { name: f.title })" />
                 <div v-else-if="f.type === 'REFERENCE' && opFormRefMap[f.field]"
                   @click="openOpReferenceModal(f)" style="cursor:pointer">
                   <n-input
                     :value="opFormData[f.field + '_display'] || opFormData[f.field]"
-                    :placeholder="'请选择' + f.title" readonly clearable
+                    :placeholder="__t('table.select_field_placeholder', { name: f.title })" readonly clearable
                     @clear.stop="opFormData[f.field] = null; opFormData[f.field + '_display'] = ''">
                     <template #suffix><iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon></template>
                   </n-input>
@@ -4793,11 +4793,11 @@ const NovaTable = {
                       :disabled="opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit && (opFormData[f.field] || []).length >= opFormAttachmentMap[f.field].maxLimit"
                       @click="triggerOpFileUpload(f.field)">
                       <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
-                      上传<span style="font-size:12px;opacity:0.7">{{ opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit ? '（共' + Math.max(0, opFormAttachmentMap[f.field].maxLimit - (opFormData[f.field] || []).length) + '个）' : '（共0个）' }}</span>
+                      {{ __t('table.uploading') }}<span style="font-size:12px;opacity:0.7">{{ opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit ? __t('common.count_n', { n: Math.max(0, opFormAttachmentMap[f.field].maxLimit - (opFormData[f.field] || []).length) }) : __t('common.count_n', { n: 0 }) }}</span>
                     </n-button>
                     <n-button style="flex:1" :disabled="!(opFormData[f.field] || []).length" @click="openPreview(f, null, true)">
                       <iconify-icon icon="mdi:eye-outline" style="font-size:14px;margin-right:4px"></iconify-icon>
-                      查看<span style="font-size:12px;opacity:0.7">（共{{ (opFormData[f.field] || []).length }}个）</span>
+                      {{ __t('table.viewing') }}<span style="font-size:12px;opacity:0.7">{{ __t('common.count_n', { n: (opFormData[f.field] || []).length }) }}</span>
                     </n-button>
                   </n-button-group>
                   <input :id="'upload-op-' + f.field" type="file" style="display:none"
@@ -4810,7 +4810,7 @@ const NovaTable = {
                     :data-editor-field="f.field"
                     class="nova-aieditor-host"></div>
                 </div>
-                <n-input v-else v-model:value="opFormData[f.field]" :placeholder="'请输入' + f.title" clearable />
+                <n-input v-else v-model:value="opFormData[f.field]" :placeholder="__t('table.search_field_placeholder', { name: f.title })" clearable />
                 <span v-if="opFormErrors[f.field]" class="form-error-tip">{{ opFormErrors[f.field] }}</span>
               </div>
             </template>
@@ -4826,7 +4826,7 @@ const NovaTable = {
               <span v-if="opFormTabRequiredCount('app_' + tab.tapNovaName) > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ opFormTabRequiredCount('app_' + tab.tapNovaName) }}</span><span v-else-if="opFormTabTotalRequired('app_' + tab.tapNovaName) > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span>
             </template>
             <div :key="'opAppTab_' + opFormTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
-            <div v-if="!(opFormAppBuild(tab.tapNovaName).editFields || []).length" style="text-align:center;padding:40px;color:#aaa;font-size:13px">加载中…</div>
+            <div v-if="!(opFormAppBuild(tab.tapNovaName).editFields || []).length" style="text-align:center;padding:40px;color:#aaa;font-size:13px">{{ __t('common.loading') }}</div>
             <div v-else>
               <n-card v-for="sec in opFormAppSections(tab.tapNovaName)" :key="sec.key" class="form-panel" size="small" :bordered="true">
                 <template v-if="sec.title" #header>
@@ -4867,13 +4867,13 @@ const NovaTable = {
                   <n-select
                     v-else-if="f.type === 'CHOICE' && opFormAppChoice(tab.tapNovaName, f.field) && opFormAppChoice(tab.tapNovaName, f.field).selectType === 'MULTI'"
                     :value="opFormAppData(tab.tapNovaName)[f.field]" :options="opFormAppFieldOpts(tab.tapNovaName, f)"
-                    :placeholder="'请选择' + f.title"
+                    :placeholder="__t('table.select_field_placeholder', { name: f.title })"
                     :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
                     multiple clearable @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
                   <n-select
                     v-else-if="f.type === 'CHOICE'"
                     :value="opFormAppData(tab.tapNovaName)[f.field]" :options="opFormAppFieldOpts(tab.tapNovaName, f)"
-                    :placeholder="'请选择' + f.title"
+                    :placeholder="__t('table.select_field_placeholder', { name: f.title })"
                     :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
                     clearable @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
                   <div v-else-if="f.type === 'BOOLEAN' && ((opFormAppBuild(tab.tapNovaName).booleanMap || {})[f.field] || {}).type === 'SWITCH'"
@@ -4881,22 +4881,22 @@ const NovaTable = {
                     <n-switch
                       :value="opFormAppData(tab.tapNovaName)[f.field] === 'true'"
                       @update:value="(v) => opFormAppSetFd(tab.tapNovaName, f.field, v ? 'true' : 'false')" />
-                    <span style="font-size:13px;color:#666">{{ opFormAppData(tab.tapNovaName)[f.field] === 'true' ? '是' : '否' }}</span>
+                    <span style="font-size:13px;color:#666">{{ opFormAppData(tab.tapNovaName)[f.field] === 'true' ? __t('common.yes') : __t('common.no') }}</span>
                   </div>
                   <n-button-group v-else-if="f.type === 'BOOLEAN' && ((opFormAppBuild(tab.tapNovaName).booleanMap || {})[f.field] || {}).type === 'SEGMENT'" size="small">
-                    <n-button :type="opFormAppData(tab.tapNovaName)[f.field] === 'true' ? 'primary' : 'default'" @click="opFormAppSetFd(tab.tapNovaName, f.field, 'true')">是</n-button>
-                    <n-button :type="opFormAppData(tab.tapNovaName)[f.field] === 'true' ? 'default' : 'primary'" @click="opFormAppSetFd(tab.tapNovaName, f.field, 'false')">否</n-button>
+                    <n-button :type="opFormAppData(tab.tapNovaName)[f.field] === 'true' ? 'primary' : 'default'" @click="opFormAppSetFd(tab.tapNovaName, f.field, 'true')">{{ __t('common.yes') }}</n-button>
+                    <n-button :type="opFormAppData(tab.tapNovaName)[f.field] === 'true' ? 'default' : 'primary'" @click="opFormAppSetFd(tab.tapNovaName, f.field, 'false')">{{ __t('common.no') }}</n-button>
                   </n-button-group>
                   <n-select
                     v-else-if="f.type === 'BOOLEAN'"
-                    :value="opFormAppData(tab.tapNovaName)[f.field]" :options="[{label:'是',value:'true'},{label:'否',value:'false'}]"
-                    :placeholder="'请选择' + f.title"
+                    :value="opFormAppData(tab.tapNovaName)[f.field]" :options="[{label:__t('table.yes'),value:'true'},{label:__t('table.no'),value:'false'}]"
+                    :placeholder="__t('table.select_field_placeholder', { name: f.title })"
                     :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
                     clearable @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
                   <n-input-number
                     v-else-if="f.type === 'NUMBER'"
                     :value="opFormAppData(tab.tapNovaName)[f.field]"
-                    :placeholder="'请输入' + f.title" :show-button="false" style="width:100%"
+                    :placeholder="__t('table.search_field_placeholder', { name: f.title })" :show-button="false" style="width:100%"
                     :min="opFormAppNumInfo(tab.tapNovaName, f.field).min"
                     :max="opFormAppNumInfo(tab.tapNovaName, f.field).max"
                     :precision="opFormAppNumInfo(tab.tapNovaName, f.field).type === 'DECIMAL' ? (opFormAppNumInfo(tab.tapNovaName, f.field).decimal || 2) : 0"
@@ -4906,7 +4906,7 @@ const NovaTable = {
                     v-else-if="f.type === 'DATE'"
                     :value="opFormAppData(tab.tapNovaName)[f.field]"
                     :type="opFormAppDateType(tab.tapNovaName, f.field)"
-                    :placeholder="'请选择' + f.title"
+                    :placeholder="__t('table.select_field_placeholder', { name: f.title })"
                     :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
                     clearable style="width:100%"
                     @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
@@ -4914,7 +4914,7 @@ const NovaTable = {
                     v-else-if="f.type === 'TAG'"
                     :value="opFormAppData(tab.tapNovaName)[f.field]"
                     :options="opFormAppTagOpts(tab.tapNovaName, f.field)"
-                    :placeholder="'请输入或选择' + f.title"
+                    :placeholder="__t('table.input_or_select_field_placeholder', { name: f.title })"
                     :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
                     filterable multiple clearable
                     @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
@@ -4922,7 +4922,7 @@ const NovaTable = {
                     v-else-if="f.type === 'TEXTAREA'"
                     :value="opFormAppData(tab.tapNovaName)[f.field]"
                     type="textarea" :autosize="{minRows:3}"
-                    :placeholder="'请输入' + f.title"
+                    :placeholder="__t('table.search_field_placeholder', { name: f.title })"
                     :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
                     @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
                   <div v-else-if="f.type === 'REFERENCE' && opFormAppChoice(tab.tapNovaName, f.field) === null"
@@ -4930,7 +4930,7 @@ const NovaTable = {
                     @click="openOpAppReferenceModal(tab.tapNovaName, f)">
                     <n-input
                       :value="opFormAppData(tab.tapNovaName)[f.field + '_display'] || opFormAppData(tab.tapNovaName)[f.field]"
-                      :placeholder="'请选择' + f.title" readonly clearable
+                      :placeholder="__t('table.select_field_placeholder', { name: f.title })" readonly clearable
                       @clear.stop="opFormAppSetFd(tab.tapNovaName, f.field, null); opFormAppSetFd(tab.tapNovaName, f.field + '_display', '')">
                       <template #suffix><iconify-icon icon="mdi:format-list-bulleted-square" style="color:#888;font-size:16px"></iconify-icon></template>
                     </n-input>
@@ -4941,11 +4941,11 @@ const NovaTable = {
                         :disabled="((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit && (opFormAppData(tab.tapNovaName)[f.field] || []).length >= ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit"
                         @click="triggerOpAppFileUpload(tab.tapNovaName, f.field)">
                         <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
-                        上传<span style="font-size:12px;opacity:0.7">{{ ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit ? '（共' + Math.max(0, ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit - (opFormAppData(tab.tapNovaName)[f.field] || []).length) + '个）' : '（共0个）' }}</span>
+                        {{ __t('table.uploading') }}<span style="font-size:12px;opacity:0.7">{{ ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit ? __t('common.count_n', { n: Math.max(0, ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit - (opFormAppData(tab.tapNovaName)[f.field] || []).length) }) : __t('common.count_n', { n: 0 }) }}</span>
                       </n-button>
                       <n-button style="flex:1" :disabled="!(opFormAppData(tab.tapNovaName)[f.field] || []).length" @click="openPreview(f, tab.tapNovaName, true)">
                         <iconify-icon icon="mdi:eye-outline" style="font-size:14px;margin-right:4px"></iconify-icon>
-                        查看<span style="font-size:12px;opacity:0.7">（共{{ (opFormAppData(tab.tapNovaName)[f.field] || []).length }}个）</span>
+                        {{ __t('table.viewing') }}<span style="font-size:12px;opacity:0.7">{{ __t('common.count_n', { n: (opFormAppData(tab.tapNovaName)[f.field] || []).length }) }}</span>
                       </n-button>
                     </n-button-group>
                     <input :id="'upload-opApp-' + tab.tapNovaName + '-' + f.field" type="file" style="display:none"
@@ -4961,7 +4961,7 @@ const NovaTable = {
                   <n-input
                     v-else
                     :value="opFormAppData(tab.tapNovaName)[f.field]"
-                    :placeholder="'请输入' + f.title"
+                    :placeholder="__t('table.search_field_placeholder', { name: f.title })"
                     :status="opFormAppErrors(tab.tapNovaName)[f.field] ? 'error' : undefined"
                     clearable @update:value="opFormAppSetFd(tab.tapNovaName, f.field, $event)" />
                   <span v-if="opFormAppErrors(tab.tapNovaName)[f.field]" class="form-error-tip">{{ opFormAppErrors(tab.tapNovaName)[f.field] }}</span>
@@ -4975,8 +4975,8 @@ const NovaTable = {
         </n-tabs>
         <template #footer>
           <n-space justify="end">
-            <n-button @click="closeOpForm">取 消</n-button>
-            <n-button type="primary" @click="submitOpForm">确 定</n-button>
+            <n-button @click="closeOpForm">{{ __t('common.cancel') }}</n-button>
+            <n-button type="primary" @click="submitOpForm">{{ __t('common.confirm') }}</n-button>
           </n-space>
         </template>
       </n-modal>
@@ -5033,7 +5033,7 @@ const NovaTable = {
     <n-modal v-model:show="tableAttachPreviewShow" preset="card" style="width:760px;margin-top:60px;padding:0" :z-index="9999">
       <template #header>
         <div class="gallery-header">
-          <span class="gallery-title">{{ tableAttachPreviewField ? (tableAttachPreviewField.title || '附件预览') : '附件预览' }}</span>
+          <span class="gallery-title">{{ tableAttachPreviewField ? (tableAttachPreviewField.title || __t('table.attach_preview')) : __t('table.attach_preview') }}</span>
         </div>
       </template>
       <!-- IMAGE / QR_CODE -->
@@ -5054,8 +5054,8 @@ const NovaTable = {
             </div>
           </div>
         </div>
-        <div class="gallery-url-wrap" :title="'点击复制: ' + tableAttachPreviewUrls[tableAttachPreviewIndex || 0]" @click="copyText(tableAttachPreviewUrls[tableAttachPreviewIndex || 0])">
-          <div class="gallery-url-label">{{ tableAttachPreviewType === 'QR_CODE' ? '二维码内容' : '图片地址' }}</div>
+        <div class="gallery-url-wrap" :title="__t('table.click_copy') + ': ' + tableAttachPreviewUrls[tableAttachPreviewIndex || 0]" @click="copyText(tableAttachPreviewUrls[tableAttachPreviewIndex || 0])">
+          <div class="gallery-url-label">{{ tableAttachPreviewType === 'QR_CODE' ? __t('table.qrcode_content') : __t('table.image_url') }}</div>
           <div class="gallery-url-text">{{ tableAttachPreviewUrls[tableAttachPreviewIndex || 0] }}</div>
         </div>
       </div>
@@ -5071,7 +5071,7 @@ const NovaTable = {
           <div style="background:var(--n-color);padding:14px 14px 14px 14px;flex-shrink:0">
           <div style="margin-bottom:10px;font-size:13px;color:var(--n-text-color-2);display:flex;align-items:center;gap:6px">
             <iconify-icon icon="mdi:playlist-music" style="font-size:16px;color:var(--n-text-color-3)"></iconify-icon>
-            播放列表
+            {{ __t('table.playlist') }}
             <span style="background:var(--n-border-color);color:var(--n-text-color-3);border-radius:10px;padding:0 6px;font-size:11px;font-weight:500">{{ tableAttachPreviewUrls.length }}</span>
           </div>
           <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin">
@@ -5107,7 +5107,7 @@ const NovaTable = {
                 padding:'6px 8px',fontSize:'12px',color: (tableAttachPreviewIndex || 0) === idx ? '#2563eb' : 'var(--n-text-color-2)',
                 textAlign:'center',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',
                 borderTop:'1px solid var(--n-border-color)'
-              }">视频 {{ idx + 1 }}</div>
+              }">{{ __t('table.video_n', { n: idx + 1 }) }}</div>
             </div>
           </div>
         </div>

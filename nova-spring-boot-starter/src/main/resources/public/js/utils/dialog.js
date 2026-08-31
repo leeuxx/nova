@@ -16,7 +16,7 @@
           type: 'success',
           title: options.title,
           content,
-          negativeText: options.negativeText || '关闭',
+          negativeText: options.negativeText || window.__t('common.close'),
           style: 'margin-top:80px',
           negativeButtonProps: { size: 'medium' }
         })
@@ -27,7 +27,7 @@
           type: 'error',
           title: options.title,
           content,
-          negativeText: options.negativeText || '关闭',
+          negativeText: options.negativeText || window.__t('common.close'),
           style: 'margin-top:80px',
           negativeButtonProps: { size: 'medium' }
         })
@@ -38,7 +38,7 @@
           type: 'info',
           title: options.title,
           content,
-          negativeText: options.negativeText || '关闭',
+          negativeText: options.negativeText || window.__t('common.close'),
           style: 'margin-top:80px',
           negativeButtonProps: { size: 'medium' }
         })
@@ -49,7 +49,7 @@
           type: 'warning',
           title: options.title,
           content,
-          negativeText: options.negativeText || '关闭',
+          negativeText: options.negativeText || window.__t('common.close'),
           style: 'margin-top:80px',
           negativeButtonProps: { size: 'medium' }
         })
@@ -60,8 +60,8 @@
           type: "warning",
           title: options.title,
           content,
-          positiveText: options.positiveText || '确定',
-          negativeText: options.negativeText || '关闭',
+          positiveText: options.positiveText || window.__t('common.confirm'),
+          negativeText: options.negativeText || window.__t('common.close'),
           style: 'margin-top:80px',
           positiveButtonProps: { type: 'primary', size: 'medium' },
           negativeButtonProps: { size: 'medium' },
