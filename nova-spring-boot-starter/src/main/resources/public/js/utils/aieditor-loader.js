@@ -1,33 +1,33 @@
 ;(function () {
-  var loadingPromise = null
-
-  function ensureLoaded() {
-    if (window.AiEditor && window.AiEditor.AiEditor) return Promise.resolve(window.AiEditor.AiEditor)
-    if (loadingPromise) return loadingPromise
-    loadingPromise = window
-      .loadResources(['js/lib/aieditor-1.4.2.js', 'js/lib/aieditor-1.4.2.css'])
-      .then(function () {
-        return window.AiEditor && window.AiEditor.AiEditor
-      })
-    return loadingPromise
+  function getClass() {
+    return window.AiEditor && window.AiEditor.AiEditor
   }
 
-  function createEditor(hostEl, html, onChange) {
-    return ensureLoaded().then(function (AiEditor) {
-      var initialContent = html || ''
-      var editor = new AiEditor({
-        element: hostEl,
-        content: initialContent,
-        placeholder: '请输入内容...',
-        contentRetention: false,
-        onChange: function (aiEditor) {
-          if (onChange) {
-            try { onChange(aiEditor.getHtml()) } catch (e) {}
-          }
+  function detectTheme() {
+    return document.body.classList.contains('dark') ? 'dark' : 'light'
+  }
+
+  function createEditor(hostEl, html, onChange, theme) {
+    var AiEditor = getClass()
+    if (!AiEditor) throw new Error('AiEditor 未加载')
+    var initialContent = html || ''
+    return new AiEditor({
+      element: hostEl,
+      content: initialContent,
+      placeholder: '请输入内容...',
+      contentRetention: false,
+      theme: theme || detectTheme(),
+      onChange: function (aiEditor) {
+        if (onChange) {
+          try { onChange(aiEditor.getHtml()) } catch (e) {}
         }
-      })
-      return editor
+      }
     })
+  }
+
+  function changeTheme(editor, theme) {
+    if (!editor || typeof editor.changeTheme !== 'function') return
+    try { editor.changeTheme(theme || detectTheme()) } catch (e) {}
   }
 
   function setContent(editor, html) {
@@ -50,8 +50,8 @@
   }
 
   window.NovaAiEditor = {
-    ensureLoaded: ensureLoaded,
     createEditor: createEditor,
+    changeTheme: changeTheme,
     setContent: setContent,
     destroy: destroy
   }

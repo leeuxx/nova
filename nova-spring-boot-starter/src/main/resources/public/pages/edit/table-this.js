@@ -62,19 +62,16 @@ window.NovaFieldThis = {
     },
     maybeMountEditor() {
       if (this._editorReady) return
-      if (this._editorMounting) return
       if (!this._editorHost) return
       if (!this.f || this.f.type !== 'EDITOR') return
       if (!window.NovaAiEditor) return
-      this._editorMounting = true
       var self = this
       var initialHtml = (self.formData && self.formData[self.f.field]) || ''
-      window.NovaAiEditor.createEditor(self._editorHost, initialHtml, function (html) {
-        self._editorLastSyncedHtml = html
-        self.$emit('field-change', { field: self.f.field, value: html })
-      }).then(function (editor) {
-        self._editorMounting = false
-        if (!editor) return
+      try {
+        var editor = window.NovaAiEditor.createEditor(self._editorHost, initialHtml, function (html) {
+          self._editorLastSyncedHtml = html
+          self.$emit('field-change', { field: self.f.field, value: html })
+        })
         if (self._editorReady) {
           try { window.NovaAiEditor.destroy(editor) } catch (e) {}
           return
@@ -82,10 +79,9 @@ window.NovaFieldThis = {
         self._editor = editor
         self._editorLastSyncedHtml = initialHtml
         self._editorReady = true
-      }).catch(function (err) {
-        self._editorMounting = false
-        console.error('[NovaFieldThis] aieditor load failed:', err)
-      })
+      } catch (err) {
+        console.error('[NovaFieldThis] aieditor mount failed:', err)
+      }
     },
     destroyEditor() {
       if (this._editor && window.NovaAiEditor) {
@@ -196,6 +192,14 @@ window.NovaFieldThis = {
   // ── 生命周期 ──────────────────────────────────────────────────
   mounted() {
     this.maybeMountEditor()
+    var self = this
+    if (window.__appDarkMode && window.Vue && typeof window.Vue.watch === 'function') {
+      this._stopThemeWatch = window.Vue.watch(function () { return window.__appDarkMode.value }, function (val) {
+        if (self._editor && window.NovaAiEditor) {
+          window.NovaAiEditor.changeTheme(self._editor, val ? 'dark' : 'light')
+        }
+      })
+    }
   },
   updated() {
     if (!this._editor || !this.f || this.f.type !== 'EDITOR') return
@@ -208,6 +212,7 @@ window.NovaFieldThis = {
     }
   },
   beforeUnmount() {
+    if (this._stopThemeWatch) { try { this._stopThemeWatch() } catch (e) {} this._stopThemeWatch = null }
     this.destroyEditor()
   },
 

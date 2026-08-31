@@ -175,30 +175,25 @@ window.NovaAppForm = {
     },
     maybeMountEditor(field) {
       if (this._editors[field]) return
-      if (!this._editorMounting) this._editorMounting = {}
-      if (this._editorMounting[field]) return
-      this._editorMounting[field] = true
       var host = this._editorHosts[field]
       if (!host) return
       if (!window.NovaAiEditor) return
       var self = this
       var initialHtml = (self.formData && self.formData[field]) || ''
-      window.NovaAiEditor.createEditor(host, initialHtml, function (html) {
-        self._editorLastSynced[field] = html
-        self.$emit('field-change', { field: field, value: html })
-      }).then(function (editor) {
-        delete self._editorMounting[field]
-        if (!editor) return
+      try {
+        var editor = window.NovaAiEditor.createEditor(host, initialHtml, function (html) {
+          self._editorLastSynced[field] = html
+          self.$emit('field-change', { field: field, value: html })
+        })
         if (self._editors[field]) {
           try { window.NovaAiEditor.destroy(editor) } catch (e) {}
           return
         }
         self._editors[field] = editor
         self._editorLastSynced[field] = initialHtml
-      }).catch(function (err) {
-        delete self._editorMounting[field]
-        console.error('[NovaAppForm] aieditor load failed:', err)
-      })
+      } catch (err) {
+        console.error('[NovaAppForm] aieditor mount failed:', err)
+      }
     },
     destroyAllEditors() {
       var self = this
@@ -217,6 +212,17 @@ window.NovaAppForm = {
   // ── 生命周期 ──────────────────────────────────────────────────
   mounted() {
     // editor hosts are registered via :ref callbacks after mount
+    var self = this
+    if (window.__appDarkMode && window.Vue && typeof window.Vue.watch === 'function') {
+      this._stopThemeWatch = window.Vue.watch(function () { return window.__appDarkMode.value }, function (val) {
+        var theme = val ? 'dark' : 'light'
+        Object.keys(self._editors).forEach(function (field) {
+          if (self._editors[field] && window.NovaAiEditor) {
+            window.NovaAiEditor.changeTheme(self._editors[field], theme)
+          }
+        })
+      })
+    }
   },
   updated() {
     var self = this
@@ -233,6 +239,7 @@ window.NovaAppForm = {
     })
   },
   beforeUnmount() {
+    if (this._stopThemeWatch) { try { this._stopThemeWatch() } catch (e) {} this._stopThemeWatch = null }
     this.destroyAllEditors()
   },
 

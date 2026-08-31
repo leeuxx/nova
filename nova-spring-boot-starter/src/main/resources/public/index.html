@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="css/login.css" />
   <link rel="stylesheet" href="css/404.css" />
   <link rel="stylesheet" href="css/home.css" />
+  <link rel="stylesheet" href="js/lib/aieditor-1.4.2.css" />
   <!-- 首屏加载动画样式（跳跃方块；ID 与 loading.js 一致，避免重复注入） -->
   <style id="nova-loading-jump-css">
     .nova-jump-box{display:flex;flex-direction:column;align-items:center}
@@ -68,7 +69,9 @@
 
   <!-- 全站参数配置（开发手写）+ 默认值填充 -->
   <script src="js/utils/loadResources.js"></script>
-  <!-- AiEditor 异步加载器（按需加载 AiEditor） -->
+  <!-- AiEditor（与 Vue/Naive UI 一样，主入口同步加载） -->
+  <script src="js/lib/aieditor-1.4.2.js"></script>
+  <!-- AiEditor 加载器封装：createEditor / setContent / destroy -->
   <script src="js/utils/aieditor-loader.js"></script>
   <!-- window.nova 兜底声明：config.js 直接写 window.nova.config，须先建对象 -->
   <script>window.nova = window.nova || {}</script>
