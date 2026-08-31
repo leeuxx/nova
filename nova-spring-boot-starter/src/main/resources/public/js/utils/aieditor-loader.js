@@ -73,7 +73,16 @@
         if (onChange) {
           try { onChange(aiEditor.getHtml()) } catch (e) {}
         }
-      }
+      },
+      /*ai: {
+          models: {
+              openai: {
+                  endpoint: "https://api.deepseek.com",
+                  model: "deepseek-v4-flash",
+                  apiKey: "",
+              }
+          }
+      }*/
     })
   }
 
