@@ -1066,6 +1066,8 @@ body.dark .form-field-editor { border-color: #2a2a2e; background: #1f1f23; }
 body.dark .form-field-editor:focus-within,
 body.dark .form-field-editor:hover { border-color: #36ad6a; box-shadow: 0 0 0 3px rgba(54,173,106,0.16); }
 .form-field-editor.has-error { border-color: #d03050; box-shadow: 0 0 0 3px rgba(208,48,80,0.10); }
+.nova-aieditor-host { height: 300px; }
+.nova-aieditor-host .aie-content { flex: 1; min-height: 0; }
 
 .nova-tiptap-toolbar {
   display: flex;

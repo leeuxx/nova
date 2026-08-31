@@ -158,8 +158,8 @@ window.NovaAppForm = {
         this._editorHosts[field] = el
         this.maybeMountEditor(field)
       } else {
-        if (this._editors[field] && window.NovaTiptap) {
-          window.NovaTiptap.destroy(this._editors[field])
+        if (this._editors[field] && window.NovaAiEditor) {
+          window.NovaAiEditor.destroy(this._editors[field])
         }
         delete this._editorHosts[field]
         delete this._editorToolbars[field]
@@ -179,39 +179,32 @@ window.NovaAppForm = {
       if (this._editorMounting[field]) return
       this._editorMounting[field] = true
       var host = this._editorHosts[field]
-      var toolbarEl = this._editorToolbars[field]
-      if (!host || !toolbarEl) return
-      if (!window.NovaTiptap) return
+      if (!host) return
+      if (!window.NovaAiEditor) return
       var self = this
       var initialHtml = (self.formData && self.formData[field]) || ''
-      window.NovaTiptap.createEditor(host, toolbarEl, {
-        html: initialHtml,
-        placeholder: '请输入内容...',
-        onChange: function (html) {
-          self._editorLastSynced[field] = html
-          self.$emit('field-change', { field: field, value: html })
-        }
-      }).then(function (rec) {
+      window.NovaAiEditor.createEditor(host, initialHtml, function (html) {
+        self._editorLastSynced[field] = html
+        self.$emit('field-change', { field: field, value: html })
+      }).then(function (editor) {
         delete self._editorMounting[field]
-        if (!rec) return
+        if (!editor) return
         if (self._editors[field]) {
-          // 已挂载过，重复触发 → 直接销毁后到的实例
-          console.log('[NovaAppForm] duplicate mount for', field, '— destroying new instance')
-          try { rec.destroy() } catch (e) {}
+          try { window.NovaAiEditor.destroy(editor) } catch (e) {}
           return
         }
-        self._editors[field] = rec
+        self._editors[field] = editor
         self._editorLastSynced[field] = initialHtml
       }).catch(function (err) {
         delete self._editorMounting[field]
-        console.error('[NovaAppForm] tiptap load failed:', err)
+        console.error('[NovaAppForm] aieditor load failed:', err)
       })
     },
     destroyAllEditors() {
       var self = this
       Object.keys(this._editors).forEach(function (k) {
-        if (self._editors[k] && window.NovaTiptap) {
-          window.NovaTiptap.destroy(self._editors[k])
+        if (self._editors[k] && window.NovaAiEditor) {
+          window.NovaAiEditor.destroy(self._editors[k])
         }
       })
       this._editors = {}
@@ -356,8 +349,7 @@ window.NovaAppForm = {
       </div>
       <div v-else-if="f.type === 'EDITOR'" class="form-field-editor"
         :class="formErrors[f.field] ? 'has-error' : ''">
-        <div :ref="el => registerEditorToolbar(f.field, el)" class="nova-tiptap-toolbar"></div>
-        <div :ref="el => registerEditorHost(f.field, el)" :data-editor-field="f.field" class="nova-tiptap-content"></div>
+        <div :ref="el => registerEditorHost(f.field, el)" :data-editor-field="f.field" class="nova-aieditor-host"></div>
       </div>
       <n-input v-else
         :value="formData[f.field]" :placeholder="'请输入'+f.title"

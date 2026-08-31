@@ -63,38 +63,33 @@ window.NovaFieldThis = {
     maybeMountEditor() {
       if (this._editorReady) return
       if (this._editorMounting) return
-      if (!this._editorHost || !this._editorToolbar) return
+      if (!this._editorHost) return
       if (!this.f || this.f.type !== 'EDITOR') return
-      if (!window.NovaTiptap) return
+      if (!window.NovaAiEditor) return
       this._editorMounting = true
       var self = this
       var initialHtml = (self.formData && self.formData[self.f.field]) || ''
-      window.NovaTiptap.createEditor(self._editorHost, self._editorToolbar, {
-        html: initialHtml,
-        placeholder: '请输入内容...',
-        onChange: function (html) {
-          self._editorLastSyncedHtml = html
-          self.$emit('field-change', { field: self.f.field, value: html })
-        }
-      }).then(function (rec) {
+      window.NovaAiEditor.createEditor(self._editorHost, initialHtml, function (html) {
+        self._editorLastSyncedHtml = html
+        self.$emit('field-change', { field: self.f.field, value: html })
+      }).then(function (editor) {
         self._editorMounting = false
-        if (!rec) return
+        if (!editor) return
         if (self._editorReady) {
-          // 已挂载过，重复触发 → 直接销毁后到的实例
-          try { rec.destroy() } catch (e) {}
+          try { window.NovaAiEditor.destroy(editor) } catch (e) {}
           return
         }
-        self._editor = rec
+        self._editor = editor
         self._editorLastSyncedHtml = initialHtml
         self._editorReady = true
       }).catch(function (err) {
         self._editorMounting = false
-        console.error('[NovaFieldThis] tiptap load failed:', err)
+        console.error('[NovaFieldThis] aieditor load failed:', err)
       })
     },
     destroyEditor() {
-      if (this._editor && window.NovaTiptap) {
-        window.NovaTiptap.destroy(this._editor)
+      if (this._editor && window.NovaAiEditor) {
+        window.NovaAiEditor.destroy(this._editor)
       }
       this._editor = null
       this._editorReady = false
@@ -366,8 +361,7 @@ window.NovaFieldThis = {
     </div>
     <div v-else-if="f.type === 'EDITOR'" class="form-field-editor"
       :class="formErrors[f.field] ? 'has-error' : ''">
-      <div :ref="el => registerEditorToolbar(el)" class="nova-tiptap-toolbar"></div>
-      <div :ref="el => registerEditorHost(el)" :data-editor-field="f.field" class="nova-tiptap-content"></div>
+      <div :ref="el => registerEditorHost(el)" :data-editor-field="f.field" class="nova-aieditor-host"></div>
     </div>
     <n-input
       v-else
