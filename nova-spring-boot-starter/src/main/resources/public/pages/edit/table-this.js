@@ -71,6 +71,8 @@ window.NovaFieldThis = {
         var editor = window.NovaAiEditor.createEditor(self._editorHost, initialHtml, function (html) {
           self._editorLastSyncedHtml = html
           self.$emit('field-change', { field: self.f.field, value: html })
+        }, {
+          uploadNovaName: self.novaName
         })
         if (self._editorReady) {
           try { window.NovaAiEditor.destroy(editor) } catch (e) {}

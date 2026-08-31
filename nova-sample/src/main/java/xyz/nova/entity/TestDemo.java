@@ -45,4 +45,5 @@ public class TestDemo {
 
     private Long parentId;
 
+    private String editor;
 }

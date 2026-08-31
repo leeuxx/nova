@@ -184,6 +184,8 @@ window.NovaAppForm = {
         var editor = window.NovaAiEditor.createEditor(host, initialHtml, function (html) {
           self._editorLastSynced[field] = html
           self.$emit('field-change', { field: field, value: html })
+        }, {
+          uploadNovaName: self.appNovaName
         })
         if (self._editors[field]) {
           try { window.NovaAiEditor.destroy(editor) } catch (e) {}

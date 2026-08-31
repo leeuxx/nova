@@ -7,16 +7,67 @@
     return document.body.classList.contains('dark') ? 'dark' : 'light'
   }
 
-  function createEditor(hostEl, html, onChange, theme) {
+  function uploadFile(file, novaName) {
+    return new Promise(function (resolve) {
+      if (!window.fetchApi || !window.fetchApi.upload) {
+        resolve({ errorCode: 1, message: 'fetchApi 未就绪' })
+        return
+      }
+      var formData = new FormData()
+      formData.append('novaName', novaName || '')
+      formData.append('files', file)
+      window.fetchApi.upload('/nova/attachment/upload', formData).then(function (resp) {
+        if (resp && resp.data && resp.data.length) {
+          resolve({ errorCode: 0, data: { src: resp.data[0] } })
+        } else {
+          resolve({ errorCode: 1, message: '上传失败' })
+        }
+      }).catch(function () {
+        resolve({ errorCode: 1, message: '请求失败' })
+      })
+    })
+  }
+
+  function createEditor(hostEl, html, onChange, options) {
     var AiEditor = getClass()
     if (!AiEditor) throw new Error('AiEditor 未加载')
+    var opts = options || {}
     var initialContent = html || ''
     return new AiEditor({
       element: hostEl,
       content: initialContent,
       placeholder: '请输入内容...',
       contentRetention: false,
-      theme: theme || detectTheme(),
+      theme: opts.theme || detectTheme(),
+      image: {
+        defaultSize: 120,
+        uploadFormName: 'image',
+        uploader: function (file, uploadUrl, headers, formName) {
+          return uploadFile(file, opts.uploadNovaName)
+        }
+      },
+      video: {
+        uploadFormName: 'video',
+        uploader: function (file, uploadUrl, headers, formName) {
+          return uploadFile(file, opts.uploadNovaName)
+        }
+      },
+      attachment: {
+        uploadFormName: 'attachment',
+        uploader: function (file, uploadUrl, headers, formName) {
+          return uploadFile(file, opts.uploadNovaName)
+        },
+        uploaderEvent: {
+            onSuccess: (file, response) => {
+                return {
+                    errorCode: response.errorCode,
+                    data: {
+                        href: response.data.src
+                    }
+                };
+            }
+        }
+      },
       onChange: function (aiEditor) {
         if (onChange) {
           try { onChange(aiEditor.getHtml()) } catch (e) {}
