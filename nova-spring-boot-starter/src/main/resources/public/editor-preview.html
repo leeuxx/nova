@@ -6,8 +6,10 @@
   <link rel="stylesheet" href="/css/main.css">
   <style>
     body { padding: 24px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f7fa; margin: 0; }
+    /* 覆盖 main.css 全站的 html/body { height:100%; overflow:hidden }，让 iframe 自身能滚动 */
+    html, body { height: auto !important; overflow: auto !important; }
     body.dark { background: #101014; }
-    .preview-wrap { max-width: 880px; margin: 0 auto; background: #fff; padding: 20px 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .preview-wrap { max-width: 95%; margin: 0 auto; background: #fff; padding: 20px 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
     body.dark .preview-wrap { background: #18181c; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
 
     .editor {
