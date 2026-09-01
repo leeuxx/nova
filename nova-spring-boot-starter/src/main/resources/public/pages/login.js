@@ -140,17 +140,17 @@ window.LoginPage = {
   <div class="login-form-area">
     <div style="width:400px;max-width:90vw">
 
-    <n-card class="login-card" :bordered="false" content-style="min-height:380px;padding:48px 32px 48px;display:flex;flex-direction:column;justify-content:center;position:relative;">
+    <n-card class="login-card" :bordered="false" content-style="min-height:260px;padding:16px 32px 24px;display:flex;flex-direction:column;justify-content:center;position:relative;">
       <n-form
         ref="formRef"
         :model="formData"
         :rules="formRules"
-        label-placement="left"
-        :label-width="60"
+        label-placement="top"
+        :show-feedback="false"
         size="large"
         style="position:relative"
       >
-        <n-form-item :label="__t('login.username')" path="username">
+        <n-form-item :show-label="false" path="username" style="margin-bottom:20px">
           <n-input
             v-model:value="formData.username"
             :placeholder="__t('login.username_placeholder')"
@@ -164,7 +164,7 @@ window.LoginPage = {
           </n-input>
         </n-form-item>
 
-        <n-form-item :label="__t('login.password')" path="password">
+        <n-form-item :show-label="false" path="password" style="margin-bottom:20px">
           <n-input
             v-model:value="formData.password"
             type="password"
@@ -179,14 +179,14 @@ window.LoginPage = {
           </n-input>
         </n-form-item>
 
-        <n-form-item :show-label="false" style="margin-top:-20px;margin-bottom:-20px">
+        <n-form-item :show-label="false" style="margin-bottom:6px;margin-top:-12px">
           <div style="display:flex;align-items:center;gap:6px;margin-left:12px">
             <n-checkbox v-model:checked="rememberMe" size="small" />
             <span class="login-remember-text" @click="rememberMe=!rememberMe">{{ __t('login.remember') }}</span>
           </div>
         </n-form-item>
 
-        <n-form-item :show-label="false" style="margin-top:2px">
+        <n-form-item :show-label="false">
           <n-button
             type="primary"
             size="large"

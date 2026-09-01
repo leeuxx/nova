@@ -95,17 +95,17 @@ window.RegisterPage = {
   <!-- 右栏表单区 -->
   <div class="login-form-area">
     <div style="width:400px;max-width:90vw">
-      <n-card class="login-card" :bordered="false" content-style="min-height:500px;padding:40px 32px 60px;display:flex;flex-direction:column;justify-content:center;position:relative;">
+      <n-card class="login-card" :bordered="false" content-style="min-height:380px;padding:24px 32px 60px;display:flex;flex-direction:column;justify-content:center;position:relative;">
       <n-form
         ref="formRef"
         :model="formData"
         :rules="formRules"
-        label-placement="left"
-        :label-width="60"
+        label-placement="top"
+        :show-feedback="false"
         size="large"
         style="position:relative"
       >
-        <n-form-item :label="__t('login.username')" path="username">
+        <n-form-item :show-label="false" path="username" style="margin-bottom:20px">
           <n-input
             v-model:value="formData.username"
             :placeholder="__t('login.username_placeholder')"
@@ -119,7 +119,7 @@ window.RegisterPage = {
           </n-input>
         </n-form-item>
 
-        <n-form-item :label="__t('login.password')" path="password">
+        <n-form-item :show-label="false" path="password" style="margin-bottom:20px">
           <n-input
             v-model:value="formData.password"
             type="password"
@@ -134,7 +134,7 @@ window.RegisterPage = {
           </n-input>
         </n-form-item>
 
-        <n-form-item :label="__t('register.name')" path="name">
+        <n-form-item :show-label="false" path="name" style="margin-bottom:20px">
           <n-input
             v-model:value="formData.name"
             :placeholder="__t('register.name_placeholder')"
@@ -148,7 +148,7 @@ window.RegisterPage = {
           </n-input>
         </n-form-item>
 
-        <n-form-item :label="__t('register.alias')" path="alias">
+        <n-form-item :show-label="false" path="alias" style="margin-bottom:20px">
           <n-input
             v-model:value="formData.alias"
             :placeholder="__t('register.alias_placeholder')"
@@ -162,7 +162,7 @@ window.RegisterPage = {
           </n-input>
         </n-form-item>
 
-        <n-form-item :show-label="false" style="margin-top:2px">
+        <n-form-item :show-label="false">
           <n-button
             type="primary"
             size="large"
@@ -176,7 +176,7 @@ window.RegisterPage = {
 
         <!-- 返回登录：相对 n-form 绝对定位，从注册按钮下方开始，不占文档流，注册信息保持垂直居中 -->
         <n-form-item :show-label="false" style="position:absolute;top:100%;left:0;right:0;margin:0">
-          <div style="width:100%;text-align:center;font-size:13px;margin-top:6px">
+          <div style="width:100%;text-align:center;font-size:13px;margin-top:12px">
             <span style="color:#94a3b8">{{ __t('register.has_account') }}</span>
             <span class="login-remember-text" style="color:#2563eb" @click="goLogin">{{ __t('register.go_login') }}</span>
           </div>
