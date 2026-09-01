@@ -41,7 +41,7 @@
     return new AiEditor({
       element: hostEl,
       content: initialContent,
-      placeholder: window.__t('common.input_content'),
+      placeholder: window.__t('editor.placeholder'),
       contentRetention: false,
       theme: opts.theme || detectTheme(),
       lang: opts.lang || detectLang(),

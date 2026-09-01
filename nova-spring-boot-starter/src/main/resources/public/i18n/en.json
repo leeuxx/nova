@@ -198,7 +198,6 @@
   "filelist.copy": "Copy",
   "filelist.delete": "Delete",
 
-  "editor.placeholder": "Write something...",
-
+  "editor.placeholder": "Write something",
   "editor_preview.empty": "Nothing to preview"
 }

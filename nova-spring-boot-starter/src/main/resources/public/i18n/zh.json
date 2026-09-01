@@ -148,9 +148,9 @@
   "table.large": "宽松",
   "table.open_dual_view": "开启双视图",
   "table.close_dual_view": "关闭双视图",
-  "table.search_field_placeholder": "请输入 {name}",
-  "table.select_field_placeholder": "请选择 {name}",
-  "table.input_or_select_field_placeholder": "请输入或选择 {name}",
+  "table.search_field_placeholder": "请输入{name}",
+  "table.select_field_placeholder": "请选择{name}",
+  "table.input_or_select_field_placeholder": "请输入或选择{name}",
   "table.min_value": "最小值",
   "table.max_value": "最大值",
   "table.start_time": "开始时间",
@@ -202,7 +202,6 @@
   "filelist.copy": "复制",
   "filelist.delete": "删除",
 
-  "editor.placeholder": "请输入内容...",
-
+  "editor.placeholder": "请输入内容",
   "editor_preview.empty": "无内容"
 }

@@ -202,7 +202,6 @@
   "filelist.copy": "복사",
   "filelist.delete": "삭제",
 
-  "editor.placeholder": "내용을 입력해주세요...",
-
+  "editor.placeholder": "내용을 입력해주세요",
   "editor_preview.empty": "미리보기 없음"
 }

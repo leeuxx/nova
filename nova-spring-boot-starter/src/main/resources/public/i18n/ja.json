@@ -202,7 +202,6 @@
   "filelist.copy": "コピー",
   "filelist.delete": "削除",
 
-  "editor.placeholder": "入力してください...",
-
+  "editor.placeholder": "入力してください",
   "editor_preview.empty": "プレビューなし"
 }
