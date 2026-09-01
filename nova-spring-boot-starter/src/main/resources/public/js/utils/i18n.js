@@ -18,11 +18,11 @@
     var saved
     try { saved = localStorage.getItem('nova_locale') } catch (e) {}
     if (saved === 'zh' || saved === 'en' || saved === 'ja' || saved === 'ko') return saved
-    var nav = (navigator && navigator.language) || 'zh'
+    var nav = (navigator && navigator.language) || ''
     var lang = String(nav).toLowerCase().split('-')[0]
-    if (lang === 'en') return 'en'
-    if (lang === 'ja') return 'ja'
-    if (lang === 'ko') return 'ko'
+    if (lang === 'en' || lang === 'ja' || lang === 'ko') return lang
+    var cfg = window.nova && window.nova.config && window.nova.config.i18n && window.nova.config.i18n.locale
+    if (cfg === 'zh' || cfg === 'en' || cfg === 'ja' || cfg === 'ko') return cfg
     return 'zh'
   }
 

@@ -19,7 +19,12 @@
         edit: false
     },
     // 右上角用户自定义项：{ type（fold（下拉菜单内）/ button（铃铛左侧图标按钮，悬浮展示 name））, name, icon, click }
-    tools: []
+    tools: [],
+    // 默认语言
+    i18n: {
+        // zh=中文 en=英语 ja=日语 ko=韩语
+        locale: "zh"
+    }
   }
 
   var userCfg = (window.nova.config) || {}
@@ -38,7 +43,8 @@
         register: userCfgUser.register || DEFAULTS.user.register,
         edit: userCfgUser.edit || DEFAULTS.user.edit
     },
-    tools: userCfg.tools || DEFAULTS.tools
+    tools: userCfg.tools || DEFAULTS.tools,
+    i18n: userCfg.i18n || DEFAULTS.i18n
   }
 
   // 把 desc 暴露为 getter，访问时才执行默认函数（此时 __t 已就绪）

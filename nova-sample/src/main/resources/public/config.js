@@ -33,7 +33,12 @@ window.nova.config = {
         alert('点击触发函数')
       }
     }
-  ]
+  ],
+  // 默认语言
+  i18n: {
+      // zh=中文 en=英语 ja=日语 ko=韩语
+      locale: "ja"
+  }
 }
 
 // 生命周期回调：页面加载完成后触发（首屏 loading 淡出后），url 为当前路由路径（如 /home）
