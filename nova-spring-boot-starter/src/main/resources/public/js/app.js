@@ -910,16 +910,20 @@ function mountApp(menuList, config, loginExpired) {
   })
 
   // ── 挂载 ────────────────────────────────────────────────────────
-  const app = createApp(App)
-  app.use(naive)
-  app.use(router)
-  // 全局注册消息铃铛组件（模板中使用 <nova-message />）
-  app.component('NovaMessage', window.NovaMessage)
-  // 暴露 router 供 LoginPage 等独立组件使用
-  window.__novaRouter = router
-  app.mount('#app')
-  // 挂载完成后淡出首屏 loading：此时主线程空闲，过渡动画不被打断；淡出完成后触发 startup 生命周期
-  hideBootLoading(false, triggerStartup)
+  // data() 同步执行会立刻调用 window.__t(...)，必须等字典 fetch 完才挂载
+  var ready = window.__i18nReady || Promise.resolve()
+  ready.then(function () {
+    const app = createApp(App)
+    app.use(naive)
+    app.use(router)
+    // 全局注册消息铃铛组件（模板中使用 <nova-message />）
+    app.component('NovaMessage', window.NovaMessage)
+    // 暴露 router 供 LoginPage 等独立组件使用
+    window.__novaRouter = router
+    app.mount('#app')
+    // 挂载完成后淡出首屏 loading：此时主线程空闲，过渡动画不被打断；淡出完成后触发 startup 生命周期
+    hideBootLoading(false, triggerStartup)
+  })
 }
 
 })()

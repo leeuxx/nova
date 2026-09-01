@@ -205,8 +205,5 @@
 
   "editor.placeholder": "请输入内容...",
 
-  "editor_preview.empty": "无内容",
-
-  "language.zh": "中文",
-  "language.en": "English"
+  "editor_preview.empty": "无内容"
 }

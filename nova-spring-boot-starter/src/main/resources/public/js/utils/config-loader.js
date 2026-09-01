@@ -3,8 +3,8 @@
   var DEFAULTS = {
     // 系统名称
     name: 'Nova UI Admin',
-    // 描述
-    desc: window.__t('app.system_desc'),
+    // 描述（延迟求值：读取时才调 __t，因为本文件加载早于 i18n.js）
+    desc: function () { return window.__t('app.system_desc') },
     // 版权信息
     copyrightTxt: '© 2026 Nova UI Admin. All Rights Reserved.',
     // logo 图片
@@ -40,6 +40,17 @@
     },
     tools: userCfg.tools || DEFAULTS.tools
   }
+
+  // 把 desc 暴露为 getter，访问时才执行默认函数（此时 __t 已就绪）
+  Object.defineProperty(window.nova.config, 'desc', {
+    configurable: true,
+    enumerable: true,
+    get: function () {
+      var v = userCfg.desc
+      if (v !== undefined && v !== null && v !== '') return v
+      return DEFAULTS.desc()
+    }
+  })
 
   // 生命周期回调 { startup(route) 页面加载完成后回调 }
   window.nova.event = window.nova.event || {}
