@@ -17,10 +17,13 @@
   function resolveLocale() {
     var saved
     try { saved = localStorage.getItem('nova_locale') } catch (e) {}
-    if (saved === 'zh' || saved === 'en') return saved
+    if (saved === 'zh' || saved === 'en' || saved === 'ja' || saved === 'ko') return saved
     var nav = (navigator && navigator.language) || 'zh'
     var lang = String(nav).toLowerCase().split('-')[0]
-    return lang === 'en' ? 'en' : 'zh'
+    if (lang === 'en') return 'en'
+    if (lang === 'ja') return 'ja'
+    if (lang === 'ko') return 'ko'
+    return 'zh'
   }
 
   var currentLocale = resolveLocale()

@@ -25,7 +25,7 @@ const {
   NBreadcrumb, NBreadcrumbItem, NBadge,
   NMessageProvider, NDialogProvider, NNotificationProvider, NAvatar,
   useDialog, useMessage, useLoadingBar,
-  darkTheme, zhCN, dateZhCN, enUS, dateEnUS
+  darkTheme, zhCN, dateZhCN, enUS, dateEnUS, jaJP, dateJaJP, koKR, dateKoKR
 } = naive
 
 // 登录页面组件
@@ -297,10 +297,15 @@ function mountApp(menuList, config, loginExpired) {
       })
 
       const theme = computed(() => isDark.value ? darkTheme : null)
-      // Naive UI locale：跟随前端 locale（zh/en），切换语言通过整页刷新触发，无需响应式
-      const naiveLocale = window.__appLocale && window.__appLocale.value === 'en'
+      // Naive UI locale：跟随前端 locale（zh/en/ja/ko），切换语言通过整页刷新触发，无需响应式
+      var _curLoc = window.__appLocale && window.__appLocale.value
+      var naiveLocale = _curLoc === 'en'
         ? { locale: enUS, dateLocale: dateEnUS }
-        : { locale: zhCN, dateLocale: dateZhCN }
+        : _curLoc === 'ja'
+          ? { locale: jaJP, dateLocale: dateJaJP }
+          : _curLoc === 'ko'
+            ? { locale: koKR, dateLocale: dateKoKR }
+            : { locale: zhCN, dateLocale: dateZhCN }
       // 是否为独立页面（登录/注册/404 等，无布局）
       const isStandaloneRoute = computed(() => route.path === '/login' || route.path === '/register' || route.path === '/404')
 
@@ -537,7 +542,9 @@ function mountApp(menuList, config, loginExpired) {
       const currentLocale = window.__appLocale || { value: 'zh' }
       const localeDropdown = [
         { label: '中文', key: 'zh', icon: mi('circle-flags:cn') },
-        { label: 'English', key: 'en', icon: mi('circle-flags:us') }
+        { label: 'English', key: 'en', icon: mi('circle-flags:us') },
+        { label: '日本語', key: 'ja', icon: mi('circle-flags:jp') },
+        { label: '한국어', key: 'ko', icon: mi('circle-flags:kr') }
       ]
       const handleLocaleSelect = (key) => {
         if (!key || key === currentLocale.value) return
