@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import xyz.nova.entity.RoleMenu;
 import xyz.nova.entity.data.Tree;
 import xyz.nova.error.NovaException;
+import xyz.nova.i18n.NovaI18nUtils;
 import xyz.nova.mapper.RoleMenuMapper;
 import xyz.nova.nova.MenuNova;
 import xyz.nova.nova.RoleMenuNova;
@@ -74,7 +75,7 @@ public class RoleMenuServiceImpl extends ServiceImpl<RoleMenuMapper, RoleMenu> i
                 .in(RoleMenu::getRoleId, roleIds)
         );
         if (roleMenus == null || roleMenus.isEmpty()) {
-            throw new NovaException("用户无登录菜单");
+            throw new NovaException(NovaI18nUtils.get("permission.noneMenu"));
         }
         return roleMenus.stream()
                 .map(RoleMenu::getMenuId)

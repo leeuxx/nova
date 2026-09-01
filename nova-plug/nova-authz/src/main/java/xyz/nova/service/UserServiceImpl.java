@@ -16,6 +16,7 @@ import xyz.nova.entity.UserRole;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Fetch;
 import xyz.nova.error.NovaException;
+import xyz.nova.i18n.NovaI18nUtils;
 import xyz.nova.mapper.UserMapper;
 import xyz.nova.nova.OrgNova;
 import xyz.nova.nova.UserNova;
@@ -44,7 +45,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
                 .eq(User::getAccount, userNova.getAccount())
         );
         if (count > 0) {
-            throw new NovaException("账户已存在");
+            throw new NovaException(NovaI18nUtils.get("permission.userAccountExist"));
         }
         // 增加用户
         String salt = BCrypt.gensalt();
@@ -201,7 +202,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
         if (param.equals("user_reset_pwd")) {
             UserNova.UserResetPwdNova userResetPwdNova = (UserNova.UserResetPwdNova) o;
             if (!userResetPwdNova.getPassword().equals(userResetPwdNova.getConfirmPassword())) {
-                throw new NovaException("两次输入的密码不一致");
+                throw new NovaException(NovaI18nUtils.get("permission.confirmPwdFail"));
             }
             String salt = BCrypt.gensalt();
             String password = BCrypt.hashpw(userResetPwdNova.getPassword(), salt);
@@ -223,13 +224,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
                 .eq(User::getAccount, username)
         );
         if (user == null) {
-            throw new NovaException("账号或密码错误");
+            throw new NovaException(NovaI18nUtils.get("permission.accountPwdError"));
         }
         if (!user.getPassword().equals(BCrypt.hashpw(password, user.getSalt()))) {
-            throw new NovaException("账号或密码错误");
+            throw new NovaException(NovaI18nUtils.get("permission.accountPwdError"));
         }
         if (!user.getStatus()) {
-            throw new NovaException("用户已禁用");
+            throw new NovaException(NovaI18nUtils.get("permission.userForbidden"));
         }
         return user;
     }

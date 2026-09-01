@@ -16,16 +16,18 @@ public class NovaI18nAutoConfiguration {
     @Bean("novaMessageSource")
     public MessageSource novaMessageSource() {
         ResourceBundleMessageSource source = new ResourceBundleMessageSource();
-        // 1. 指定资源文件基础名（框架自己的文件）
-        // 会加载 classpath:i18n/nova-messages.properties, 以及 classpath:i18n/nova-messages_zh.properties 等
+        // 1. 指定资源文件基础名
+        // 加载 classpath:i18n/nova-messages.properties 及对应语言文件
         source.setBasename("i18n/nova-messages");
         // 2. 字符编码（必须 UTF-8）
         source.setDefaultEncoding(StandardCharsets.UTF_8.name());
-        // 3. 如果找不到 key，返回 ???key??? 格式，方便调试
+        // 3. 找不到 key 时，返回 key 本身（不抛异常）
+        //    配合 FallbackToSystemLocale(false)，未匹配的语言也返回 key
         source.setUseCodeAsDefaultMessage(true);
-        // 4. 缓存时间（秒），-1 表示永久缓存，热部署时可以设为 5 秒
+        // 4. 缓存时间（秒），-1 表示永久缓存
         source.setCacheSeconds(-1);
-        // 5. 如果找不到资源文件，不抛异常，返回 null
+        // 5. 找不到对应语言文件时，不回退到系统语言
+        //    避免依赖服务器系统语言导致行为不可控
         source.setFallbackToSystemLocale(false);
         return source;
     }

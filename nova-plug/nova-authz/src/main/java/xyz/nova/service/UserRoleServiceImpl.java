@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import xyz.nova.entity.UserRole;
 import xyz.nova.error.NovaException;
+import xyz.nova.i18n.NovaI18nUtils;
 import xyz.nova.mapper.UserRoleMapper;
 
 import java.time.LocalDateTime;
@@ -62,7 +63,7 @@ public class UserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRole> {
                 .eq(UserRole::getUserId, userId)
         );
         if (userRoles == null || userRoles.isEmpty()) {
-            throw new NovaException("用户无登录角色");
+            throw new NovaException(NovaI18nUtils.get("permission.noneRole"));
         }
         return userRoles.stream().map(UserRole::getRoleId).toList();
     }

@@ -12,6 +12,7 @@ import xyz.nova.entity.Role;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Fetch;
 import xyz.nova.error.NovaException;
+import xyz.nova.i18n.NovaI18nUtils;
 import xyz.nova.mapper.RoleMapper;
 import xyz.nova.nova.RoleNova;
 import xyz.nova.nova.condition.RoleCondition;
@@ -37,7 +38,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Da
                 .eq(Role::getCode, roleNova.getCode())
         );
         if (count > 0) {
-            throw new NovaException("code已存在");
+            throw new NovaException(NovaI18nUtils.get("work.dataExist", new Object[]{"code"}));
         }
         Role role = BeanCopyUtils.copy(roleNova, Role.class)
                 .setId(YitIdHelper.nextId())
@@ -64,7 +65,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Da
                 .ne(Role::getId, roleNova.getId())
         );
         if (count > 0) {
-            throw new NovaException("code已存在");
+            throw new NovaException(NovaI18nUtils.get("work.dataExist", new Object[]{"code"}));
         }
         Role role = BeanCopyUtils.copy(roleNova, Role.class);
         updateById(role);
@@ -111,7 +112,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Da
                 .eq(Role::getStatus, true)
         );
         if (roles == null || roles.isEmpty()) {
-            throw new NovaException("用户无登录角色");
+            throw new NovaException(NovaI18nUtils.get("permission.noneRole"));
         }
         return roles.stream().map(Role::getId).toList();
     }

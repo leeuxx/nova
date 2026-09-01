@@ -16,6 +16,7 @@ import xyz.nova.entity.DictItem;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Fetch;
 import xyz.nova.error.NovaException;
+import xyz.nova.i18n.NovaI18nUtils;
 import xyz.nova.mapper.DictMapper;
 import xyz.nova.nova.DictItemNova;
 import xyz.nova.nova.DictNova;
@@ -45,7 +46,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Da
                 .eq(Dict::getCode, dictNova.getCode())
         );
         if (count > 0) {
-            throw new NovaException("code已存在");
+            throw new NovaException(NovaI18nUtils.get("work.dataExist", new Object[]{"code"}));
         }
         Dict dict = BeanCopyUtils.copy(dictNova, Dict.class)
                 .setId(YitIdHelper.nextId())
@@ -77,7 +78,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Da
                 .ne(Dict::getId, dictNova.getId())
         );
         if (count > 0) {
-            throw new NovaException("code已存在");
+            throw new NovaException(NovaI18nUtils.get("work.dataExist", new Object[]{"code"}));
         }
         BeanCopyUtils.copy(dictNova, dict);
         updateById(dict);

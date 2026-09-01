@@ -11,6 +11,7 @@ import xyz.nova.entity.Org;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Tree;
 import xyz.nova.error.NovaException;
+import xyz.nova.i18n.NovaI18nUtils;
 import xyz.nova.mapper.OrgMapper;
 import xyz.nova.nova.MenuNova;
 import xyz.nova.nova.OrgNova;
@@ -32,7 +33,7 @@ public class OrgServiceImpl extends ServiceImpl<OrgMapper, Org> implements DataP
                 .eq(Org::getCode, orgNova.getCode())
         );
         if (count > 0) {
-            throw new NovaException("code已存在");
+            throw new NovaException(NovaI18nUtils.get("work.dataExist", new Object[]{"code"}));
         }
         Org org = BeanCopyUtils.copy(orgNova, Org.class)
                 .setId(YitIdHelper.nextId())
@@ -60,7 +61,7 @@ public class OrgServiceImpl extends ServiceImpl<OrgMapper, Org> implements DataP
                 .ne(Org::getId, orgNova.getId())
         );
         if (count > 0) {
-            throw new NovaException("code已存在");
+            throw new NovaException(NovaI18nUtils.get("work.dataExist", new Object[]{"code"}));
         }
         Org org = BeanCopyUtils.copy(orgNova, Org.class);
         if (orgNova.getOrgNova() != null) {
