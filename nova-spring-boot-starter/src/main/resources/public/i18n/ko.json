@@ -77,10 +77,6 @@
   "tabs.close_other": "다른 탭 닫기",
   "tabs.theme_tip": "테마 전환",
   "tabs.message_center": "메시지",
-  "tabs.lang_tip": "언어 전환",
-  "tabs.lang_zh": "中文",
-  "tabs.lang_en": "English",
-  "tabs.lang_label": "언어",
 
   "profile.title": "프로필",
   "profile.token": "토큰",
