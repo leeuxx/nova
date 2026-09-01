@@ -20,9 +20,9 @@
     },
     // 右上角用户自定义项：{ type（fold（下拉菜单内）/ button（铃铛左侧图标按钮，悬浮展示 name））, name, icon, click }
     tools: [],
-    // 默认语言
+    // 国际化
     i18n: {
-        // zh=中文 en=英语 ja=日语 ko=韩语
+        // 默认语言：zh=中文 en=英语 ja=日语 ko=韩语
         locale: "zh"
     }
   }

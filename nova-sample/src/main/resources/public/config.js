@@ -34,9 +34,7 @@ window.nova.config = {
       }
     }
   ],
-  // 默认语言
   i18n: {
-      // zh=中文 en=英语 ja=日语 ko=韩语
       locale: "ja"
   }
 }
