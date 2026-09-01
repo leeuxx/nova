@@ -40,7 +40,7 @@ public class NovaMyBatisUtils {
             Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
             NovaApplication.ScanNova scanNova = scanNovas.get(novaName);
             if (scanNova == null) {
-                throw new NovaException("Nova类不存在");
+                throw new NovaException("Nova class does not exist: " + novaName);
             }
             Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
             // 关联列：REFERENCE的ref、APPENDAGE/APPENDAGES的by, 一律按列精确匹配
@@ -104,7 +104,7 @@ public class NovaMyBatisUtils {
                     map.put(f.getName(), value);
                 }
             } catch (IllegalAccessException e) {
-                throw new NovaException("读取查询条件属性失败: " + f.getName());
+                throw new NovaException("Failed to read query condition property: " + f);
             }
         }
         return map;
@@ -201,7 +201,7 @@ public class NovaMyBatisUtils {
             return;
         }
         // 其余组件类型无合法查询列（ATTACHMENT/BUTTON/DIVIDE/EMPTY，key 恰好是 REFERENCE/APPENDAGE 字段名，或未成功解析的 AUTO）：显式报错，不静默丢弃
-        throw new NovaException("不支持的查询组件类型: " + type + ", 列: " + column);
+        throw new NovaException("Unsupported query component type '" + type + "' for column '" + column + "'");
     }
 
     /**
@@ -246,7 +246,7 @@ public class NovaMyBatisUtils {
         if (date instanceof Date d) {
             return d.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter);
         }
-        throw new NovaException("无法格式化日期条件值: " + date);
+        throw new NovaException("Failed to format date condition value: '" + date + "'");
     }
 
     @Data

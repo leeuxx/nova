@@ -13,6 +13,7 @@ import xyz.nova.annotation.sub.nova.field.view.PopHandler;
 import xyz.nova.annotation.sub.nova.row.ExprBool;
 import xyz.nova.config.NovaApplication;
 import xyz.nova.error.NovaException;
+import xyz.nova.i18n.NovaI18nUtils;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -278,7 +279,7 @@ public class NovaFieldUtils {
         editInfos.add(new EditInfo()
                 .setTapType("thisForm")
                 .setTapNovaName(className)
-                .setTapTitle("基本信息")
+                .setTapTitle(NovaI18nUtils.get("table.edit.tabName"))
                 .setThisForms(thisForms)
                 .setTapShow(true)
                 .setTapSort(0)
@@ -713,7 +714,7 @@ public class NovaFieldUtils {
         Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
         NovaApplication.ScanNova scanNova = scanNovas.get(className);
         if (scanNova == null) {
-            throw new NovaException("Nova类不存在：" + className);
+            throw new NovaException("Nova class does not exist: " + className);
         }
         return scanNova;
     }

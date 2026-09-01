@@ -15,6 +15,7 @@ import xyz.nova.dto.*;
 import xyz.nova.dto.page.PageBean;
 import xyz.nova.entity.data.*;
 import xyz.nova.error.NovaException;
+import xyz.nova.i18n.NovaI18nUtils;
 import xyz.nova.service.NovaTableService;
 import xyz.nova.service.data.DataProxy;
 import xyz.nova.utils.*;
@@ -729,7 +730,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         boolean status = vo.getStatus() != null && vo.getStatus();
         String message = vo.getMessage();
         if (message == null || message.isEmpty()) {
-            message = status ? "请求成功" : "请求失败";
+            message = status ? NovaI18nUtils.get("assembly.button.success") : NovaI18nUtils.get("assembly.button.fail");
         }
         return new NovaTableButton.Vo()
                 .setStatus(status)

@@ -222,7 +222,7 @@ public class DataProxyUtils {
         try {
             searchObj = conditionClass.getDeclaredConstructor().newInstance();
         } catch (ReflectiveOperationException e) {
-            throw new NovaException("查询条件类实例化失败: " + conditionClass.getName());
+            throw new NovaException("Failed to instantiate query condition class '" + conditionClass.getName() + "'");
         }
         for (Map.Entry<String, String> entry : conditions.entrySet()) {
             String key = entry.getKey();
@@ -237,7 +237,7 @@ public class DataProxyUtils {
             } catch (NoSuchFieldException e) {
                 // 没有这个字段，跳过
             } catch (IllegalAccessException e) {
-                throw new NovaException("查询条件类属性赋值失败: " + key);
+                throw new NovaException("Failed to set query condition property: " + key);
             }
         }
         return searchObj;
@@ -252,11 +252,11 @@ public class DataProxyUtils {
         try {
             array = JSONUtil.parseArray(value);
         } catch (Exception e) {
-            throw new NovaException("查询条件值不是合法的数组字符串: " + value);
+            throw new NovaException("Invalid array string for query condition: " + value);
         }
         if (!List.class.isAssignableFrom(field.getType())) {
             if (array.size() != 1) {
-                throw new NovaException("标量字段收到多个查询值: " + field.getName());
+                throw new NovaException("Scalar field cannot have multiple query values: " + field.getName());
             }
             return JSONUtil.isNull(array.get(0)) ? null : convertConditionScalar(String.valueOf(array.get(0)), field.getType());
         }
@@ -268,7 +268,7 @@ public class DataProxyUtils {
             itemType = clz;
         }
         if (itemType == null) {
-            throw new NovaException("查询条件类字段缺少泛型参数: " + field.getName());
+            throw new NovaException("Query condition field '" + field.getName() + "' is missing generic parameter");
         }
         List<Object> list = new ArrayList<>(array.size());
         for (Object element : array) {
@@ -294,7 +294,7 @@ public class DataProxyUtils {
         if (cs.canConvert(String.class, type)) {
             return cs.convert(value, type);
         }
-        throw new NovaException("无法转换查询条件值: " + value + " -> " + type.getName());
+        throw new NovaException("Failed to convert query condition value '" + value + "' to " + type.getName());
     }
 
 }

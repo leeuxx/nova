@@ -52,13 +52,13 @@ public class LambdaUtils {
         // 第2步 implMethodName 即为Field对应的Getter方法名
         String implMethodName = serializedLambda.getImplMethodName();
         if (implMethodName.startsWith("lambda$")) {
-            throw new IllegalArgumentException("不能传递lambda表达式,只能使用方法引用");
+            throw new IllegalArgumentException("Cannot pass lambda expression, only method reference is allowed");
         }
         String propertyName;
         if (implMethodName.startsWith("get") && implMethodName.length() > 3) {
             propertyName = Introspector.decapitalize(implMethodName.substring(3));
         } else {
-            throw new IllegalArgumentException(implMethodName + "不是Getter方法引用");
+            throw new IllegalArgumentException(implMethodName + " is not a Getter method reference");
         }
         // 第3步 获取的Class是字符串，并且包名是"/"分割，需要替换成"."，才能获取到对应的Class对象
         String declaredClass = serializedLambda.getImplClass().replace("/", ".");

@@ -5,6 +5,7 @@ import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.config.RestMappingController;
 import xyz.nova.dto.AttachmentUpload;
 import xyz.nova.error.NovaException;
+import xyz.nova.i18n.NovaI18nUtils;
 import xyz.nova.service.file.AttachmentProxy;
 import xyz.nova.utils.R;
 import lombok.AllArgsConstructor;
@@ -38,14 +39,14 @@ public class AttachmentController {
                     try (InputStream inputStream = file.getInputStream()) {
                         return attachmentProxy.upLoad(attachmentUpload.getNovaName(), inputStream);
                     } catch (IOException e) {
-                        log.error("文件上传失败: {}", file.getOriginalFilename(), e);
+                        log.error("File upload failed: {}", file.getOriginalFilename(), e);
                         return null;
                     }
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         if (paths.isEmpty()) {
-            throw new NovaException("文件上传失败");
+            throw new NovaException(NovaI18nUtils.get("attachment.error"));
         }
         return R.ok(paths);
     }
