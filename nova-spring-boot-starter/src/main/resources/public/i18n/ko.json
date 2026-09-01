@@ -198,7 +198,6 @@
   "table.no_file": "파일 없음",
   "table.data_nodes": "노드",
   "table.items_per_page": "{n}개/페이지",
-  "table.basic_info": "기본 정보",
 
   "filelist.copy": "복사",
   "filelist.delete": "삭제",

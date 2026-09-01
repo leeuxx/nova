@@ -198,7 +198,6 @@
   "table.no_file": "ファイルなし",
   "table.data_nodes": "ノード",
   "table.items_per_page": "{n} 件/ページ",
-  "table.basic_info": "基本情報",
 
   "filelist.copy": "コピー",
   "filelist.delete": "削除",

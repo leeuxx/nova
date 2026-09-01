@@ -194,7 +194,6 @@
   "table.no_file": "No files",
   "table.data_nodes": "Nodes",
   "table.items_per_page": "{n}/page",
-  "table.basic_info": "Basic info",
 
   "filelist.copy": "Copy",
   "filelist.delete": "Delete",

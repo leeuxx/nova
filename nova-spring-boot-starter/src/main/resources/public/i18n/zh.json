@@ -198,7 +198,6 @@
   "table.no_file": "暂无文件",
   "table.data_nodes": "数据节点",
   "table.items_per_page": "{n} 条/页",
-  "table.basic_info": "基础信息",
 
   "filelist.copy": "复制",
   "filelist.delete": "删除",

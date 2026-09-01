@@ -222,6 +222,9 @@ window.NovaTableJQ = (function ($) {
         if (layout.editLayout) target.editLayout = layout.editLayout
         var allEdit = resp.data.edit || []
         var refMap = resp.data.reference || {}
+        // 基本信息 tab 名称：读后端 thisForm.tapTitle，方便后续按 nova 配置改名
+        var thisFormEdit = allEdit.find(function(e) { return e.tapType === 'thisForm' })
+        target.opFormTabTitle = (thisFormEdit && thisFormEdit.tapTitle) || ''
         target.editFields = allEdit.filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
         target.editReferenceTabs = allEdit.filter(function(e) { return e.tapType === 'referenceForm' && e.tapShow !== false })
         target.editAppendageTabs = allEdit.filter(function(e) { return e.tapType === 'appendageForm' && e.tapShow !== false })

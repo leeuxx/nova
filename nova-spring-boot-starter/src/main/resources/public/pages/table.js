@@ -381,6 +381,7 @@ const NovaTable = {
       tplDrawerPlacement: 'right',
       // opForm tab 相关
       opFormTab:          'form',
+      opFormTabTitle:     '',      // 后端 thisForm.tapTitle 透传，未传则前端 i18n 兜底
       opFormExtraTabs:    [],      // APPENDAGE 表单 tab
       opFormAppTabBuild:  {},      // 附属表单 build 数据
       opFormAppFormData:  {},      // 附属表单数据
@@ -2138,6 +2139,9 @@ const NovaTable = {
           self.opFormButtons    = d.buttons || {}
           self.opFormLayoutObj   = d.layout || {}
           var allEdit = d.edit || []
+          // 基本信息 tab 名称：读后端 thisForm.tapTitle，方便后续按 nova 配置改名
+          var thisFormEdit = allEdit.find(function(e) { return e.tapType === 'thisForm' })
+          self.opFormTabTitle = (thisFormEdit && thisFormEdit.tapTitle) || ''
           // 基本信息 tab 字段
           self.opFormFields = allEdit.filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
           self.opFormFields = self.opFormFields.filter(function(f) {
@@ -2186,6 +2190,7 @@ const NovaTable = {
       this.opFormAppFormErrors = {}
       this.opFormButtons = {}
       this.opFormTab = 'form'
+      this.opFormTabTitle = ''
       this._opLoadPending = null
     },
     // ── opForm tab 辅助 ───────────────────────────────────────
@@ -4519,7 +4524,7 @@ const NovaTable = {
 
           <!-- Tab 1: 表单 -->
           <n-tab-pane name="form" style="padding:16px 0 20px 0">
-            <template #tab><iconify-icon icon="mdi:pencil-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>{{ __t('table.basic_info') }}<span v-if="tabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('form') }}</span><span v-else-if="tabTotalRequired('form') > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template>
+            <template #tab><iconify-icon icon="mdi:pencil-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>{{ opFormTabTitle }}<span v-if="tabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('form') }}</span><span v-else-if="tabTotalRequired('form') > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template>
             <nova-form-this
               :form-data="formData"
               :form-errors="formErrors"
@@ -4688,7 +4693,7 @@ const NovaTable = {
           <!-- Tab 1: 基本信息 -->
           <n-tab-pane name="form" style="padding:16px 0 20px 0">
             <template #tab>
-              <iconify-icon icon="mdi:pencil-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>{{ __t('table.basic_info') }}
+              <iconify-icon icon="mdi:pencil-outline" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>{{ opFormTabTitle }}
               <span v-if="opFormTabRequiredCount('form') > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ opFormTabRequiredCount('form') }}</span><span v-else-if="opFormTabTotalRequired('form') > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span>
             </template>
             <div :key="'opTab_' + opFormTab" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
