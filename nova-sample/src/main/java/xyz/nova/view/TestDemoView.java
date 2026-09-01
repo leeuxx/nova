@@ -457,8 +457,7 @@ public class TestDemoView {
                             maxLimit = 7,
                             tableShowType = AttachmentType.TableShowType.IMAGE,
                             separator = "|"
-                    ),
-                    defaultValue = "https://cdn.ossfile.mxrvending.com/tyGoods/6902890255482.png,https://cdn.ossfile.mxrvending.com/tyGoods/6902890252771.png,https://cdn.ossfile.mxrvending.com/tyGoods/6901668934451.png,https://cdn.ossfile.mxrvending.com/tyGoods/6901668933232.png"
+                    )
             )
     )
     private String file;
