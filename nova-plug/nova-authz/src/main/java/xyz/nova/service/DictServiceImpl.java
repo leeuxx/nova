@@ -46,7 +46,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Da
                 .eq(Dict::getCode, dictNova.getCode())
         );
         if (count > 0) {
-            throw new NovaException(NovaI18nUtils.get("work.dataExist", new Object[]{"code"}));
+            throw new NovaException("code已存在");
         }
         Dict dict = BeanCopyUtils.copy(dictNova, Dict.class)
                 .setId(YitIdHelper.nextId())
@@ -78,7 +78,7 @@ public class DictServiceImpl extends ServiceImpl<DictMapper, Dict> implements Da
                 .ne(Dict::getId, dictNova.getId())
         );
         if (count > 0) {
-            throw new NovaException(NovaI18nUtils.get("work.dataExist", new Object[]{"code"}));
+            throw new NovaException("code已存在");
         }
         BeanCopyUtils.copy(dictNova, dict);
         updateById(dict);

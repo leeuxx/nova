@@ -12,7 +12,6 @@ import xyz.nova.entity.Menu;
 import xyz.nova.entity.data.Details;
 import xyz.nova.entity.data.Tree;
 import xyz.nova.error.NovaException;
-import xyz.nova.i18n.NovaI18nUtils;
 import xyz.nova.mapper.MenuMapper;
 import xyz.nova.nova.MenuNova;
 import xyz.nova.service.data.DataProxy;
@@ -52,7 +51,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
                         .setParentId(id)
                         .setCode(menu.getCode() + "@" + s)
                         .setIcon(s.equals("ADD") ? "gridicons:add-outline" : s.equals("EDIT") ? "ep:edit" : s.equals("DELETE") ? "fluent:delete-48-regular" : null)
-                        .setName(s.equals("ADD") ? NovaI18nUtils.get("work.sysButton.add") : s.equals("EDIT") ? NovaI18nUtils.get("work.sysButton.edit") : s.equals("DELETE") ? NovaI18nUtils.get("work.sysButton.delete") : null)
+                        .setName(s.equals("ADD") ? "新增" : s.equals("EDIT") ? "编辑" : s.equals("DELETE") ? "删除" : null)
                         .setSort(menu.getSort())
                         .setStatus(true)
                         .setType("BUTTON")
@@ -129,7 +128,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
                                     .setParentId(menu.getId())
                                     .setCode(menu.getCode() + suffix)
                                     .setIcon(suffix.equals("@ADD") ? "gridicons:add-outline" : suffix.equals("@EDIT") ? "ep:edit" : suffix.equals("@DELETE") ? "fluent:delete-48-regular" : null)
-                                    .setName(suffix.equals("@ADD") ? NovaI18nUtils.get("work.sysButton.add") : suffix.equals("@EDIT") ? NovaI18nUtils.get("work.sysButton.edit") : suffix.equals("@DELETE") ? NovaI18nUtils.get("work.sysButton.delete") : null)
+                                    .setName(suffix.equals("@ADD") ? "新增" : suffix.equals("@EDIT") ? "编辑" : suffix.equals("@DELETE") ? "删除" : null)
                                     .setSort(menu.getSort())
                                     .setStatus(true)
                                     .setType("BUTTON")
@@ -321,7 +320,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Da
                 .orderByAsc(Menu::getSort, Menu::getCreateTime)
         );
         if (menus == null || menus.isEmpty()) {
-            throw new NovaException(NovaI18nUtils.get("permission.noneMenu"));
+            throw new NovaException("用户无登录菜单");
         }
         return menus;
     }

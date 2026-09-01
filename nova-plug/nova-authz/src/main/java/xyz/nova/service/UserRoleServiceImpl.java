@@ -63,7 +63,7 @@ public class UserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRole> {
                 .eq(UserRole::getUserId, userId)
         );
         if (userRoles == null || userRoles.isEmpty()) {
-            throw new NovaException(NovaI18nUtils.get("permission.noneRole"));
+            throw new NovaException("用户无登录角色");
         }
         return userRoles.stream().map(UserRole::getRoleId).toList();
     }

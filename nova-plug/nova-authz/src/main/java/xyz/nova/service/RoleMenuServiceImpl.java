@@ -75,7 +75,7 @@ public class RoleMenuServiceImpl extends ServiceImpl<RoleMenuMapper, RoleMenu> i
                 .in(RoleMenu::getRoleId, roleIds)
         );
         if (roleMenus == null || roleMenus.isEmpty()) {
-            throw new NovaException(NovaI18nUtils.get("permission.noneMenu"));
+            throw new NovaException("用户无登录菜单");
         }
         return roleMenus.stream()
                 .map(RoleMenu::getMenuId)

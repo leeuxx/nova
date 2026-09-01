@@ -33,7 +33,7 @@ public class OrgServiceImpl extends ServiceImpl<OrgMapper, Org> implements DataP
                 .eq(Org::getCode, orgNova.getCode())
         );
         if (count > 0) {
-            throw new NovaException(NovaI18nUtils.get("work.dataExist", new Object[]{"code"}));
+            throw new NovaException("code已存在");
         }
         Org org = BeanCopyUtils.copy(orgNova, Org.class)
                 .setId(YitIdHelper.nextId())
@@ -61,7 +61,7 @@ public class OrgServiceImpl extends ServiceImpl<OrgMapper, Org> implements DataP
                 .ne(Org::getId, orgNova.getId())
         );
         if (count > 0) {
-            throw new NovaException(NovaI18nUtils.get("work.dataExist", new Object[]{"code"}));
+            throw new NovaException("code已存在");
         }
         Org org = BeanCopyUtils.copy(orgNova, Org.class);
         if (orgNova.getOrgNova() != null) {

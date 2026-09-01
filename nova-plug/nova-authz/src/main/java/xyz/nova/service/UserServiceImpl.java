@@ -45,7 +45,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
                 .eq(User::getAccount, userNova.getAccount())
         );
         if (count > 0) {
-            throw new NovaException(NovaI18nUtils.get("permission.userAccountExist"));
+            throw new NovaException("账户已存在");
         }
         // 增加用户
         String salt = BCrypt.gensalt();
@@ -202,7 +202,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
         if (param.equals("user_reset_pwd")) {
             UserNova.UserResetPwdNova userResetPwdNova = (UserNova.UserResetPwdNova) o;
             if (!userResetPwdNova.getPassword().equals(userResetPwdNova.getConfirmPassword())) {
-                throw new NovaException(NovaI18nUtils.get("permission.confirmPwdFail"));
+                throw new NovaException("两次输入的密码不一致");
             }
             String salt = BCrypt.gensalt();
             String password = BCrypt.hashpw(userResetPwdNova.getPassword(), salt);
@@ -224,13 +224,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Da
                 .eq(User::getAccount, username)
         );
         if (user == null) {
-            throw new NovaException(NovaI18nUtils.get("permission.accountPwdError"));
+            throw new NovaException("账号或密码错误");
         }
         if (!user.getPassword().equals(BCrypt.hashpw(password, user.getSalt()))) {
-            throw new NovaException(NovaI18nUtils.get("permission.accountPwdError"));
+            throw new NovaException("账号或密码错误");
         }
         if (!user.getStatus()) {
-            throw new NovaException(NovaI18nUtils.get("permission.userForbidden"));
+            throw new NovaException("用户已禁用");
         }
         return user;
     }

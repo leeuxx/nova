@@ -28,7 +28,7 @@ public class NovaRouterAspect {
         // 获取Token并验证有效性
         String token = AuthorityUtils.getToken();
         if (token == null || token.isEmpty() || !authorityProxy.checkToken(token)) {
-            return R.fail(520, NovaI18nUtils.get("permission.timeout"), null);
+            return R.fail(520, "Authorization expired, please login again", null);
         }
         // 验证菜单权限（仅当校验类型为LOGIN_MENU时）
         NovaRouter.VerifyType verifyType = novaRouter.verifyType();
@@ -43,7 +43,7 @@ public class NovaRouterAspect {
                         .findFirst()
                         .orElse(null);
                 if (NovaUtils.getPower(novaName)) {
-                    return R.fail(521, NovaI18nUtils.get("permission.check"), null);
+                    return R.fail(521, "User permission verification failed", null);
                 }
             }
         }

@@ -36,7 +36,7 @@ public class DictItemServiceImpl extends ServiceImpl<DictItemMapper, DictItem> i
                 .eq(DictItem::getDictId, dictNova.getId())
         );
         if (count > 0) {
-            throw new NovaException(NovaI18nUtils.get("work.dataExist", new Object[]{"code"}));
+            throw new NovaException("code已存在");
         }
         DictItem dictItem = BeanCopyUtils.copy(dictItemNova, DictItem.class, DictItemNova::getDictNova)
                 .setId(YitIdHelper.nextId())
@@ -66,7 +66,7 @@ public class DictItemServiceImpl extends ServiceImpl<DictItemMapper, DictItem> i
                     .ne(DictItem::getId, dictItemNova.getId())
             );
             if (count > 0) {
-                throw new NovaException(NovaI18nUtils.get("work.dataExist", new Object[]{"code"}));
+                throw new NovaException("code已存在");
             }
         }
         BeanCopyUtils.copy(dictItemNova, dictItem);
