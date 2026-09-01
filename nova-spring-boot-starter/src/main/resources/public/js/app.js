@@ -833,11 +833,11 @@ function mountApp(menuList, config, loginExpired) {
         <!-- 个人中心弹窗 -->
         <n-modal v-model:show="showProfile" preset="card" :title="__t('profile.title')" style="width:420px;margin-top:60px">
           <n-form ref="profileFormRef" :model="profileForm" :rules="profileRules"
-            label-placement="left" label-width="70" style="margin-top:4px">
-            <n-form-item :label="__t('profile.token')" path="token">
+            label-placement="top" :show-feedback="false" style="margin-top:4px">
+            <n-form-item :label="__t('profile.token')" path="token" style="margin-bottom:20px">
               <n-input v-model:value="profileForm.token" disabled />
             </n-form-item>
-            <n-form-item :label="__t('profile.avatar')" path="avatar">
+            <n-form-item :label="__t('profile.avatar')" path="avatar" style="margin-bottom:20px">
               <n-upload
                 v-model:file-list="avatarFileList"
                 :max="1"
@@ -847,7 +847,7 @@ function mountApp(menuList, config, loginExpired) {
                 @remove="onAvatarRemove"
               />
             </n-form-item>
-            <n-form-item :label="__t('profile.alias')" path="alias">
+            <n-form-item :label="__t('profile.alias')" path="alias" style="margin-bottom:20px">
               <n-input v-model:value="profileForm.alias" :placeholder="__t('profile.alias_placeholder')" />
             </n-form-item>
             <n-form-item :label="__t('profile.name')" path="name">
