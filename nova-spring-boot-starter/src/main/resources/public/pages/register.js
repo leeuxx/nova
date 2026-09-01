@@ -95,7 +95,7 @@ window.RegisterPage = {
   <!-- 右栏表单区 -->
   <div class="login-form-area">
     <div style="width:400px;max-width:90vw">
-      <n-card class="login-card" :bordered="false" content-style="min-height:380px;padding:24px 32px 60px;display:flex;flex-direction:column;justify-content:center;position:relative;">
+      <n-card class="login-card" :bordered="false" content-style="padding:40px 32px 24px;">
       <n-form
         ref="formRef"
         :model="formData"
@@ -174,9 +174,9 @@ window.RegisterPage = {
           </n-button>
         </n-form-item>
 
-        <!-- 返回登录：相对 n-form 绝对定位，从注册按钮下方开始，不占文档流，注册信息保持垂直居中 -->
-        <n-form-item :show-label="false" style="position:absolute;top:100%;left:0;right:0;margin:0">
-          <div style="width:100%;text-align:center;font-size:13px;margin-top:12px">
+        <!-- 返回登录：flow 布局，跟在注册按钮下方，由 padding-bottom 给卡片底部留白 -->
+        <n-form-item :show-label="false" style="margin-top:20px">
+          <div style="width:100%;text-align:center;font-size:13px">
             <span style="color:#94a3b8">{{ __t('register.has_account') }}</span>
             <span class="login-remember-text" style="color:#2563eb" @click="goLogin">{{ __t('register.go_login') }}</span>
           </div>

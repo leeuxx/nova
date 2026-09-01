@@ -140,7 +140,7 @@ window.LoginPage = {
   <div class="login-form-area">
     <div style="width:400px;max-width:90vw">
 
-    <n-card class="login-card" :bordered="false" content-style="min-height:260px;padding:16px 32px 24px;display:flex;flex-direction:column;justify-content:center;position:relative;">
+    <n-card class="login-card" :bordered="false" content-style="padding:40px 32px 24px;">
       <n-form
         ref="formRef"
         :model="formData"
@@ -198,9 +198,9 @@ window.LoginPage = {
           </n-button>
         </n-form-item>
 
-        <!-- 注册入口：始终显示，点击时按 register 配置判断是否跳转 -->
-        <n-form-item :show-label="false" style="position:absolute;top:100%;left:0;right:0;margin:0">
-          <div style="width:100%;text-align:center;font-size:13px;margin-top:10px">
+        <!-- 注册入口：flow 布局，由 padding-bottom 给卡片底部留白 -->
+        <n-form-item :show-label="false" style="margin-top:20px">
+          <div style="width:100%;text-align:center;font-size:13px">
             <span style="color:#94a3b8">{{ __t('login.no_account') }}</span>
             <span class="login-remember-text" style="color:#2563eb" @click="goRegister">{{ __t('login.go_register') }}</span>
           </div>
