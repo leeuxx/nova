@@ -1,5 +1,11 @@
-// fetch.js — 统一 fetch 工具，自动带上本地 token，统一 POST + JSON
+// fetch.js — 统一 fetch 工具，自动带上本地 token + 当前 locale，统一 POST + JSON
 ;(function () {
+
+  // 从 window.__appLocale 读当前语言，固定覆盖 Accept-Language（后端 LocaleContextHolder.getLocale 依赖此 header）
+  function currentLocaleHeader() {
+    var loc = (window.__appLocale && window.__appLocale.value) || 'zh'
+    return { 'Accept-Language': loc }
+  }
 
 window.fetchApi = {
   // 普通请求（POST + JSON）
@@ -10,7 +16,8 @@ window.fetchApi = {
     var allHeaders = Object.assign(
       { 'Content-Type': 'application/json' },
       token ? { 'token': token } : {},
-      headers
+      headers,
+      currentLocaleHeader()  // 固定覆盖 Accept-Language，放最后确保不被调用方覆盖
     )
     return fetch(url, {
       method:  'POST',
@@ -28,9 +35,13 @@ window.fetchApi = {
   // 文件上传（FormData）
   upload: function (url, formData) {
     var token = localStorage.getItem('nova_token') || ''
+    var allHeaders = Object.assign(
+      token ? { 'token': token } : {},
+      currentLocaleHeader()
+    )
     return fetch(url, {
       method: 'POST',
-      headers: token ? { 'token': token } : {},
+      headers: allHeaders,
       body: formData
     }).then(function (resp) { return resp.json() })
       .then(function (resp) {

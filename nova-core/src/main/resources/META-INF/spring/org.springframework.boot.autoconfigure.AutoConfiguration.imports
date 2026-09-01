@@ -5,3 +5,5 @@ xyz.nova.utils.SpringBeanUtils
 xyz.nova.service.data.DefaultDataProxy
 xyz.nova.service.DefaultOperationHandler
 xyz.nova.utils.RowAuthExpr
+xyz.nova.i18n.NovaI18nAutoConfiguration
+xyz.nova.i18n.NovaI18nUtils
