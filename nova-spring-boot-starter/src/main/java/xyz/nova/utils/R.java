@@ -24,7 +24,7 @@ public class R<T> {
     }
 
     public static <T> R<T> ok(T data) {
-        return new R<T>(data);
+        return new R<>(data);
     }
 
     public static R fail() {
@@ -68,9 +68,9 @@ public class R<T> {
     @AllArgsConstructor
     public enum Enum {
 
-        SUCCESS(200, "成功"),
+        SUCCESS(200, "success"),
 
-        FAIL(500, "失败"),
+        FAIL(500, "fail"),
 
         ;
 
