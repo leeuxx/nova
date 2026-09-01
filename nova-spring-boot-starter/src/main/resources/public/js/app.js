@@ -552,6 +552,13 @@ function mountApp(menuList, config, loginExpired) {
           window.__i18n.setLocale(key)
         }
       }
+      // naive UI node-props：给当前语言项返回 style，其他项返回 {}（不动默认渲染/hover）
+      const localeNodeProps = (rawNode) => {
+        if (rawNode && rawNode.key === currentLocale.value) {
+          return { style: 'background:rgba(24,160,88,0.12)' }
+        }
+        return {}
+      }
 
       // 个人中心弹窗状态
       const showProfile = ref(false)
@@ -683,7 +690,7 @@ function mountApp(menuList, config, loginExpired) {
         menuTree, breadcrumbItems, naiveLocale, routeKey, isStandaloneRoute, pageTransitionName, menuSelectedKey, route,
         pageComponent, cachedNames,
         handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, userToolButtons, handleUserMenuSelect,
-        localeDropdown, handleLocaleSelect, currentLocale,
+        localeDropdown, handleLocaleSelect, currentLocale, localeNodeProps,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
         barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText, logoImg,
         showProfile, profileSaving, profileFormRef, profileForm, profileRules, submitProfile,
@@ -756,7 +763,7 @@ function mountApp(menuList, config, loginExpired) {
                           </div>
                         </template>
                         <nova-message :data-tip="__t('tabs.message_center')" />
-                        <n-dropdown :options="localeDropdown" trigger="hover" @select="handleLocaleSelect" key-field="key">
+                        <n-dropdown :options="localeDropdown" trigger="hover" @select="handleLocaleSelect" key-field="key" :node-props="localeNodeProps">
                           <div class="header-action lang-switch" style="cursor:pointer">
                             <n-icon size="20"><iconify-icon icon="material-symbols:translate"></iconify-icon></n-icon>
                           </div>

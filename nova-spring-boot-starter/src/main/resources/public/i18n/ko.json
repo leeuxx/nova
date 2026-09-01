@@ -38,7 +38,7 @@
   "common.collapse": "접기",
   "common.upload": "업로드",
   "common.view": "보기",
-  "common.count_n": "(총 {n}개)",
+  "common.count_n": "（{n}）",
 
   "login.title": "로그인",
   "login.username": "사용자명",

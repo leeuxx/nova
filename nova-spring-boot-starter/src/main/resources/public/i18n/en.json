@@ -38,7 +38,7 @@
   "common.collapse": "Collapse",
   "common.upload": "Upload",
   "common.view": "View",
-  "common.count_n": "({n})",
+  "common.count_n": "（{n}）",
 
   "login.title": "Log In",
   "login.username": "Username",
