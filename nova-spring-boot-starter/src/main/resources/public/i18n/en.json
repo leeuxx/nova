@@ -47,7 +47,7 @@
   "login.password_placeholder": "Password",
   "login.remember": "Remember me",
   "login.submit": "Log In",
-  "login.no_account": "No account?",
+  "login.no_account": "No account? ",
   "login.go_register": "Sign up",
   "login.success": "Welcome, {name}!",
   "login.failed": "Invalid credentials",

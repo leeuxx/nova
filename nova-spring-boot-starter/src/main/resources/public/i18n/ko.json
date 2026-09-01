@@ -47,7 +47,7 @@
   "login.password_placeholder": "비밀번호",
   "login.remember": "기억하기",
   "login.submit": "로그인",
-  "login.no_account": "계정이 없으신가요?",
+  "login.no_account": "계정이 없으신가요? ",
   "login.go_register": "회원가입",
   "login.success": "환영합니다, {name}님!",
   "login.failed": "사용자명 또는 비밀번호가 올바르지 않습니다",

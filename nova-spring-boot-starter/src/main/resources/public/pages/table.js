@@ -4111,7 +4111,7 @@ const NovaTable = {
               <div v-else-if="field.type === 'NUMBER' && field.vague" class="number-vague-field">
                 <n-input-number
                   v-model:value="filterForm[field.field][0]"
-                  placeholder="{{ __t('table.min_value') }}"
+                  :placeholder="__t('table.min_value')"
                   :min="numberMap[field.field] && numberMap[field.field].min"
                   :max="numberMap[field.field] && numberMap[field.field].max"
                   :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
@@ -4120,7 +4120,7 @@ const NovaTable = {
                 <span class="number-vague-sep">—</span>
                 <n-input-number
                   v-model:value="filterForm[field.field][1]"
-                  placeholder="{{ __t('table.max_value') }}"
+                  :placeholder="__t('table.max_value')"
                   :min="numberMap[field.field] && numberMap[field.field].min"
                   :max="numberMap[field.field] && numberMap[field.field].max"
                   :precision="numberMap[field.field] && numberMap[field.field].type === 'DECIMAL' ? (numberMap[field.field].decimal || 2) : 0"
