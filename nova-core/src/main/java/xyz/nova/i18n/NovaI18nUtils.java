@@ -21,14 +21,14 @@ public class NovaI18nUtils implements ApplicationContextAware {
     }
 
     /**
-     * 获取国际化消息（无参数，默认语言）
+     * 获取国际化消息（无参数）
      */
     public static String get(String key) {
         return get(key, null, LocaleContextHolder.getLocale());
     }
 
     /**
-     * 获取国际化消息（带参数，默认语言）
+     * 获取国际化消息（带参数）
      */
     public static String get(String key, Object[] args) {
         return get(key, args, LocaleContextHolder.getLocale());
