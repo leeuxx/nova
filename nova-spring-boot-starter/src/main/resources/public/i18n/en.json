@@ -59,7 +59,7 @@
   "register.alias": "Nickname",
   "register.alias_placeholder": "Nickname (optional)",
   "register.submit": "Sign Up",
-  "register.has_account": "Have an account?",
+  "register.has_account": "Have an account? ",
   "register.go_login": "Log in",
   "register.success": "Welcome, {name}!",
   "register.invalid_response": "Sign-up failed. Please log in.",
