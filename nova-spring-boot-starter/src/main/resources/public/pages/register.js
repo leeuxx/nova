@@ -95,7 +95,7 @@ window.RegisterPage = {
   <!-- 右栏表单区 -->
   <div class="login-form-area">
     <div style="width:400px;max-width:90vw">
-      <n-card class="login-card" :bordered="false" content-style="padding:40px 32px 24px;">
+      <n-card class="login-card" :bordered="false" content-style="padding:56px 32px 24px;">
       <n-form
         ref="formRef"
         :model="formData"
