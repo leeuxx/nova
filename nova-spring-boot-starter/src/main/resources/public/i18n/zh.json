@@ -195,9 +195,6 @@
   "table.data_nodes": "数据节点",
   "table.items_per_page": "{n} 条/页",
 
-  "filelist.copy": "复制",
-  "filelist.delete": "删除",
-
   "editor.placeholder": "请输入内容",
   "editor_preview.empty": "无内容"
 }
