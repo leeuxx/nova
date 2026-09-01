@@ -152,6 +152,7 @@
   "table.start_time": "시작",
   "table.end_time": "종료",
   "table.total_n": "총 {n}개",
+  "table.field_required": "{name}은(는) 필수 입력 항목입니다",
   "table.actions": "작업",
   "table.detail": "상세",
   "table.upload_max": "최대 {n}개 파일",

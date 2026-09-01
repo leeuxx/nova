@@ -152,6 +152,7 @@
   "table.start_time": "開始",
   "table.end_time": "終了",
   "table.total_n": "全 {n} 件",
+  "table.field_required": "{name}は必須です",
   "table.actions": "操作",
   "table.detail": "詳細",
   "table.upload_max": "最大 {n} ファイル",

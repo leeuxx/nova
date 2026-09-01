@@ -152,6 +152,7 @@
   "table.start_time": "开始时间",
   "table.end_time": "结束时间",
   "table.total_n": "共 {n} 条",
+  "table.field_required": "{name}不能为空",
   "table.actions": "操作",
   "table.detail": "详情",
   "table.upload_max": "最多上传 {n} 个文件",

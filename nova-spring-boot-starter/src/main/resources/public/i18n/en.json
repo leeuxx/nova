@@ -152,6 +152,7 @@
   "table.start_time": "Start",
   "table.end_time": "End",
   "table.total_n": "{n} items",
+  "table.field_required": "{name} is required",
   "table.actions": "Actions",
   "table.detail": "Details",
   "table.upload_max": "Max {n} files",
