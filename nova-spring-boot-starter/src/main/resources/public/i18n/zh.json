@@ -165,7 +165,6 @@
   "table.request_failed": "请求失败",
   "table.op_success": "操作成功",
   "table.op_failed": "操作失败",
-  "table.update_success": "修改成功",
   "table.confirm_action": "确认操作",
   "table.no_clickable_content": "无可点击内容",
   "table.popup_load_failed": "弹窗加载失败",

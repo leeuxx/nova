@@ -828,7 +828,7 @@ const NovaTable = {
               if (bInfo.tableType === 'SEGMENT') {
                 const loadKey = (vm.embeddedMode || vm.dualMode) ? vm._vmKey : novaName
                 const segSet = disabled ? undefined : (newVal) => {
-                  window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: newVal, type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success(window.__t('table.update_success')); window.NovaTableJQ.loadData(loadKey) })
+                  window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: newVal, type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success(window.__t('table.op_success')); window.NovaTableJQ.loadData(loadKey) })
                 }
                 return h(NButtonGroup, { size: 'small' }, {
                   default: () => [
@@ -850,7 +850,7 @@ const NovaTable = {
               const newVal = isTrue ? 'false' : 'true'
               const loadKey = (vm.embeddedMode || vm.dualMode) ? vm._vmKey : novaName
               const onClick = disabled ? undefined : () => {
-                window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: newVal, type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success(window.__t('table.update_success')); window.NovaTableJQ.loadData(loadKey) })
+                window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: newVal, type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success(window.__t('table.op_success')); window.NovaTableJQ.loadData(loadKey) })
               }
               return h('span', { style: `display:inline-block;vertical-align:middle;width:44px;height:22px;border-radius:11px;background:${isTrue ? '#006be6' : offBg};position:relative;cursor:${disabled ? 'not-allowed' : 'pointer'};opacity:${disabled ? '0.5' : '1'};flex-shrink:0;transition:background .2s`, onClick }, [
                 h('span', { style: `position:absolute;top:0;${isTrue ? 'left:0;right:20px' : 'right:0;left:20px'};bottom:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;user-select:none` }, isTrue ? window.__t('common.yes') : window.__t('common.no')),

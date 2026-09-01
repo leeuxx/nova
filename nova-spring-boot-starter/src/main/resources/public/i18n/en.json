@@ -165,7 +165,6 @@
   "table.request_failed": "Request failed",
   "table.op_success": "Done",
   "table.op_failed": "Failed",
-  "table.update_success": "Updated",
   "table.confirm_action": "Confirm?",
   "table.no_clickable_content": "Nothing to click",
   "table.popup_load_failed": "Popup failed",

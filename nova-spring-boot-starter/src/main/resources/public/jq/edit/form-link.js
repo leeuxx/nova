@@ -21,7 +21,7 @@ window.NovaTableJQ_link = (function () {
     window.fetchApi.post('/nova/table/addLinkTarget', { novaName: linkNovaName, formInfo: formInfo }).then(function (resp) {
       var t = window.vmMap && window.vmMap[key]
       if (!t) return
-      if (window.$message) window.$message.success(window.__t('common.create_success'))
+      if (window.$message) window.$message.success(window.__t('table.op_success'))
       // 刷新目标表格：优先使用传入的 refreshVmKey，否则查找嵌入式 vmKey
       var embVmKey = refreshVmKey || findEmbVmKey(linkNovaName)
       if (embVmKey && window.NovaTableJQ) window.NovaTableJQ.loadData(embVmKey)

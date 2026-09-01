@@ -165,7 +165,6 @@
   "table.request_failed": "リクエスト失敗",
   "table.op_success": "成功",
   "table.op_failed": "失敗",
-  "table.update_success": "更新しました",
   "table.confirm_action": "確認",
   "table.no_clickable_content": "クリックできるものなし",
   "table.popup_load_failed": "ポップアップの読み込みに失敗しました",

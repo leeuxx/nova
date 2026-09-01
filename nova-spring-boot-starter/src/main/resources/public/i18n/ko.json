@@ -165,7 +165,6 @@
   "table.request_failed": "요청 실패",
   "table.op_success": "성공",
   "table.op_failed": "실패",
-  "table.update_success": "업데이트되었습니다",
   "table.confirm_action": "확인",
   "table.no_clickable_content": "클릭할 내용 없음",
   "table.popup_load_failed": "팝업 불러오기 실패",

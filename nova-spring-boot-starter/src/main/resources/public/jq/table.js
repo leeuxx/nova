@@ -902,7 +902,7 @@ window.NovaTableJQ = (function ($) {
       var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
       if (!t) return
       t.checkedRowKeys = []
-      if (window.$message) window.$message.success(window.__t('common.delete_success'))
+      if (window.$message) window.$message.success(window.__t('table.op_success'))
       loadData(vmKey || novaName)
     }).catch(function () {
       console.info('[Nova] delete接口请求失败，novaName:', novaName)
@@ -1010,7 +1010,7 @@ window.NovaTableJQ = (function ($) {
         var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
         if (!t) return
         t.showForm = false
-        if (window.$message) window.$message.success(window.__t('common.update_success'))
+        if (window.$message) window.$message.success(window.__t('table.op_success'))
         loadData(vmKey || novaName)
       }).catch(function () {
         console.info('[Nova] update接口请求失败，novaName:', novaName)
@@ -1032,7 +1032,7 @@ window.NovaTableJQ = (function ($) {
         var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
         if (!t) return
         t.showForm = false
-        if (window.$message) window.$message.success(window.__t('common.create_success'))
+        if (window.$message) window.$message.success(window.__t('table.op_success'))
         loadData(vmKey || novaName)
       }).catch(function () {
         console.info('[Nova] add接口请求失败，novaName:', novaName)
