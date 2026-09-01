@@ -7,6 +7,11 @@
     return document.body.classList.contains('dark') ? 'dark' : 'light'
   }
 
+  function detectLang() {
+    if (window.__appLocale && window.__appLocale.value) return window.__appLocale.value
+    return 'zh'
+  }
+
   function uploadFile(file, novaName) {
     return new Promise(function (resolve) {
       if (!window.fetchApi || !window.fetchApi.upload) {
@@ -39,6 +44,7 @@
       placeholder: window.__t('common.input_content'),
       contentRetention: false,
       theme: opts.theme || detectTheme(),
+      lang: opts.lang || detectLang(),
       editable: opts.editable !== false,
       image: {
         defaultSize: 120,
@@ -91,6 +97,11 @@
     try { editor.changeTheme(theme || detectTheme()) } catch (e) {}
   }
 
+  function changeLang(editor, lang) {
+    if (!editor || typeof editor.changeLang !== 'function') return
+    try { editor.changeLang(lang || detectLang()) } catch (e) {}
+  }
+
   function setEditable(editor, editable) {
     if (!editor || typeof editor.setEditable !== 'function') return
     try { editor.setEditable(editable !== false) } catch (e) {}
@@ -118,6 +129,7 @@
   window.NovaAiEditor = {
     createEditor: createEditor,
     changeTheme: changeTheme,
+    changeLang: changeLang,
     setEditable: setEditable,
     setContent: setContent,
     destroy: destroy
