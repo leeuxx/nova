@@ -284,8 +284,8 @@ public class TestDemoView {
                     type = Edit.Type.CHOICE,
                     choiceType = @ChoiceType(
                             vl = {
-                                    @VL(value = "1", label = "男", color = "#28f439"),
-                                    @VL(value = "2", label = "女", color = "#fe6767")
+                                    @VL(value = "1", label = "user.sex.man", color = "#28f439"),
+                                    @VL(value = "2", label = "user.sex.woman", color = "#fe6767")
                             }
                     ),
                     search = @Search(vague = true),
@@ -435,14 +435,14 @@ public class TestDemoView {
                     type = Edit.Type.TAG,
                     tagType = @TagType(
                             tags = {
-                                    "护腕",
-                                    "项链",
-                                    "戒指",
-                                    "手镯"
+                                    "user.wrister",
+                                    "user.necklace",
+                                    "user.ring",
+                                    "user.bracelet"
                             }
                     ),
                     search = @Search(vague = true),
-                    defaultValue = "戒指,护腕"
+                    defaultValue = "user.necklace,user.bracelet"
             )
     )
     private String tags;

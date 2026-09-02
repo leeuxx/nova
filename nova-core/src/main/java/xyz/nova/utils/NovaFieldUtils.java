@@ -195,6 +195,7 @@ public class NovaFieldUtils {
                         addReadonly = readonlyHandler.add(param);
                         editReadonly = readonlyHandler.edit(param);
                     }
+                    String defaultValue = edit.defaultValue();
                     EditInfo.ThisForm thisForm = new EditInfo.ThisForm()
                             .setField(field)
                             .setTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE))
@@ -207,7 +208,16 @@ public class NovaFieldUtils {
                             )
                             .setShowBy(edit.showBy())
                             .setGroup(NovaI18nUtils.get(edit.group(), NovaI18nUtils.SourceType.ANNOTATE))
-                            .setDefaultValue(edit.defaultValue());
+                            .setDefaultValue(defaultValue);
+                    // 标签组件 默认值国际化处理
+                    if (novaFieldInfo.getType() == Edit.Type.TAG && defaultValue != null && !defaultValue.isEmpty()) {
+                        String[] split = defaultValue.split(",");
+                        StringJoiner joiner = new StringJoiner(",");
+                        for (String s : split) {
+                            joiner.add(NovaI18nUtils.get(s, NovaI18nUtils.SourceType.ANNOTATE));
+                        }
+                        thisForm.setDefaultValue(joiner.toString());
+                    }
                     thisForms.add(thisForm);
                 }
             }
@@ -313,7 +323,7 @@ public class NovaFieldUtils {
                 for (VL vl : vls) {
                     ChoiceInfo.ValueInfo valueInfo = new ChoiceInfo.ValueInfo()
                             .setValue(vl.value())
-                            .setLabel(vl.label())
+                            .setLabel(NovaI18nUtils.get(vl.label(), NovaI18nUtils.SourceType.ANNOTATE))
                             .setColor(vl.color())
                             .setRefValue(vl.refValue());
                     values.add(valueInfo);
@@ -357,7 +367,10 @@ public class NovaFieldUtils {
                 TagType tagType = edit.tagType();
                 // 静态选择列表
                 String[] staticTags = tagType.tags();
-                List<String> tags = new ArrayList<>(Arrays.asList(staticTags));
+                List<String> tags = new ArrayList<>(staticTags.length);
+                for (String staticTag : staticTags) {
+                    tags.add(NovaI18nUtils.get(staticTag, NovaI18nUtils.SourceType.ANNOTATE));
+                }
                 // 动态选择列表
                 Class<? extends TagFetchHandler> tagFetchHandlerClass = tagType.fetchHandler();
                 if (tagFetchHandlerClass != TagFetchHandler.class) {
