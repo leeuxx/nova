@@ -478,9 +478,9 @@ public class TestDemoView {
     private String file2;
 
     @NovaField(
-            views = @View(title = "富文本", width = "10%"),
+            views = @View(title = "user.editor", width = "10%"),
             edit = @Edit(
-                    title = "富文本",
+                    title = "user.editor",
                     type = Edit.Type.EDITOR
             )
     )
