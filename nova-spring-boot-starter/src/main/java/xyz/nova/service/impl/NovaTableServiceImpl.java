@@ -3,6 +3,7 @@ package xyz.nova.service.impl;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import xyz.nova.annotation.sub.nova.TreeType;
@@ -14,7 +15,6 @@ import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.dto.*;
 import xyz.nova.dto.page.PageBean;
 import xyz.nova.entity.data.*;
-import xyz.nova.error.NovaException;
 import xyz.nova.i18n.NovaI18nUtils;
 import xyz.nova.service.NovaTableService;
 import xyz.nova.service.data.DataProxy;
@@ -32,6 +32,7 @@ public class NovaTableServiceImpl implements NovaTableService {
 
     @Override
     public NovaTableBuild.Vo build(NovaTableBuild novaTableBuild) {
+        Locale locale = LocaleContextHolder.getLocale();
         NovaTableBuild.Vo vo = new NovaTableBuild.Vo();
         // 获取novaId属性名称
         String novaIdFieldName = NovaFieldUtils.getNovaIdFieldName(novaTableBuild.getNovaName());
@@ -50,7 +51,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         // 获取搜索条件
         if (!treeInfo.getValue()) {
             List<NovaTableBuild.Vo.Search> searchList = new ArrayList<>();
-            List<NovaFieldUtils.SearchInfo> searchs = NovaFieldUtils.getSearch(novaTableBuild.getNovaName());
+            List<NovaFieldUtils.SearchInfo> searchs = NovaFieldUtils.getSearch(novaTableBuild.getNovaName(), locale);
             for (NovaFieldUtils.SearchInfo search : searchs) {
                 NovaTableBuild.Vo.Search searchVo = new NovaTableBuild.Vo.Search()
                         .setField(search.getField())
@@ -68,7 +69,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         }
         // 获取表头列
         List<NovaTableBuild.Vo.TableColumn> tableColumnList = new ArrayList<>();
-        List<NovaFieldUtils.TableColumnInfo> tableColumns = NovaFieldUtils.getTableColumn(novaTableBuild.getNovaName());
+        List<NovaFieldUtils.TableColumnInfo> tableColumns = NovaFieldUtils.getTableColumn(novaTableBuild.getNovaName(), locale);
         for (NovaFieldUtils.TableColumnInfo tableColumn : tableColumns) {
             tableColumnList.add(new NovaTableBuild.Vo.TableColumn()
                     .setField(tableColumn.getField())
@@ -91,7 +92,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         );
         // 获取编辑信息
         List<NovaTableBuild.Vo.Edit> editList = new ArrayList<>();
-        List<NovaFieldUtils.EditInfo> editInfos = NovaFieldUtils.getEdit(novaTableBuild.getNovaName());
+        List<NovaFieldUtils.EditInfo> editInfos = NovaFieldUtils.getEdit(novaTableBuild.getNovaName(), locale);
         for (NovaFieldUtils.EditInfo editInfo : editInfos) {
             NovaTableBuild.Vo.Edit edit = new NovaTableBuild.Vo.Edit()
                     .setTapType(editInfo.getTapType())
@@ -125,7 +126,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         vo.setEdit(editList);
         // 获取选择组件信息
         Map<String, NovaTableBuild.Vo.Choice> choiceMap = new LinkedHashMap<>();
-        Map<String, NovaFieldUtils.ChoiceInfo> choices = NovaFieldUtils.getChoice(novaTableBuild.getNovaName());
+        Map<String, NovaFieldUtils.ChoiceInfo> choices = NovaFieldUtils.getChoice(novaTableBuild.getNovaName(), locale);
         choices.forEach((field, choiceInfo) -> {
             List<NovaTableBuild.Vo.Choice.Value> buildValues = new ArrayList<>();
             List<NovaFieldUtils.ChoiceInfo.ValueInfo> fieldValues = choiceInfo.getValues();
@@ -147,7 +148,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         vo.setChoice(choiceMap);
         // 获取标签组件信息
         Map<String, NovaTableBuild.Vo.Tag> tagMap = new LinkedHashMap<>();
-        Map<String, NovaFieldUtils.TagInfo> tags = NovaFieldUtils.getTag(novaTableBuild.getNovaName());
+        Map<String, NovaFieldUtils.TagInfo> tags = NovaFieldUtils.getTag(novaTableBuild.getNovaName(), locale);
         tags.forEach((field, tagInfo) -> {
             NovaTableBuild.Vo.Tag tag = new NovaTableBuild.Vo.Tag()
                     .setAllowExtension(tagInfo.getAllowExtension())
@@ -341,7 +342,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         });
         vo.setButtons(buttons);
         // 获取弹窗信息
-        Map<String, NovaFieldUtils.PopInfo> popInfos = NovaFieldUtils.getPop(novaTableBuild.getNovaName());
+        Map<String, NovaFieldUtils.PopInfo> popInfos = NovaFieldUtils.getPop(novaTableBuild.getNovaName(), locale);
         Map<String, NovaTableBuild.Vo.Pop> pops = new LinkedHashMap<>();
         popInfos.forEach((field, popInfo) -> {
             NovaTableBuild.Vo.Pop pop = new NovaTableBuild.Vo.Pop()
@@ -748,7 +749,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         PopHandler popHandler = (PopHandler) SpringBeanUtils.getBean(handleClass);
         List<PopHandler.PopModel> popModels = popHandler.getPopModel(novaTablePop.getParam(), novaTablePop.getValue(), context);
         List<NovaTablePop.Vo> vos = new ArrayList<>();
-        if(popModels != null && !popModels.isEmpty()) {
+        if (popModels != null && !popModels.isEmpty()) {
             popModels.forEach(popModel -> {
                 NovaTablePop.Vo vo = new NovaTablePop.Vo()
                         .setType(popModel.getType().name())

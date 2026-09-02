@@ -53,7 +53,7 @@ public class NovaFieldUtils {
      * @param className 类名
      * @return 搜索条件信息
      */
-    public static List<SearchInfo> getSearch(String className) {
+    public static List<SearchInfo> getSearch(String className, Locale locale) {
         NovaApplication.ScanNova scanNova = getScanNova(className);
         List<SearchInfo> searchInfos = new ArrayList<>();
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
@@ -84,7 +84,7 @@ public class NovaFieldUtils {
             }
             SearchInfo searchInfo = new SearchInfo()
                     .setField(field)
-                    .setTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE))
+                    .setTitle(NovaI18nUtils.get(edit.title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
                     .setType(type)
                     .setVague(search.vague())
                     .setSort(search.sort());
@@ -108,7 +108,7 @@ public class NovaFieldUtils {
      * @param className 类名
      * @return 表头列信息
      */
-    public static List<TableColumnInfo> getTableColumn(String className) {
+    public static List<TableColumnInfo> getTableColumn(String className, Locale locale) {
         NovaApplication.ScanNova scanNova = getScanNova(className);
         List<TableColumnInfo> tableColumnInfos = new ArrayList<>();
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
@@ -153,8 +153,8 @@ public class NovaFieldUtils {
                 }
                 TableColumnInfo tableColumnInfo = new TableColumnInfo()
                         .setField(fieldName)
-                        .setTitle(NovaI18nUtils.get(view.title(), NovaI18nUtils.SourceType.ANNOTATE))
-                        .setDesc(NovaI18nUtils.get(view.desc(), NovaI18nUtils.SourceType.ANNOTATE))
+                        .setTitle(NovaI18nUtils.get(view.title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
+                        .setDesc(NovaI18nUtils.get(view.desc(), locale, NovaI18nUtils.SourceType.ANNOTATE))
                         .setWidth(view.width())
                         .setSortable(view.sortable())
                         .setType(findType)
@@ -172,7 +172,7 @@ public class NovaFieldUtils {
      * @param className 类名
      * @return 编辑信息
      */
-    public static List<EditInfo> getEdit(String className) {
+    public static List<EditInfo> getEdit(String className, Locale locale) {
         NovaApplication.ScanNova scanNova = getScanNova(className);
         List<EditInfo> editInfos = new ArrayList<>();
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
@@ -198,8 +198,8 @@ public class NovaFieldUtils {
                     String defaultValue = edit.defaultValue();
                     EditInfo.ThisForm thisForm = new EditInfo.ThisForm()
                             .setField(field)
-                            .setTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE))
-                            .setDesc(NovaI18nUtils.get(edit.desc(), NovaI18nUtils.SourceType.ANNOTATE))
+                            .setTitle(NovaI18nUtils.get(edit.title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
+                            .setDesc(NovaI18nUtils.get(edit.desc(), locale, NovaI18nUtils.SourceType.ANNOTATE))
                             .setType(novaFieldInfo.getType())
                             .setNotNull(edit.notNull())
                             .setReadonly(new EditInfo.ThisForm.ReadonlyInfo()
@@ -207,14 +207,14 @@ public class NovaFieldUtils {
                                     .setEdit(editReadonly)
                             )
                             .setShowBy(edit.showBy())
-                            .setGroup(NovaI18nUtils.get(edit.group(), NovaI18nUtils.SourceType.ANNOTATE))
+                            .setGroup(NovaI18nUtils.get(edit.group(), locale, NovaI18nUtils.SourceType.ANNOTATE))
                             .setDefaultValue(defaultValue);
                     // 标签组件 默认值国际化处理
                     if (novaFieldInfo.getType() == Edit.Type.TAG && defaultValue != null && !defaultValue.isEmpty()) {
                         String[] split = defaultValue.split(",");
                         StringJoiner joiner = new StringJoiner(",");
                         for (String s : split) {
-                            joiner.add(NovaI18nUtils.get(s, NovaI18nUtils.SourceType.ANNOTATE));
+                            joiner.add(NovaI18nUtils.get(s, locale, NovaI18nUtils.SourceType.ANNOTATE));
                         }
                         thisForm.setDefaultValue(joiner.toString());
                     }
@@ -230,7 +230,7 @@ public class NovaFieldUtils {
                     EditInfo editInfo = new EditInfo()
                             .setTapType("appendageForm")
                             .setTapNovaName(fieldClass.getSimpleName())
-                            .setTapTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE))
+                            .setTapTitle(NovaI18nUtils.get(edit.title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
                             .setTapShow(appendageType.tapShow())
                             .setTapShowByExpr(appendageType.tapShowBy().value())
                             .setTapSort(1);
@@ -246,7 +246,7 @@ public class NovaFieldUtils {
                     editInfos.add(new EditInfo()
                             .setTapType("appendagesTable")
                             .setTapNovaName(fieldClass.getSimpleName())
-                            .setTapTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE))
+                            .setTapTitle(NovaI18nUtils.get(edit.title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
                             .setTapShow(appendageType.tapShow())
                             .setTapShowByExpr(appendageType.tapShowBy().value())
                             .setTapSort(2)
@@ -262,7 +262,7 @@ public class NovaFieldUtils {
                     editInfos.add(new EditInfo()
                             .setTapType("linkForm")
                             .setTapNovaName(fieldClass.getSimpleName())
-                            .setTapTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE))
+                            .setTapTitle(NovaI18nUtils.get(edit.title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
                             .setTapShow(linkType.tapShow())
                             .setTapShowByExpr(linkType.tapShowBy().value())
                             .setTapSort(3)
@@ -278,7 +278,7 @@ public class NovaFieldUtils {
                     editInfos.add(new EditInfo()
                             .setTapType("referenceForm")
                             .setTapNovaName(fieldClass.getSimpleName())
-                            .setTapTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE))
+                            .setTapTitle(NovaI18nUtils.get(edit.title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
                             .setTapShow(referenceType.tapShow())
                             .setTapShowByExpr(referenceType.tapShowBy().value())
                             .setTapSort(4)
@@ -289,7 +289,7 @@ public class NovaFieldUtils {
         editInfos.add(new EditInfo()
                 .setTapType("thisForm")
                 .setTapNovaName(className)
-                .setTapTitle(NovaI18nUtils.get("table.edit.tabName", NovaI18nUtils.SourceType.CODE))
+                .setTapTitle(NovaI18nUtils.get("table.edit.tabName", locale, NovaI18nUtils.SourceType.CODE))
                 .setThisForms(thisForms)
                 .setTapShow(true)
                 .setTapSort(0)
@@ -304,7 +304,7 @@ public class NovaFieldUtils {
      * @param className 类名
      * @return 选择参数信息
      */
-    public static Map<String, ChoiceInfo> getChoice(String className) {
+    public static Map<String, ChoiceInfo> getChoice(String className, Locale locale) {
         NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, ChoiceInfo> choiceValues = new LinkedHashMap<>();
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
@@ -323,7 +323,7 @@ public class NovaFieldUtils {
                 for (VL vl : vls) {
                     ChoiceInfo.ValueInfo valueInfo = new ChoiceInfo.ValueInfo()
                             .setValue(vl.value())
-                            .setLabel(NovaI18nUtils.get(vl.label(), NovaI18nUtils.SourceType.ANNOTATE))
+                            .setLabel(NovaI18nUtils.get(vl.label(), locale, NovaI18nUtils.SourceType.ANNOTATE))
                             .setColor(vl.color())
                             .setRefValue(vl.refValue());
                     values.add(valueInfo);
@@ -356,7 +356,7 @@ public class NovaFieldUtils {
      * @param className 类名
      * @return 标签参数信息
      */
-    public static Map<String, TagInfo> getTag(String className) {
+    public static Map<String, TagInfo> getTag(String className, Locale locale) {
         NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, TagInfo> tagInfos = new LinkedHashMap<>();
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
@@ -369,7 +369,7 @@ public class NovaFieldUtils {
                 String[] staticTags = tagType.tags();
                 List<String> tags = new ArrayList<>(staticTags.length);
                 for (String staticTag : staticTags) {
-                    tags.add(NovaI18nUtils.get(staticTag, NovaI18nUtils.SourceType.ANNOTATE));
+                    tags.add(NovaI18nUtils.get(staticTag, locale, NovaI18nUtils.SourceType.ANNOTATE));
                 }
                 // 动态选择列表
                 Class<? extends TagFetchHandler> tagFetchHandlerClass = tagType.fetchHandler();
@@ -668,7 +668,7 @@ public class NovaFieldUtils {
      * @param className 类名
      * @return 弹窗参数信息
      */
-    public static Map<String, PopInfo> getPop(String className) {
+    public static Map<String, PopInfo> getPop(String className, Locale locale) {
         NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, PopInfo> popInfoMaps = new LinkedHashMap<>();
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
@@ -694,7 +694,7 @@ public class NovaFieldUtils {
                 }
                 Class<? extends PopHandler> popHandler = pop.popHandler();
                 PopInfo popInfo = new PopInfo()
-                        .setTitle(NovaI18nUtils.get(pop.title(), NovaI18nUtils.SourceType.ANNOTATE))
+                        .setTitle(NovaI18nUtils.get(pop.title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
                         .setParam(pop.param())
                         .setContext(Arrays.asList(pop.context()))
                         .setHandleClass(popHandler != PopHandler.class ? popHandler : null);
