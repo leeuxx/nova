@@ -144,7 +144,7 @@
   "table.large": "Spacious",
   "table.open_dual_view": "Open split view",
   "table.close_dual_view": "Close split view",
-  "table.search_field_placeholder": "Search {name}",
+  "table.search_field_placeholder": "Enter {name}",
   "table.select_field_placeholder": "Select {name}",
   "table.input_or_select_field_placeholder": "Enter or select {name}",
   "table.min_value": "Min",
