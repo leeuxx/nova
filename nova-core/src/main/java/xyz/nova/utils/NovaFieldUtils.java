@@ -84,7 +84,7 @@ public class NovaFieldUtils {
             }
             SearchInfo searchInfo = new SearchInfo()
                     .setField(field)
-                    .setTitle(edit.title())
+                    .setTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE))
                     .setType(type)
                     .setVague(search.vague())
                     .setSort(search.sort());
@@ -153,8 +153,8 @@ public class NovaFieldUtils {
                 }
                 TableColumnInfo tableColumnInfo = new TableColumnInfo()
                         .setField(fieldName)
-                        .setTitle(view.title())
-                        .setDesc(view.desc())
+                        .setTitle(NovaI18nUtils.get(view.title(), NovaI18nUtils.SourceType.ANNOTATE))
+                        .setDesc(NovaI18nUtils.get(view.desc(), NovaI18nUtils.SourceType.ANNOTATE))
                         .setWidth(view.width())
                         .setSortable(view.sortable())
                         .setType(findType)
@@ -197,8 +197,8 @@ public class NovaFieldUtils {
                     }
                     EditInfo.ThisForm thisForm = new EditInfo.ThisForm()
                             .setField(field)
-                            .setTitle(edit.title())
-                            .setDesc(edit.desc())
+                            .setTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE))
+                            .setDesc(NovaI18nUtils.get(edit.desc(), NovaI18nUtils.SourceType.ANNOTATE))
                             .setType(novaFieldInfo.getType())
                             .setNotNull(edit.notNull())
                             .setReadonly(new EditInfo.ThisForm.ReadonlyInfo()
@@ -206,7 +206,7 @@ public class NovaFieldUtils {
                                     .setEdit(editReadonly)
                             )
                             .setShowBy(edit.showBy())
-                            .setGroup(edit.group())
+                            .setGroup(NovaI18nUtils.get(edit.group(), NovaI18nUtils.SourceType.ANNOTATE))
                             .setDefaultValue(edit.defaultValue());
                     thisForms.add(thisForm);
                 }
@@ -220,7 +220,7 @@ public class NovaFieldUtils {
                     EditInfo editInfo = new EditInfo()
                             .setTapType("appendageForm")
                             .setTapNovaName(fieldClass.getSimpleName())
-                            .setTapTitle(edit.title())
+                            .setTapTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE))
                             .setTapShow(appendageType.tapShow())
                             .setTapShowByExpr(appendageType.tapShowBy().value())
                             .setTapSort(1);
@@ -236,7 +236,7 @@ public class NovaFieldUtils {
                     editInfos.add(new EditInfo()
                             .setTapType("appendagesTable")
                             .setTapNovaName(fieldClass.getSimpleName())
-                            .setTapTitle(edit.title())
+                            .setTapTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE))
                             .setTapShow(appendageType.tapShow())
                             .setTapShowByExpr(appendageType.tapShowBy().value())
                             .setTapSort(2)
@@ -252,7 +252,7 @@ public class NovaFieldUtils {
                     editInfos.add(new EditInfo()
                             .setTapType("linkForm")
                             .setTapNovaName(fieldClass.getSimpleName())
-                            .setTapTitle(edit.title())
+                            .setTapTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE))
                             .setTapShow(linkType.tapShow())
                             .setTapShowByExpr(linkType.tapShowBy().value())
                             .setTapSort(3)
@@ -268,7 +268,7 @@ public class NovaFieldUtils {
                     editInfos.add(new EditInfo()
                             .setTapType("referenceForm")
                             .setTapNovaName(fieldClass.getSimpleName())
-                            .setTapTitle(edit.title())
+                            .setTapTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE))
                             .setTapShow(referenceType.tapShow())
                             .setTapShowByExpr(referenceType.tapShowBy().value())
                             .setTapSort(4)
@@ -279,7 +279,7 @@ public class NovaFieldUtils {
         editInfos.add(new EditInfo()
                 .setTapType("thisForm")
                 .setTapNovaName(className)
-                .setTapTitle(NovaI18nUtils.get("table.edit.tabName"))
+                .setTapTitle(NovaI18nUtils.get("table.edit.tabName", NovaI18nUtils.SourceType.CODE))
                 .setThisForms(thisForms)
                 .setTapShow(true)
                 .setTapSort(0)
@@ -681,7 +681,7 @@ public class NovaFieldUtils {
                 }
                 Class<? extends PopHandler> popHandler = pop.popHandler();
                 PopInfo popInfo = new PopInfo()
-                        .setTitle(pop.title())
+                        .setTitle(NovaI18nUtils.get(pop.title(), NovaI18nUtils.SourceType.ANNOTATE))
                         .setParam(pop.param())
                         .setContext(Arrays.asList(pop.context()))
                         .setHandleClass(popHandler != PopHandler.class ? popHandler : null);

@@ -13,6 +13,6 @@ public class DefaultAttachmentProxy implements AttachmentProxy {
 
     @Override
     public String upLoad(String novaName, InputStream inputStream) {
-        throw new NovaException(NovaI18nUtils.get("attachment.none"));
+        throw new NovaException(NovaI18nUtils.get("attachment.none", NovaI18nUtils.SourceType.CODE));
     }
 }

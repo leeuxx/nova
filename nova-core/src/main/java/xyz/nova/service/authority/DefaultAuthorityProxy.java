@@ -21,17 +21,17 @@ public class DefaultAuthorityProxy implements AuthorityProxy {
 
     @Override
     public Login.User login(Login login) {
-        throw new NovaException(NovaI18nUtils.get("permission.none"));
+        throw new NovaException(NovaI18nUtils.get("permission.none", NovaI18nUtils.SourceType.CODE));
     }
 
     @Override
     public void logout(String token) {
-        throw new NovaException(NovaI18nUtils.get("permission.none"));
+        throw new NovaException(NovaI18nUtils.get("permission.none", NovaI18nUtils.SourceType.CODE));
     }
 
     @Override
     public List<Menu> getMenu(String token) {
-        throw new NovaException(NovaI18nUtils.get("permission.none"));
+        throw new NovaException(NovaI18nUtils.get("permission.none", NovaI18nUtils.SourceType.CODE));
     }
 
     @Override
@@ -41,11 +41,11 @@ public class DefaultAuthorityProxy implements AuthorityProxy {
 
     @Override
     public void editUser(Login.User user) {
-        throw new NovaException(NovaI18nUtils.get("permission.none"));
+        throw new NovaException(NovaI18nUtils.get("permission.none", NovaI18nUtils.SourceType.CODE));
     }
 
     @Override
     public Login.User register(Register register) {
-        throw new NovaException(NovaI18nUtils.get("permission.none"));
+        throw new NovaException(NovaI18nUtils.get("permission.none", NovaI18nUtils.SourceType.CODE));
     }
 }

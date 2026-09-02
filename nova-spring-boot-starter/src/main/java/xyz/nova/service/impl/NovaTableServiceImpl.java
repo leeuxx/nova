@@ -730,7 +730,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         boolean status = vo.getStatus() != null && vo.getStatus();
         String message = vo.getMessage();
         if (message == null || message.isEmpty()) {
-            message = status ? NovaI18nUtils.get("assembly.button.success") : NovaI18nUtils.get("assembly.button.fail");
+            message = status ? NovaI18nUtils.get("assembly.button.success", NovaI18nUtils.SourceType.CODE) : NovaI18nUtils.get("assembly.button.fail", NovaI18nUtils.SourceType.CODE);
         }
         return new NovaTableButton.Vo()
                 .setStatus(status)

@@ -11,14 +11,27 @@ import java.nio.charset.StandardCharsets;
 public class NovaI18nAutoConfiguration {
 
     /**
-     * 框架自己的 MessageSource Bean
+     * 框架自己的MessageSource（代码层）
      */
-    @Bean("novaMessageSource")
-    public MessageSource novaMessageSource() {
+    @Bean("novaCodeMessageSource")
+    public MessageSource novaCodeMessageSource() {
+        // 加载 classpath:i18n/nova_code_zh.properties 等语言文件
+        return getResourceBundleMessageSource("i18n/nova_code");
+    }
+
+    /**
+     * 框架自己的MessageSource（注解层）
+     */
+    @Bean("novaAnnotateMessageSource")
+    public MessageSource novaAnnotateMessageSource() {
+        // 加载 classpath:i18n/nova_messages_zh.properties 等语言文件
+        return getResourceBundleMessageSource("i18n/nova_messages");
+    }
+
+    private ResourceBundleMessageSource getResourceBundleMessageSource(String basename) {
         ResourceBundleMessageSource source = new ResourceBundleMessageSource();
         // 1. 指定资源文件基础名
-        // 加载 classpath:i18n/nova-messages.properties 及对应语言文件
-        source.setBasename("i18n/nova-messages");
+        source.setBasename(basename);
         // 2. 字符编码（必须 UTF-8）
         source.setDefaultEncoding(StandardCharsets.UTF_8.name());
         // 3. 找不到 key 时，返回 key 本身（不抛异常）

@@ -46,7 +46,7 @@ public class AttachmentController {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         if (paths.isEmpty()) {
-            throw new NovaException(NovaI18nUtils.get("attachment.error"));
+            throw new NovaException(NovaI18nUtils.get("attachment.error", NovaI18nUtils.SourceType.CODE));
         }
         return R.ok(paths);
     }

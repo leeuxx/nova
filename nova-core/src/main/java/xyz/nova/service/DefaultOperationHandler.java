@@ -12,7 +12,7 @@ public class DefaultOperationHandler implements OperationHandler<Object, Object>
 
     @Override
     public String exec(List<Object> novaIds, Object o, String param) {
-        throw new NovaException(NovaI18nUtils.get("operationHandler.none"));
+        throw new NovaException(NovaI18nUtils.get("operationHandler.none", NovaI18nUtils.SourceType.CODE));
     }
 
     @Override
