@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>xyz.nova</groupId>
+        <groupId>io.github.leeuxx</groupId>
         <artifactId>nova</artifactId>
         <version>1.0.0</version>
     </parent>
@@ -15,15 +15,27 @@
     <packaging>jar</packaging>
     <name>nova-sample</name>
 
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- 跳过部署 -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <!-- 跳过 Javadoc -->
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <!-- ★ 关键：跳过 central-publishing-maven-plugin -->
+        <central.publishing.skip>true</central.publishing.skip>
+    </properties>
+
     <dependencies>
         <!-- 引入框架 starter -->
         <dependency>
-            <groupId>xyz.nova</groupId>
+            <groupId>io.github.leeuxx</groupId>
             <artifactId>nova-spring-boot-starter</artifactId>
             <version>${nova.version}</version>
         </dependency>
         <dependency>
-            <groupId>xyz.nova</groupId>
+            <groupId>io.github.leeuxx</groupId>
             <artifactId>nova-authz</artifactId>
             <version>${nova.version}</version>
         </dependency>
@@ -63,8 +75,14 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>injected-central-publishing</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

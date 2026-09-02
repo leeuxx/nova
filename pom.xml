@@ -4,7 +4,6 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- 先继承 Spring Boot Parent -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -12,16 +11,17 @@
         <relativePath/>
     </parent>
 
-    <groupId>xyz.nova</groupId>
+    <groupId>io.github.leeuxx</groupId>
     <artifactId>nova</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <modules>
         <module>nova-spring-boot-starter</module>
-        <module>nova-sample</module>
         <module>nova-core</module>
-        <module>nova-plug</module>
+        <module>nova-plug/nova-authz</module>
+
+        <module>nova-sample</module>
     </modules>
 
     <properties>
@@ -29,13 +29,11 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <nova.version>${project.version}</nova.version>
-        <!-- 工具库版本 -->
         <hutool.version>5.8.26</hutool.version>
         <commons-lang3.version>3.14.0</commons-lang3.version>
     </properties>
 
     <dependencies>
-        <!-- Lombok（版本由 Spring Boot Parent 管理） -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -45,29 +43,26 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- 内部模块版本管理 -->
             <dependency>
-                <groupId>xyz.nova</groupId>
+                <groupId>io.github.leeuxx</groupId>
                 <artifactId>nova-core</artifactId>
                 <version>${nova.version}</version>
             </dependency>
             <dependency>
-                <groupId>xyz.nova</groupId>
+                <groupId>io.github.leeuxx</groupId>
                 <artifactId>nova-spring-boot-starter</artifactId>
                 <version>${nova.version}</version>
             </dependency>
             <dependency>
-                <groupId>xyz.nova</groupId>
+                <groupId>io.github.leeuxx</groupId>
                 <artifactId>nova-authz</artifactId>
                 <version>${nova.version}</version>
             </dependency>
-            <!-- Hutool -->
             <dependency>
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
                 <version>${hutool.version}</version>
             </dependency>
-            <!-- Apache Commons Lang3 -->
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
@@ -107,5 +102,102 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <!-- ★ 开源必须：发布插件（直接放在 plugins 下） -->
+        <plugins>
+            <!-- 中央仓库发布插件 -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.9.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>nova</publishingServerId> <!-- 上传服务器ID -->
+                    <autoPublish>false</autoPublish> <!-- 上传后自动发布 -->
+                </configuration>
+            </plugin>
+
+            <!-- ★ 开源必须：源码包 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- ★ 开源必须：Javadoc 包 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.11.2</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <additionalOptions>-Xdoclint:none</additionalOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- ★ 开源必须：GPG 签名 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.2.7</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <!-- ★ 父POM本身跳过签名 -->
+                            <skip>false</skip>
+                            <executable>C:\Program Files\GnuPG\bin\gpg.exe</executable>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
+
+    <!-- ★ 开源必须：项目名称、描述、主页地址 -->
+    <name>Nova</name>
+    <description>Nova 全栈协议框架</description>
+    <url>https://gitee.com/laoshirenggo/nova</url>
+
+    <!-- ★ 开源必须：开源协议 -->
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <!-- ★ 开源必须：开发者信息 -->
+    <developers>
+        <developer>
+            <name>Lee</name>
+            <email>467640597@qq.com</email>
+        </developer>
+    </developers>
+
+    <!-- ★ 开源必须：源码仓库地址 -->
+    <scm>
+        <connection>scm:git:https://gitee.com/laoshirenggo/nova.git</connection>
+        <developerConnection>scm:git:git@gitee.com:laoshirenggo/nova.git</developerConnection>
+        <url>https://gitee.com/laoshirenggo/nova</url>
+    </scm>
 </project>

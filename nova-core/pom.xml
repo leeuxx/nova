@@ -3,18 +3,25 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
-        <groupId>xyz.nova</groupId>
+        <groupId>io.github.leeuxx</groupId>
         <artifactId>nova</artifactId>
         <version>1.0.0</version>
     </parent>
 
     <artifactId>nova-core</artifactId>
+    <name>Nova核心模块</name>
 
+    <!-- 明确这个模块需要发布（默认就是 true，显式声明更清楚） -->
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- 跳过 Spring Boot repackage，防止 jar 结构被改变 -->
+        <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
+        <!-- ★ 关键：开启 GPG 签名，覆盖父 POM 的 skip=true -->
+        <gpg.skip>false</gpg.skip>
     </properties>
 
     <dependencies>
@@ -30,7 +37,7 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
-        <!-- Spring Boot 配置处理器（可选，用于生成配置元数据） -->
+        <!-- Spring Boot 配置处理器 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
@@ -51,14 +58,7 @@
             <artifactId>spring-boot-autoconfigure</artifactId>
         </dependency>
 
-        <!-- Spring Boot 配置处理器 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Spring Context（用于注解扫描） -->
+        <!-- Spring Context -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
@@ -82,7 +82,7 @@
             <artifactId>jackson-annotations</artifactId>
         </dependency>
 
-        <!-- MyBatis-Plus（不传递） -->
+        <!-- MyBatis-Plus（provided，用户自行引入） -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
@@ -99,21 +99,14 @@
 
     <build>
         <plugins>
-            <!-- 上传源码 -->
             <plugin>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>2.4</version>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <extensions>true</extensions>
                 <configuration>
-                    <attach>true</attach>
+                    <publishingServerId>nova</publishingServerId>
+                    <autoPublish>false</autoPublish>
                 </configuration>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

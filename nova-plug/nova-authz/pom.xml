@@ -3,59 +3,80 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
-        <groupId>xyz.nova</groupId>
-        <artifactId>nova-plug</artifactId>
+        <groupId>io.github.leeuxx</groupId>
+        <artifactId>nova</artifactId>   <!-- 直接继承根POM -->
         <version>1.0.0</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>nova-authz</artifactId>
+    <name>Nova权限模块</name>
 
+    <!-- 明确这个模块需要发布（默认就是 true，显式声明更清楚） -->
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- 跳过 Spring Boot repackage，防止 jar 结构被改变 -->
+        <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
+        <!-- ★ 关键：开启 GPG 签名，覆盖父 POM 的 skip=true -->
+        <gpg.skip>false</gpg.skip>
     </properties>
 
     <dependencies>
-        <!-- 依赖 core 模块 -->
         <dependency>
-            <groupId>xyz.nova</groupId>
+            <groupId>io.github.leeuxx</groupId>
             <artifactId>nova-core</artifactId>
         </dependency>
 
-        <!-- Web 支持 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        <!-- 雪花ID -->
+
         <dependency>
             <groupId>com.github.yitter</groupId>
             <artifactId>yitter-idgenerator</artifactId>
             <version>1.0.6</version>
         </dependency>
-        <!-- MySQL 驱动 -->
+
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
-        <!-- MyBatis-Plus（Spring Boot 3） -->
+
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
             <version>3.5.9</version>
         </dependency>
+
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-jsqlparser</artifactId>
             <version>3.5.9</version>
         </dependency>
-        <!-- Spring Boot Redis -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>nova</publishingServerId>
+                    <autoPublish>false</autoPublish>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
