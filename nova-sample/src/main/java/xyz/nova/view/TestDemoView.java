@@ -146,9 +146,9 @@ public class TestDemoView {
     private Long id;
 
     @NovaField(
-            views = @View(title = "用户名", width = "10%"),
+            views = @View(title = "user.name", width = "10%"),
             edit = @Edit(
-                    title = "用户名",
+                    title = "user.name",
                     notNull = true,
                     search = @Search,
                     group = "用户信息"
