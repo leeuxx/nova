@@ -538,14 +538,18 @@ function mountApp(menuList, config, loginExpired) {
         { label: window.__t('profile.logout'), key: 'logout', icon: mi('material-symbols:logout') }
       ]
 
-      // 右上角语言入口：展示四种语言，点击切换后由 i18n.setLocale 写 localStorage + 刷新页面
+      // 右上角语言入口：按 config.i18n.languages 渲染（默认四种），点击切换后由 i18n.setLocale 写 localStorage + 刷新页面
+      var LOCALE_LABELS = {
+        zh: { label: '中文',   icon: 'circle-flags:cn' },
+        en: { label: 'English',icon: 'circle-flags:us' },
+        ja: { label: '日本語', icon: 'circle-flags:jp' },
+        ko: { label: '한국어', icon: 'circle-flags:kr' }
+      }
+      var supportedLocales = (window.nova && window.nova.config && window.nova.config.i18n && window.nova.config.i18n.languages) || ['zh', 'en', 'ja', 'ko']
       const currentLocale = window.__appLocale || { value: 'zh' }
-      const localeDropdown = [
-        { label: '中文',   key: 'zh', icon: mi('circle-flags:cn') },
-        { label: 'English',key: 'en', icon: mi('circle-flags:us') },
-        { label: '日本語', key: 'ja', icon: mi('circle-flags:jp') },
-        { label: '한국어', key: 'ko', icon: mi('circle-flags:kr') }
-      ]
+      const localeDropdown = supportedLocales
+        .filter(function (k) { return LOCALE_LABELS[k] })
+        .map(function (k) { return { label: LOCALE_LABELS[k].label, key: k, icon: mi(LOCALE_LABELS[k].icon) } })
       const handleLocaleSelect = (key) => {
         if (!key || key === currentLocale.value) return
         if (window.__i18n && typeof window.__i18n.setLocale === 'function') {

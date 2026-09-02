@@ -35,6 +35,7 @@ window.nova.config = {
     }
   ],
   i18n: {
+      languages: ['zh', 'en', 'ja', 'ko'],
       locale: "ko"
   }
 }
