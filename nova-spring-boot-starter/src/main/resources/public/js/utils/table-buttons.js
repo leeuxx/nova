@@ -147,20 +147,38 @@ function hasRowActions(vm) {
   return hasEdit || hasDelete || hasCustom
 }
 
+// ─── 文本像素测量（canvas measureText 缓存复用）────────────
+var _measureCtx
+function textWidth(text) {
+  if (!_measureCtx) {
+    var c = document.createElement('canvas')
+    _measureCtx = c.getContext('2d')
+  }
+  _measureCtx.font = '13px -apple-system, "Microsoft YaHei", sans-serif'
+  return _measureCtx.measureText(text || '').width
+}
+
 // ─── 行操作列宽度计算 ──────────────────────────────────────
+// 用 canvas measureText 按当前 locale 实际字宽算，locale 切换整页刷新会自动重算
 function calcRowActionColWidth(linkMode, rowOperations, novaName, readonly, sysBtnHide) {
   var hasEdit   = !readonly && !linkMode && window.__hasButton(novaName, 'edit')
   var hasDelete = !readonly && window.__hasButton(novaName, 'delete')
   var btns = filterRowCustomButtons(rowOperations)
   var unfolded = btns.length > 0 ? 1 : 0
   var hasFolded = btns.length > 1
+  // 单按钮基宽：文字宽 + 8px padding；并列再加 4px 间隙
+  var btnW = function(label) { return textWidth(label) + 8 }
   var w = 0
-  if (hasEdit && hasDelete) w = 85
-  else if (hasEdit)         w = 50
-  else if (hasDelete)       w = 45
-  w += unfolded * 60             // 每个非折叠按钮
-  if (hasFolded) w += 38        // 更多图标
-  return w
+  if (hasEdit && hasDelete)   w = btnW(window.__t('common.edit')) + 4 + btnW(window.__t('common.delete'))
+  else if (hasEdit)           w = btnW(window.__t('common.edit'))
+  else if (hasDelete)         w = btnW(window.__t('common.delete'))
+  if (btns.length > 0 && !hasFolded) {
+    w += btnW(btns[0].title || '') + 4
+  } else if (hasFolded) {
+    w += btnW(btns[0].title || '') + 4 + 38  // 第一个展开 + 更多图标
+  }
+  // 安全 padding：给 cell 内边距留呼吸空间
+  return Math.ceil(w + 16)
 }
 
 // ─── 工具栏标准按钮显示条件 ────────────────────────────────
