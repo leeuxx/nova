@@ -45,9 +45,9 @@ public class TestDemo3View {
     private TestDemoView testDemoView;
 
     @NovaField(
-            views = @View(title = "岗位名称"),
+            views = @View(title = "post.name"),
             edit = @Edit(
-                    title = "岗位名称",
+                    title = "post.name",
                     notNull = true,
                     search = @Search
             )
