@@ -538,19 +538,26 @@ function mountApp(menuList, config, loginExpired) {
         { label: window.__t('profile.logout'), key: 'logout', icon: mi('material-symbols:logout') }
       ]
 
-      // 右上角语言入口：只展示当前使用的语言项（启动时由 config 确定），切语言需改 config.i18n.locale 后重启
+      // 右上角语言入口：展示四种语言，点击切换后由 i18n.setLocale 写 localStorage + 刷新页面
       const currentLocale = window.__appLocale || { value: 'zh' }
-      var LOCALE_LABELS = {
-        zh: { label: '中文',   icon: mi('circle-flags:cn') },
-        en: { label: 'English',icon: mi('circle-flags:us') },
-        ja: { label: '日本語', icon: mi('circle-flags:jp') },
-        ko: { label: '한국어', icon: mi('circle-flags:kr') }
-      }
-      const localeDropdown = [Object.assign({ key: currentLocale.value }, LOCALE_LABELS[currentLocale.value] || {})]
+      const localeDropdown = [
+        { label: '中文',   key: 'zh', icon: mi('circle-flags:cn') },
+        { label: 'English',key: 'en', icon: mi('circle-flags:us') },
+        { label: '日本語', key: 'ja', icon: mi('circle-flags:jp') },
+        { label: '한국어', key: 'ko', icon: mi('circle-flags:kr') }
+      ]
       const handleLocaleSelect = (key) => {
-        if (key !== currentLocale.value && window.__i18n && typeof window.__i18n.setLocale === 'function') {
+        if (!key || key === currentLocale.value) return
+        if (window.__i18n && typeof window.__i18n.setLocale === 'function') {
           window.__i18n.setLocale(key)
         }
+      }
+      // naive UI node-props：给当前语言项返回 style，其他项返回 {}（不动默认渲染/hover）
+      const localeNodeProps = (rawNode) => {
+        if (rawNode && rawNode.key === currentLocale.value) {
+          return { style: 'background:rgba(24,160,88,0.12)' }
+        }
+        return {}
       }
 
       // 个人中心弹窗状态
@@ -683,7 +690,7 @@ function mountApp(menuList, config, loginExpired) {
         menuTree, breadcrumbItems, naiveLocale, routeKey, isStandaloneRoute, pageTransitionName, menuSelectedKey, route,
         pageComponent, cachedNames,
         handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, userToolButtons, handleUserMenuSelect,
-        localeDropdown, handleLocaleSelect, currentLocale,
+        localeDropdown, handleLocaleSelect, currentLocale, localeNodeProps,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
         barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText, logoImg,
         showProfile, profileSaving, profileFormRef, profileForm, profileRules, submitProfile,
@@ -756,7 +763,7 @@ function mountApp(menuList, config, loginExpired) {
                           </div>
                         </template>
                         <nova-message :data-tip="__t('tabs.message_center')" />
-                        <n-dropdown :options="localeDropdown" trigger="hover" @select="handleLocaleSelect" key-field="key">
+                        <n-dropdown :options="localeDropdown" trigger="hover" @select="handleLocaleSelect" key-field="key" :node-props="localeNodeProps">
                           <div class="header-action lang-switch" style="cursor:pointer">
                             <n-icon size="20"><iconify-icon icon="material-symbols:translate"></iconify-icon></n-icon>
                           </div>

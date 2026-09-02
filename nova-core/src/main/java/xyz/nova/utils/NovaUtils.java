@@ -10,6 +10,7 @@ import xyz.nova.annotation.sub.nova.TreeType;
 import xyz.nova.annotation.sub.nova.row.ExprBool;
 import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.config.NovaApplication;
+import xyz.nova.i18n.NovaI18nUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -117,7 +118,7 @@ public class NovaUtils {
             if (show) {
                 Drill.Link link = drill.link();
                 DrillInfo drillInfo = new DrillInfo()
-                        .setDualTableTitle(drill.title())
+                        .setDualTableTitle(NovaI18nUtils.get(drill.title(), NovaI18nUtils.SourceType.ANNOTATE))
                         .setLinkNova(link.linkNova())
                         .setColumn(link.column())
                         .setJoinColumn(link.joinColumn());

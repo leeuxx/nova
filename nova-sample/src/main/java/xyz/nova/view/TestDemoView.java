@@ -40,9 +40,9 @@ import java.time.LocalDateTime;
         conditionClass = TestDemoCondition.class,
         rowOperation = {
                 @RowOperation(
-                        title = "下发指令",
-                        tip = "测试功能是否正常",
-                        callHint = "确认执行操作？",
+                        title = "send.cmd",
+                        tip = "send.tip",
+                        callHint = "send.callHint",
                         mode = RowOperation.Mode.SINGLE,
                         ifExpr = "sex == '男'",
                         novaClass = TestDemoView.TestRow.class,
@@ -54,7 +54,7 @@ import java.time.LocalDateTime;
                         )
                 ),
                 @RowOperation(
-                        title = "完结订单",
+                        title = "success.order",
                         icon = "material-symbols:amp-stories-rounded",
                         mode = RowOperation.Mode.SINGLE,
                         operationHandler = TestDemoService.class
@@ -151,7 +151,7 @@ public class TestDemoView {
                     title = "user.name",
                     notNull = true,
                     search = @Search,
-                    group = "用户信息"
+                    group = "user.info"
             )
     )
     private String name;
@@ -167,7 +167,7 @@ public class TestDemoView {
             edit = @Edit(
                     title = "用户昵称",
                     search = @Search(vague = true),
-                    group = "用户信息"
+                    group = "user.info"
             )
     )
     private String nick;
@@ -271,7 +271,7 @@ public class TestDemoView {
             edit = @Edit(
                     title = "手机号",
                     defaultValue = "13162880890",
-                    group = "用户信息"
+                    group = "user.info"
             )
     )
     private String tel;
@@ -289,7 +289,7 @@ public class TestDemoView {
                             }
                     ),
                     search = @Search(vague = true),
-                    group = "用户信息",
+                    group = "user.info",
                     defaultValue = "2"
             )
     )
@@ -308,7 +308,7 @@ public class TestDemoView {
                             refChoice = "sex"
                     ),
                     search = @Search(vague = true),
-                    group = "用户信息",
+                    group = "user.info",
                     defaultValue = "2"
             )
     )

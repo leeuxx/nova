@@ -280,15 +280,15 @@ public class NovaTableServiceImpl implements NovaTableService {
         List<NovaTableBuild.Vo.RowOperationInfo> rowOperationInfos = new ArrayList<>();
         for (RowOperation rowOperation : rowOperations) {
             NovaTableBuild.Vo.RowOperationInfo rowOperationInfo = new NovaTableBuild.Vo.RowOperationInfo()
-                    .setTitle(rowOperation.title())
-                    .setTip("".equals(rowOperation.tip()) ? rowOperation.title() : rowOperation.tip())
-                    .setCallHint(rowOperation.callHint())
+                    .setTitle(NovaI18nUtils.get(rowOperation.title(), NovaI18nUtils.SourceType.ANNOTATE))
+                    .setTip(NovaI18nUtils.get("".equals(rowOperation.tip()) ? rowOperation.title() : rowOperation.tip(), NovaI18nUtils.SourceType.ANNOTATE))
+                    .setCallHint(NovaI18nUtils.get(rowOperation.callHint(), NovaI18nUtils.SourceType.ANNOTATE))
                     .setColor(rowOperation.color())
                     .setIcon(rowOperation.icon())
                     .setMode(rowOperation.mode().name())
                     .setType(rowOperation.type().name())
                     .setIfExpr(rowOperation.ifExpr())
-                    .setGroup(rowOperation.group())
+                    .setGroup(NovaI18nUtils.get(rowOperation.group(), NovaI18nUtils.SourceType.ANNOTATE))
                     .setNovaClassName(rowOperation.novaClass().getSimpleName().equals("void") ? null : rowOperation.novaClass().getSimpleName())
                     .setOperationParam(rowOperation.param());
             if (rowOperation.type() == RowOperation.Type.NOVA) {

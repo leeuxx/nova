@@ -18,12 +18,6 @@ public class NovaI18nUtils implements ApplicationContextAware {
 
     private static MessageSource annotateMessageSource;
 
-    @Override
-    public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
-        codeMessageSource = applicationContext.getBean("novaCodeMessageSource", MessageSource.class);
-        annotateMessageSource = applicationContext.getBean("novaAnnotateMessageSource", MessageSource.class);
-    }
-
     /**
      * 获取国际化消息
      */
@@ -42,12 +36,21 @@ public class NovaI18nUtils implements ApplicationContextAware {
      * 获取国际化消息
      */
     public static String get(String key, Locale locale, SourceType sourceType, Object... args) {
+        if (key == null || key.isEmpty()) {
+            return key;
+        }
         try {
             MessageSource messageSource = sourceType == SourceType.CODE ? codeMessageSource : annotateMessageSource;
             return messageSource.getMessage(key, args, locale);
         } catch (Exception e) {
             return key;
         }
+    }
+
+    @Override
+    public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
+        codeMessageSource = applicationContext.getBean("novaCodeMessageSource", MessageSource.class);
+        annotateMessageSource = applicationContext.getBean("novaAnnotateMessageSource", MessageSource.class);
     }
 
     public enum SourceType {
