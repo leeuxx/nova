@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://nova-docs.example.com"><img src="https://img.shields.io/badge/📚-官方文档-4A90D9?style=flat-square" alt="文档"></a>
+  <a href="https://www.yuque.com/laoshiren-bne7g/dg287r"><img src="https://img.shields.io/badge/📚-使用文档-4A90D9?style=flat-square" alt="文档"></a>
   <a href="https://nova-demo.example.com"><img src="https://img.shields.io/badge/🧪-在线体验-28f439?style=flat-square" alt="体验"></a>
   <a href="https://github.com/your-org/nova"><img src="https://img.shields.io/badge/🐙-GitHub-181717?style=flat-square" alt="GitHub"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/📄-Apache%202.0-blue?style=flat-square" alt="License"></a>
