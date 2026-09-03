@@ -1,6 +1,6 @@
 
 
-# 🚀 Nova 全栈协议框架
+<h1 align="center">🚀 Nova 全栈协议框架</h1>
 
 <p align="center">
   <strong>JDK 21 · Spring Boot 3.3.4 · Naive UI · 零前端代码的管理后台框架</strong>
