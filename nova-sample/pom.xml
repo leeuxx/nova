@@ -23,7 +23,7 @@
         <maven.deploy.skip>true</maven.deploy.skip>
         <!-- 跳过 Javadoc -->
         <maven.javadoc.skip>true</maven.javadoc.skip>
-        <!-- ★ 关键：跳过 central-publishing-maven-plugin -->
+        <!-- 跳过 central-publishing-maven-plugin -->
         <central.publishing.skip>true</central.publishing.skip>
     </properties>
 
