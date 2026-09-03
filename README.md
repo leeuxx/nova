@@ -54,11 +54,11 @@ Nova 采用模块化设计，职责清晰：
     *   处理注解扫描与解析逻辑 (`NovaApplication`)。
     *   定义核心接口规范 (`DataProxy`, `OperationHandler`)。
 *   **nova-spring-boot-starter**: 启动器与桥接层。
-    *   自动配置与 MVC 控制器 (`NovaTableController`)，提供标准的增删改查 API。
+    *   自动配置与 MVC 控制器，提供标准的增删改查 API。
     *   内置基于 Vue3 + Naive UI 的前端静态资源（登录、主页、表格编辑页等）。
-*   **nova-plug (nova-authz)**: 权限模块示例。
+*   **nova-plug (nova-authz)**: 权限模块。
     *   集成了用户、角色、菜单、字典、组织架构的完整管理后台实现。
-    *   演示了如何在 Nova 框架下实现复杂的权限体系。
+    *   提供 Nova 框架下权限体系的快速接入包。
 *   **nova-sample**: 开发者演示项目。
     *   包含各种字段类型的示例（文件上传、级联选择、树形关联等），可直接运行体验。
 
