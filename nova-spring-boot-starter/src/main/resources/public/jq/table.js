@@ -151,6 +151,7 @@ window.NovaTableJQ = (function ($) {
         target.buttons        = resp.data.buttons      || {}
         target.sysBtnHide     = resp.data.sysBtnHide   || {}
         target.popMap         = resp.data.pops         || {}
+        target.tipHtml        = (resp.data.tooltip && resp.data.tooltip.value) || ''   // 顶部提示面板内容；空则不显示小三角
         var fields = resp.data.search || []
         // 提取 tapSearch 字段，从 searchFields 中移除
         var tapSearchField = null
@@ -1070,6 +1071,7 @@ window.NovaTableJQ = (function ($) {
         target.appendageMap  = resp.data.appendage   || {}
         target.linkMap       = resp.data.link        || {}
         target.drillMap      = resp.data.drill       || {}
+        target.tipHtml       = (resp.data.tooltip && resp.data.tooltip.value) || ''   // 顶部提示面板内容；picker 不显示，但保持字段一致
         var fields = resp.data.search || []
         target.searchFields = fields
         var form = {}

@@ -84,6 +84,9 @@ public class NovaTableBuild {
         @Comment("表格行系统按钮隐藏控制信息")
         private NovaTableBuild.Vo.SysBtnHide sysBtnHide;
 
+        @Comment("提示框信息")
+        private Tooltip tooltip;
+
         @Data
         @Accessors(chain = true)
         public static class Search {
@@ -635,5 +638,15 @@ public class NovaTableBuild {
             @Comment("选取框表达式（满足则隐藏）")
             private String rowSelect;
         }
+
+        @Data
+        @Accessors(chain = true)
+        public static class Tooltip {
+
+            @Comment("提示内容")
+            private String value;
+
+        }
+
     }
 }

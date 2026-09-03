@@ -366,6 +366,11 @@ public class NovaTableServiceImpl implements NovaTableService {
             sysBtnHide.setRowSelect(sysBtnShowInfo.getRowSelect().value());
         }
         vo.setSysBtnHide(sysBtnHide);
+        // 获取表格提示框信息
+        NovaUtils.TooltipInfo tooltipInfo = NovaUtils.getTooltip(novaTableBuild.getNovaName());
+        NovaTableBuild.Vo.Tooltip tooltip = new NovaTableBuild.Vo.Tooltip()
+                .setValue(tooltipInfo.getValue());
+        vo.setTooltip(tooltip);
         return vo;
     }
 

@@ -1,11 +1,8 @@
 package xyz.nova.annotation;
 
 import xyz.nova.annotation.comment.Comment;
-import xyz.nova.annotation.sub.nova.Drill;
-import xyz.nova.annotation.sub.nova.SysBtnHide;
+import xyz.nova.annotation.sub.nova.*;
 import xyz.nova.service.data.DataProxy;
-import xyz.nova.annotation.sub.nova.Layout;
-import xyz.nova.annotation.sub.nova.TreeType;
 import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.service.data.DefaultDataProxy;
 
@@ -51,5 +48,8 @@ public @interface Nova {
 
     @Comment("双表视图表列宽度压缩系数（值越小列越窄, 不可小于0, 最大值为1表示原样）")
     double dualShrink() default 0.8;
+
+    @Comment("提示框配置")
+    Tooltip tooltip() default @Tooltip;
 
 }

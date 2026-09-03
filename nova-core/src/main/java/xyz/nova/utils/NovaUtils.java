@@ -4,9 +4,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import xyz.nova.annotation.Nova;
 import xyz.nova.annotation.comment.Comment;
-import xyz.nova.annotation.sub.nova.Drill;
-import xyz.nova.annotation.sub.nova.Layout;
-import xyz.nova.annotation.sub.nova.TreeType;
+import xyz.nova.annotation.sub.nova.*;
 import xyz.nova.annotation.sub.nova.row.ExprBool;
 import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.config.NovaApplication;
@@ -155,6 +153,30 @@ public class NovaUtils {
         return dualShrink <= 0 || dualShrink > 1 ? 1D : dualShrink;
     }
 
+    /**
+     * 获取提示信息
+     *
+     * @param className 类名
+     * @return 提示信息
+     */
+    public static TooltipInfo getTooltip(String className) {
+        TooltipInfo tooltipInfo = new TooltipInfo();
+        NovaApplication.ScanNova scanNova = NovaApplication.getScanNovas().get(className);
+        if (scanNova == null) {
+            return tooltipInfo;
+        }
+        Nova nova = scanNova.getNova();
+        Tooltip tooltip = nova.tooltip();
+        tooltipInfo.setValue(tooltip.value());
+        Class<? extends TooltipHandler> tooltipHandler = tooltip.tooltipHandler();
+        if(tooltipHandler != TooltipHandler.class) {
+            TooltipHandler service = SpringBeanUtils.getBean(tooltipHandler);
+            String value = service.getTooltip(tooltip.value());
+            tooltipInfo.setValue(value);
+        }
+        return tooltipInfo;
+    }
+
     public static boolean exprBool(boolean show, ExprBool exprBool) {
         if (!show || !exprBool.value()) {
             return false;
@@ -201,4 +223,14 @@ public class NovaUtils {
         private String joinColumn;
 
     }
+
+    @Data
+    @Accessors(chain = true)
+    public static class TooltipInfo {
+
+        @Comment("提示内容")
+        private String value;
+
+    }
+
 }
