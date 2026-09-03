@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  📖 <strong>使用文档：</strong><a href="https://www.yuque.com/laoshiren-bne7g/nova">https://www.yuque.com/laoshiren-bne7g/dg287r</a>
+  📖 <strong>使用文档：</strong><a href="https://www.yuque.com/laoshiren-bne7g/nova">https://www.yuque.com/laoshiren-bne7g/nova</a>
 </p>
 
 <p align="center">
