@@ -1,0 +1,171 @@
+/* 主 nova 表格顶部提示面板：纯手动浮层，不参与布局、不占高度 */
+
+/* 容器：absolute + height:0，作为 chip 和 panel 的定位上下文 */
+.nova-tip-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.nova-tip-bar > * {
+  pointer-events: auto;
+}
+
+/* chip：居中浮在 v-else 顶部（即 tab-bar 下沿） */
+.nova-tip-tab {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 102px;
+  height: 12px;
+  border-radius: 0 0 11px 11px;
+  background: #ffffff;
+  border: 0 solid var(--n-border-color, #e5e7eb);
+  border-width: 0 1px 1px 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  z-index: 51;
+  line-height: 1;
+}
+
+.nova-tip-tab:hover,
+.nova-tip-tab.open {
+  background: rgba(24, 160, 88, 0.1);
+  border-color: rgba(24, 160, 88, 0.4);
+}
+
+/* 箭头：纯文本字符 ▾（不用 iconify-icon），flex 子项由父级居中 */
+.nova-tip-arrow {
+  display: block;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--n-text-color-3, #888);
+  transition: transform 0.3s ease, color 0.2s ease;
+}
+
+.nova-tip-tab:hover .nova-tip-arrow,
+.nova-tip-tab.open .nova-tip-arrow {
+  color: #18a058;
+}
+
+.nova-tip-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+/* 面板：absolute 紧贴 chip 下方（top: 22px 无缝），宽度填充主区域，max-height: 30vh */
+.nova-tip-panel {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(800px, calc(100% - 32px));
+  max-height: 30vh;
+  background: var(--n-card-color, #fafafa);
+  border-radius: 8px;
+  border: 1px solid var(--n-border-color, #e5e7eb);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  z-index: 50;
+}
+
+.nova-tip-body {
+  max-height: 30vh;
+  overflow-y: auto;
+  padding: 16px 24px 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--n-text-color-2, #333);
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #bbb #fafafa;
+  scrollbar-gutter: stable;
+}
+
+.nova-tip-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nova-tip-body::-webkit-scrollbar-track {
+  background: #fafafa;
+  border-radius: 3px;
+}
+
+.nova-tip-body::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 3px;
+}
+
+.nova-tip-body::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+.nova-tip-content h3,
+.nova-tip-content h4 {
+  margin: 8px 0 6px;
+}
+
+.nova-tip-content p {
+  margin: 6px 0;
+}
+
+/* 暗色模式微调 */
+html.dark .nova-tip-tab,
+.dark .nova-tip-tab {
+  background: #2a2a30;
+  border-color: #3a3a42;
+}
+
+html.dark .nova-tip-tab:hover,
+html.dark .nova-tip-tab.open,
+.dark .nova-tip-tab:hover,
+.dark .nova-tip-tab.open {
+  background: rgba(24, 160, 88, 0.18);
+  border-color: rgba(24, 160, 88, 0.4);
+}
+
+html.dark .nova-tip-panel,
+.dark .nova-tip-panel {
+  background: #18181c;
+  border-color: #2e2e35;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+html.dark .nova-tip-body,
+.dark .nova-tip-body {
+  color: rgba(255, 255, 255, 0.85);
+  scrollbar-color: #555 #18181c;
+}
+
+html.dark .nova-tip-body::-webkit-scrollbar-track,
+.dark .nova-tip-body::-webkit-scrollbar-track {
+  background: #18181c;
+}
+
+html.dark .nova-tip-body::-webkit-scrollbar-thumb,
+.dark .nova-tip-body::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+html.dark .nova-tip-body::-webkit-scrollbar-thumb:hover,
+.dark .nova-tip-body::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+html.dark .nova-tip-content h3,
+.dark .nova-tip-content h3 {
+  color: #6cb1ff !important;
+}
+
+html.dark .nova-tip-content a,
+.dark .nova-tip-content a {
+  color: #6cb1ff;
+}

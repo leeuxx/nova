@@ -319,6 +319,9 @@ const NovaTable = {
       popMap:         {},  // pop 弹窗配置：字段名 → { title, param, handleName }
       popActiveKey:   '',  // 当前打开 popover 的 "行主键@列field"，用于精确定位单行单元格
       popTooltipShow: {},  // 每行 pop 列完整内容 tooltip 是否显示（仅文本溢出时 true）
+      tipShow:        false,  // 顶部提示面板是否展开
+      tipHideTimer:   null,   // 收起延时器，划过边界时 200ms 延迟再关
+      tipHtml:        '<h3 style="color:#2080f0">表格操作提示</h3><p>这是一段测试用的提示文案，用于预览 hover 展开收起的效果。</p><p>鼠标移开后会自动收起（带 200ms 延迟）。</p><p>超出 30vh 时会出现纵向滚动条。</p><p>本面板仅在主 nova 表格界面显示，子表 / 表单 / 选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。选择器都不会出现。</p>',
       popTitle:       '',
       popLoading:     false,
       popList:        [],  // [{ type, name, value }]
@@ -448,6 +451,14 @@ const NovaTable = {
       return typeof w.__hasButton === 'function' && w.__hasButton(this.novaName || this.novaNameProp, 'edit')
     },
     embSize() { return undefined },
+    isMainNovaView() {
+      // 主 nova 表格视图：排除 viewMode / pickerMode / embeddedMode / linkMode / dualMode
+      return !this.viewMode && !this.pickerMode && !this.embeddedMode && !this.linkMode && !this.dualMode
+    },
+    showNovaTip() {
+      // 仅在主 nova 表格视图且 tipHtml 非空时显示顶部提示
+      return this.isMainNovaView && !!this.tipHtml
+    },
     tapSearchOptions() {
       const f = this.tapSearchField
       if (!f) return []
@@ -1495,6 +1506,20 @@ const NovaTable = {
     isRowSelectDisabled(row) {
       var expr = (this.sysBtnHide || {}).rowSelect
       return !!(expr && window.evalShowExpr(expr, row))
+    },
+    onTipEnter() {
+      if (this.tipHideTimer) { clearTimeout(this.tipHideTimer); this.tipHideTimer = null }
+      this.tipShow = true
+    },
+    onTipLeave() {
+      if (this.tipHideTimer) clearTimeout(this.tipHideTimer)
+      this.tipHideTimer = setTimeout(() => { this.tipShow = false }, 200)
+    },
+    onTipToggle() {
+      this.tipShow = !this.tipShow
+      if (this.tipShow && this.tipHideTimer) {
+        clearTimeout(this.tipHideTimer); this.tipHideTimer = null
+      }
     },
     tableRowClassName(row) {
       var cls = []
@@ -4036,6 +4061,29 @@ const NovaTable = {
       </n-modal>
     </div>
     <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="'position:relative;' + (pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:16px 8px 4px 16px' : 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:16px 8px 4px 16px'))">
+
+      <!-- 顶部提示面板：纯手动浮层（仅主 nova 视图）。触发 chip + 面板均为 absolute，不参与布局、不占高度 -->
+      <div v-if="showNovaTip" class="nova-tip-bar">
+        <div
+          class="nova-tip-tab"
+          :class="{ open: tipShow }"
+          @click.stop="onTipToggle"
+          @mouseenter="onTipEnter"
+          @mouseleave="onTipLeave"
+        >
+          <span class="nova-tip-arrow" :class="{ rotated: tipShow }">▾</span>
+        </div>
+        <div
+          v-show="tipShow"
+          class="nova-tip-panel"
+          @mouseenter="onTipEnter"
+          @mouseleave="onTipLeave"
+        >
+          <div class="nova-tip-body">
+            <div class="nova-tip-content" v-html="tipHtml"></div>
+          </div>
+        </div>
+      </div>
 
       <!-- 主表 /build 构建中：loading 覆盖层（覆盖搜索区+表格），hidden 时淡出 -->
       <div class="table-build-overlay" :class="buildLoading ? '' : 'hidden'">
