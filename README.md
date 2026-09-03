@@ -1,7 +1,9 @@
-<h1 align="center">🚀 Nova 全栈协议框架</h1>
+
+
+# 🚀 Nova 全栈协议框架
 
 <p align="center">
-  <strong>JDK 21 · Spring Boot 3.3.4 · Naive UI · 零前端代码的后台协议框架</strong>
+  <strong>JDK 21 · Spring Boot 3.3.4 · Naive UI · 零前端代码的管理后台框架</strong>
 </p>
 
 <p align="center">
@@ -11,7 +13,6 @@
 <p align="center">
   <a href="https://www.yuque.com/laoshiren-bne7g/dg287r"><img src="https://img.shields.io/badge/📚-使用文档-4A90D9?style=flat-square" alt="文档"></a>
   <a href="https://nova-demo.example.com"><img src="https://img.shields.io/badge/🧪-在线体验-28f439?style=flat-square" alt="体验"></a>
-  <a href="https://github.com/your-org/nova"><img src="https://img.shields.io/badge/🐙-GitHub-181717?style=flat-square" alt="GitHub"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/📄-Apache%202.0-blue?style=flat-square" alt="License"></a>
 </p>
 
@@ -19,38 +20,53 @@
 
 ## ✨ 简介
 
-**Nova** 是一款注解驱动的后台协议框架，帮助开发者**零前端代码**实现管理系统搭建！
-
-📖 **使用文档**：[https://www.yuque.com/laoshiren-bne7g/dg287r](https://www.yuque.com/laoshiren-bne7g/dg287r)
+**Nova** 是一款基于注解驱动的全栈后台协议框架。开发者只需编写 Java 注解描述数据与视图，Nova 便会自动编译生成前端渲染协议（JSON），由前端框架（Naive UI）实时解析并渲染出完整的增删改查管理界面。
 
 ### 核心理念
 
-> 用 Java 注解描述视图 → Nova 编译为渲染协议 → 自动生成管理界面
+> **后端定义视图，前端只负责渲染。**
 
-❌ 不绑定任何数据源
-
-❌ 不生成任何代码
-
-❌ 不提供任何 CRUD 模板
-
-**你写的不是页面，是页面的元数据。**
+❌ **不绑定任何数据源** (MyBatis, MyBatis-Plus, JPA 皆可接入)  
+❌ **不生成任何代码文件** (运行期动态解析)  
+❌ **不提供 CRUD 模板** (一切皆协议)
 
 ---
 
 ## 🧩 核心特性
 
-| 特性 | 说明 |
+| 特性 | 描述 |
 |:---|:---|
-| 🧬 **现代底座** | 基于 JDK 21 + Spring Boot 3.x + Naive UI |
-| 📡 **视图全协议** | 后端注解驱动 UI，全程 0 前端代码 |
-| 🧩 **多形态布局** | 支持表格、树、左右双表、Tab 视图等多种布局 |
-| 🔐 **权限单点真理** | 菜单 / 操作 / 子表均由后端统一裁剪 |
-| 🔗 **上下文联动** | 主从数据、交互状态可穿透传递 |
-| 🚪 **可逃逸** | 内置能力覆盖不了的场景，可通过 Custom View 无缝接入原生自定义页面 |
+| 🧬 **现代技术底座** | 基于 JDK 21 + Spring Boot 3.x + Naive UI 构建 |
+| 📡 **视图全协议驱动** | 后端通过注解定义界面元素，全程 0 前端代码参与绑定 |
+| 🧩 **多形态布局** | 原生支持表格、树形、左右双表、Tab 页签等多种复杂布局 |
+| 🔐 **后端权限管控** | 菜单、操作按钮、字段级权限均由后端统一裁剪返回 |
+| 🔗 **上下文联动** | 支持主从数据联动、交互状态传递与穿透 |
+| 🚪 **灵活可扩展** | 提供 Custom View (Tpl) 和 Custom JS，无缝接入自定义业务逻辑 |
+
+---
+
+## 🏗️ 项目架构
+
+Nova 采用模块化设计，职责清晰：
+
+*   **nova-core**: 核心引擎。
+    *   定义所有注解（`@Nova`, `@NovaField`, `@Edit` 等）。
+    *   处理注解扫描与解析逻辑 (`NovaApplication`)。
+    *   定义核心接口规范 (`DataProxy`, `OperationHandler`)。
+*   **nova-spring-boot-starter**: 启动器与桥接层。
+    *   自动配置与 MVC 控制器 (`NovaTableController`)，提供标准的增删改查 API。
+    *   内置基于 Vue3 + Naive UI 的前端静态资源（登录、主页、表格编辑页等）。
+*   **nova-plug (nova-authz)**: 权限模块示例。
+    *   集成了用户、角色、菜单、字典、组织架构的完整管理后台实现。
+    *   演示了如何在 Nova 框架下实现复杂的权限体系。
+*   **nova-sample**: 开发者演示项目。
+    *   包含各种字段类型的示例（文件上传、级联选择、树形关联等），可直接运行体验。
 
 ---
 
 ## 📦 代码示例
+
+只需定义实体类并实现 `DataProxy` 接口，即可自动生成管理页面：
 
 ```java
 @Data
@@ -86,12 +102,12 @@ public class UserNova {
                                     @VL(value = "2", label = "女", color = "#fe6767")
                             }
                     ),
-                    notNull = true,
-                    search = @Search
+                    notNull = true
             )
     )
     private Integer sex;
 
+    // 复杂组件演示：多选标签
     @NovaField(
             views = @View(title = "技术栈"),
             edit = @Edit(
@@ -102,41 +118,12 @@ public class UserNova {
                             vl = {
                                     @VL(value = "Java", label = "Java"),
                                     @VL(value = "Python", label = "Python"),
-                                    @VL(value = "C++", label = "C++"),
-                                    @VL(value = "go", label = "Golang"),
-                                    @VL(value = "js", label = "JavaScript")
+                                    @VL(value = "Go", label = "Golang")
                             }
-                    ),
-                    notNull = true,
-                    search = @Search(vague = true)
+                    )
             )
     )
     private String skill;
-
-    @NovaField(
-            views = @View(title = "年龄"),
-            edit = @Edit(title = "年龄")
-    )
-    private Integer age;
-
-    @NovaField(
-            views = @View(title = "邮箱"),
-            edit = @Edit(title = "邮箱")
-    )
-    private String email;
-
-    @NovaField(
-            views = @View(title = "备注"),
-            edit = @Edit(title = "备注", type = Edit.Type.TEXTAREA, desc = "这是说明")
-    )
-    private String remarks;
-
-    @NovaField(
-            views = @View(title = "创建时间"),
-            edit = @Edit(title = "创建时间", type = Edit.Type.DATE, dateType = @DateType, show = false)
-    )
-    private LocalDateTime createTime;
-
 }
 ```
 
@@ -154,3 +141,36 @@ public class UserNova {
 </p>
 
 ---
+
+## 🚀 快速开始
+
+1.  **添加依赖**
+    在你的 Spring Boot 项目 `pom.xml` 中引入 Starter：
+    ```xml
+    <dependency>
+        <groupId>xyz.nova</groupId>
+        <artifactId>nova-spring-boot-starter</artifactId>
+        <version>${latest.version}</version>
+    </dependency>
+    ```
+
+2.  **启用扫描**
+    在启动类上添加 `@NovaScan` 注解：
+    ```java
+    @NovaScan
+    @SpringBootApplication
+    public class Application {
+        public static void main(String[] args) {
+            SpringApplication.run(Application.class, args);
+        }
+    }
+    ```
+
+3.  **定义 Nova 视图**
+    创建一个类，添加 `@Nova` 注解，并实现 `DataProxy` 接口。
+
+---
+
+## 📄 许可证
+
+Nova 采用 [Apache License 2.0](LICENSE) 开源协议。
