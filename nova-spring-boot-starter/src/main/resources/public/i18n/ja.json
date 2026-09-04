@@ -190,6 +190,7 @@
   "table.viewing": "プレビュー中...",
   "table.edit_unavailable": "編集不可",
   "table.delete_unavailable": "削除不可",
+  "table.confirm_delete_n_items": "この {n} 件のデータを削除しますか？",
   "table.preview_rich": "リッチテキストをプレビュー",
   "table.no_file": "ファイルなし",
   "table.data_nodes": "ノード",

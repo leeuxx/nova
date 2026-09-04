@@ -190,6 +190,7 @@
   "table.viewing": "미리보기 중...",
   "table.edit_unavailable": "편집 불가",
   "table.delete_unavailable": "삭제 불가",
+  "table.confirm_delete_n_items": "이 {n}개 항목을 삭제하시겠습니까?",
   "table.preview_rich": "리치 텍스트 미리보기",
   "table.no_file": "파일 없음",
   "table.data_nodes": "노드",

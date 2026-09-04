@@ -190,6 +190,7 @@
   "table.viewing": "Previewing...",
   "table.edit_unavailable": "Edit unavailable",
   "table.delete_unavailable": "Cannot delete",
+  "table.confirm_delete_n_items": "Are you sure you want to delete these {n} items?",
   "table.preview_rich": "Preview",
   "table.no_file": "No files",
   "table.data_nodes": "Nodes",
