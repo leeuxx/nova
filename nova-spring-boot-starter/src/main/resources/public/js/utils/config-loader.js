@@ -3,8 +3,8 @@
   var DEFAULTS = {
     // 系统名称
     name: 'Nova UI Admin',
-    // 描述（延迟求值：读取时才调 __t，因为本文件加载早于 i18n.js）
-    desc: function () { return window.__t('app.system_desc') },
+    // 系统描述
+    desc: "全栈式后台协议框架",
     // 版权信息
     copyrightTxt: '© 2026 Nova UI Admin. All Rights Reserved.',
     // logo 图片
