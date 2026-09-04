@@ -6,6 +6,9 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   color: #333;
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;          /* flex 子项允许收缩到 content 以下，ellipsis 才生效 */
+  max-width: 150px;      /* sidebar 220 - logo 28 - gap 8 - 内边距 ≈ 150 */
   display: inline-block;
   transition: all 0.3s ease;
 }
