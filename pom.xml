@@ -20,8 +20,6 @@
         <module>nova-spring-boot-starter</module>
         <module>nova-core</module>
         <module>nova-plug/nova-authz</module>
-
-        <module>nova-sample</module>
     </modules>
 
     <properties>
