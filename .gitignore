@@ -7,6 +7,8 @@ node_modules/
 
 # 测试模块：本地调试用，不入库
 /test-module/
+# 演示模块：本地调试用，不入库
+/showhow-module/
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
