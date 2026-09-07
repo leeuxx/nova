@@ -35,30 +35,6 @@ function darkenHex(hex, factor) {
   return '#' + [r,g,b].map(function(v){ return v.toString(16).padStart(2,'0') }).join('')
 }
 
-// ─── QrCodeCell 二维码组件（使用 qrcodejs 库）────────────────────
-var QrCodeCell = {
-  props: { text: String, size: { type: Number, default: 80 } },
-  mounted() {
-    if (window.QRCode && this.text) {
-      var s = this.size
-      this.qrcode = new window.QRCode(this.$refs.box, {
-        text: this.text,
-        width: s,
-        height: s,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: window.QRCode.CorrectLevel.L
-      })
-    }
-  },
-  beforeUnmount() {
-    if (this.qrcode) this.qrcode.clear()
-  },
-  render() {
-    return h('div', { ref: 'box', style: 'line-height:0;display:inline-block', onClick: (e) => this.$emit('click', e) })
-  }
-}
-
 // ─── showByExpr 表达式解析器 ────────────────────────────────────
 // 支持语法：field op value [&& / || ...] 以及括号分组
 // op: = != > >= < <= = null != null
@@ -234,7 +210,7 @@ window.evalShowExpr = evalShowExpr
 
 const NovaTable = {
   name: 'NovaTable',
-  components: { NovaFormThis: window.NovaFormThis, QrCodeCell: QrCodeCell, NovaImagePreview: NovaImagePreview, NovaRollNumber: NovaRollNumber, NovaFileList: window.NovaFileList },
+  components: { NovaFormThis: window.NovaFormThis, NovaImagePreview: NovaImagePreview, NovaRollNumber: NovaRollNumber, NovaFileList: window.NovaFileList },
 
   props: {
     pickerMode:         { type: Boolean, default: false },
@@ -976,13 +952,17 @@ const NovaTable = {
               })
             }
             if (tableShowType === 'QR_CODE') {
-              const badge = isMulti ? h('span', { style: 'flex-shrink:0;cursor:pointer;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px', onClick: open }, '+' + (urls.length - 1)) : null
+              // 二维码预览：把文本转成 data URL，复用 NovaImagePreview（与普通图片同一组件）
+              const qrSrcs = urls.map(function (t) { return window.NovaQRCode && window.NovaQRCode.toDataURL(t, 200) }).filter(Boolean)
               return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
                 default: () => window.__t('table.click_view_detail'),
-                trigger: () => h('span', { style: 'display:inline-flex;align-items:center;gap:4px;cursor:pointer', onClick: open }, [
-                  h(QrCodeCell, { text: urls[0], size: 20 }),
-                  badge
-                ])
+                trigger: () => h(NovaImagePreview, {
+                  srcList: qrSrcs,
+                  width: 20,
+                  height: 20,
+                  objectFit: 'cover',
+                  showDelete: false
+                })
               })
             }
             if (tableShowType === 'VIDEO') {
@@ -5103,26 +5083,22 @@ const NovaTable = {
           <span class="gallery-title">{{ tableAttachPreviewField ? (tableAttachPreviewField.title || __t('table.attach_preview')) : __t('table.attach_preview') }}</span>
         </div>
       </template>
-      <!-- IMAGE / QR_CODE -->
-      <div v-if="(tableAttachPreviewType === 'IMAGE' || tableAttachPreviewType === 'QR_CODE') && tableAttachPreviewUrls.length > 0" class="gallery-wrap">
+      <!-- IMAGE -->
+      <div v-if="tableAttachPreviewType === 'IMAGE' && tableAttachPreviewUrls.length > 0" class="gallery-wrap">
         <div class="gallery-body">
           <div class="gallery-sider">
             <div class="gallery-thumb-list">
               <div v-for="(url, idx) in tableAttachPreviewUrls" :key="idx" class="gallery-thumb-item" @click="tableAttachPreviewIndex = idx">
-                <img v-if="tableAttachPreviewType === 'IMAGE'" :src="url" class="gallery-thumb-img" :class="{active: (tableAttachPreviewIndex || 0) === idx}" />
-                <div v-else class="gallery-thumb-img" :class="{active: (tableAttachPreviewIndex || 0) === idx}" style="display:flex;align-items:center;justify-content:center"><QrCodeCell :text="url" :size="40" /></div>
+                <img :src="url" class="gallery-thumb-img" :class="{active: (tableAttachPreviewIndex || 0) === idx}" />
               </div>
             </div>
           </div>
           <div class="gallery-stage">
-            <img v-if="tableAttachPreviewType === 'IMAGE'" :src="tableAttachPreviewUrls[tableAttachPreviewIndex || 0]" class="gallery-main-img" />
-            <div v-else style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">
-              <QrCodeCell :key="tableAttachPreviewIndex" :text="tableAttachPreviewUrls[tableAttachPreviewIndex || 0]" :size="200" />
-            </div>
+            <img :src="tableAttachPreviewUrls[tableAttachPreviewIndex || 0]" class="gallery-main-img" />
           </div>
         </div>
         <div class="gallery-url-wrap" :title="__t('table.click_copy') + ': ' + tableAttachPreviewUrls[tableAttachPreviewIndex || 0]" @click="copyText(tableAttachPreviewUrls[tableAttachPreviewIndex || 0])">
-          <div class="gallery-url-label">{{ tableAttachPreviewType === 'QR_CODE' ? __t('table.qrcode_content') : __t('table.image_url') }}</div>
+          <div class="gallery-url-label">{{ __t('table.image_url') }}</div>
           <div class="gallery-url-text">{{ tableAttachPreviewUrls[tableAttachPreviewIndex || 0] }}</div>
         </div>
       </div>

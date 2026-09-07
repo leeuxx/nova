@@ -138,7 +138,7 @@ window.LoginPage = {
 
   <!-- 右栏表单区 -->
   <div class="login-form-area">
-    <div style="width:400px;max-width:90vw">
+    <div style="width:380px;max-width:90vw">
 
     <n-card class="login-card" :bordered="false" content-style="padding:56px 32px 24px;">
       <n-form

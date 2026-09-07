@@ -167,7 +167,7 @@ public class NovaUtils {
         }
         Nova nova = scanNova.getNova();
         Tooltip tooltip = nova.tooltip();
-        tooltipInfo.setValue(tooltip.value());
+        tooltipInfo.setValue(NovaI18nUtils.get(tooltip.value(), NovaI18nUtils.SourceType.ANNOTATE));
         Class<? extends TooltipHandler> tooltipHandler = tooltip.tooltipHandler();
         if(tooltipHandler != TooltipHandler.class) {
             TooltipHandler service = SpringBeanUtils.getBean(tooltipHandler);
