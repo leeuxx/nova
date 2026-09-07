@@ -1743,6 +1743,18 @@ const NovaTable = {
       if (dateInfo.pickerMode === 'HISTORY') return (ts) => ts > todayTs
       return undefined
     },
+    searchDatePlaceholder(field) {
+      const dateInfo = this.dateMap && this.dateMap[field.field]
+      const type = dateInfo && dateInfo.type
+      if (field.vague) {
+        if (type === 'YEAR')      return [window.__t('table.start_year'), window.__t('table.end_year')]
+        if (type === 'YEAR_MONTH') return [window.__t('table.start_year_month'), window.__t('table.end_year_month')]
+        return [window.__t('table.start_time'), window.__t('table.end_time')]
+      }
+      if (type === 'YEAR')      return window.__t('table.select_year')
+      if (type === 'YEAR_MONTH') return window.__t('table.select_year_month')
+      return window.__t('table.select_field_placeholder', { name: field.title })
+    },
     handleCheck(keys)   {
       // 去重：防止 n-data-table 在某些情况下传重复值
       var uniqueKeys = []
@@ -4189,7 +4201,9 @@ const NovaTable = {
                 v-model:value="filterForm[field.field]"
                 :type="datePickerType(field.field, field.vague, false)"
                 :is-date-disabled="datePickerDisabled(field.field, false)"
-                :placeholder="field.vague ? [__t('table.start_time'), __t('table.end_time')] : __t('table.select_field_placeholder', { name: field.title })"
+                :placeholder="field.vague ? '' : searchDatePlaceholder(field)"
+                :start-placeholder="field.vague ? searchDatePlaceholder(field)[0] : undefined"
+                :end-placeholder="field.vague ? searchDatePlaceholder(field)[1] : undefined"
                 :size="embSize"
                 clearable style="flex:1"
               />
