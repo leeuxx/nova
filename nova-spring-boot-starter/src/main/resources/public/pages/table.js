@@ -939,7 +939,7 @@ const NovaTable = {
             const d = new Date(ts)
             const p = n => String(n).padStart(2, '0')
             if (type === 'YEAR')       return String(d.getFullYear())
-            if (type === 'MONTH')      return d.getFullYear() + '-' + p(d.getMonth() + 1)
+            if (type === 'YEAR_MONTH') return d.getFullYear() + '-' + p(d.getMonth() + 1)
             if (type === 'DATE')       return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
             if (type === 'TIME')       return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds())
             // DATE_TIME 及默认
@@ -1587,7 +1587,7 @@ const NovaTable = {
     },
     opDateType(field) {
       var info = this.opFormDateMap[field]
-      var map = { DATE: 'date', TIME: 'time', DATE_TIME: 'datetime', MONTH: 'month', YEAR: 'year' }
+      var map = { DATE: 'date', TIME: 'time', DATE_TIME: 'datetime', YEAR_MONTH: 'month', YEAR: 'year' }
       return (info && map[info.type]) || 'date'
     },
     opTagOpts(field) {
@@ -1728,8 +1728,8 @@ const NovaTable = {
     },
     datePickerType(field, vague, forEdit) {
       const dateInfo = this.dateMap && this.dateMap[field]
-      const single = { DATE: 'date', TIME: 'time', DATE_TIME: 'datetime', MONTH: 'month', YEAR: 'year' }
-      const range  = { DATE: 'daterange', TIME: 'time', DATE_TIME: 'datetimerange', MONTH: 'monthrange', YEAR: 'yearrange' }
+      const single = { DATE: 'date', TIME: 'time', DATE_TIME: 'datetime', YEAR_MONTH: 'month', YEAR: 'year' }
+      const range  = { DATE: 'daterange', TIME: 'time', DATE_TIME: 'datetimerange', YEAR_MONTH: 'monthrange', YEAR: 'yearrange' }
       const map = vague ? range : single
       return (dateInfo && map[dateInfo.type]) || (vague ? 'daterange' : 'date')
     },
@@ -2253,7 +2253,7 @@ const NovaTable = {
     opFormAppNumInfo(n, f)  { return ((this.opFormAppTabBuild[n] || {}).numberMap || {})[f] || {} },
     opFormAppDateType(n, f) {
       var info = ((this.opFormAppTabBuild[n] || {}).dateMap || {})[f]
-      var map = { DATE: 'date', TIME: 'time', DATE_TIME: 'datetime', MONTH: 'month', YEAR: 'year' }
+      var map = { DATE: 'date', TIME: 'time', DATE_TIME: 'datetime', YEAR_MONTH: 'month', YEAR: 'year' }
       return (info && map[info.type]) || 'date'
     },
     opFormAppTagOpts(n, f) {
@@ -3933,7 +3933,7 @@ const NovaTable = {
       const d = new Date(ts)
       const p = n => String(n).padStart(2, '0')
       if (type === 'YEAR')  return String(d.getFullYear())
-      if (type === 'MONTH') return d.getFullYear() + '-' + p(d.getMonth() + 1)
+      if (type === 'YEAR_MONTH') return d.getFullYear() + '-' + p(d.getMonth() + 1)
       if (type === 'DATE')  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
       return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' +
              p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds())

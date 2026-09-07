@@ -334,7 +334,7 @@ var NovaRefForm = {
       var d = new Date(ts)
       var p = function(n) { return String(n).padStart(2, '0') }
       if (type === 'YEAR')       return String(d.getFullYear())
-      if (type === 'MONTH')      return d.getFullYear() + '-' + p(d.getMonth() + 1)
+      if (type === 'YEAR_MONTH') return d.getFullYear() + '-' + p(d.getMonth() + 1)
       if (type === 'DATE')       return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
       if (type === 'TIME')       return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds())
       return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds())

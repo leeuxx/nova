@@ -121,8 +121,8 @@ window.NovaFieldThis = {
     },
     datePickerType(field, vague, forEdit) {
       var dateInfo = this.dateMap && this.dateMap[field]
-      var single = { DATE: 'date', TIME: 'time', DATE_TIME: 'datetime', MONTH: 'month', YEAR: 'year' }
-      var range  = { DATE: 'daterange', TIME: 'time', DATE_TIME: 'datetimerange', MONTH: 'monthrange', YEAR: 'yearrange' }
+      var single = { DATE: 'date', TIME: 'time', DATE_TIME: 'datetime', YEAR_MONTH: 'month', YEAR: 'year' }
+      var range  = { DATE: 'daterange', TIME: 'time', DATE_TIME: 'datetimerange', YEAR_MONTH: 'monthrange', YEAR: 'yearrange' }
       var map = vague ? range : single
       return (dateInfo && map[dateInfo.type]) || (vague ? 'daterange' : 'date')
     },
