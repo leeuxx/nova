@@ -13,10 +13,7 @@ import xyz.nova.service.data.DataProxy;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.*;
 
 public class DataProxyUtils {
@@ -74,6 +71,16 @@ public class DataProxyUtils {
                     val = ld.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
                 } else if (val instanceof Date d) {
                     val = d.getTime();
+                } else if (val instanceof YearMonth ym) {
+                    val = ym.atDay(1)
+                            .atStartOfDay(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli();
+                } else if (val instanceof Year y) {
+                    val = y.atDay(1)
+                            .atStartOfDay(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli();
                 }
                 map.put(field.getName(), val);
             } catch (IllegalAccessException e) {
@@ -175,6 +182,18 @@ public class DataProxyUtils {
         }
         if (type == Date.class) {
             return new Date(Long.parseLong(value));
+        }
+        if (type == YearMonth.class) {
+            LocalDate date = Instant.ofEpochMilli(Long.parseLong(value))
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+            return YearMonth.from(date);
+        }
+        if (type == Year.class) {
+            LocalDate date = Instant.ofEpochMilli(Long.parseLong(value))
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+            return Year.from(date);
         }
         // 其他类型交给 Spring ConversionService
         ConversionService cs = SpringBeanUtils.getBean(ConversionService.class);
@@ -289,6 +308,18 @@ public class DataProxyUtils {
         }
         if (type == Date.class) {
             return new Date(Long.parseLong(value));
+        }
+        if (type == YearMonth.class) {
+            LocalDate date = Instant.ofEpochMilli(Long.parseLong(value))
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+            return YearMonth.from(date);
+        }
+        if (type == Year.class) {
+            LocalDate date = Instant.ofEpochMilli(Long.parseLong(value))
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+            return Year.from(date);
         }
         ConversionService cs = SpringBeanUtils.getBean(ConversionService.class);
         if (cs.canConvert(String.class, type)) {
