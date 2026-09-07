@@ -15,9 +15,7 @@ import xyz.nova.entity.data.Tree;
 import xyz.nova.error.NovaException;
 
 import java.lang.reflect.Field;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -245,6 +243,12 @@ public class NovaMyBatisUtils {
         }
         if (date instanceof Date d) {
             return d.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter);
+        }
+        if (date instanceof YearMonth ym) {
+            return ym.format(formatter);
+        }
+        if (date instanceof Year y) {
+            return y.format(formatter);
         }
         throw new NovaException("Failed to format date condition value: '" + date + "'");
     }
