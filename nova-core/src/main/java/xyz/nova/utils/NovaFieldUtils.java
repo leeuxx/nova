@@ -543,7 +543,7 @@ public class NovaFieldUtils {
                         .setBy(appendageType.by())
                         .setRefName(appendageType.refName())
                         .setDualTable(novaFieldInfo.getType() == Edit.Type.APPENDAGES && NovaUtils.exprBool(appendageType.dualTable(), appendageType.show()))
-                        .setDualTableTitle(edit.title());
+                        .setDualTableTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE));
                 appendageTypeInfos.put(field, appendageTypeInfo);
             }
         });
@@ -569,7 +569,7 @@ public class NovaFieldUtils {
                         .setReferenceClass(novaFieldInfo.getFieldClass())
                         .setContext(Arrays.asList(linkType.context()))
                         .setDualTable(NovaUtils.exprBool(linkType.dualTable(), linkType.show()))
-                        .setDualTableTitle(edit.title());
+                        .setDualTableTitle(NovaI18nUtils.get(edit.title(), NovaI18nUtils.SourceType.ANNOTATE));
                 linkInfos.put(field, linkInfo);
                 // 获取中间类中的LINK_TARGET声明属性
                 Class<?> fieldClass = novaFieldInfo.getFieldClass();
