@@ -9,10 +9,13 @@
 <p align="center">
   📖 <strong>使用文档：</strong><a href="https://www.yuque.com/laoshiren-bne7g/nova">https://www.yuque.com/laoshiren-bne7g/nova</a>
 </p>
+<p align="center">
+  🔑 <strong>演示账号：</strong>show / 123456
+</p>
 
 <p align="center">
   <a href="https://www.yuque.com/laoshiren-bne7g/nova"><img src="https://img.shields.io/badge/📚-使用文档-4A90D9?style=flat-square" alt="文档"></a>
-  <a href="https://nova-demo.example.com"><img src="https://img.shields.io/badge/🧪-在线体验-28f439?style=flat-square" alt="体验"></a>
+  <a href="http://182.43.87.39:8989"><img src="https://img.shields.io/badge/🧪-在线体验-28f439?style=flat-square" alt="体验"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/📄-Apache%202.0-blue?style=flat-square" alt="License"></a>
 </p>
 
