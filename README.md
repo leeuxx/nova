@@ -9,6 +9,9 @@
 <p align="center">
   📖 <strong>使用文档：</strong><a href="https://www.yuque.com/laoshiren-bne7g/nova">https://www.yuque.com/laoshiren-bne7g/nova</a>
 </p>
+<p align="center">
+  🔑 <strong>演示账号：</strong>show / 123456
+</p>
 
 <p align="center">
   <a href="https://www.yuque.com/laoshiren-bne7g/nova"><img src="https://img.shields.io/badge/📚-使用文档-4A90D9?style=flat-square" alt="文档"></a>
