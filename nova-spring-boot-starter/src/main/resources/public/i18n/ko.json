@@ -201,6 +201,7 @@
   "table.no_file": "파일 없음",
   "table.data_nodes": "노드",
   "table.items_per_page": "{n}개/페이지",
+  "table.link_tree_detail_empty": "왼쪽 노드를 선택하여 세부 정보를 확인하세요",
 
   "editor.placeholder": "내용을 입력해주세요",
   "editor_preview.empty": "미리보기 없음"

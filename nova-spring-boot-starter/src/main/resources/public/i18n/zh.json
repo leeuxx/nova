@@ -201,6 +201,7 @@
   "table.no_file": "暂无文件",
   "table.data_nodes": "数据节点",
   "table.items_per_page": "{n} 条/页",
+  "table.link_tree_detail_empty": "请选择左侧节点查看详情",
 
   "editor.placeholder": "请输入内容",
   "editor_preview.empty": "无内容"

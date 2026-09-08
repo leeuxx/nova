@@ -201,6 +201,7 @@
   "table.no_file": "ファイルなし",
   "table.data_nodes": "ノード",
   "table.items_per_page": "{n} 件/ページ",
+  "table.link_tree_detail_empty": "左側のノードを選択して詳細を表示してください",
 
   "editor.placeholder": "入力してください",
   "editor_preview.empty": "プレビューなし"

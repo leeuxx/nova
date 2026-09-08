@@ -201,6 +201,7 @@
   "table.no_file": "No files",
   "table.data_nodes": "Nodes",
   "table.items_per_page": "{n}/page",
+  "table.link_tree_detail_empty": "Please select a node on the left to view details",
 
   "editor.placeholder": "Write something",
   "editor_preview.empty": "Nothing to preview"

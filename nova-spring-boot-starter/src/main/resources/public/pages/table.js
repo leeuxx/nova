@@ -116,6 +116,84 @@ function parseShowExpr(expr) {
   try { return parseOr() } catch(e) { return { op: 'lit', val: true } }
 }
 
+// 全局字段展示格式化工具（只读详情面板复用：LINK 树节点详情、REFERENCE 预览等）
+window.NovaFieldView = (function() {
+  function fmtDate(ts, type) {
+    var d = new Date(ts)
+    var p = function(n) { return String(n).padStart(2, '0') }
+    if (type === 'YEAR')  return String(d.getFullYear())
+    if (type === 'YEAR_MONTH') return d.getFullYear() + '-' + p(d.getMonth() + 1)
+    if (type === 'DATE')  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' +
+           p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds())
+  }
+  function format(f, val, ctx) {
+    ctx = ctx || {}
+    var choiceMap    = ctx.choiceMap    || {}
+    var dateMap      = ctx.dateMap      || {}
+    var numberMap    = ctx.numberMap    || {}
+    var referenceMap = ctx.referenceMap || {}
+    if (val === null || val === undefined || val === '') return ''
+    var type = f.type
+    // CHOICE: 翻译 value → label
+    if (type === 'CHOICE') {
+      var ci = choiceMap[f.field]
+      if (ci) {
+        var vals = ci.selectType === 'MULTI' ? String(val).split(',') : [String(val)]
+        return vals.map(function(v) {
+          var o = (ci.values || []).find(function(x) { return x.value === v })
+          return o ? o.label : v
+        }).join('、')
+      }
+      return String(val)
+    }
+    // DATE: 按 dateMap.type 格式化时间戳
+    if (type === 'DATE') {
+      var ts = Number(val)
+      if (!ts || isNaN(ts)) return String(val)
+      var di = dateMap[f.field]
+      return fmtDate(ts, di && di.type)
+    }
+    // BOOLEAN: 是 / 否
+    if (type === 'BOOLEAN') {
+      return (val === 'true' || val === true) ? (window.__t ? window.__t('common.yes') : '是') : (window.__t ? window.__t('common.no') : '否')
+    }
+    // TAG: 数组或逗号串拼接
+    if (type === 'TAG') {
+      return Array.isArray(val) ? val.join('、') : String(val).split(',').filter(Boolean).join('、')
+    }
+    // REFERENCE: 取 _display
+    if (type === 'REFERENCE') {
+      return String((ctx.formData && ctx.formData[f.field + '_display']) || val)
+    }
+    // LINK / APPENDAGE: 取 _display
+    if (type === 'LINK' || type === 'APPENDAGE') {
+      var d = (ctx.formData && ctx.formData[f.field + '_display'])
+      return d ? String(d) : String(val)
+    }
+    // NUMBER: 按 numberMap.format 格式化
+    if (type === 'NUMBER') {
+      var ni = numberMap[f.field]
+      var n = Number(val)
+      if (isNaN(n)) return String(val)
+      if (ni && ni.format) {
+        var parts = ni.format.split('.')
+        var decimals = parts.length > 1 ? parts[1].length : 0
+        return n.toFixed(decimals)
+      }
+      return String(n)
+    }
+    // ATTACHMENT: 文件名 / 数量提示（具体预览走 NovaAttachmentPreview）
+    if (type === 'ATTACHMENT') {
+      if (Array.isArray(val)) return val.length ? val.length + ' 个文件' : ''
+      return String(val)
+    }
+    // 默认纯文本
+    return String(val)
+  }
+  return { format: format }
+})()
+
 function evalShowNode(node, formData) {
   if (!node) return true
   if (node.op === 'lit')  return !!node.val
@@ -447,13 +525,7 @@ const NovaTable = {
     isEmbTab() {
       if (!this.formTab) return false
       if (this.formTab.startsWith('emb_')) return true
-      if (this.formTab.startsWith('link_')) {
-        // linkTree 模式下不放大弹窗
-        var tapNovaName = this.formTab.slice(5)
-        var build = this.linkTabBuild[tapNovaName]
-        if (build && build.linkTarget && build.linkTarget.linkTree) return false
-        return true
-      }
+      if (this.formTab.startsWith('link_')) return true
       return false
     },
     dualTableSubTables() {
@@ -3134,7 +3206,11 @@ const NovaTable = {
             novaIdFieldName: bd.novaIdFieldName,
             choiceMap: bd.choice || {},
             referenceMap: bd.reference || {},
-            linkMap: bd.link || {}
+            linkMap: bd.link || {},
+            dateMap: bd.date || {},
+            numberMap: bd.number || {},
+            tagMap: bd.tag || {},
+            attachmentMap: bd.attachment || {}
           }
           self.linkTabBuild = newBuild
           self.linkTreeLoading[tapNovaName] = false
@@ -3231,6 +3307,20 @@ const NovaTable = {
               treeParentField: treeParentField,
               treeStorageField: treeStorageField,
               tableColumns: buildData.tableColumns || []
+            }
+            // 目标表完整 build：给右侧详情面板用（含 group、choiceMap、dateMap 等元信息）
+            newBuild.linkTreeTargetBuild = {
+              tableColumns:    buildData.tableColumns || [],
+              choice:          buildData.choice      || {},
+              date:            buildData.date        || {},
+              attachment:      buildData.attachment   || {},
+              reference:       buildData.reference    || {},
+              link:            buildData.link         || {},
+              number:          buildData.number       || {},
+              tag:             buildData.tag          || {},
+              edit:            buildData.edit         || [],
+              layout:          buildData.layout       || {},
+              novaIdFieldName: buildData.novaIdFieldName
             }
             self.linkTabBuild[tapNovaName] = newBuild
             self._startLinkTreeLoad(tapNovaName, stateKey, row, lt, targetNovaName)
@@ -3941,23 +4031,13 @@ const NovaTable = {
       return icons[f.type] || 'mdi:format-list-bulleted-square'
     },
     viewDisplayValue(f) {
-      const val = this.formData[f.field]
-      if (val === null || val === undefined || val === '') return ''
-      const choiceInfo = this.choiceMap && this.choiceMap[f.field]
-      if (choiceInfo) {
-        const vals = choiceInfo.selectType === 'MULTI' ? String(val).split(',') : [String(val)]
-        return vals.map(v => { const o = (choiceInfo.values || []).find(x => x.value === v); return o ? o.label : v }).join('、')
-      }
-      if (f.type === 'DATE') {
-        const ts = Number(val); if (!ts || isNaN(ts)) return String(val)
-        const dateInfo = this.dateMap && this.dateMap[f.field]
-        const d = new Date(ts)
-        return this.formatDateTs(ts, dateInfo && dateInfo.type)
-      }
-      if (f.type === 'BOOLEAN') return (val === 'true' || val === true) ? window.__t('common.yes') : window.__t('common.no')
-      if (f.type === 'TAG') return Array.isArray(val) ? val.join('、') : String(val).split(',').filter(Boolean).join('、')
-      if (f.type === 'REFERENCE') return String(this.formData[f.field + '_display'] || val)
-      return String(val)
+      return window.NovaFieldView.format(f, this.formData[f.field], {
+        choiceMap:    this.choiceMap,
+        dateMap:      this.dateMap,
+        numberMap:    this.numberMap,
+        referenceMap: this.referenceMap,
+        formData:     this.formData
+      })
     },
     handlePageChange(current) {
       if (this.isTree) return
@@ -4648,6 +4728,7 @@ const NovaTable = {
             :link-tree-default-expanded-keys="linkTreeDefaultExpandedKeys"
             :link-tree-expanded-keys="linkTreeExpandedKeys"
             :link-tree-display-keys="linkTreeDisplayKeys"
+            :link-tree-node-map="linkTreeNodeMap"
             :link-tree-loading="linkTreeLoading"
             :link-tree-search-keyword="linkTreeSearchKeyword"
             :loading-style="loadingStyle"

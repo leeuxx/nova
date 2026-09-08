@@ -1237,3 +1237,45 @@ body.dark .nova-tiptap-content .ProseMirror a { color: #36ad6a; }
 }
 body.dark .nova-tiptap-content .ProseMirror p.is-editor-empty:first-child::before { color: #666; }
 
+/* ─── LINK 树模式：右侧详情面板 ─── */
+/* 只读字段框：模拟 n-input readonly 视觉，与 REFERENCE 表单一致 */
+.nova-readonly-field {
+  min-height: 34px;
+  padding: 4px 12px;
+  border: 1px solid #dcdfe6;
+  border-radius: 3px;
+  background: #fafbfc;
+  line-height: 24px;
+  color: #333;
+  word-break: break-word;
+  font-size: 13px;
+}
+.nova-readonly-field.is-empty { color: #bbb; }
+.nova-readonly-field.is-editor { padding: 8px 12px; }
+.dark .nova-readonly-field { background: #1f1f23; border-color: #3a3a3a; color: #e0e0e0; }
+.dark .nova-readonly-field.is-empty { color: #555; }
+
+/* 富文本样式 */
+.link-tree-detail-editor { word-break:break-word; line-height:1.6; color:#333 }
+.link-tree-detail-editor p { margin:0 0 8px 0 }
+.link-tree-detail-editor h1,
+.link-tree-detail-editor h2,
+.link-tree-detail-editor h3,
+.link-tree-detail-editor h4,
+.link-tree-detail-editor h5,
+.link-tree-detail-editor h6 { margin:12px 0 8px 0; font-weight:600 }
+.link-tree-detail-editor h1 { font-size:20px }
+.link-tree-detail-editor h2 { font-size:18px }
+.link-tree-detail-editor h3 { font-size:16px }
+.link-tree-detail-editor blockquote { border-left:3px solid #ccc; padding-left:12px; color:#666; margin:8px 0 }
+.link-tree-detail-editor pre,
+.link-tree-detail-editor code { background:#f5f5f5; border-radius:3px; padding:2px 6px; font-family:Consolas,Monaco,monospace; font-size:13px }
+.link-tree-detail-editor pre { padding:8px 12px; overflow:auto }
+.link-tree-detail-editor ul,
+.link-tree-detail-editor ol { padding-left:24px; margin:8px 0 }
+.link-tree-detail-editor a { color:#2563eb; text-decoration:underline }
+.dark .link-tree-detail-editor { color:#d0d0d0 }
+.dark .link-tree-detail-editor blockquote { border-left-color:#555; color:#aaa }
+.dark .link-tree-detail-editor pre,
+.dark .link-tree-detail-editor code { background:#2a2a2a; color:#e0e0e0 }
+
