@@ -34,4 +34,10 @@ public interface AuthorityProxy {
     default Login.User register(Register register) {
         throw new NovaException("AuthorityProxy.register未实现");
     }
+
+    @Comment("获取服务名;微服务使用")
+    default String getServiceName(String token, String novaName) {
+        throw new NovaException("AuthorityProxy.getServiceName未实现");
+    }
+
 }

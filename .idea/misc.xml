@@ -4,6 +4,9 @@
     <list size="1">
       <item index="0" class="java.lang.String" itemvalue="lombok.SneakyThrows" />
     </list>
+    <writeAnnotations>
+      <writeAnnotation name="org.springframework.beans.factory.annotation.Autowired" />
+    </writeAnnotations>
   </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="MavenProjectsManager">

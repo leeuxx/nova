@@ -38,6 +38,8 @@ public class Menu implements Serializable {
 
     private String param;
 
+    private String serviceName;
+
     private LocalDateTime createTime;
 
 }

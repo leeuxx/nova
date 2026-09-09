@@ -5,9 +5,14 @@ import lombok.AllArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
+import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.stereotype.Component;
 import xyz.nova.annotation.NovaRouter;
-import xyz.nova.i18n.NovaI18nUtils;
+import xyz.nova.constant.NovaConst;
 import xyz.nova.service.authority.AuthorityProxy;
 import xyz.nova.utils.AuthorityUtils;
 import xyz.nova.utils.NovaUtils;
@@ -19,6 +24,7 @@ import java.util.Objects;
 @Aspect
 @Component
 @AllArgsConstructor
+@Conditional(NovaRouterAspect.SlaveModeCondition.class)
 public class NovaRouterAspect {
 
     private AuthorityProxy authorityProxy;
@@ -51,4 +57,30 @@ public class NovaRouterAspect {
         return joinPoint.proceed(joinPoint.getArgs());
     }
 
+    public static class SlaveModeCondition extends SpringBootCondition {
+
+        @Override
+        public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
+            // 检查是否有cloud依赖
+            boolean hasCloudDependency;
+            try {
+                Class.forName("com.alibaba.cloud.nacos.NacosDiscoveryProperties");
+                hasCloudDependency = true;
+            } catch (ClassNotFoundException e) {
+                hasCloudDependency = false;
+            }
+            if (!hasCloudDependency) {
+                return ConditionOutcome.match("Standalone mode, need auth");  // ⭐ 单体 → 加载
+            }
+            // 读取 nova.cloud.master 配置
+            String master = context.getEnvironment().getProperty(NovaConst.CLOUD_MASTER_KEY, "false");
+            boolean isMaster = "true".equals(master);
+            if (isMaster) {
+                return ConditionOutcome.match("Master mode, need auth");      // ⭐ 主节点 → 加载
+            } else {
+                return ConditionOutcome.noMatch("Slave mode, no auth");       // ⭐ 子节点 → 不加载
+            }
+        }
+
+    }
 }

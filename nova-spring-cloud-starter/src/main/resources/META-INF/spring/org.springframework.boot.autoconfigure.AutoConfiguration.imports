@@ -1,0 +1,3 @@
+xyz.nova.cloud.config.NovaCouldAutoConfiguration
+xyz.nova.cloud.config.NovaRestTemplateConfig
+xyz.nova.cloud.config.NovaCloudConfig

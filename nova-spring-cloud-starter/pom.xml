@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.leeuxx</groupId>
+        <artifactId>nova</artifactId>
+        <version>1.2.0</version>
+    </parent>
+
+    <artifactId>nova-spring-cloud-starter</artifactId>
+    <name>Nova Spring Cloud 启动模块</name>
+
+    <!-- 明确这个模块需要发布（默认就是 true，显式声明更清楚） -->
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- 跳过 Spring Boot repackage，防止 jar 结构被改变 -->
+        <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
+        <!-- 开启 GPG 签名，覆盖父 POM 的 skip=true -->
+        <gpg.skip>false</gpg.skip>
+    </properties>
+
+    <dependencies>
+        <!-- 依赖 core 模块 -->
+        <dependency>
+            <groupId>io.github.leeuxx</groupId>
+            <artifactId>nova-core</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.leeuxx</groupId>
+            <artifactId>nova-spring-boot-starter</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+
+        <!-- ============ Spring Cloud 基础 ============ -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-commons</artifactId>
+        </dependency>
+        <!-- ============ Bootstrap 配置支持 ============ -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        </dependency>
+        <!-- ============ Nacos 服务注册与发现 ============ -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+        <!-- ============ Nacos 配置中心 ============ -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <!-- ============ 负载均衡（RestTemplate + Feign 需要） ============ -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+        <!-- ============ OpenFeign（服务间调用，optional 让用户选择） ============ -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- ============ Spring Cloud Context（事件、生命周期等） ============ -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-context</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>nova</publishingServerId>
+                    <autoPublish>false</autoPublish>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

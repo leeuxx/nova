@@ -151,7 +151,16 @@ public class MenuNova {
     private String sysButton;
 
     @NovaField(
-            views = @View(title = "排序", width = "5%", desc = "正序"),
+            views = @View(title = "服务名", width = "8%", defaultValue = "-"),
+            edit = @Edit(
+                    title = "服务名",
+                    group = "扩展信息"
+            )
+    )
+    private String serviceName;
+
+    @NovaField(
+            views = @View(title = "排序", width = "6%", desc = "正序"),
             edit = @Edit(
                     title = "排序",
                     desc = "正序",
@@ -162,7 +171,7 @@ public class MenuNova {
     private Integer sort;
 
     @NovaField(
-            views = @View(title = "显示状态", width = "9%"),
+            views = @View(title = "显示状态", width = "8%"),
             edit = @Edit(
                     title = "显示状态",
                     booleanType = @BooleanType(

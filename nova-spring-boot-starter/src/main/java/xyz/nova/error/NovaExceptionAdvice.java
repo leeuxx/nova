@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @Slf4j
 @AllArgsConstructor
-@RestControllerAdvice(NovaConst.CONTROLLER_PACKAGE)
+@RestControllerAdvice({NovaConst.CONTROLLER_PACKAGE, NovaConst.CONTROLLER_CLOUD_PACKAGE})
 public class NovaExceptionAdvice {
 
     /**

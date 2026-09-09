@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class AuthorityProxyImpl implements AuthorityProxy {
 
     public static String redisKeyMenu = "nova:login:menu:";
+    public static String redisKeyService = "nova:login:service:";
     public static String redisKeyUser = "nova:login:user:";
 
     private final NovaAuthorityConfig novaAuthorityConfig;
@@ -43,6 +44,7 @@ public class AuthorityProxyImpl implements AuthorityProxy {
         // token续期
         if (result) {
             redisTemplate.expire(redisKeyMenu + token, novaAuthorityConfig.getExpireTime(), TimeUnit.MINUTES);
+            redisTemplate.expire(redisKeyService + token, novaAuthorityConfig.getExpireTime(), TimeUnit.MINUTES);
             redisTemplate.expire(redisKeyUser + token, novaAuthorityConfig.getExpireTime(), TimeUnit.MINUTES);
         }
         return result;
@@ -77,6 +79,7 @@ public class AuthorityProxyImpl implements AuthorityProxy {
         }
         // 构建缓存（Hash结构，key=菜单code，所有菜单包括BUTTON都缓存）
         Map<String, String> menuMap = new LinkedHashMap<>();
+        Map<String, String> serviceMap = new LinkedHashMap<>();
         int sort = 0;
         for (xyz.nova.entity.Menu menu : menus) {
             JSONObject menuObj = new JSONObject()
@@ -93,9 +96,11 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                             : null
                     )
                     .set("show", menu.getStatus())
-                    .set("sort", sort++);
-            // NOVA菜单附加systemButton聚合信息
+                    .set("sort", sort++)
+                    .set("serviceName", menu.getServiceName());
+            // NOVA菜单
             if ("NOVA".equals(menu.getType())) {
+                // 附加systemButton聚合信息
                 List<xyz.nova.entity.Menu> buttons = buttonGroupMap.get(menu.getId());
                 if (buttons != null && !buttons.isEmpty()) {
                     JSONObject systemButton = new JSONObject();
@@ -114,12 +119,21 @@ public class AuthorityProxyImpl implements AuthorityProxy {
                     }
                     menuObj.set("systemButton", systemButton);
                 }
+                // 写入Nova和服务名映射map
+                if (menu.getServiceName() != null && !menu.getServiceName().isEmpty()) {
+                    serviceMap.put(menu.getValue(), menu.getServiceName());
+                }
             }
             menuMap.put(menu.getCode(), menuObj.toString());
         }
         // 存入Redis Hash（菜单）
         redisTemplate.opsForHash().putAll(redisKeyMenu + token, menuMap);
         redisTemplate.expire(redisKeyMenu + token, novaAuthorityConfig.getExpireTime(), TimeUnit.MINUTES);
+        // 存入Redis Hash（服务名）
+        if (!serviceMap.isEmpty()) {
+            redisTemplate.opsForHash().putAll(redisKeyService + token, serviceMap);
+            redisTemplate.expire(redisKeyService + token, novaAuthorityConfig.getExpireTime(), TimeUnit.MINUTES);
+        }
         // 存入Redis String（用户信息）
         JSONObject userObj = new JSONObject()
                 .set("id", user.getId())
@@ -138,6 +152,7 @@ public class AuthorityProxyImpl implements AuthorityProxy {
     @Override
     public void logout(String token) {
         redisTemplate.delete(redisKeyMenu + token);
+        redisTemplate.delete(redisKeyService + token);
         redisTemplate.delete(redisKeyUser + token);
     }
 
@@ -185,5 +200,15 @@ public class AuthorityProxyImpl implements AuthorityProxy {
     public JSONObject getUser() {
         String user = redisTemplate.opsForValue().get(redisKeyUser + AuthorityUtils.getToken());
         return JSONUtil.parseObj(user);
+    }
+
+    @Override
+    public String getServiceName(String token, String novaName) {
+        Map<Object, Object> entries = redisTemplate.opsForHash().entries(redisKeyService + token);
+        if (entries.isEmpty()) {
+            return null;
+        }
+        Object o = entries.get(novaName);
+        return o == null ? null : o.toString();
     }
 }
