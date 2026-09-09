@@ -154,6 +154,8 @@ public class MenuNova {
             views = @View(title = "服务名", width = "8%", defaultValue = "-"),
             edit = @Edit(
                     title = "服务名",
+                    showBy = @ShowBy("type == 'NOVA'"),
+                    desc = "服务在注册中心的名称",
                     group = "扩展信息"
             )
     )
