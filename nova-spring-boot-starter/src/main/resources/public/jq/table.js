@@ -824,7 +824,7 @@ window.NovaTableJQ = (function ($) {
     var novaIdField = target.novaIdFieldName
     var pkVal = String(row[novaIdField])
 
-    window.fetchApi.post('/nova/table/details', { novaName: novaName, storageFieldValue: pkVal }).then(function(resp) {
+    window.fetchApi.post('/nova/table/details', { novaName: novaName, sourceType: 'MAIN', storageFieldValue: pkVal }).then(function(resp) {
         var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
         if (!t) return
         var detailRow = resp.data

@@ -413,10 +413,15 @@ public class NovaTableServiceImpl implements NovaTableService {
         String novaName = novaTableDetails.getNovaName();
         String storageFieldValue = novaTableDetails.getStorageFieldValue();
         DataProxy<?, ?> dataProxy = DataProxyUtils.getDataProxy(novaName);
-        return DataProxyUtils.toMapWithTimestamp(dataProxy.details(new Details()
+        Object details = dataProxy.details(new Details()
                 .setNovaName(novaName)
                 .setValue(storageFieldValue)
-        ));
+                .setType(novaTableDetails.getSourceType().equals("APPENDAGE") ? Details.Type.REFERENCE_ID : Details.Type.NOVA_ID)
+        );
+        if (details == null) {
+            return null;
+        }
+        return DataProxyUtils.toMapWithTimestamp(details);
     }
 
     @Override

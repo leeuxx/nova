@@ -73,7 +73,7 @@ window.NovaTableJQ_app = (function () {
       target.appendageTabReady = rdyNoVal
       return
     }
-    window.fetchApi.post('/nova/table/details', { novaName: appNovaName, storageFieldValue: String(storageVal) }).then(function(resp) {
+    window.fetchApi.post('/nova/table/details', { novaName: appNovaName, sourceType: 'APPENDAGE', storageFieldValue: String(storageVal) }).then(function(resp) {
       var t = window.vmMap && window.vmMap[key]
       if (!t) return
       if (resp.data) fillAppendageData(t, appNovaName, resp.data)
