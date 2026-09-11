@@ -326,6 +326,7 @@ const NovaTable = {
       refPickerStack: [],      tableWrapperWidth: 0,
       novaName:       '',
       novaIdFieldName:    null,
+      buildError:     null,
       tableData:      [],
       rawTableData:   [],
       tableColumns:   [],
@@ -3780,6 +3781,10 @@ const NovaTable = {
       })
       target._sourceRefFields = sourceRefFields
     },
+    retryBuild() {
+      this.buildError = null
+      if (window.NovaTableJQ && this.novaName) window.NovaTableJQ.onRouteChange(this.novaName)
+    },
     reloadDual(novaName, sourceFields) {
       if (this._vmKey && window.vmMap) delete window.vmMap[this._vmKey]
       this.novaName = novaName
@@ -4131,6 +4136,14 @@ const NovaTable = {
           <div v-if="(formData[previewField.field] || []).length === 0" class="preview-empty">{{ __t('table.no_file') }}</div>
         </div>
       </n-modal>
+    </div>
+    <div v-else-if="buildError" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:400px;gap:16px;color:var(--n-text-color-3)">
+      <iconify-icon icon="mdi:cloud-off-outline" width="96" style="color:var(--n-text-color-3);opacity:0.5"></iconify-icon>
+      <div style="font-size:16px;font-weight:500;color:var(--n-text-color-2)">{{ buildError.message }}</div>
+      <n-button quaternary type="primary" size="small" style="padding:14px 14px" @click="retryBuild">
+        <template #icon><iconify-icon icon="mdi:refresh" width="14"></iconify-icon></template>
+        {{ __t('tabs.reload') }}
+      </n-button>
     </div>
     <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="'position:relative;' + (pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:16px 8px 4px 16px' : 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:16px 8px 4px 16px'))">
 

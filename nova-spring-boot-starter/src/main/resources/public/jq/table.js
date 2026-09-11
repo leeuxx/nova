@@ -121,8 +121,10 @@ window.NovaTableJQ = (function ($) {
       window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function (resp) {
         var target = window.vmMap && window.vmMap[key]
         if (!target) return
+        target.buildError = null
         if (!resp.data) {
           target._buildPending = false
+          target.buildError = { code: resp.code, message: resp.msg || 'build failed' }
           setBuildLoading(target, false)
           return
         }
@@ -362,12 +364,13 @@ window.NovaTableJQ = (function ($) {
         if (window.Vue && window.Vue.nextTick) window.Vue.nextTick(function () { updateTableHeight() })
         // 表格页面 build 完成 → 结束顶部加载条（仅路由切换后生效，embedded 等无 start 则空操作）
         if (window.__novaPageLoading) window.__novaPageLoading.finish()
-      }).catch(function () {
+      }).catch(function (err) {
         var target = window.vmMap && window.vmMap[key]
         if (target) {
           target._buildPending = false
           if (target._buildLoadingHold) target._buildLoadingHold = false
           setBuildLoading(target, false)
+          target.buildError = { code: (err && err.code) || 0, message: (err && err.message) || 'build failed' }
         }
         if (window.__novaPageLoading) window.__novaPageLoading.finish()
       })
