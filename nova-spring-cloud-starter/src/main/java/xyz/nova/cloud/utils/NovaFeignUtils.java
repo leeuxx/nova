@@ -1,5 +1,6 @@
 package xyz.nova.cloud.utils;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -7,6 +8,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 import xyz.nova.service.authority.AuthorityProxy;
@@ -42,6 +45,11 @@ public class NovaFeignUtils {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         headers.set("token", AuthorityUtils.getToken());
         headers.set("menuCode", AuthorityUtils.getMenuCode());
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes != null) {
+            HttpServletRequest request = attributes.getRequest();
+            headers.set("accept-language", request.getHeader("accept-language"));
+        }
         HttpEntity<MultiValueMap<String, HttpEntity<?>>> requestEntity = new HttpEntity<>(multipartBody, headers);
         RestTemplate restTemplate = SpringBeanUtils.getBean("novaRestTemplate", RestTemplate.class);
         return restTemplate.postForObject(url, requestEntity, R.class);
@@ -67,6 +75,11 @@ public class NovaFeignUtils {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("token", AuthorityUtils.getToken());
         headers.set("menuCode", AuthorityUtils.getMenuCode());
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes != null) {
+            HttpServletRequest request = attributes.getRequest();
+            headers.set("accept-language", request.getHeader("accept-language"));
+        }
         HttpEntity<Object> requestEntity = new HttpEntity<>(requestBody, headers);
         RestTemplate restTemplate = SpringBeanUtils.getBean("novaRestTemplate", RestTemplate.class);
         return restTemplate.postForObject(url, requestEntity, R.class);
