@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import xyz.nova.annotation.NovaRouter;
 import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.config.RestMappingController;
-import xyz.nova.cloud.utils.NovaFeignUtils;
+import xyz.nova.cloud.utils.NovaRpcUtils;
 import xyz.nova.dto.AttachmentUpload;
 import xyz.nova.service.file.AttachmentProxy;
 import xyz.nova.utils.R;
@@ -24,7 +24,7 @@ public class AttachmentController {
     @PostMapping("upload")
     @NovaRouter
     public R<List<String>> upload(@ModelAttribute @Validated AttachmentUpload attachmentUpload) {
-        return NovaFeignUtils.upload(attachmentUpload.getNovaName(), "/nova/attachment/upload", attachmentUpload.getFiles(), () -> {
+        return NovaRpcUtils.upload(attachmentUpload.getNovaName(), "/nova/attachment/upload", attachmentUpload.getFiles(), () -> {
             xyz.nova.controller.AttachmentController attachmentController = new xyz.nova.controller.AttachmentController(attachmentProxy);
             return attachmentController.upload(attachmentUpload);
         });

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import xyz.nova.annotation.NovaRouter;
 import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.config.RestMappingController;
-import xyz.nova.cloud.utils.NovaFeignUtils;
+import xyz.nova.cloud.utils.NovaRpcUtils;
 import xyz.nova.dto.NovaTplOpen;
 import xyz.nova.service.NovaTplService;
 import xyz.nova.utils.R;
@@ -22,7 +22,7 @@ public class NovaTplController {
     @PostMapping("getTplPath")
     @NovaRouter
     public R<String> getTplPath(@RequestBody @Validated NovaTplOpen novaTplOpen) {
-        return NovaFeignUtils.post(novaTplOpen.getNovaName(), "/nova/tpl/getTplPath", novaTplOpen, () -> {
+        return NovaRpcUtils.post(novaTplOpen.getNovaName(), "/nova/tpl/getTplPath", novaTplOpen, () -> {
             xyz.nova.controller.NovaTplController novaTplController = new xyz.nova.controller.NovaTplController(novaTplService);
             return novaTplController.getTplPath(novaTplOpen);
         });

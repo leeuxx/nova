@@ -38,6 +38,11 @@
             <version>1.2.0</version>
         </dependency>
 
+        <!-- ============ Apache HttpClient 5.x（RestTemplate池化需要用到） ============ -->
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+        </dependency>
         <!-- ============ Spring Cloud 基础 ============ -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -63,11 +68,10 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
-        <!-- ============ OpenFeign（服务间调用，optional 让用户选择） ============ -->
+        <!-- ============ OpenFeign（服务间调用） ============ -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
-            <optional>true</optional>
         </dependency>
         <!-- ============ Spring Cloud Context（事件、生命周期等） ============ -->
         <dependency>

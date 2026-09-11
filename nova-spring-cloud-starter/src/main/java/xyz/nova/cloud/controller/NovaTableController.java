@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import xyz.nova.annotation.NovaRouter;
 import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.config.RestMappingController;
-import xyz.nova.cloud.utils.NovaFeignUtils;
+import xyz.nova.cloud.utils.NovaRpcUtils;
 import xyz.nova.dto.*;
 import xyz.nova.dto.page.PageBean;
 import xyz.nova.service.NovaTableService;
@@ -26,7 +26,7 @@ public class NovaTableController {
     @PostMapping("build")
     @NovaRouter(verifyType = NovaRouter.VerifyType.LOGIN_MENU)
     public R<NovaTableBuild.Vo> build(@RequestBody @Validated NovaTableBuild novaTableBuild) {
-        return NovaFeignUtils.post(novaTableBuild.getNovaName(), "nova/table/build", novaTableBuild, () -> {
+        return NovaRpcUtils.post(novaTableBuild.getNovaName(), "nova/table/build", novaTableBuild, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.build(novaTableBuild);
         });
@@ -36,7 +36,7 @@ public class NovaTableController {
     @PostMapping("data")
     @NovaRouter(verifyType = NovaRouter.VerifyType.LOGIN_MENU)
     public R<PageBean<?>> data(@RequestBody @Validated NovaTableData novaTableData) {
-        return NovaFeignUtils.post(novaTableData.getNovaName(), "nova/table/data", novaTableData, () -> {
+        return NovaRpcUtils.post(novaTableData.getNovaName(), "nova/table/data", novaTableData, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.data(novaTableData);
         });
@@ -46,7 +46,7 @@ public class NovaTableController {
     @PostMapping("details")
     @NovaRouter
     public R<Map<String, Object>> details(@RequestBody @Validated NovaTableDetails novaTableDetails) {
-        return NovaFeignUtils.post(novaTableDetails.getNovaName(), "nova/table/details", novaTableDetails, () -> {
+        return NovaRpcUtils.post(novaTableDetails.getNovaName(), "nova/table/details", novaTableDetails, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.details(novaTableDetails);
         });
@@ -56,7 +56,7 @@ public class NovaTableController {
     @PostMapping("add")
     @NovaRouter
     public R<NovaTableAdd.Vo> add(@RequestBody @Validated NovaTableAdd novaTableAdd) {
-        return NovaFeignUtils.post(novaTableAdd.getNovaName(), "nova/table/add", novaTableAdd, () -> {
+        return NovaRpcUtils.post(novaTableAdd.getNovaName(), "nova/table/add", novaTableAdd, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.add(novaTableAdd);
         });
@@ -66,7 +66,7 @@ public class NovaTableController {
     @PostMapping("addLinkTarget")
     @NovaRouter
     public R<NovaTableAdd.Vo> addLinkTarget(@RequestBody @Validated NovaTableAdd novaTableAdd) {
-        return NovaFeignUtils.post(novaTableAdd.getNovaName(), "nova/table/addLinkTarget", novaTableAdd, () -> {
+        return NovaRpcUtils.post(novaTableAdd.getNovaName(), "nova/table/addLinkTarget", novaTableAdd, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.addLinkTarget(novaTableAdd);
         });
@@ -76,7 +76,7 @@ public class NovaTableController {
     @PostMapping("promptSearch")
     @NovaRouter
     public R<PageBean<NovaTablePromptSearch.Vo>> promptSearch(@RequestBody @Validated NovaTablePromptSearch novaTablePromptSearch) {
-        return NovaFeignUtils.post(novaTablePromptSearch.getNovaName(), "nova/table/promptSearch", novaTablePromptSearch, () -> {
+        return NovaRpcUtils.post(novaTablePromptSearch.getNovaName(), "nova/table/promptSearch", novaTablePromptSearch, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.promptSearch(novaTablePromptSearch);
         });
@@ -86,7 +86,7 @@ public class NovaTableController {
     @PostMapping("update")
     @NovaRouter
     public R<NovaTableUpdate.Vo> update(@RequestBody @Validated NovaTableUpdate novaTableUpdate) {
-        return NovaFeignUtils.post(novaTableUpdate.getNovaName(), "nova/table/update", novaTableUpdate, () -> {
+        return NovaRpcUtils.post(novaTableUpdate.getNovaName(), "nova/table/update", novaTableUpdate, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.update(novaTableUpdate);
         });
@@ -96,7 +96,7 @@ public class NovaTableController {
     @PostMapping("delete")
     @NovaRouter
     public R<NovaTableDelete.Vo> delete(@RequestBody @Validated NovaTableDelete novaTableDelete) {
-        return NovaFeignUtils.post(novaTableDelete.getNovaName(), "nova/table/delete", novaTableDelete, () -> {
+        return NovaRpcUtils.post(novaTableDelete.getNovaName(), "nova/table/delete", novaTableDelete, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.delete(novaTableDelete);
         });
@@ -106,7 +106,7 @@ public class NovaTableController {
     @PostMapping("rowOperationSubmit")
     @NovaRouter
     public R<NovaTableRowOperationSubmit.Vo> rowOperationSubmit(@RequestBody @Validated NovaTableRowOperationSubmit req) {
-        return NovaFeignUtils.post(req.getNovaName(), "nova/table/rowOperationSubmit", req, () -> {
+        return NovaRpcUtils.post(req.getNovaName(), "nova/table/rowOperationSubmit", req, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.rowOperationSubmit(req);
         });
@@ -116,7 +116,7 @@ public class NovaTableController {
     @PostMapping("rowOperationLoad")
     @NovaRouter
     public R<Map<String, Map<String, Object>>> rowOperationLoad(@RequestBody @Validated NovaTableRowOperationLoad req) {
-        return NovaFeignUtils.post(req.getNovaName(), "nova/table/rowOperationLoad", req, () -> {
+        return NovaRpcUtils.post(req.getNovaName(), "nova/table/rowOperationLoad", req, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.rowOperationLoad(req);
         });
@@ -126,7 +126,7 @@ public class NovaTableController {
     @PostMapping("tree")
     @NovaRouter(verifyType = NovaRouter.VerifyType.LOGIN_MENU)
     public R<NovaTableTree.Vo> tree(@RequestBody @Validated NovaTableTree req) {
-        return NovaFeignUtils.post(req.getNovaName(), "nova/table/tree", req, () -> {
+        return NovaRpcUtils.post(req.getNovaName(), "nova/table/tree", req, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.tree(req);
         });
@@ -136,7 +136,7 @@ public class NovaTableController {
     @PostMapping("treeDisplay")
     @NovaRouter(verifyType = NovaRouter.VerifyType.LOGIN_MENU)
     public R<List<?>> treeDisplay(@RequestBody @Validated NovaTableTree req) {
-        return NovaFeignUtils.post(req.getNovaName(), "nova/table/treeDisplay", req, () -> {
+        return NovaRpcUtils.post(req.getNovaName(), "nova/table/treeDisplay", req, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.treeDisplay(req);
         });
@@ -146,7 +146,7 @@ public class NovaTableController {
     @PostMapping("buttonClick")
     @NovaRouter
     public R<NovaTableButton.Vo> buttonClick(@RequestBody @Validated NovaTableButton req) {
-        return NovaFeignUtils.post(req.getNovaName(), "nova/table/buttonClick", req, () -> {
+        return NovaRpcUtils.post(req.getNovaName(), "nova/table/buttonClick", req, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.buttonClick(req);
         });
@@ -156,7 +156,7 @@ public class NovaTableController {
     @PostMapping("pop")
     @NovaRouter
     public R<List<NovaTablePop.Vo>> pop(@RequestBody @Validated NovaTablePop novaTablePop) {
-        return NovaFeignUtils.post(novaTablePop.getNovaName(), "nova/table/pop", novaTablePop, () -> {
+        return NovaRpcUtils.post(novaTablePop.getNovaName(), "nova/table/pop", novaTablePop, () -> {
             xyz.nova.controller.NovaTableController novaTableController = new xyz.nova.controller.NovaTableController(novaTableService);
             return novaTableController.pop(novaTablePop);
         });
