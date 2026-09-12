@@ -68,10 +68,11 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
-        <!-- ============ OpenFeign（服务间调用） ============ -->
+        <!-- ============ OpenFeign（服务间调用，仅做参考，Nova未使用，optional 让用户选择） ============ -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <optional>true</optional>
         </dependency>
         <!-- ============ Spring Cloud Context（事件、生命周期等） ============ -->
         <dependency>
