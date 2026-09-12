@@ -3,6 +3,18 @@
 
 ;(function () {
 
+const { h } = Vue
+const { NIcon } = naive
+const mi = (icon) => () => h(NIcon, { size: 16 }, { default: () => h('iconify-icon', { icon }) })
+
+// 语言切换（与主页一致）
+const LOCALE_LABELS = {
+  zh: { label: '中文',    icon: 'circle-flags:cn' },
+  en: { label: 'English', icon: 'circle-flags:us' },
+  ja: { label: '日本語',  icon: 'circle-flags:jp' },
+  ko: { label: '한국어',  icon: 'circle-flags:kr' }
+}
+
 // 左侧插画 SVG（与 login 一致）
 const ILLUSTRATION_SVG = `
 <svg viewBox="0 0 600 520" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -145,6 +157,8 @@ window.RegisterPage = {
       slogan: cfg.desc,
       logo: cfg.logo,
       copyrightTxt: cfg.copyrightTxt,
+      supportedLocales: (cfg.i18n && cfg.i18n.languages) || ['zh', 'en', 'ja', 'ko'],
+      currentLocale: (window.__appLocale && window.__appLocale.value) || 'zh',
       formData: {
         username: '',
         password: '',
@@ -172,7 +186,13 @@ window.RegisterPage = {
   },
 
   computed: {
-    illustrationSvg() { return ILLUSTRATION_SVG }
+    illustrationSvg() { return ILLUSTRATION_SVG },
+
+    localeDropdown() {
+      return this.supportedLocales
+        .filter((k) => LOCALE_LABELS[k])
+        .map((k) => ({ label: LOCALE_LABELS[k].label, key: k, icon: mi(LOCALE_LABELS[k].icon) }))
+    }
   },
 
   methods: {
@@ -184,6 +204,20 @@ window.RegisterPage = {
       if (window.__appDarkMode) {
         window.__appDarkMode.value = !window.__appDarkMode.value
       }
+    },
+
+    handleLocaleSelect(key) {
+      if (!key || key === this.currentLocale) return
+      if (window.__i18n && typeof window.__i18n.setLocale === 'function') {
+        window.__i18n.setLocale(key)
+      }
+    },
+
+    localeNodeProps(rawNode) {
+      if (rawNode && rawNode.key === this.currentLocale) {
+        return { style: 'background:rgba(24,160,88,0.12)' }
+      }
+      return {}
     },
 
     checkTokenAndRedirect() {
@@ -248,26 +282,49 @@ window.RegisterPage = {
     <div class="glow glow-3"></div>
   </div>
 
+  <!-- 语言切换按钮 -->
+  <n-dropdown
+    :options="localeDropdown"
+    trigger="hover"
+    @select="handleLocaleSelect"
+    key-field="key"
+    :node-props="localeNodeProps"
+    placement="bottom-end"
+  >
+    <button class="lang-toggle" type="button" aria-label="切换语言">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M3 12h18"/>
+        <path d="M12 3a14 14 0 0 1 0 18"/>
+        <path d="M12 3a14 14 0 0 0 0 18"/>
+      </svg>
+    </button>
+  </n-dropdown>
+
   <!-- 主题切换按钮 -->
-  <button class="theme-toggle" type="button"
-          :title="isDark ? __t('common.theme_light') : __t('common.theme_dark')"
-          @click="toggleTheme"
-          aria-label="切换主题">
-    <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-    </svg>
-    <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="4"/>
-      <path d="M12 2v2"/>
-      <path d="M12 20v2"/>
-      <path d="M4.93 4.93l1.41 1.41"/>
-      <path d="M17.66 17.66l1.41 1.41"/>
-      <path d="M2 12h2"/>
-      <path d="M20 12h2"/>
-      <path d="M6.34 17.66l-1.41 1.41"/>
-      <path d="M19.07 4.93l-1.41 1.41"/>
-    </svg>
-  </button>
+  <n-tooltip placement="bottom" :show-arrow="true">
+    <template #trigger>
+      <button class="theme-toggle" type="button"
+              @click="toggleTheme"
+              aria-label="切换主题">
+        <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2"/>
+          <path d="M12 20v2"/>
+          <path d="M4.93 4.93l1.41 1.41"/>
+          <path d="M17.66 17.66l1.41 1.41"/>
+          <path d="M2 12h2"/>
+          <path d="M20 12h2"/>
+          <path d="M6.34 17.66l-1.41 1.41"/>
+          <path d="M19.07 4.93l-1.41 1.41"/>
+        </svg>
+      </button>
+    </template>
+    {{ isDark ? __t('common.theme_light') : __t('common.theme_dark') }}
+  </n-tooltip>
 
   <!-- 主布局 -->
   <div class="layout">

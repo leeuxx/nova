@@ -10,7 +10,7 @@
     // 系统名称
     name: 'Nova UI Admin',
     // 系统描述
-    desc: '全栈式后台协议框架',
+    desc: '面向后台、协议驱动、无需前端、全栈支撑！',
     // 版权信息
     copyrightTxt: '© 2026 Nova UI Admin. All Rights Reserved.',
     // logo 图片

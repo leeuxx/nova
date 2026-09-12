@@ -70,6 +70,54 @@
 }
 
 /* ============================================================
+   右上角语言切换按钮（在主题切换按钮左边）
+   ============================================================ */
+.login .lang-toggle {
+  position: fixed;
+  top: 1.5rem;
+  right: calc(1.5rem + 38px + 0.6rem);
+  z-index: 100;
+  width: 38px;
+  height: 38px;
+  border-radius: 18px;
+  border: 1px solid rgba(180, 200, 240, 0.5);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 8px 20px -8px rgba(120, 140, 190, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: all 0.25s ease;
+}
+
+.login .lang-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 24px -8px rgba(120, 140, 190, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  border-color: rgba(150, 180, 240, 0.7);
+}
+
+.login .lang-toggle:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.login .lang-toggle svg {
+  width: 20px;
+  height: 20px;
+  stroke: #5c6f96;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.25s ease;
+}
+
+/* ============================================================
    右上角主题切换按钮
    ============================================================ */
 .login .theme-toggle {
@@ -690,6 +738,12 @@
     width: 40px;
     height: 40px;
   }
+  .login .lang-toggle {
+    top: 1rem;
+    right: calc(1rem + 40px + 0.5rem);
+    width: 40px;
+    height: 40px;
+  }
 }
 
 /* ============================================================
@@ -729,6 +783,23 @@
 }
 
 .dark .login .theme-toggle svg {
+  stroke: #a8b8e0;
+}
+
+.dark .login .lang-toggle {
+  background: rgba(40, 46, 64, 0.85);
+  border-color: rgba(100, 115, 150, 0.5);
+  box-shadow:
+    0 8px 20px -8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.dark .login .lang-toggle:hover {
+  background: rgba(52, 60, 82, 0.9);
+  border-color: rgba(106, 141, 255, 0.5);
+}
+
+.dark .login .lang-toggle svg {
   stroke: #a8b8e0;
 }
 
