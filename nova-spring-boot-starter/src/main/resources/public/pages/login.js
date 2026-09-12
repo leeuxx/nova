@@ -1,6 +1,130 @@
 // pages/login.js - 登录页面组件
+// 设计参考 public/test.html（保留供对比）；暗色模式与全局 nova-theme 联动
 
 ;(function () {
+
+// 左侧插画 SVG（复刻 test.html）
+const ILLUSTRATION_SVG = `
+<svg viewBox="0 0 600 520" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#eaf0fc" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="circleGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a8c0ff"/>
+      <stop offset="100%" stop-color="#c8b6ff"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#a8c0ff" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#a8c0ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gradPink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffd6e8"/>
+      <stop offset="100%" stop-color="#e0c8ff"/>
+    </linearGradient>
+    <linearGradient id="gradSecondary" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#b8d4ff"/>
+      <stop offset="100%" stop-color="#dcc8ff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景光晕 -->
+  <circle class="pulse-soft" cx="300" cy="260" r="220" fill="url(#halo)"/>
+
+  <!-- 细虚线环 -->
+  <g class="float-slow" style="transform-origin: 300px 260px;">
+    <circle cx="300" cy="260" r="200" fill="none" stroke="#a8c0ff" stroke-width="1"
+            opacity="0.28" stroke-dasharray="4 14"/>
+  </g>
+
+  <!-- 叠层卡片 -->
+  <g class="card-stack">
+    <rect x="200" y="190" width="150" height="160" rx="22"
+          fill="url(#cardGrad)" opacity="0.4"
+          transform="rotate(-6, 275, 270)"/>
+    <rect x="210" y="185" width="150" height="160" rx="22"
+          fill="url(#cardGrad)" opacity="0.7"
+          transform="rotate(-2, 285, 265)"/>
+    <g transform="rotate(2, 295, 260)">
+      <rect x="220" y="180" width="150" height="160" rx="22"
+            fill="url(#cardGrad)" stroke="#ffffff" stroke-width="1.2"/>
+      <rect x="238" y="204" width="60" height="8" rx="4" fill="#a8c0ff" opacity="0.55"/>
+      <rect x="238" y="224" width="100" height="6" rx="3" fill="#c8d6f5" opacity="0.7"/>
+      <rect x="238" y="240" width="80" height="6" rx="3" fill="#c8d6f5" opacity="0.6"/>
+      <rect x="238" y="256" width="110" height="6" rx="3" fill="#c8d6f5" opacity="0.5"/>
+      <circle cx="340" cy="300" r="6" fill="#a8c0ff" opacity="0.6"/>
+      <circle cx="356" cy="300" r="6" fill="#c8b6ff" opacity="0.5"/>
+      <circle cx="372" cy="300" r="6" fill="#c8d6f5" opacity="0.4"/>
+    </g>
+  </g>
+
+  <!-- 同心圆弧 -->
+  <g class="arc-system" style="transform-origin: 380px 280px;">
+    <circle cx="380" cy="280" r="72" fill="none" stroke="url(#circleGrad)" stroke-width="1" opacity="0.18"/>
+    <path class="arc-spin" d="M 380 208 A 72 72 0 0 1 452 280"
+          fill="none" stroke="url(#circleGrad)" stroke-width="2.5" stroke-linecap="round"/>
+    <path class="arc-spin-rev" d="M 308 280 A 72 72 0 0 0 380 352"
+          fill="none" stroke="#c8b6ff" stroke-width="1.8" stroke-linecap="round" opacity="0.75"/>
+    <path class="arc-spin-slow" d="M 380 232 A 48 48 0 0 1 428 280 A 48 48 0 0 1 380 328"
+          fill="none" stroke="#a8c0ff" stroke-width="1.2" stroke-linecap="round" opacity="0.55" stroke-dasharray="4 7"/>
+    <path class="arc-spin-rev" d="M 344 280 A 36 36 0 0 1 380 244"
+          fill="none" stroke="#b8d4ff" stroke-width="1" stroke-linecap="round" opacity="0.65"/>
+    <circle class="core-pulse" cx="380" cy="280" r="9" fill="url(#circleGrad)"/>
+    <circle cx="380" cy="280" r="9" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.7"/>
+    <circle cx="377" cy="277" r="3.5" fill="#ffffff" opacity="0.85"/>
+  </g>
+
+  <!-- 悬浮小元素 -->
+  <g class="float-fast" style="transform-origin: 140px 160px;">
+    <rect x="120" y="140" width="40" height="40" rx="11"
+          fill="url(#gradPink)" opacity="0.9"
+          transform="rotate(-22, 140, 160)"/>
+    <rect x="120" y="140" width="40" height="40" rx="11"
+          fill="none" stroke="#ffffff" stroke-width="1.3" opacity="0.85"
+          transform="rotate(-22, 140, 160)"/>
+  </g>
+
+  <g class="float-slow" style="transform-origin: 470px 150px;">
+    <circle cx="470" cy="150" r="38" fill="url(#circleGrad)" opacity="0.85"/>
+    <circle cx="470" cy="150" r="38" fill="none" stroke="#ffffff" stroke-width="1.4" opacity="0.7"/>
+    <circle cx="470" cy="150" r="15" fill="#ffffff" opacity="0.7"/>
+  </g>
+
+  <circle class="pulse-soft" cx="130" cy="380" r="5" fill="#c8b6ff" opacity="0.7"/>
+
+  <g class="float-slow-rev" style="transform-origin: 460px 400px;">
+    <rect x="440" y="380" width="40" height="40" rx="11"
+          fill="url(#gradSecondary)" opacity="0.9"
+          transform="rotate(28, 460, 400)"/>
+    <rect x="440" y="380" width="40" height="40" rx="11"
+          fill="none" stroke="#ffffff" stroke-width="1.3" opacity="0.8"
+          transform="rotate(28, 460, 400)"/>
+  </g>
+
+  <!-- 装饰星点 -->
+  <circle class="pulse-soft" cx="220" cy="120" r="6" fill="#a8c0ff" opacity="0.75"/>
+  <circle class="pulse-soft" cx="420" cy="110" r="5" fill="#c8b6ff" opacity="0.75"/>
+  <circle class="pulse-soft" cx="510" cy="300" r="5" fill="#ffb8d4" opacity="0.7"/>
+  <circle class="pulse-soft" cx="90" cy="300" r="4" fill="#b8d4ff" opacity="0.75"/>
+  <circle class="pulse-soft" cx="380" cy="470" r="5" fill="#a8c0ff" opacity="0.75"/>
+  <circle class="pulse-soft" cx="180" cy="480" r="4" fill="#c8b6ff" opacity="0.75"/>
+
+  <!-- 装饰十字 -->
+  <g class="float-slow" style="transform-origin: 520px 240px;" opacity="0.65">
+    <path d="M520 232 v16 M512 240 h16" stroke="#a8c0ff" stroke-width="2.4" stroke-linecap="round"/>
+  </g>
+  <g class="float-med" style="transform-origin: 80px 220px;" opacity="0.55">
+    <path d="M80 212 v16 M72 220 h16" stroke="#c8b6ff" stroke-width="2.4" stroke-linecap="round"/>
+  </g>
+
+  <!-- 装饰弧线 -->
+  <path class="float-slow" d="M420 460 Q 480 420 540 460"
+        fill="none" stroke="#a8c0ff" stroke-width="1.8" stroke-linecap="round" opacity="0.55" stroke-dasharray="1 8"/>
+  <path class="float-slow-rev" d="M60 140 Q 100 100 140 140"
+        fill="none" stroke="#c8b6ff" stroke-width="1.8" stroke-linecap="round" opacity="0.55" stroke-dasharray="1 8"/>
+</svg>
+`
 
 window.LoginPage = {
   name: 'LoginPage',
@@ -8,6 +132,17 @@ window.LoginPage = {
   created() {
     this.loadRememberedAccount()
     this.checkTokenAndRedirect()
+    if (window.__appDarkMode) {
+      this.syncDarkClass(window.__appDarkMode.value)
+      this._unwatchDark = this.$watch(
+        () => window.__appDarkMode && window.__appDarkMode.value,
+        (val) => this.syncDarkClass(val)
+      )
+    }
+  },
+
+  beforeUnmount() {
+    if (this._unwatchDark) this._unwatchDark()
   },
 
   data() {
@@ -15,11 +150,13 @@ window.LoginPage = {
     return {
       loading: false,
       rememberMe: false,
+      isDark: false,
       loginTitle:    cfg.name,
-      loginDesc:     cfg.desc,
+      subtitle:      '请输入您的账户信息以开始管理您的项目',
+      slogan:        cfg.desc,
+      logo:          cfg.logo,
       copyrightTxt:  cfg.copyrightTxt,
       registerEnabled: cfg.user.register,
-      logoImg: cfg.logo,
       formData: {
         username: '',
         password: ''
@@ -39,22 +176,31 @@ window.LoginPage = {
     }
   },
 
+  computed: {
+    illustrationSvg() { return ILLUSTRATION_SVG }
+  },
+
   methods: {
-    // 检查本地 token 是否有效
+    syncDarkClass(val) {
+      this.isDark = !!val
+    },
+
+    toggleTheme() {
+      if (window.__appDarkMode) {
+        window.__appDarkMode.value = !window.__appDarkMode.value
+      }
+    },
+
     checkTokenAndRedirect() {
       if (!localStorage.getItem('nova_token')) return
       window.fetchApi.post('/nova/authority/checkToken').then((resp) => {
         if (resp.data === true) {
-          // token 有效，直接进入主页（replaceState 改 hash 不触发 SPA 导航，避免先闪主页元素再出动画）
           history.replaceState(null, '', '#/home')
           window.location.reload()
         } else {
-          // token 无效，清除本地
           this.clearAuth()
         }
-      }).catch(() => {
-        // 网络错误时不清除，让用户手动登录
-      })
+      }).catch(() => {})
     },
 
     clearAuth() {
@@ -64,7 +210,6 @@ window.LoginPage = {
       localStorage.removeItem('nova_avatar')
     },
 
-    // 页面加载时读取记住的账号
     loadRememberedAccount() {
       const saved = localStorage.getItem('nova_remember_user')
       if (saved) {
@@ -74,9 +219,7 @@ window.LoginPage = {
     },
 
     handleLogin() {
-      // 验证表单
       this.$refs.formRef?.validate().then(() => {
-        // 记住账号逻辑
         if (this.rememberMe) {
           localStorage.setItem('nova_remember_user', this.formData.username)
         } else {
@@ -86,13 +229,11 @@ window.LoginPage = {
         this.loading = true
         window.fetchApi.post('/nova/authority/login', this.formData).then((resp) => {
           if (resp.data) {
-            // 完整保存登录态
             localStorage.setItem('nova_token', resp.data.token || '')
             localStorage.setItem('nova_user', resp.data.name)
             localStorage.setItem('nova_alias', resp.data.alias || '')
             localStorage.setItem('nova_avatar', resp.data.avatar || '')
             if (window.$message) window.$message.success(window.__t('login.success', { name: resp.data.name }))
-            // 登录成功后重新加载页面以拉取菜单（replaceState 改 hash 不触发 SPA 导航，避免先闪主页元素再出动画）
             history.replaceState(null, '', '#/home')
             window.location.reload()
           } else {
@@ -121,97 +262,148 @@ window.LoginPage = {
   },
 
   template: `
-<div class="login-container">
-  <!-- 动态光晕背景 -->
-  <div class="blur-orb orb-1"></div>
-  <div class="blur-orb orb-2"></div>
-  <div class="blur-orb orb-3"></div>
-  <div class="blur-orb orb-4"></div>
-  <div class="blur-orb orb-5"></div>
-
-  <!-- 品牌区 -->
-  <div class="login-brand">
-    <img v-if="logoImg" :src="logoImg" class="login-logo" alt="logo" />
-    <h1 class="login-title">{{ loginTitle }}</h1>
-    <p class="login-subtitle">{{ loginDesc }}</p>
+<div class="login" :class="{ dark: isDark }">
+  <!-- 柔光背景 -->
+  <div class="glow-bg" aria-hidden="true">
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    <div class="glow glow-3"></div>
   </div>
 
-  <!-- 右栏表单区 -->
-  <div class="login-form-area">
-    <div style="width:380px;max-width:90vw">
+  <!-- 主题切换按钮 -->
+  <button class="theme-toggle" type="button"
+          :title="isDark ? __t('common.theme_light') : __t('common.theme_dark')"
+          @click="toggleTheme"
+          aria-label="切换主题">
+    <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2"/>
+      <path d="M12 20v2"/>
+      <path d="M4.93 4.93l1.41 1.41"/>
+      <path d="M17.66 17.66l1.41 1.41"/>
+      <path d="M2 12h2"/>
+      <path d="M20 12h2"/>
+      <path d="M6.34 17.66l-1.41 1.41"/>
+      <path d="M19.07 4.93l-1.41 1.41"/>
+    </svg>
+  </button>
 
-    <n-card class="login-card" :bordered="false" content-style="padding:56px 32px 24px;">
-      <n-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-placement="top"
-        :show-feedback="false"
-        size="large"
-        style="position:relative"
-      >
-        <n-form-item :show-label="false" path="username" style="margin-bottom:20px">
-          <n-input
-            v-model:value="formData.username"
-            :placeholder="__t('login.username_placeholder')"
-            clearable
-            @keyup.enter="handleKeyPress"
-            :bordered="true"
-          >
-            <template #prefix>
-              <n-icon color="#2563eb"><iconify-icon icon="lucide:user"></iconify-icon></n-icon>
-            </template>
-          </n-input>
-        </n-form-item>
+  <!-- 主布局 -->
+  <div class="layout">
 
-        <n-form-item :show-label="false" path="password" style="margin-bottom:20px">
-          <n-input
-            v-model:value="formData.password"
-            type="password"
-            :placeholder="__t('login.password_placeholder')"
-            show-password-on="click"
-            @keyup.enter="handleKeyPress"
-            :bordered="true"
-          >
-            <template #prefix>
-              <n-icon color="#2563eb"><iconify-icon icon="lucide:lock"></iconify-icon></n-icon>
-            </template>
-          </n-input>
-        </n-form-item>
-
-        <n-form-item :show-label="false" style="margin-bottom:6px;margin-top:-12px">
-          <div style="display:flex;align-items:center;gap:6px;margin-left:12px">
-            <n-checkbox v-model:checked="rememberMe" size="small" />
-            <span class="login-remember-text" @click="rememberMe=!rememberMe">{{ __t('login.remember') }}</span>
-          </div>
-        </n-form-item>
-
-        <n-form-item :show-label="false">
-          <n-button
-            type="primary"
-            size="large"
-            style="width:100%"
-            :loading="loading"
-            @click="handleLogin"
-          >
-            {{ __t('login.submit') }}
-          </n-button>
-        </n-form-item>
-
-        <!-- 注册入口：flow 布局，由 padding-bottom 给卡片底部留白 -->
-        <n-form-item :show-label="false" style="margin-top:20px">
-          <div style="width:100%;text-align:center;font-size:13px">
-            <span style="color:#94a3b8">{{ __t('login.no_account') }}</span>
-            <span class="login-remember-text" style="color:#2563eb" @click="goRegister">{{ __t('login.go_register') }}</span>
-          </div>
-        </n-form-item>
-      </n-form>
-    </n-card>
+    <!-- 左侧插画面板 -->
+    <div class="left-panel">
+      <div class="left-inner">
+        <div class="illustration" aria-hidden="true" v-html="illustrationSvg"></div>
+        <div class="left-caption">
+          <p class="caption-desc">{{ slogan }}</p>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- 版权信息 -->
-  <div class="login-copyright">{{ copyrightTxt }}</div>
+    <!-- 右侧全高面板 -->
+    <div class="right-panel">
+      <div class="panel-inner">
+
+        <div class="panel-content">
+
+          <div class="panel-header">
+            <div class="panel-brand">
+              <div class="panel-brand-logo" :class="{ 'has-logo': !!logo }">
+                <img v-if="logo" :src="logo" alt="" />
+                <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 2L4 7v10l8 5 8-5V7l-8-5z"/>
+                  <path d="M12 22V12"/>
+                  <path d="M12 12l8-5"/>
+                  <path d="M12 12L4 7"/>
+                </svg>
+              </div>
+              <div class="panel-brand-name">{{ loginTitle }}</div>
+            </div>
+          </div>
+
+          <div class="panel-form-wrap">
+
+            <p class="panel-subtitle">{{ subtitle }}</p>
+
+            <n-form
+              ref="formRef"
+              class="login-form"
+              :model="formData"
+              :rules="formRules"
+              label-placement="top"
+              :show-feedback="false"
+              @keyup.enter="handleKeyPress"
+            >
+              <n-form-item :show-label="false" path="username">
+                <div class="input-group">
+                  <div class="input-wrap">
+                    <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <circle cx="12" cy="8" r="4"/>
+                      <path d="M4 21v-2a6 6 0 0 1 12 0v2"/>
+                    </svg>
+                    <input
+                      class="form-input"
+                      type="text"
+                      v-model="formData.username"
+                      :placeholder="__t('login.username_placeholder')"
+                      autocomplete="username"
+                    />
+                  </div>
+                </div>
+              </n-form-item>
+
+              <n-form-item :show-label="false" path="password">
+                <div class="input-group">
+                  <div class="input-wrap">
+                    <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="4" y="10" width="16" height="10" rx="2"/>
+                      <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+                    </svg>
+                    <input
+                      class="form-input"
+                      type="password"
+                      v-model="formData.password"
+                      :placeholder="__t('login.password_placeholder')"
+                      autocomplete="current-password"
+                    />
+                  </div>
+                </div>
+              </n-form-item>
+
+              <div class="options-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" v-model="rememberMe" />
+                  <span>{{ __t('login.remember') }}</span>
+                </label>
+              </div>
+
+              <button
+                type="button"
+                class="login-btn"
+                :disabled="loading"
+                @click="handleLogin"
+              >
+                <template v-if="loading">{{ __t('login.submitting') }}</template>
+                <template v-else>{{ __t('login.submit') }}</template>
+              </button>
+            </n-form>
+
+            <div class="panel-bottom">
+              <span>{{ __t('login.no_account') }}</span>
+              <a @click="goRegister">{{ __t('login.go_register') }}</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-copyright">{{ copyrightTxt }}</div>
+      </div>
+    </div>
+
+  </div>
 </div>
 `
 }

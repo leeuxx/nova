@@ -21,6 +21,8 @@
   "common.empty": "データなし",
   "common.unavailable": "（利用不可）",
   "common.preview": "プレビュー",
+  "common.theme_light": "ライトモードに切替",
+  "common.theme_dark": "ダークモードに切替",
   "common.copy": "コピー",
   "common.copy_success": "コピーしました",
   "common.upload_success": "アップ成功",
@@ -51,6 +53,7 @@
   "login.go_register": "新規登録",
   "login.success": "ようこそ、{name} さん",
   "login.failed": "ユーザー名またはパスワードが正しくありません",
+  "login.submitting": "ログイン中...",
   "login.register_disabled": "登録受付終了",
 
   "register.title": "新規登録",

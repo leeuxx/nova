@@ -21,6 +21,8 @@
   "common.empty": "暂无数据",
   "common.unavailable": "(不可用)",
   "common.preview": "预览",
+  "common.theme_light": "切换为浅色模式",
+  "common.theme_dark": "切换为深色模式",
   "common.copy": "复制",
   "common.copy_success": "链接已复制",
   "common.upload_success": "上传成功",
@@ -51,6 +53,7 @@
   "login.go_register": "立即注册",
   "login.success": "登录成功，欢迎 {name}",
   "login.failed": "登录失败，请检查账号密码",
+  "login.submitting": "登录中...",
   "login.register_disabled": "未开放注册",
 
   "register.title": "注 册",

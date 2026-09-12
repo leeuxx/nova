@@ -21,6 +21,8 @@
   "common.empty": "No data",
   "common.unavailable": "(unavailable)",
   "common.preview": "Preview",
+  "common.theme_light": "Switch to light mode",
+  "common.theme_dark": "Switch to dark mode",
   "common.copy": "Copy",
   "common.copy_success": "Copied!",
   "common.upload_success": "Uploaded",
@@ -51,6 +53,7 @@
   "login.go_register": "Sign up",
   "login.success": "Welcome, {name}!",
   "login.failed": "Invalid credentials",
+  "login.submitting": "Signing in...",
   "login.register_disabled": "Registration closed",
 
   "register.title": "Sign Up",

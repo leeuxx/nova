@@ -21,6 +21,8 @@
   "common.empty": "데이터 없음",
   "common.unavailable": "(사용 불가)",
   "common.preview": "미리보기",
+  "common.theme_light": "라이트 모드로 전환",
+  "common.theme_dark": "다크 모드로 전환",
   "common.copy": "복사",
   "common.copy_success": "복사되었습니다",
   "common.upload_success": "업로드 성공",
@@ -51,6 +53,7 @@
   "login.go_register": "회원가입",
   "login.success": "환영합니다, {name}님!",
   "login.failed": "사용자명 또는 비밀번호가 올바르지 않습니다",
+  "login.submitting": "로그인 중...",
   "login.register_disabled": "회원가입이 닫혔습니다",
 
   "register.title": "회원가입",
