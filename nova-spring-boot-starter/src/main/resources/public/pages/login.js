@@ -266,15 +266,22 @@ window.LoginPage = {
             localStorage.setItem('nova_user', resp.data.name)
             localStorage.setItem('nova_alias', resp.data.alias || '')
             localStorage.setItem('nova_avatar', resp.data.avatar || '')
-            if (window.$message) window.$message.success(window.__t('login.success', { name: resp.data.name }))
-            history.replaceState(null, '', '#/home')
-            window.location.reload()
+            if (window.$message) {
+              window.$message.success(window.__t('login.success', { name: resp.data.name }))
+            }
+            // 先弹窗，0.8s 后再跳转，期间按钮保持 loading
+            setTimeout(() => {
+              history.replaceState(null, '', '#/home')
+              window.location.reload()
+            }, 800)
           } else {
-            if (window.$message) window.$message.error(resp.message || window.__t('login.failed'))
+            if (window.$message) {
+              window.$message.error(resp.message || window.__t('login.failed'))
+            }
+            this.loading = false   // 失败才恢复按钮
           }
         }).catch(() => {
-        }).finally(() => {
-          this.loading = false
+          this.loading = false      // 请求异常也恢复按钮
         })
       }).catch(() => {})
     },

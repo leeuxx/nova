@@ -37,7 +37,7 @@
 .login .glow-1 {
   width: 70vmax;
   height: 70vmax;
-  background: radial-gradient(circle, rgba(180, 205, 255, 0.75), rgba(180, 205, 255, 0) 70%);
+  background: radial-gradient(circle, rgba(180, 205, 255, 0.65), rgba(180, 205, 255, 0) 70%);
   top: -30vmax;
   left: -20vmax;
   animation-delay: -2s;
@@ -46,7 +46,7 @@
 .login .glow-2 {
   width: 60vmax;
   height: 60vmax;
-  background: radial-gradient(circle, rgba(255, 200, 225, 0.65), rgba(255, 200, 225, 0) 70%);
+  background: radial-gradient(circle, rgba(255, 200, 225, 0.55), rgba(255, 200, 225, 0) 70%);
   bottom: -25vmax;
   right: -20vmax;
   animation-delay: -6s;
@@ -56,7 +56,7 @@
 .login .glow-3 {
   width: 55vmax;
   height: 55vmax;
-  background: radial-gradient(circle, rgba(210, 195, 255, 0.6), rgba(210, 195, 255, 0) 70%);
+  background: radial-gradient(circle, rgba(210, 195, 255, 0.5), rgba(210, 195, 255, 0) 70%);
   top: 20vmax;
   left: 35vmax;
   animation-delay: -9s;
@@ -758,15 +758,15 @@
 }
 
 .dark .login .glow-1 {
-  background: radial-gradient(circle, rgba(70, 100, 200, 0.35), rgba(70, 100, 200, 0) 70%);
+  background: radial-gradient(circle, rgba(70, 100, 200, 0.28), rgba(70, 100, 200, 0) 70%);
 }
 
 .dark .login .glow-2 {
-  background: radial-gradient(circle, rgba(150, 80, 140, 0.28), rgba(150, 80, 140, 0) 70%);
+  background: radial-gradient(circle, rgba(150, 80, 140, 0.22), rgba(150, 80, 140, 0) 70%);
 }
 
 .dark .login .glow-3 {
-  background: radial-gradient(circle, rgba(120, 90, 200, 0.3), rgba(120, 90, 200, 0) 70%);
+  background: radial-gradient(circle, rgba(120, 90, 200, 0.24), rgba(120, 90, 200, 0) 70%);
 }
 
 .dark .login .theme-toggle {
