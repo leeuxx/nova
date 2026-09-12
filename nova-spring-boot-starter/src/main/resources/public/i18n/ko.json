@@ -43,6 +43,7 @@
   "common.count_n": "（{n}）",
 
   "login.title": "로그인",
+  "login.subtitle": "프로젝트 관리를 시작하려면 계정 정보를 입력하세요",
   "login.username": "사용자명",
   "login.password": "비밀번호",
   "login.username_placeholder": "사용자명",
@@ -57,6 +58,7 @@
   "login.register_disabled": "회원가입이 닫혔습니다",
 
   "register.title": "회원가입",
+  "register.subtitle": "새 계정을 만들려면 아래 정보를 입력하세요",
   "register.name": "표시 이름",
   "register.name_placeholder": "표시 이름",
   "register.alias": "닉네임",

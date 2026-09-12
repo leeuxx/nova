@@ -418,6 +418,21 @@
   display: block;
 }
 
+.login .login-form .n-form-item-feedback {
+  display: block;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: #d03050;
+  margin-top: 0.4rem;
+  margin-left: 0.15rem;
+  letter-spacing: 0.01em;
+  transition: color 0.3s ease;
+}
+
+.login .login-form .n-form-item-feedback:empty {
+  display: none;
+}
+
 .login .input-group label {
   display: block;
   font-size: 0.78rem;
@@ -792,6 +807,10 @@
 
 .dark .login .caption-desc {
   color: #6a748c;
+}
+
+.dark .login .login-form .n-form-item-feedback {
+  color: #ff6b85;
 }
 
 .dark .login .login-btn {

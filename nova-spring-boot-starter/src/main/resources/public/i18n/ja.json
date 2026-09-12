@@ -43,6 +43,7 @@
   "common.count_n": "（{n}）",
 
   "login.title": "ログイン",
+  "login.subtitle": "アカウント情報を入力してプロジェクト管理を始めましょう",
   "login.username": "ユーザー名",
   "login.password": "パスワード",
   "login.username_placeholder": "ユーザー名",
@@ -57,6 +58,7 @@
   "login.register_disabled": "登録受付終了",
 
   "register.title": "新規登録",
+  "register.subtitle": "新規アカウント作成のため、以下を入力してください",
   "register.name": "表示名",
   "register.name_placeholder": "表示名",
   "register.alias": "ニックネーム",

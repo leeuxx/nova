@@ -43,6 +43,7 @@
   "common.count_n": "（共 {n} 个）",
 
   "login.title": "登 录",
+  "login.subtitle": "请输入您的账户信息以开始管理您的项目",
   "login.username": "账号",
   "login.password": "密码",
   "login.username_placeholder": "请输入账号",
@@ -57,6 +58,7 @@
   "login.register_disabled": "未开放注册",
 
   "register.title": "注 册",
+  "register.subtitle": "请填写以下信息以创建您的新账号",
   "register.name": "名称",
   "register.name_placeholder": "请输入名称",
   "register.alias": "别名",

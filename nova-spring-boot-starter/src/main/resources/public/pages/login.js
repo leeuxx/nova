@@ -152,7 +152,6 @@ window.LoginPage = {
       rememberMe: false,
       isDark: false,
       loginTitle:    cfg.name,
-      subtitle:      '请输入您的账户信息以开始管理您的项目',
       slogan:        cfg.desc,
       logo:          cfg.logo,
       copyrightTxt:  cfg.copyrightTxt,
@@ -327,7 +326,7 @@ window.LoginPage = {
 
           <div class="panel-form-wrap">
 
-            <p class="panel-subtitle">{{ subtitle }}</p>
+            <p class="panel-subtitle">{{ __t('login.subtitle') }}</p>
 
             <n-form
               ref="formRef"
@@ -335,7 +334,6 @@ window.LoginPage = {
               :model="formData"
               :rules="formRules"
               label-placement="top"
-              :show-feedback="false"
               @keyup.enter="handleKeyPress"
             >
               <n-form-item :show-label="false" path="username">

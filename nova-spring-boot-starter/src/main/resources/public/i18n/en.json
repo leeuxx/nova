@@ -43,6 +43,7 @@
   "common.count_n": "（{n}）",
 
   "login.title": "Log In",
+  "login.subtitle": "Sign in to start managing your projects",
   "login.username": "Username",
   "login.password": "Password",
   "login.username_placeholder": "Username",
@@ -57,6 +58,7 @@
   "login.register_disabled": "Registration closed",
 
   "register.title": "Sign Up",
+  "register.subtitle": "Fill in the information below to create your account",
   "register.name": "Display Name",
   "register.name_placeholder": "Display name",
   "register.alias": "Nickname",
