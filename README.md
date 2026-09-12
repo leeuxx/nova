@@ -48,23 +48,6 @@
 
 ---
 
-## 🏗️ 项目架构
-
-Nova 采用模块化设计，职责清晰：
-
-*   **nova-core**: 核心引擎。
-    *   定义所有注解（`@Nova`, `@NovaField`, `@Edit` 等）。
-    *   处理注解扫描与解析逻辑 (`NovaApplication`)。
-    *   定义核心接口规范 (`DataProxy`, `OperationHandler`)。
-*   **nova-spring-boot-starter**: 启动器与桥接层。
-    *   自动配置与 MVC 控制器，提供标准的增删改查 API。
-    *   内置基于 Vue3 + Naive UI 的前端静态资源（登录、主页、表格编辑页等）。
-*   **nova-plug (nova-authz)**: 权限模块。
-    *   集成了用户、角色、菜单、字典、组织架构的完整管理后台实现。
-    *   提供 Nova 框架下权限体系的快速接入包。
-
----
-
 ## 📦 代码示例
 
 只需定义实体类并实现 `DataProxy` 接口，即可自动生成管理页面：
