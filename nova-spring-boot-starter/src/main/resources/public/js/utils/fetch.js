@@ -7,11 +7,23 @@
     return { 'Accept-Language': loc }
   }
 
+  // 顶部加载条：调用 __novaPageLoading，它内部用 ref 计数（app.js 定义）
+  // 写操作默认开启；个别调用方传 { withLoading: false } 关闭（如键入触发的 promptSearch、认证流程）
+  function startLoading() {
+    if (window.__novaPageLoading) window.__novaPageLoading.start()
+  }
+  function finishLoading() {
+    if (window.__novaPageLoading) window.__novaPageLoading.finish()
+  }
+
 window.fetchApi = {
   // 普通请求（POST + JSON）
-  post: function (url, data, headers) {
+  // options.withLoading = false 关闭顶部加载条，默认开启
+  post: function (url, data, headers, options) {
     data  = data  || {}
     headers = headers || {}
+    options = options || {}
+    var useLoading = options.withLoading !== false
     var token = localStorage.getItem('nova_token') || ''
     var allHeaders = Object.assign(
       { 'Content-Type': 'application/json' },
@@ -19,6 +31,7 @@ window.fetchApi = {
       headers,
       currentLocaleHeader()  // 固定覆盖 Accept-Language，放最后确保不被调用方覆盖
     )
+    if (useLoading) startLoading()
     return fetch(url, {
       method:  'POST',
       headers: allHeaders,
@@ -31,14 +44,28 @@ window.fetchApi = {
         }
         return resp
       })
+      .catch(function (e) {
+        // 网络层错误（fetch 抛 TypeError/AbortError 等）；响应层错误由 errorHandle 处理，不重复提示
+        if (e && !e.code && window.$message) {
+          window.$message.error(window.__t('common.request_failed'))
+        }
+        return Promise.reject(e)
+      })
+      .then(
+        function (v) { if (useLoading) finishLoading(); return v },
+        function (e) { if (useLoading) finishLoading(); throw e }
+      )
   },
   // 文件上传（FormData）
-  upload: function (url, formData) {
+  upload: function (url, formData, options) {
+    options = options || {}
+    var useLoading = options.withLoading !== false
     var token = localStorage.getItem('nova_token') || ''
     var allHeaders = Object.assign(
       token ? { 'token': token } : {},
       currentLocaleHeader()
     )
+    if (useLoading) startLoading()
     return fetch(url, {
       method: 'POST',
       headers: allHeaders,
@@ -51,6 +78,16 @@ window.fetchApi = {
         }
         return resp
       })
+      .catch(function (e) {
+        if (e && !e.code && window.$message) {
+          window.$message.error(window.__t('common.request_failed'))
+        }
+        return Promise.reject(e)
+      })
+      .then(
+        function (v) { if (useLoading) finishLoading(); return v },
+        function (e) { if (useLoading) finishLoading(); throw e }
+      )
   }
 }
 

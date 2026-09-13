@@ -3929,7 +3929,7 @@ const NovaTable = {
         sourceFields,
         prompt: query,
         pageBean: { current: page, size: 10 }
-      }).then(resp => {
+      }, undefined, { withLoading: false }).then(resp => {
         const pb = resp.data || {}
         const items = (pb.records || []).map(item => ({
           label: String(item.displayField ?? ''),

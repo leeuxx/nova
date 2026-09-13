@@ -493,7 +493,7 @@ window.NovaTableJQ = (function ($) {
         conditions[rf.referenceField] = JSON.stringify([String(rf.value)])
       }
     })
-    window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, pageBean: pageBean, conditions: conditions }, window.__novaMenuCode(queryName)).then(function (resp) {
+    window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, pageBean: pageBean, conditions: conditions }, window.__novaMenuCode(queryName), { withLoading: false }).then(function (resp) {
       var t = window.vmMap && window.vmMap[vmKey]
       if (!t) return
       // 动画期间（首屏 boot 或切 tab 表格加载动画）保持主线程空闲：

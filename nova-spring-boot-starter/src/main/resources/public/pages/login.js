@@ -226,7 +226,7 @@ window.LoginPage = {
 
     checkTokenAndRedirect() {
       if (!localStorage.getItem('nova_token')) return
-      window.fetchApi.post('/nova/authority/checkToken').then((resp) => {
+      window.fetchApi.post('/nova/authority/checkToken', undefined, undefined, { withLoading: false }).then((resp) => {
         if (resp.data === true) {
           history.replaceState(null, '', '#/home')
           window.location.reload()
@@ -260,7 +260,7 @@ window.LoginPage = {
         }
 
         this.loading = true
-        window.fetchApi.post('/nova/authority/login', this.formData).then((resp) => {
+        window.fetchApi.post('/nova/authority/login', this.formData, undefined, { withLoading: false }).then((resp) => {
           if (resp.data) {
             localStorage.setItem('nova_token', resp.data.token || '')
             localStorage.setItem('nova_user', resp.data.name)

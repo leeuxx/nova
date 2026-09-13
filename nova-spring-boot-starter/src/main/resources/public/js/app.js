@@ -231,20 +231,20 @@ function mountApp(menuList, config, loginExpired) {
     setup() {
       window.$dialog  = useDialog()
       window.$message = useMessage()
-      // 页面顶部加载条：由真实接口触发 start/finish（首屏被全屏 boot 覆盖，不显示）
-      // finish 仅在 start 后生效，避免 embedded/弹窗等无路由切换场景误结束
-      var _lbStarted = false
+      // 页面顶部加载条：ref 计数模式，路由切换 + 接口请求共享同一计数器
+      // 最后一个 owner 调用 finish 后才真正收起，避免相互提前结束
+      var _lbCounter = 0
       window.$loadingBar = useLoadingBar()
       window.__novaPageLoading = {
         start: function () {
           if (!window.$loadingBar) return
-          _lbStarted = true
-          window.$loadingBar.start()
+          _lbCounter++
+          if (_lbCounter === 1) window.$loadingBar.start()
         },
         finish: function () {
-          if (!window.$loadingBar || !_lbStarted) return
-          _lbStarted = false
-          window.$loadingBar.finish()
+          if (!window.$loadingBar) return
+          _lbCounter = Math.max(0, _lbCounter - 1)
+          if (_lbCounter === 0) window.$loadingBar.finish()
         }
       }
     },
@@ -599,7 +599,7 @@ function mountApp(menuList, config, loginExpired) {
           window.modal.confirm(window.__t('profile.logout_confirm'), {
             title: window.__t('profile.logout_title'),
             onConfirm: () => {
-              window.fetchApi.post('/nova/authority/logout').finally(() => {
+              window.fetchApi.post('/nova/authority/logout', undefined, undefined, { withLoading: false }).finally(() => {
                 // 清空本地登录态
                 localStorage.removeItem('nova_token')
                 localStorage.removeItem('nova_user')

@@ -222,7 +222,7 @@ window.RegisterPage = {
 
     checkTokenAndRedirect() {
       if (!localStorage.getItem('nova_token')) return
-      window.fetchApi.post('/nova/authority/checkToken').then((resp) => {
+      window.fetchApi.post('/nova/authority/checkToken', undefined, undefined, { withLoading: false }).then((resp) => {
         if (resp.data === true) {
           history.replaceState(null, '', '#/home')
           window.location.reload()
@@ -242,7 +242,7 @@ window.RegisterPage = {
     handleRegister() {
       this.$refs.formRef?.validate().then(() => {
         this.loading = true
-        window.fetchApi.post('/nova/authority/register', this.formData).then((resp) => {
+        window.fetchApi.post('/nova/authority/register', this.formData, undefined, { withLoading: false }).then((resp) => {
           const data = resp.data
           if (data && data.token) {
             localStorage.setItem('nova_token', data.token || '')
