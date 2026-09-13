@@ -381,6 +381,27 @@ function mountApp(menuList, config, loginExpired) {
         return route.path
       })
 
+      // 选中项变化时，重置展开路径为"根→自身"，收起其它已被展开的菜单分支
+      // 不在菜单树里的 key（如 /home、/login）跳过，保留当前展开状态
+      const menuRootKeySet = new Set(menuTree.map(function (m) { return m.key }))
+      const findMenuPath = function (key) {
+        if (!key) return null
+        if (!menuRootKeySet.has(key) && !parentKeyMap[key]) return null
+        var path = []
+        var cur = key
+        while (cur) {
+          path.unshift(cur)
+          if (menuRootKeySet.has(cur)) break
+          cur = parentKeyMap[cur]
+          if (!cur) break
+        }
+        return path
+      }
+      watch(menuSelectedKey, function (newKey) {
+        var path = findMenuPath(newKey)
+        if (path) expandedKeys.value = path
+      }, { immediate: true })
+
       const handleMenuSelect = (key, item) => {
         if (item && item._raw && item._raw.type === 'TPL' && item._raw.value) {
           router.push('/tpl/' + item._raw.code)
