@@ -3402,7 +3402,7 @@ const NovaTable = {
       }
 
       // Step 2a: 目标表 tree（全量树结构），sourceNovaName 为外层主 nova
-      window.fetchApi.post('/nova/table/tree', { novaName: targetNovaName, sourceNovaName: self.novaName, sourceFields: srcFields }, window.__novaMenuCode(targetNovaName)).then(function(treeResp) {
+      window.fetchApi.post('/nova/table/tree', { novaName: targetNovaName, sourceNovaName: self.novaName, sourceFields: srcFields }, window.__novaMenuCode(targetNovaName), { withLoading: false }).then(function(treeResp) {
           if (treeResp.code !== 200) {
             self.linkTreeLoading[stateKey] = false
             if (window.$message) window.$message.error(window.__t('table.tree_load_failed'))
@@ -3471,7 +3471,7 @@ const NovaTable = {
       // Step 2b: 反显接口（返回已勾选的 key 列表，直接回显）
       var storageField = lt.thisStorageField
       // linkStorageField 已在函数顶部声明（全量树 key 字段）
-      window.fetchApi.post('/nova/table/treeDisplay', { novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String((row || self.currentRow)[storageField]) }, window.__novaMenuCode(tapNovaName)).then(function(linkResp) {
+      window.fetchApi.post('/nova/table/treeDisplay', { novaName: tapNovaName, sourceNovaName: self.novaName, operateValue: String((row || self.currentRow)[storageField]) }, window.__novaMenuCode(tapNovaName), { withLoading: false }).then(function(linkResp) {
           if (linkResp.code === 200) {
             var list = linkResp.data || []
             list.forEach(function(val) {
