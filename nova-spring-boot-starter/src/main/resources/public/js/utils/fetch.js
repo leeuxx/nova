@@ -9,11 +9,17 @@
 
   // 顶部加载条：调用 __novaPageLoading，它内部用 ref 计数（app.js 定义）
   // 写操作默认开启；个别调用方传 { withLoading: false } 关闭（如键入触发的 promptSearch、认证流程）
-  function startLoading() {
-    if (window.__novaPageLoading) window.__novaPageLoading.start()
+  // build 接口（/nova/table/build）耗时短（百毫秒级），native-ui 加载条 0.3s 入场淡入还没完成就被 finish，
+  // 视觉上像"没出现"，对用户体验无价值，统一跳过
+  function shouldShowLoading(url) {
+    if (url && url.indexOf('/nova/table/build') !== -1) return false
+    return true
   }
-  function finishLoading() {
-    if (window.__novaPageLoading) window.__novaPageLoading.finish()
+  function startLoading(url) {
+    if (window.__novaPageLoading && shouldShowLoading(url)) window.__novaPageLoading.start()
+  }
+  function finishLoading(url) {
+    if (window.__novaPageLoading && shouldShowLoading(url)) window.__novaPageLoading.finish()
   }
 
 window.fetchApi = {
@@ -31,7 +37,7 @@ window.fetchApi = {
       headers,
       currentLocaleHeader()  // 固定覆盖 Accept-Language，放最后确保不被调用方覆盖
     )
-    if (useLoading) startLoading()
+    if (useLoading) startLoading(url)
     return fetch(url, {
       method:  'POST',
       headers: allHeaders,
@@ -52,8 +58,8 @@ window.fetchApi = {
         return Promise.reject(e)
       })
       .then(
-        function (v) { if (useLoading) finishLoading(); return v },
-        function (e) { if (useLoading) finishLoading(); throw e }
+        function (v) { if (useLoading) finishLoading(url); return v },
+        function (e) { if (useLoading) finishLoading(url); throw e }
       )
   },
   // 文件上传（FormData）
@@ -65,7 +71,7 @@ window.fetchApi = {
       token ? { 'token': token } : {},
       currentLocaleHeader()
     )
-    if (useLoading) startLoading()
+    if (useLoading) startLoading(url)
     return fetch(url, {
       method: 'POST',
       headers: allHeaders,
@@ -85,8 +91,8 @@ window.fetchApi = {
         return Promise.reject(e)
       })
       .then(
-        function (v) { if (useLoading) finishLoading(); return v },
-        function (e) { if (useLoading) finishLoading(); throw e }
+        function (v) { if (useLoading) finishLoading(url); return v },
+        function (e) { if (useLoading) finishLoading(url); throw e }
       )
   }
 }
