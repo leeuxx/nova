@@ -1485,7 +1485,23 @@ const NovaTable = {
       window.activeNovaName = this.novaName
       this.paginationConfig.onUpdatePage     = this.handlePageChange
       this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
-      this.paginationConfig.suffix           = ({ itemCount }) => window.__t('table.total_n', { n: itemCount })
+      var self = this
+      this.paginationConfig.suffix           = ({ itemCount }) => {
+        // 树模式：itemCount 只统计根节点，递归累加 children 显示根+子总数
+        if (self.isTree) {
+          var total = 0
+          var walk = function(nodes) {
+            if (!nodes) return
+            for (var i = 0; i < nodes.length; i++) {
+              total++
+              if (nodes[i].children) walk(nodes[i].children)
+            }
+          }
+          walk(self.tableData)
+          return window.__t('table.total_n', { n: total })
+        }
+        return window.__t('table.total_n', { n: itemCount })
+      }
       if (window.NovaTableJQ) window.NovaTableJQ.onMounted(this.novaName)
     }
     // 双表视图高度同步：resize 时重新同步
