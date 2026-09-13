@@ -124,36 +124,6 @@ public class UserNova {
   <img src="images/4.png" width="40%" style="margin: 12px;">
 </p>
 
----
-
-## 🚀 快速开始
-
-1.  **添加依赖**
-    在你的 Spring Boot 项目 `pom.xml` 中引入 Starter：
-    ```xml
-    <dependency>
-        <groupId>xyz.nova</groupId>
-        <artifactId>nova-spring-boot-starter</artifactId>
-        <version>${latest.version}</version>
-    </dependency>
-    ```
-
-2.  **启用扫描**
-    在启动类上添加 `@NovaScan` 注解：
-    ```java
-    @NovaScan
-    @SpringBootApplication
-    public class Application {
-        public static void main(String[] args) {
-            SpringApplication.run(Application.class, args);
-        }
-    }
-    ```
-
-3.  **定义 Nova 视图**
-    创建一个类，添加 `@Nova` 注解，并实现 `DataProxy` 接口。
-
----
 
 ## 📄 许可证
 
