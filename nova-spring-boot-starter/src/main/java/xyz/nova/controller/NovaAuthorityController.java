@@ -1,5 +1,10 @@
 package xyz.nova.controller;
 
+import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import xyz.nova.annotation.NovaRouter;
 import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.config.RestMappingController;
@@ -7,13 +12,11 @@ import xyz.nova.entity.authority.EditUser;
 import xyz.nova.entity.authority.Login;
 import xyz.nova.entity.authority.Menu;
 import xyz.nova.entity.authority.Register;
+import xyz.nova.error.NovaException;
+import xyz.nova.i18n.NovaI18nUtils;
 import xyz.nova.service.authority.AuthorityProxy;
 import xyz.nova.utils.AuthorityUtils;
 import xyz.nova.utils.R;
-import lombok.AllArgsConstructor;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Map;
@@ -41,6 +44,15 @@ public class NovaAuthorityController {
     @PostMapping("login")
     public R<Login.User> login(@RequestBody @Validated Login login) {
         Login.User user = authorityProxy.login(login);
+        if (user == null) {
+            throw new NovaException(NovaI18nUtils.get("sys.error", NovaI18nUtils.SourceType.CODE), "user is blank");
+        }
+        if (StringUtils.isBlank(user.getToken())) {
+            throw new NovaException(NovaI18nUtils.get("sys.error", NovaI18nUtils.SourceType.CODE), "token is blank");
+        }
+        if (StringUtils.isBlank(user.getName())) {
+            throw new NovaException(NovaI18nUtils.get("sys.error", NovaI18nUtils.SourceType.CODE), "name is blank");
+        }
         return R.ok(user);
     }
 
@@ -106,6 +118,14 @@ public class NovaAuthorityController {
     @PostMapping("register")
     public R<Login.User> register(@RequestBody @Validated Register register) {
         Login.User user = authorityProxy.register(register);
+        if (user != null) {
+            if (StringUtils.isBlank(user.getToken())) {
+                throw new NovaException(NovaI18nUtils.get("sys.error", NovaI18nUtils.SourceType.CODE), "token is blank");
+            }
+            if (StringUtils.isBlank(user.getName())) {
+                throw new NovaException(NovaI18nUtils.get("sys.error", NovaI18nUtils.SourceType.CODE), "name is blank");
+            }
+        }
         return R.ok(user);
     }
 

@@ -418,9 +418,6 @@ public class NovaTableServiceImpl implements NovaTableService {
                 .setValue(storageFieldValue)
                 .setType(novaTableDetails.getSourceType().equals("APPENDAGE") ? Details.Type.REFERENCE_ID : Details.Type.NOVA_ID)
         );
-        if (details == null) {
-            return null;
-        }
         return DataProxyUtils.toMapWithTimestamp(details);
     }
 
@@ -434,7 +431,6 @@ public class NovaTableServiceImpl implements NovaTableService {
                 .setPrompt(novaTablePromptSearch.getPrompt())
                 .setContext(novaTablePromptSearch.getSourceFields())
         );
-
         if (promptSearchVo == null) {
             return pageBean;
         }
@@ -721,12 +717,16 @@ public class NovaTableServiceImpl implements NovaTableService {
                     new OrderItemBean().setColumn(MixUtils.camelToSnake(o.getColumn())).setAsc(o.isAsc())
             ));
         }
-        return DataProxyUtils.getDataProxy(novaTableTree.getNovaName()).treeDisplay(new Tree()
+        List<?> result = DataProxyUtils.getDataProxy(novaTableTree.getNovaName()).treeDisplay(new Tree()
                 .setNovaName(novaTableTree.getSourceNovaName())
                 .setContext(novaTableTree.getSourceFields())
                 .setOrders(requestOrders)
                 .setOperateValue(novaTableTree.getOperateValue())
         );
+        if (result == null) {
+            result = new ArrayList<>();
+        }
+        return result;
     }
 
     @Override
