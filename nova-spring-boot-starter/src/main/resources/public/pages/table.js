@@ -565,7 +565,7 @@ const NovaTable = {
       return {
         flex: '0 0 50%',
         width: '50%',
-        padding: '16px 16px 4px 8px',
+        padding: '16px 16px 16px 8px',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden'
@@ -605,6 +605,10 @@ const NovaTable = {
     },
     tbStandardShow() {
       return window.NovaTableButtons.toolbarStandardShow(this)
+    },
+    // 双表视图：左面板 padding 在 dual 激活时把右侧内侧压成 8，间隙=16；普通模式保持 16 uniform
+    dualPanelLeftPadding() {
+      return this.dualTableViewActive ? 'padding:16px 8px 16px 16px' : 'padding:16px'
     },
     // 列宽像素：checkbox 50 + 操作列 + 数据列
     // 后端列宽总和 < 100% 时补全铺满，≥ 100% 时原样渲染（出现滚动条）
@@ -4161,7 +4165,7 @@ const NovaTable = {
         {{ __t('tabs.reload') }}
       </n-button>
     </div>
-    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="'position:relative;' + (pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:16px 8px 4px 16px' : 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:16px 8px 4px 16px'))">
+    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="'position:relative;' + (pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;' + dualPanelLeftPadding : 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;' + dualPanelLeftPadding))">
 
       <!-- 顶部提示面板：纯手动浮层（仅主 nova 视图）。触发 chip + 面板均为 absolute，不参与布局、不占高度 -->
       <div v-if="showNovaTip" class="nova-tip-bar">
