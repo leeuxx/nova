@@ -680,10 +680,11 @@ const NovaTable = {
         if ($panel) container = $panel.clientWidth
       }
       if (this.dualMode) {
-        // 双表右面板：colPixels 基于主表宽度（tableWrapperWidth）估算，与实际在 50% 面板里渲染的列宽不一致。
-        // 当新子表列较窄时 total 会 ≤ container，返回 undefined 会让 n-data-table 的 xScrollableRef=false，Scrollbar 不渲染。
-        // 强制返回 > container 的值，确保横滚一直显示。
-        return total > container ? total : (container || 0) + 1
+        // 双表右面板要求横滚条始终显示（视觉一致性 + 暴露可滚动区域）。
+        // colPixels 按主表宽算列宽，dualShrink 砍一刀后，不同子表 total 可能 ≤ 容器；
+        // 此时若返回 undefined，n-data-table 的 xScrollableRef=false，Scrollbar 不渲染横滚。
+        // 强制取 max(total, container+1) 保证 scroll-x > 容器。
+        return Math.max(total, (container || 0) + 1)
       }
       return total > container ? total : undefined
     },
