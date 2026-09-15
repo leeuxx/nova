@@ -679,6 +679,12 @@ const NovaTable = {
         const $panel = document.querySelector('.dual-right-panel')
         if ($panel) container = $panel.clientWidth
       }
+      if (this.dualMode) {
+        // 双表右面板：colPixels 基于主表宽度（tableWrapperWidth）估算，与实际在 50% 面板里渲染的列宽不一致。
+        // 当新子表列较窄时 total 会 ≤ container，返回 undefined 会让 n-data-table 的 xScrollableRef=false，Scrollbar 不渲染。
+        // 强制返回 > container 的值，确保横滚一直显示。
+        return total > container ? total : (container || 0) + 1
+      }
       return total > container ? total : undefined
     },
 
