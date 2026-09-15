@@ -15,6 +15,7 @@ window.NovaDualLinkJQ = (function () {
     hostVm.linkTreeDisplayKeys['__dual__'] = null
     hostVm.linkTreeFilteredData['__dual__'] = null
 
+    // linkTabBuild 已由内层 nova-table 的 build 响应回填（applyNow → _dualHost.applyDualLinkBuildResp）
     var build = hostVm.linkTabBuild[tapNovaName]
     if (build && build.linkTarget) {
       if (build.linkTarget.linkTree) {
@@ -27,39 +28,10 @@ window.NovaDualLinkJQ = (function () {
       return
     }
 
-    // 需要先加载 build
+    // linkTabBuild 尚未就绪：内层 nova-table 仍在 build 中，标记 loading 并等待回填；
+    // 不再单独请求 build，由内层响应统一回填，避免同一 novaName 的重复 build 请求
     hostVm.linkTreeLoading['__dual__'] = true
-    var self = hostVm
-    window.fetchApi.post('/nova/table/build', { novaName: tapNovaName }, window.__novaMenuCode(tapNovaName)).then(function(resp) {
-      // 请求期间已切换到其他子表：丢弃过期响应，避免 linkTreeLoading/linkTabBuild 被旧表状态错乱
-      if (hostVm.dualTableCurrentNova !== tapNovaName) return
-      var bd = resp.data || {}
-      var lt = bd.linkTarget || {}
-      var ltEditFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
-      var newBuild = Object.assign({}, hostVm.linkTabBuild)
-      newBuild[tapNovaName] = {
-        linkTarget: lt,
-        sourceFieldName: lt.thisFieldName || '',
-        targetFieldName: lt.linkFieldName || '',
-        editFields: ltEditFields,
-        tableColumns: bd.tableColumns || [],
-        novaIdFieldName: bd.novaIdFieldName,
-        choiceMap: bd.choice || {},
-        referenceMap: bd.reference || {},
-        linkMap: bd.link || {}
-      }
-      hostVm.linkTabBuild = newBuild
-      hostVm.linkTreeLoading['__dual__'] = false
-      if (lt.linkTree) {
-        hostVm.loadLinkTreeData(tapNovaName, { row: hostVm._dualSelectedRow, stateKey: '__dual__' })
-        if (callback) callback(true)
-      } else {
-        if (callback) callback(false)
-      }
-    }).catch(function() {
-      hostVm.linkTreeLoading['__dual__'] = false
-      if (callback) callback(false)
-    })
+    if (callback) callback(false)
   }
 
   // ── 提交双表 LINK 树勾选 ──────────────────────────────────────

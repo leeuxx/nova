@@ -347,6 +347,11 @@ window.NovaTableJQ = (function ($) {
             }
           }
         }
+        // LINK 双表视图：内层 nova-table 即 tapNovaName 本身，其 build 响应携带 linkTarget，
+        // 反向回填到外层 linkTabBuild，避免 initDualLinkTreeTab 再单独请求一次 build
+        if (target.dualMode && target.linkMode && target._dualHost && typeof target._dualHost.applyDualLinkBuildResp === 'function') {
+          target._dualHost.applyDualLinkBuildResp(novaName, resp)
+        }
         // 非 linkForm 的 embedded 模式仍走原来的 loadData
         // 注意：LINK 专属路径 (line 202) 仅在 parentVm.currentRow 存在时生效（编辑弹窗）；
         // 双表视图下 currentRow 为 null，需走此 fallback
