@@ -584,7 +584,7 @@ window.NovaTableJQ = (function ($) {
 
   // ── 动态计算表格高度 ──────────────────────────────────────────
   function updateTableHeight() {
-    var $wrapper = $('#table-wrapper')
+    var $wrapper = $('#main-table-wrapper')
     if (!$wrapper.length) return
     var winH       = $(window).height()
     var headerH    = $('.n-layout-header').outerHeight(true) || 50
@@ -598,7 +598,7 @@ window.NovaTableJQ = (function ($) {
   }
 
   function updateTableWidth() {
-    var $wrapper = $('#table-wrapper')
+    var $wrapper = $('#main-table-wrapper')
     if (!$wrapper.length) return
     var activeVm = window.vmMap && window.vmMap[window.activeNovaName]
     if (!activeVm) return

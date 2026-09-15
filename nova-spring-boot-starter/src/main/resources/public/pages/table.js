@@ -673,20 +673,14 @@ const NovaTable = {
       // 双表视图激活时，用实际容器宽度判断滚动条（保持列宽不变）
       let container = this.tableWrapperWidth || 0
       if (this.dualTableViewActive) {
-        const $wrapper = document.querySelector('#table-wrapper')
+        const $wrapper = document.querySelector('#main-table-wrapper')
         if ($wrapper) container = $wrapper.clientWidth
       } else if (this.dualMode) {
         const $panel = document.querySelector('.dual-right-panel')
         if ($panel) container = $panel.clientWidth
       }
-      if (this.dualMode) {
-        // 双表右面板要求横滚条始终显示（视觉一致性 + 暴露可滚动区域）。
-        // colPixels 按主表宽算列宽，dualShrink 砍一刀后，不同子表 total 可能 ≤ 容器；
-        // 此时若返回 undefined，n-data-table 的 xScrollableRef=false，Scrollbar 不渲染横滚。
-        // 强制取 max(total, container+1) 保证 scroll-x > 容器。
-        return Math.max(total, (container || 0) + 1)
-      }
-      return total > container ? total : undefined
+      const result = total > container ? total : undefined
+      return result
     },
 
     filteredData() {
@@ -1473,6 +1467,13 @@ const NovaTable = {
       this.novaName = this.novaNameProp || ''
       this._vmKey = '__dual_' + this.novaName + '_' + Date.now()
       window.vmMap[this._vmKey] = this
+      // inner 实例 mount 时立刻从左主表同步 tableWrapperWidth：
+      // 切子表场景下 inner 实例会被销毁重建，新实例 data 初始化为 0，
+      // 若不同步，colPixels 走 ||1200 fallback 算小，导致 scrollX=undefined 没滚动条
+      var _activeVm = window.vmMap && window.vmMap[window.activeNovaName]
+      if (_activeVm && _activeVm.tableWrapperWidth) {
+        this.tableWrapperWidth = _activeVm.tableWrapperWidth
+      }
       this.paginationConfig.pageSlot = 5
       this.paginationConfig.showQuickJumper = false
       this.paginationConfig.onUpdatePage     = this.handlePageChange
@@ -4634,8 +4635,9 @@ const NovaTable = {
             </n-popover>
           </div>
         </div>
-        <div id="table-wrapper" :style="'flex:1;min-height:0;overflow:hidden'">
+        <div :id="dualMode ? 'dual-table-wrapper' : 'main-table-wrapper'" :style="'flex:1;min-height:0;overflow:hidden'">
           <n-data-table
+            :key="novaName"
             :data="tableData"
             :columns="columns"
             :row-key="row => String(row[novaIdFieldName])"
