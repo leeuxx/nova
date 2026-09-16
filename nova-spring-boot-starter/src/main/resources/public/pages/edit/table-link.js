@@ -399,8 +399,9 @@ window.NovaLinkForm = {
     style="display:flex;align-items:center;justify-content:center;padding:60px">
     <div v-html="novaLoadingHtml"></div>
   </div>
-  <!-- 树模式（含加载遮罩）：build 返回后立即占据树区域，避免空白 -->
-  <div v-else-if="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig"
+  <!-- 树模式（含加载遮罩）：/build 返回 linkTarget.linkTree=true 就立即进入树分支（T2 间隙不再空白），
+       内部 v-if="linkTreeData" 保证搜索框和树等数据就绪再渲染，loading 遮罩覆盖整个加载过程 -->
+  <div v-else-if="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig || ((linkTabBuild[linkNovaName] || {}).linkTarget || {}).linkTree"
     style="position:relative;display:flex;flex-direction:column;flex:1;min-height:200px">
     <!-- 树数据加载遮罩：跳跃方块动画 -->
     <div v-if="linkTreeLoading[linkNovaName]"
