@@ -526,7 +526,8 @@ window.NovaLinkForm = {
     </template>
   </div>
   <!-- 普通模式：内嵌中间表 -->
-  <nova-table v-else-if="linkTabBuild[linkNovaName] && !linkTreeLoading[linkNovaName]"
+  <!-- linkTabBuild 已由内层 nova-table 的 build 响应回填，不再要求先有 linkTabBuild 才渲染 -->
+  <nova-table v-else-if="!linkTreeLoading[linkNovaName]"
     :key="embedKey"
     :embedded-mode="true"
     :link-mode="true"

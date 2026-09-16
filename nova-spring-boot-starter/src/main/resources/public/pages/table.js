@@ -1497,6 +1497,9 @@ const NovaTable = {
       this.novaName = this.novaNameProp || ''
       this._vmKey = '__emb_' + this.novaName + '_' + Date.now()
       window.vmMap[this._vmKey] = this
+      // 持有外层 NovaTable 引用（provide/inject），让 build 响应能反向回填到外层 linkTabBuild
+      // —— 编辑弹窗 LINK 普通模式：initLinkTreeTab 不再单独请求 build，由内层 /build 响应统一回填
+      this._dualHost = this.dualHost || null
       this.paginationConfig.onUpdatePage     = this.handlePageChange
       this.paginationConfig.onUpdatePageSize = this.handlePageSizeChange
       this.paginationConfig.suffix           = ({ itemCount }) => window.__t('table.total_n', { n: itemCount })
@@ -3220,15 +3223,16 @@ const NovaTable = {
       )
       this.closeLinkPicker()
     },
-    // ── 双表视图 LINK：内层 nova-table 的 build 响应回填 ─────────
-    // 双表 LINK 模式下内层 nova-table 自身就是 tapNovaName 的实例，
+    // ── LINK：内层 nova-table 的 build 响应回填 ──────────────────
+    // 双表 LINK / 编辑弹窗 LINK 通用：内层 nova-table 即 tapNovaName 的实例，
     // 其 /build 响应同时携带 linkTarget 元数据。回填到外层 linkTabBuild，
-    // 避免 initDualLinkTreeTab 再单独请求一次 build
-    applyDualLinkBuildResp(tapNovaName, resp) {
+    // 避免 initLinkTreeTab/initDualLinkTreeTab 再单独请求一次 build
+    applyLinkBuildResp(tapNovaName, resp, mode) {
       if (!tapNovaName || !resp || !resp.data) return
       var bd = resp.data
       var lt = bd.linkTarget || {}
-      if (!lt.thisFieldName && !lt.linkFieldName) return
+      // 不再强制要求 thisFieldName/linkFieldName：edit popup 内嵌的 linkNovaName 可能本身不是 link 源，
+      // 但其 /build 响应仍携带足够的元数据来填充 linkTabBuild（tableColumns/choiceMap/editFields 等）
       var ltEditFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
       var newBuild = Object.assign({}, this.linkTabBuild)
       newBuild[tapNovaName] = {
@@ -3247,13 +3251,22 @@ const NovaTable = {
         attachmentMap: bd.attachment || {}
       }
       this.linkTabBuild = newBuild
-      // 普通模式（!linkTree）：仅回填元数据即可，模板按 linkTabBuild 渲染内嵌表格
-      // 树模式（linkTree=true）：触发 loadLinkTreeData 加载树
-      if (lt.linkTree && !this.linkTreeData['__dual__']) {
-        this.loadLinkTreeData(tapNovaName, { row: this._dualSelectedRow, stateKey: '__dual__' })
+      // 树模式：触发 loadLinkTreeData 加载树；stateKey 区分双表与编辑弹窗
+      if (lt.linkTree) {
+        var stateKey = mode === 'dual' ? '__dual__' : tapNovaName
+        if (!this.linkTreeData[stateKey]) {
+          var row = mode === 'dual' ? this._dualSelectedRow : this.currentRow
+          this.loadLinkTreeData(tapNovaName, { row: row, stateKey: stateKey })
+        }
       }
     },
+    // 兼容旧调用名
+    applyDualLinkBuildResp(tapNovaName, resp) {
+      this.applyLinkBuildResp(tapNovaName, resp, 'dual')
+    },
     // ── linkTree 模式：LINK 直接渲染树 ──────────────────────────
+    // 编辑弹窗 linkForm tab 激活时调用。linkTabBuild 已由内层 nova-table 的 build 响应回填
+    // （applyNow → _dualHost.applyLinkBuildResp），此方法不再单独请求 build，避免重复
     initLinkTreeTab(tapNovaName) {
       if (this.linkTreeData[tapNovaName]) return
       if (this.linkTreeLoading[tapNovaName]) return
@@ -3262,38 +3275,8 @@ const NovaTable = {
         if (build.linkTarget.linkTree) this.loadLinkTreeData(tapNovaName)
         return
       }
-      var self = this
-      this.linkTreeLoading[tapNovaName] = true
-      window.fetchApi.post('/nova/table/build', { novaName: tapNovaName }, window.__novaMenuCode(tapNovaName)).then(function(resp) {
-          var bd = resp.data || {}
-          var lt = bd.linkTarget || {}
-          var ltEditFields = (bd.edit || []).filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
-          var newBuild = Object.assign({}, self.linkTabBuild)
-          newBuild[tapNovaName] = {
-            linkTarget: lt,
-            sourceFieldName: lt.thisFieldName || '',
-            targetFieldName: lt.linkFieldName || '',
-            editFields: ltEditFields,
-            tableColumns: bd.tableColumns || [],
-            novaIdFieldName: bd.novaIdFieldName,
-            choiceMap: bd.choice || {},
-            referenceMap: bd.reference || {},
-            linkMap: bd.link || {},
-            dateMap: bd.date || {},
-            numberMap: bd.number || {},
-            tagMap: bd.tag || {},
-            attachmentMap: bd.attachment || {}
-          }
-          self.linkTabBuild = newBuild
-          self.linkTreeLoading[tapNovaName] = false
-          if (lt.linkTree) {
-            self.loadLinkTreeData(tapNovaName)
-          }
-          // 普通模式：linkTabBuild 已填充，模板自动渲染内嵌表格
-        }).catch(function() {
-          self.linkTreeLoading[tapNovaName] = false
-          if (window.$message) window.$message.error(window.__t('table.link_get_mid_failed'))
-        })
+      // linkTabBuild 尚未就绪：内层 nova-table 仍在 build 中，等其响应回填；
+      // 不再单独请求 build，由内层响应统一回填，避免同一 novaName 的重复 build 请求
     },
     submitDualLinkTree() {
       window.NovaDualLinkJQ.submitDualLinkTree(this)
