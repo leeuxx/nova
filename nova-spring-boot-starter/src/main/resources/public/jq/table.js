@@ -117,263 +117,23 @@ window.NovaTableJQ = (function ($) {
       t0._buildPending = true
       setBuildLoading(t0, true)
     }
-    var fire = function () {
-      window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function (resp) {
-        var target = window.vmMap && window.vmMap[key]
-        if (!target) return
-        target.buildError = null
-        if (!resp.data) {
-          target._buildPending = false
-          target.buildError = { code: resp.code, message: resp.msg || 'build failed' }
-          setBuildLoading(target, false)
+    // 双表 LINK：initDualLinkTreeTab 已先发 /build 并把响应缓存到 linkTabBuild[novaName]._cachedResp，
+    // 这里直接复用，避免双表非树模式下 nova-table mounted 又触发一次 /build
+    if (sourceNovaName) {
+      var parentVm0 = window.vmMap && window.vmMap[sourceNovaName]
+      var cached = parentVm0 && parentVm0.linkTabBuild && parentVm0.linkTabBuild[novaName] && parentVm0.linkTabBuild[novaName]._cachedResp
+      if (cached) {
+        // 同步复用缓存，不二次请求 /build；t0 不存在说明 nova-table 实例还没挂载（极少见，
+        // 例如外层强制 setBuildLoading 尚未注册），则放过、回到 fire() 走正常 /build
+        if (t0) {
+          handleBuildResp(novaName, key, embSourceFields, sourceNovaName, deferDataLoad, cached)
           return
         }
-        if (target.dualMode) {
-          // dual 右表（drill/appendage）：build 完成后遮罩持续到数据渲染完成再关闭，
-          // 避免 buildLoading 关闭与 loadData 数据渲染之间的空窗露出空表格（闪一下）
-          target._buildLoadingHold = true
-        } else {
-          setBuildLoading(target, false)
-        }
-        // 数据应用（设置响应式数据 + 渲染表格）是主线程重活：整页加载阶段延迟到 boot 移除后执行，
-        // 避免动画期间掉帧；网络请求已并行完成，数据就绪后立即渲染，不留空表格空窗
-        var applyNow = function () {
-        target.choiceMap  = resp.data.choice  || {}
-        target.tagMap     = resp.data.tag     || {}
-        target.dateMap    = resp.data.date    || {}
-        target.numberMap  = resp.data.number  || {}
-        target.booleanMap = resp.data.booleanInfo || {}
-        target.attachmentMap  = resp.data.attachment  || {}
-        target.referenceMap   = resp.data.reference   || {}
-        target.appendageMap   = resp.data.appendage   || {}
-        target.linkMap        = resp.data.link        || {}
-        target.drills         = resp.data.drills       || []
-        target.linkTargetInfo = resp.data.linkTarget  || {}
-        target.rowOperations  = resp.data.rowOperations || []
-        target.buttons        = resp.data.buttons      || {}
-        target.sysBtnHide     = resp.data.sysBtnHide   || {}
-        target.popMap         = resp.data.pops         || {}
-        target.tipHtml        = (resp.data.tooltip && resp.data.tooltip.value) || ''   // 顶部提示面板内容；空则不显示小三角
-        var fields = resp.data.search || []
-        // 提取 tapSearch 字段，从 searchFields 中移除
-        var tapSearchField = null
-        var normalFields = []
-        fields.forEach(function(f) {
-          if (f.tapSearch) { tapSearchField = f } else { normalFields.push(f) }
-        })
-        target.tapSearchField = tapSearchField
-        // 默认选中：showAll=true 时选"全部"(null)，否则选第一个选项值
-        if (tapSearchField) {
-          var tsChoiceVals = ((target.choiceMap[tapSearchField.field] || {}).values || [])
-          target.tapSearchValue = (tapSearchField.tapSearch && tapSearchField.tapSearch.showAll)
-            ? null
-            : (tsChoiceVals.length > 0 ? tsChoiceVals[0].value : null)
-        } else {
-          target.tapSearchValue = null
-        }
-        target.searchFields = normalFields
-        var form = {}
-        normalFields.forEach(function (f) {
-          var choiceInfo = target.choiceMap[f.field]
-          var isMultiChoice = f.type === 'CHOICE' && (choiceInfo && choiceInfo.selectType === 'MULTI' || f.vague)
-          var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
-          var isDate = f.type === 'DATE'
-          form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
-          if (f.type === 'REFERENCE' || f.type === 'APPENDAGE' || f.type === 'APPENDAGES' || f.type === 'LINK') {
-            form[f.field + '_display'] = ''
-          }
-        })
-        target.filterForm = form
-        var cols = resp.data.tableColumns || []
-        target.tableColumns = cols
-        var states = {}
-        cols.forEach(function (c) { if (c.sortable) states[c.field] = null })
-        target.sortStates = states
-        // 嵌套字段（REFERENCE/APPENDAGE 引用子表属性）：收集去重的 refNovaName，
-        // 逐个 build 子表并缓存元数据（choice/date/booleanInfo/attachment 等），供渲染规则匹配
-        var refNames = []
-        cols.forEach(function (c) { if (c.refNovaName && refNames.indexOf(c.refNovaName) === -1) refNames.push(c.refNovaName) })
-        target.refBuildMeta = {}
-        target.refBuildMetaLoading = {}
-        refNames.forEach(function (name) {
-          target.refBuildMetaLoading[name] = true
-          window.fetchApi.post('/nova/table/build', { novaName: name }, window.__novaMenuCode(name)).then(function (r) {
-            var t = window.vmMap && window.vmMap[key]
-            if (!t) return
-            if (!r.data) {
-              var nl0 = Object.assign({}, t.refBuildMetaLoading)
-              nl0[name] = false
-              t.refBuildMetaLoading = nl0
-              return
-            }
-            var nm = Object.assign({}, t.refBuildMeta)
-            nm[name] = r.data
-            t.refBuildMeta = nm
-            var nl = Object.assign({}, t.refBuildMetaLoading)
-            nl[name] = false
-            t.refBuildMetaLoading = nl
-            // 元数据就绪后重新翻译数据，让嵌套 CHOICE 列按子表元数据翻译 label/颜色
-            translateData(key)
-          })
-        })
-        var layout = resp.data.layout || {}
-        if (layout.pageSize)  { target.pageSize = layout.pageSize; target.paginationConfig.pageSize = layout.pageSize }
-        if (layout.pageSizes) {
-          target.pageSizes = layout.pageSizes
-          target.paginationConfig.pageSizes = layout.pageSizes.map(function (n) { return { label: window.__t('table.items_per_page', { n: n }), value: n } })
-        }
-        if (layout.editLayout) target.editLayout = layout.editLayout
-        var allEdit = resp.data.edit || []
-        var refMap = resp.data.reference || {}
-        // 基本信息 tab 名称：读后端 thisForm.tapTitle，方便后续按 nova 配置改名
-        var thisFormEdit = allEdit.find(function(e) { return e.tapType === 'thisForm' })
-        target.opFormTabTitle = (thisFormEdit && thisFormEdit.tapTitle) || ''
-        target.editFields = allEdit.filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
-        target.editReferenceTabs = allEdit.filter(function(e) { return e.tapType === 'referenceForm' && e.tapShow !== false })
-        target.editAppendageTabs = allEdit.filter(function(e) { return e.tapType === 'appendageForm' && e.tapShow !== false })
-        target.editExtraTabs = allEdit.filter(function(e) { return (e.tapType === 'referenceForm' || e.tapType === 'appendageForm' || e.tapType === 'appendagesTable' || e.tapType === 'linkForm') && e.tapShow !== false })
-        target.editReferenceTabs.forEach(function(tab) {
-          if (!tab.tapNovaName) return
-          target.editFields.forEach(function(f) {
-            if (!tab.tapParamField && f.type === 'REFERENCE' && (refMap[f.field] || {}).referenceName === tab.tapNovaName)
-              tab.tapParamField = f.field
-          })
-        })
-        if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
-        if (resp.data.dualShrink) target.dualShrink = resp.data.dualShrink
-        var treeInfo = resp.data.tree || {}
-        target.isTree = treeInfo.value === true
-        target.treeSearchField = treeInfo.searchField || ''
-        target.treeLevel = treeInfo.level != null ? treeInfo.level : 0
-        target.treeCascade = treeInfo.cascade === true
-        if (treeInfo.sortField && target.sortStates && target.sortStates.hasOwnProperty(treeInfo.sortField)) {
-          target.sortStates[treeInfo.sortField] = treeInfo.sortAsc ? 'asc' : 'desc'
-        }
-        for (var rfKey in refMap) {
-          var rf = refMap[rfKey] || {}
-          if (rf.isThisObj === true) {
-            target.treeParentField = rfKey
-            target.treeStorageField = rf.storageField || ''
-            break
-          }
-        }
-        if (!target.isTree && target.paginationConfig) {
-          target.paginationConfig.showSizePicker = true
-          target.paginationConfig.showQuickJumper = true
-          target.paginationConfig.showPrev = true
-          target.paginationConfig.showNext = true
-          target.paginationConfig.showPageSize = true
-        }
-        target._sourceFields = embSourceFields || {}
-        target._sourceNovaName = sourceNovaName || novaName
-        // consumedKeys: 记录已被 refMap 匹配消费掉的 sourceField key，
-        // 剩余的 key（LINK_TARGET 的 thisReferenceField / drill 的 joinColumn）直接用 key 本身作为条件列
-        var consumedKeys = []
-        if (embSourceFields && Object.keys(embSourceFields).length > 0) {
-          var sourceKeys = Object.keys(embSourceFields)
-          var hiddenRefNovas = []
-          var sourceRefFields = []
-          target.editFields = target.editFields.filter(function(f) {
-            if (f.type !== 'REFERENCE') return true
-            var refInfo = refMap[f.field] || {}
-            // storageField = 引用表的值字段（父表PK），与 sourceFields 的 key 对应
-            if (sourceKeys.indexOf(refInfo.storageField) !== -1) {
-              hiddenRefNovas.push(refInfo.referenceName)
-              consumedKeys.push(refInfo.storageField)
-              sourceRefFields.push({ field: f.field, referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
-              return false
-            }
-            return true
-          })
-          // 未命中 refMap 的 source key 直接作为条件列（类型由后端按字段注解适配）
-          sourceKeys.forEach(function(k) {
-            if (embSourceFields[k] != null && consumedKeys.indexOf(k) === -1) {
-              sourceRefFields.push({ field: k, referenceField: k, value: String(embSourceFields[k]) })
-            }
-          })
-          target._sourceRefFields = sourceRefFields
-          // 同步过滤搜索条件中的外键 REFERENCE 字段
-          target.searchFields = target.searchFields.filter(function(f) {
-            if (f.type !== 'REFERENCE') return true
-            var refInfo = refMap[f.field] || {}
-            return sourceKeys.indexOf(refInfo.storageField) === -1
-          })
-          // 同步过滤对应的 referenceForm tab
-          target.editExtraTabs = target.editExtraTabs.filter(function(tab) {
-            return !(tab.tapType === 'referenceForm' && hiddenRefNovas.indexOf(tab.tapNovaName) !== -1)
-          })
-          target.editReferenceTabs = target.editReferenceTabs.filter(function(tab) {
-            return hiddenRefNovas.indexOf(tab.tapNovaName) === -1
-          })
-        }
-        // refReferenceFieldsProp 对应的 REFERENCE 字段也需要隐藏（自动填充，不展示）
-        var refRefFieldsProp = target.refReferenceFieldsProp || {}
-        var refRefKeys = Object.keys(refRefFieldsProp)
-        if (refRefKeys.length > 0) {
-          target.editFields = (target.editFields || []).filter(function(f) {
-            return !(f.type === 'REFERENCE' && refRefKeys.indexOf(f.field) !== -1)
-          })
-        }
-        // LINK embedded 模式：子组件 build 完成后，把 linkTarget 等元数据同步到父组件 linkTabBuild
-        if (sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField) {
-          var parentVm = window.vmMap && window.vmMap[sourceNovaName]
-          if (parentVm && parentVm.linkTabBuild !== undefined) {
-            var lt = resp.data.linkTarget
-            var ltEditFields = target.editFields || []
-            var newBuild = Object.assign({}, parentVm.linkTabBuild)
-            newBuild[novaName] = {
-              linkTarget: lt,
-              sourceFieldName: lt.thisFieldName || '',
-              targetFieldName: lt.linkFieldName || '',
-              editFields: ltEditFields,
-              tableColumns: resp.data.tableColumns || [],
-              novaIdFieldName: resp.data.novaIdFieldName,
-              choiceMap: resp.data.choice || {},
-              referenceMap: resp.data.reference || {},
-              linkMap: resp.data.link || {}
-            }
-            parentVm.linkTabBuild = newBuild
-            // linkForm：同步完成后设置 sourceFields，然后 loadData
-            if (!deferDataLoad && lt.thisReferenceField && parentVm && parentVm.currentRow) {
-              var storageField = lt.thisStorageField || lt.thisReferenceField
-              var refVal = parentVm.currentRow[storageField]
-              target._sourceFields = refVal != null ? { [lt.thisReferenceField]: String(refVal) } : {}
-              var srf = []
-              if (refVal != null) {
-                srf.push({ field: lt.thisReferenceField, referenceField: lt.thisReferenceField, value: String(refVal) })
-              }
-              target._sourceRefFields = srf
-              loadData(key)
-            }
-          }
-        }
-        // LINK 双表视图：内层 nova-table 即 tapNovaName 本身，其 build 响应携带 linkTarget，
-        // 反向回填到外层 linkTabBuild，避免 initDualLinkTreeTab 再单独请求一次 build
-        if (target.dualMode && target.linkMode && target._dualHost && typeof target._dualHost.applyLinkBuildResp === 'function') {
-          target._dualHost.applyLinkBuildResp(novaName, resp, 'dual')
-        }
-        // LINK 编辑弹窗：内层 nova-table（embedded+link）的 build 响应回填到外层 linkTabBuild，
-        // 避免 initLinkTreeTab 再单独请求一次 build（普通模式重复 build 的根因）
-        if (target.embeddedMode && target.linkMode && target._dualHost && typeof target._dualHost.applyLinkBuildResp === 'function') {
-          target._dualHost.applyLinkBuildResp(novaName, resp, 'embedded')
-        }
-        // 非 linkForm 的 embedded 模式仍走原来的 loadData
-        // 注意：LINK 专属路径 (line 202) 仅在 parentVm.currentRow 存在时生效（编辑弹窗）；
-        // 双表视图下 currentRow 为 null，需走此 fallback
-        if (!deferDataLoad && !(sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField && parentVm && parentVm.currentRow)) {
-          loadData(key)
-        }
-        }
-        // 元数据应用（列头/搜索表单）相对轻量，build 响应后立即执行让数据请求并行拉取；
-        // 重活（表格数据渲染）由 loadData 按动画状态（首屏 boot 或切 tab 遮罩）延迟到动画结束，动画期间不掉帧、动画结束不留空表格
-        applyNow()
-        target._buildPending = false
-        // build 响应后容器布局变化（尤其树模式 isTree=true 时容器 height:100%、树搜索 filter-card 才渲染）：
-        // mounted/activated 的高度计算早于 build 响应（build 慢时用的是 isTree=false 的错误布局），必须重算，
-        // 否则树模式表格高度塌陷
-        if (window.Vue && window.Vue.nextTick) window.Vue.nextTick(function () { updateTableHeight() })
-        // 表格页面 build 完成 → 结束顶部加载条（仅路由切换后生效，embedded 等无 start 则空操作）
-        if (window.__novaPageLoading) window.__novaPageLoading.finish()
+      }
+    }
+    var fire = function () {
+      window.fetchApi.post('/nova/table/build', { novaName: novaName }, window.__novaMenuCode(novaName)).then(function (resp) {
+        handleBuildResp(novaName, key, embSourceFields, sourceNovaName, deferDataLoad, resp)
       }).catch(function (err) {
         var target = window.vmMap && window.vmMap[key]
         if (target) {
@@ -387,6 +147,265 @@ window.NovaTableJQ = (function ($) {
     }
     // build 网络请求立即发出（并行，不占主线程）；响应后的数据应用延迟到 boot 移除后执行
     fire()
+  }
+
+  // ── build 响应统一处理（/build 网络回调 或 initDualLinkTreeTab 缓存复用） ──────
+  function handleBuildResp(novaName, key, embSourceFields, sourceNovaName, deferDataLoad, resp) {
+    var target = window.vmMap && window.vmMap[key]
+    if (!target) return
+    target.buildError = null
+    if (!resp.data) {
+      target._buildPending = false
+      target.buildError = { code: resp.code, message: resp.msg || 'build failed' }
+      setBuildLoading(target, false)
+      return
+    }
+    if (target.dualMode) {
+      // dual 右表（drill/appendage）：build 完成后遮罩持续到数据渲染完成再关闭，
+      // 避免 buildLoading 关闭与 loadData 数据渲染之间的空窗露出空表格（闪一下）
+      target._buildLoadingHold = true
+    } else {
+      setBuildLoading(target, false)
+    }
+    // 数据应用（设置响应式数据 + 渲染表格）是主线程重活：整页加载阶段延迟到 boot 移除后执行，
+    // 避免动画期间掉帧；网络请求已并行完成，数据就绪后立即渲染，不留空表格空窗
+    var applyNow = function () {
+    target.choiceMap  = resp.data.choice  || {}
+    target.tagMap     = resp.data.tag     || {}
+    target.dateMap    = resp.data.date    || {}
+    target.numberMap  = resp.data.number  || {}
+    target.booleanMap = resp.data.booleanInfo || {}
+    target.attachmentMap  = resp.data.attachment  || {}
+    target.referenceMap   = resp.data.reference   || {}
+    target.appendageMap   = resp.data.appendage   || {}
+    target.linkMap        = resp.data.link        || {}
+    target.drills         = resp.data.drills       || []
+    target.linkTargetInfo = resp.data.linkTarget  || {}
+    target.rowOperations  = resp.data.rowOperations || []
+    target.buttons        = resp.data.buttons      || {}
+    target.sysBtnHide     = resp.data.sysBtnHide   || {}
+    target.popMap         = resp.data.pops         || {}
+    target.tipHtml        = (resp.data.tooltip && resp.data.tooltip.value) || ''   // 顶部提示面板内容；空则不显示小三角
+    var fields = resp.data.search || []
+    // 提取 tapSearch 字段，从 searchFields 中移除
+    var tapSearchField = null
+    var normalFields = []
+    fields.forEach(function(f) {
+      if (f.tapSearch) { tapSearchField = f } else { normalFields.push(f) }
+    })
+    target.tapSearchField = tapSearchField
+    // 默认选中：showAll=true 时选"全部"(null)，否则选第一个选项值
+    if (tapSearchField) {
+      var tsChoiceVals = ((target.choiceMap[tapSearchField.field] || {}).values || [])
+      target.tapSearchValue = (tapSearchField.tapSearch && tapSearchField.tapSearch.showAll)
+        ? null
+        : (tsChoiceVals.length > 0 ? tsChoiceVals[0].value : null)
+    } else {
+      target.tapSearchValue = null
+    }
+    target.searchFields = normalFields
+    var form = {}
+    normalFields.forEach(function (f) {
+      var choiceInfo = target.choiceMap[f.field]
+      var isMultiChoice = f.type === 'CHOICE' && (choiceInfo && choiceInfo.selectType === 'MULTI' || f.vague)
+      var isSingleChoice = f.type === 'CHOICE' && choiceInfo && choiceInfo.selectType === 'SINGLE' && !f.vague
+      var isDate = f.type === 'DATE'
+      form[f.field] = (isMultiChoice || f.type === 'TAG') ? [] : (f.type === 'NUMBER' && f.vague ? [null, null] : (isSingleChoice || isDate || f.type === 'BOOLEAN' || f.type === 'NUMBER' ? null : ''))
+      if (f.type === 'REFERENCE' || f.type === 'APPENDAGE' || f.type === 'APPENDAGES' || f.type === 'LINK') {
+        form[f.field + '_display'] = ''
+      }
+    })
+    target.filterForm = form
+    var cols = resp.data.tableColumns || []
+    target.tableColumns = cols
+    var states = {}
+    cols.forEach(function (c) { if (c.sortable) states[c.field] = null })
+    target.sortStates = states
+    // 嵌套字段（REFERENCE/APPENDAGE 引用子表属性）：收集去重的 refNovaName，
+    // 逐个 build 子表并缓存元数据（choice/date/booleanInfo/attachment 等），供渲染规则匹配
+    var refNames = []
+    cols.forEach(function (c) { if (c.refNovaName && refNames.indexOf(c.refNovaName) === -1) refNames.push(c.refNovaName) })
+    target.refBuildMeta = {}
+    target.refBuildMetaLoading = {}
+    refNames.forEach(function (name) {
+      target.refBuildMetaLoading[name] = true
+      window.fetchApi.post('/nova/table/build', { novaName: name }, window.__novaMenuCode(name)).then(function (r) {
+        var t = window.vmMap && window.vmMap[key]
+        if (!t) return
+        if (!r.data) {
+          var nl0 = Object.assign({}, t.refBuildMetaLoading)
+          nl0[name] = false
+          t.refBuildMetaLoading = nl0
+          return
+        }
+        var nm = Object.assign({}, t.refBuildMeta)
+        nm[name] = r.data
+        t.refBuildMeta = nm
+        var nl = Object.assign({}, t.refBuildMetaLoading)
+        nl[name] = false
+        t.refBuildMetaLoading = nl
+        // 元数据就绪后重新翻译数据，让嵌套 CHOICE 列按子表元数据翻译 label/颜色
+        translateData(key)
+      })
+    })
+    var layout = resp.data.layout || {}
+    if (layout.pageSize)  { target.pageSize = layout.pageSize; target.paginationConfig.pageSize = layout.pageSize }
+    if (layout.pageSizes) {
+      target.pageSizes = layout.pageSizes
+      target.paginationConfig.pageSizes = layout.pageSizes.map(function (n) { return { label: window.__t('table.items_per_page', { n: n }), value: n } })
+    }
+    if (layout.editLayout) target.editLayout = layout.editLayout
+    var allEdit = resp.data.edit || []
+    var refMap = resp.data.reference || {}
+    // 基本信息 tab 名称：读后端 thisForm.tapTitle，方便后续按 nova 配置改名
+    var thisFormEdit = allEdit.find(function(e) { return e.tapType === 'thisForm' })
+    target.opFormTabTitle = (thisFormEdit && thisFormEdit.tapTitle) || ''
+    target.editFields = allEdit.filter(function(e) { return e.tapType === 'thisForm' }).reduce(function(acc, e) { return acc.concat(e.thisForms || []) }, [])
+    target.editReferenceTabs = allEdit.filter(function(e) { return e.tapType === 'referenceForm' && e.tapShow !== false })
+    target.editAppendageTabs = allEdit.filter(function(e) { return e.tapType === 'appendageForm' && e.tapShow !== false })
+    target.editExtraTabs = allEdit.filter(function(e) { return (e.tapType === 'referenceForm' || e.tapType === 'appendageForm' || e.tapType === 'appendagesTable' || e.tapType === 'linkForm') && e.tapShow !== false })
+    target.editReferenceTabs.forEach(function(tab) {
+      if (!tab.tapNovaName) return
+      target.editFields.forEach(function(f) {
+        if (!tab.tapParamField && f.type === 'REFERENCE' && (refMap[f.field] || {}).referenceName === tab.tapNovaName)
+          tab.tapParamField = f.field
+      })
+    })
+    if (resp.data.novaIdFieldName) target.novaIdFieldName = resp.data.novaIdFieldName
+    if (resp.data.dualShrink) target.dualShrink = resp.data.dualShrink
+    var treeInfo = resp.data.tree || {}
+    target.isTree = treeInfo.value === true
+    target.treeSearchField = treeInfo.searchField || ''
+    target.treeLevel = treeInfo.level != null ? treeInfo.level : 0
+    target.treeCascade = treeInfo.cascade === true
+    if (treeInfo.sortField && target.sortStates && target.sortStates.hasOwnProperty(treeInfo.sortField)) {
+      target.sortStates[treeInfo.sortField] = treeInfo.sortAsc ? 'asc' : 'desc'
+    }
+    for (var rfKey in refMap) {
+      var rf = refMap[rfKey] || {}
+      if (rf.isThisObj === true) {
+        target.treeParentField = rfKey
+        target.treeStorageField = rf.storageField || ''
+        break
+      }
+    }
+    if (!target.isTree && target.paginationConfig) {
+      target.paginationConfig.showSizePicker = true
+      target.paginationConfig.showQuickJumper = true
+      target.paginationConfig.showPrev = true
+      target.paginationConfig.showNext = true
+      target.paginationConfig.showPageSize = true
+    }
+    target._sourceFields = embSourceFields || {}
+    target._sourceNovaName = sourceNovaName || novaName
+    // consumedKeys: 记录已被 refMap 匹配消费掉的 sourceField key，
+    // 剩余的 key（LINK_TARGET 的 thisReferenceField / drill 的 joinColumn）直接用 key 本身作为条件列
+    var consumedKeys = []
+    if (embSourceFields && Object.keys(embSourceFields).length > 0) {
+      var sourceKeys = Object.keys(embSourceFields)
+      var hiddenRefNovas = []
+      var sourceRefFields = []
+      target.editFields = target.editFields.filter(function(f) {
+        if (f.type !== 'REFERENCE') return true
+        var refInfo = refMap[f.field] || {}
+        // storageField = 引用表的值字段（父表PK），与 sourceFields 的 key 对应
+        if (sourceKeys.indexOf(refInfo.storageField) !== -1) {
+          hiddenRefNovas.push(refInfo.referenceName)
+          consumedKeys.push(refInfo.storageField)
+          sourceRefFields.push({ field: f.field, referenceField: refInfo.referenceField, value: embSourceFields[refInfo.storageField] })
+          return false
+        }
+        return true
+      })
+      // 未命中 refMap 的 source key 直接作为条件列（类型由后端按字段注解适配）
+      sourceKeys.forEach(function(k) {
+        if (embSourceFields[k] != null && consumedKeys.indexOf(k) === -1) {
+          sourceRefFields.push({ field: k, referenceField: k, value: String(embSourceFields[k]) })
+        }
+      })
+      target._sourceRefFields = sourceRefFields
+      // 同步过滤搜索条件中的外键 REFERENCE 字段
+      target.searchFields = target.searchFields.filter(function(f) {
+        if (f.type !== 'REFERENCE') return true
+        var refInfo = refMap[f.field] || {}
+        return sourceKeys.indexOf(refInfo.storageField) === -1
+      })
+      // 同步过滤对应的 referenceForm tab
+      target.editExtraTabs = target.editExtraTabs.filter(function(tab) {
+        return !(tab.tapType === 'referenceForm' && hiddenRefNovas.indexOf(tab.tapNovaName) !== -1)
+      })
+      target.editReferenceTabs = target.editReferenceTabs.filter(function(tab) {
+        return hiddenRefNovas.indexOf(tab.tapNovaName) !== -1
+      })
+    }
+    // refReferenceFieldsProp 对应的 REFERENCE 字段也需要隐藏（自动填充，不展示）
+    var refRefFieldsProp = target.refReferenceFieldsProp || {}
+    var refRefKeys = Object.keys(refRefFieldsProp)
+    if (refRefKeys.length > 0) {
+      target.editFields = (target.editFields || []).filter(function(f) {
+        return !(f.type === 'REFERENCE' && refRefKeys.indexOf(f.field) !== -1)
+      })
+    }
+    // LINK embedded 模式：子组件 build 完成后，把 linkTarget 等元数据同步到父组件 linkTabBuild
+    if (sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField) {
+      var parentVm = window.vmMap && window.vmMap[sourceNovaName]
+      if (parentVm && parentVm.linkTabBuild !== undefined) {
+        var lt = resp.data.linkTarget
+        var ltEditFields = target.editFields || []
+        var newBuild = Object.assign({}, parentVm.linkTabBuild)
+        newBuild[novaName] = {
+          linkTarget: lt,
+          sourceFieldName: lt.thisFieldName || '',
+          targetFieldName: lt.linkFieldName || '',
+          editFields: ltEditFields,
+          tableColumns: resp.data.tableColumns || [],
+          novaIdFieldName: resp.data.novaIdFieldName,
+          choiceMap: resp.data.choice || {},
+          referenceMap: resp.data.reference || {},
+          linkMap: resp.data.link || {}
+        }
+        parentVm.linkTabBuild = newBuild
+        // linkForm：同步完成后设置 sourceFields，然后 loadData
+        if (!deferDataLoad && lt.thisReferenceField && parentVm && parentVm.currentRow) {
+          var storageField = lt.thisStorageField || lt.thisReferenceField
+          var refVal = parentVm.currentRow[storageField]
+          target._sourceFields = refVal != null ? { [lt.thisReferenceField]: String(refVal) } : {}
+          var srf = []
+          if (refVal != null) {
+            srf.push({ field: lt.thisReferenceField, referenceField: lt.thisReferenceField, value: String(refVal) })
+          }
+          target._sourceRefFields = srf
+          loadData(key)
+        }
+      }
+    }
+    // LINK 双表视图：内层 nova-table 即 tapNovaName 本身，其 build 响应携带 linkTarget，
+    // 反向回填到外层 linkTabBuild，避免 initDualLinkTreeTab 再单独请求一次 build
+    if (target.dualMode && target.linkMode && target._dualHost && typeof target._dualHost.applyLinkBuildResp === 'function') {
+      target._dualHost.applyLinkBuildResp(novaName, resp, 'dual')
+    }
+    // LINK 编辑弹窗：内层 nova-table（embedded+link）的 build 响应回填到外层 linkTabBuild，
+    // 避免 initLinkTreeTab 再单独请求一次 build（普通模式重复 build 的根因）
+    if (target.embeddedMode && target.linkMode && target._dualHost && typeof target._dualHost.applyLinkBuildResp === 'function') {
+      target._dualHost.applyLinkBuildResp(novaName, resp, 'embedded')
+    }
+    // 非 linkForm 的 embedded 模式仍走原来的 loadData
+    // 注意：LINK 专属路径 (line 202) 仅在 parentVm.currentRow 存在时生效（编辑弹窗）；
+    // 双表视图下 currentRow 为 null，需走此 fallback
+    if (!deferDataLoad && !(sourceNovaName && resp.data.linkTarget && resp.data.linkTarget.thisReferenceField && parentVm && parentVm.currentRow)) {
+      loadData(key)
+    }
+    }
+    // 元数据应用（列头/搜索表单）相对轻量，build 响应后立即执行让数据请求并行拉取；
+    // 重活（表格数据渲染）由 loadData 按动画状态（首屏 boot 或切 tab 遮罩）延迟到动画结束，动画期间不掉帧、动画结束不留空表格
+    applyNow()
+    target._buildPending = false
+    // build 响应后容器布局变化（尤其树模式 isTree=true 时容器 height:100%、树搜索 filter-card 才渲染）：
+    // mounted/activated 的高度计算早于 build 响应（build 慢时用的是 isTree=false 的错误布局），必须重算，
+    // 否则树模式表格高度塌陷
+    if (window.Vue && window.Vue.nextTick) window.Vue.nextTick(function () { updateTableHeight() })
+    // 表格页面 build 完成 → 结束顶部加载条（仅路由切换后生效，embedded 等无 start 则空操作）
+    if (window.__novaPageLoading) window.__novaPageLoading.finish()
   }
 
   // ── 懒加载 link sub-build（首次打开弹窗时调用）─────────────────
