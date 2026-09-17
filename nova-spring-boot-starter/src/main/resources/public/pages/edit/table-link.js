@@ -393,7 +393,7 @@ window.NovaLinkForm = {
 
   template: `
 <div v-if="visible"
-  :style="'display:flex;flex-direction:column;overflow:hidden;' + (linkTreeData[linkNovaName] ? 'max-height:500px' : 'height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px'))">
+  :style="'display:flex;flex-direction:column;overflow:hidden;' + (isEmbTab ? 'height:calc(100vh - 240px)' : 'height:460px')">
   <!-- 加载中：跳跃方块动画 -->
   <div v-if="linkTreeLoading[linkNovaName] && !linkTabBuild[linkNovaName]"
     style="display:flex;align-items:center;justify-content:center;padding:60px">
