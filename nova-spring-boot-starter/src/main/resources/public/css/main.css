@@ -971,6 +971,26 @@ body.dark { background: #151515 !important; }
 }
 
 /* ─── REFERENCE 只读反显（descriptions 式：label 左 / 值右） ─── */
+/* 细滚动条（thin 6px），与 .msg-drawer / .n-modal 保持统一风格 */
+.ref-detail,
+.link-tree-detail { scrollbar-width: thin; scrollbar-color: #bbb #fafafa; scrollbar-gutter: stable; }
+.ref-detail::-webkit-scrollbar,
+.link-tree-detail::-webkit-scrollbar { width: 6px; }
+.ref-detail::-webkit-scrollbar-track,
+.link-tree-detail::-webkit-scrollbar-track { background: #fafafa; border-radius: 3px; }
+.ref-detail::-webkit-scrollbar-thumb,
+.link-tree-detail::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+.ref-detail::-webkit-scrollbar-thumb:hover,
+.link-tree-detail::-webkit-scrollbar-thumb:hover { background: #999; }
+.dark .ref-detail,
+.dark .link-tree-detail { scrollbar-color: #555 #1a1a1a; }
+.dark .ref-detail::-webkit-scrollbar-track,
+.dark .link-tree-detail::-webkit-scrollbar-track { background: #1a1a1a; }
+.dark .ref-detail::-webkit-scrollbar-thumb,
+.dark .link-tree-detail::-webkit-scrollbar-thumb { background: #555; }
+.dark .ref-detail::-webkit-scrollbar-thumb:hover,
+.dark .link-tree-detail::-webkit-scrollbar-thumb:hover { background: #777; }
+
 /* 卡片内边距与网格间距统一为 20/24，避免内容贴边 */
 .ref-detail .n-card {
   --n-padding-top: 20px !important;
