@@ -32,6 +32,9 @@ public @interface Edit {
     @Comment("默认值,新增时反显（日期组件需要使用13位时间戳）")
     String defaultValue() default "";
 
+    @Comment("AI集成")
+    AI ai() default @AI;
+
     @Comment("组件类型")
     Type type() default Type.AUTO;
 

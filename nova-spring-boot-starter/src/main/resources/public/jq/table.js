@@ -186,6 +186,10 @@ window.NovaTableJQ = (function ($) {
     target.sysBtnHide     = resp.data.sysBtnHide   || {}
     target.popMap         = resp.data.pops         || {}
     target.tipHtml        = (resp.data.tooltip && resp.data.tooltip.value) || ''   // 顶部提示面板内容；空则不显示小三角
+    // AI 审查：buildVo.ai.review === true 才走门禁
+    if (window.NovaAiCheck && resp.data.ai && resp.data.ai.review === true) {
+      window.NovaAiCheck.registerNova(target.novaName, true)
+    }
     var fields = resp.data.search || []
     // 提取 tapSearch 字段，从 searchFields 中移除
     var tapSearchField = null
@@ -1008,8 +1012,10 @@ window.NovaTableJQ = (function ($) {
   }
 
   // ── 提交表单 ──────────────────────────────────────────────────
-  function handleFormSubmit(vmKey) {
+  function handleFormSubmit(vmKey, opts) {
+    opts = opts || {}
     var target     = vmKey ? (window.vmMap && window.vmMap[vmKey]) : vm()
+    if (!target) return
     var formData   = target.formData
     var editFields = target.editFields || []
     var errors = window.NovaTableJQ_form.validateThisForm(editFields, target.visibleEditFields || [], formData)
@@ -1023,9 +1029,11 @@ window.NovaTableJQ = (function ($) {
 
     // 组装附属表单数据
     var appendageFormInfo = buildAppendageFormInfo(target)
-    if (target.currentRow) {
-      // 编辑：sourceRefFields 的 field 也要用 refReference
-      var novaName = target.novaName
+    var isEdit = !!target.currentRow
+    var novaName = target.novaName
+
+    // 编辑：直接 doSave（暂不做 AI 门禁）
+    if (isEdit) {
       var novaIdField = target.novaIdFieldName
       var pkValue = String(target.currentRow[novaIdField])
       var refRefFieldsEdit = target.refReferenceFieldsProp || {}
@@ -1034,43 +1042,64 @@ window.NovaTableJQ = (function ($) {
         if (refRefKeyEdit) return { field: refRefKeyEdit, referenceField: rf.referenceField, value: rf.value }
         return rf
       })
-      var formInfo = window.NovaTableJQ_form.buildFormInfo(editFields, formData, target.referenceMap, target.attachmentMap || {}, {
+      var formInfoEdit = window.NovaTableJQ_form.buildFormInfo(editFields, formData, target.referenceMap, target.attachmentMap || {}, {
         currentRow: target.currentRow,
         novaIdField: novaIdField,
         sourceRefFields: sourceRefFieldsEdit
       })
-      window.fetchApi.post('/nova/table/update', { novaName: novaName, formInfo: formInfo, appendageFormInfo: appendageFormInfo }).then(function (resp) {
-        var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
-        if (!t) return
-        t.showForm = false
-        if (window.$message) window.$message.success(window.__t('table.op_success'))
-        loadData(vmKey || novaName)
-      }).catch(function () {
-        console.info('[Nova] update接口请求失败，novaName:', novaName)
-      })
-    } else {
-      // 新增：sourceRefFields 的 field 要用 refReference（REFERENCE 字段名），不用 referenceField
-      var novaName = target.novaName
-      var refRefFields = target.refReferenceFieldsProp || {}
-      var refRefKey = Object.keys(refRefFields)[0] || null
-      var sourceRefFields = (target._sourceRefFields || []).map(function(rf) {
-        if (refRefKey) return { field: refRefKey, referenceField: rf.referenceField, value: rf.value }
-        return rf
-      })
-      var formInfo = window.NovaTableJQ_form.buildFormInfo(editFields, formData, target.referenceMap, target.attachmentMap || {}, {
-        skipEmpty: true,
-        sourceRefFields: sourceRefFields
-      })
-      window.fetchApi.post('/nova/table/add', { novaName: novaName, formInfo: formInfo, appendageFormInfo: appendageFormInfo }).then(function (resp) {
-        var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
-        if (!t) return
-        t.showForm = false
-        if (window.$message) window.$message.success(window.__t('table.op_success'))
-        loadData(vmKey || novaName)
-      }).catch(function () {
-        console.info('[Nova] add接口请求失败，novaName:', novaName)
-      })
+      return doSave(target, vmKey, novaName, formInfoEdit, appendageFormInfo, 'update')
     }
+
+    // 新增：先校验基础条件，再走 AI 门禁
+    var refRefFields = target.refReferenceFieldsProp || {}
+    var refRefKey = Object.keys(refRefFields)[0] || null
+    var sourceRefFields = (target._sourceRefFields || []).map(function(rf) {
+      if (refRefKey) return { field: refRefKey, referenceField: rf.referenceField, value: rf.value }
+      return rf
+    })
+    var formInfo = window.NovaTableJQ_form.buildFormInfo(editFields, formData, target.referenceMap, target.attachmentMap || {}, {
+      skipEmpty: true,
+      sourceRefFields: sourceRefFields
+    })
+
+    // 跳过 AI 的几个分支
+    if (opts.bypassAi) return doSave(target, vmKey, novaName, formInfo, appendageFormInfo, 'add')
+    if (!window.NovaAiCheck || !window.NovaAiCheck.shouldCheck(novaName)) return doSave(target, vmKey, novaName, formInfo, appendageFormInfo, 'add')
+    if (window.NovaAiCheck.shouldThrottle(novaName)) return doSave(target, vmKey, novaName, formInfo, appendageFormInfo, 'add')
+
+    // AI 门禁
+    window.NovaAiCheck.gate({
+      novaName:           novaName,
+      formInfo:           formInfo,
+      appendageFormInfo:  appendageFormInfo
+    }, { timeoutMs: 3000 }).then(function (result) {
+      // showForm 可能已因用户取消而被关掉；这种情况 doSave 内部还会再读一次 vmMap
+      var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
+      if (!t) return
+      // proceed:true 的几种 kind 都直接 doSave（pass/timeout/error 自动放行，stillSubmit 用户在 mask 内确认）
+      if (result.proceed) {
+        doSave(t, vmKey, novaName, formInfo, appendageFormInfo, 'add')
+      }
+      // proceed:false：cancelled / editBack —— 啥也不做，表单保持打开
+    })
+  }
+
+  // ── 提交保存（add/update 共用）─────────────────────────────────
+  function doSave(target, vmKey, novaName, formInfo, appendageFormInfo, mode) {
+    var url = mode === 'update' ? '/nova/table/update' : '/nova/table/add'
+    return window.fetchApi.post(url, {
+      novaName:          novaName,
+      formInfo:          formInfo,
+      appendageFormInfo: appendageFormInfo
+    }).then(function (resp) {
+      var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
+      if (!t) return
+      t.showForm = false
+      if (window.$message) window.$message.success(window.__t('table.op_success'))
+      loadData(vmKey || novaName)
+    }).catch(function () {
+      console.info('[Nova] ' + mode + '接口请求失败，novaName:', novaName)
+    })
   }
 
   // ── picker 模式初始化（不更新 tableHeight，不绑 resize） ────────

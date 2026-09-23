@@ -1306,6 +1306,10 @@ const NovaTable = {
     showForm(val) {
       if (!val) {
         // 弹窗关闭：清空所有 tab 相关缓存，确保下次打开完全等同于第一次
+        // 若 AI 门禁遮罩在跑，中断它（互相取消）
+        if (window.NovaAiCheck && window.NovaAiCheck.cancelCurrent) {
+          window.NovaAiCheck.cancelCurrent()
+        }
         this.visitedEmbTabs      = new Set()
         this.formTab             = 'form'
         this.appendageDetailsLoaded = {}
@@ -2691,7 +2695,11 @@ const NovaTable = {
         if (window.$message) window.$message.success(window.__t('table.upload_success'))
       }).catch(function() {})
     },
-    handleFormSubmit()  { if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleFormSubmit(this._vmKey); else window.NovaTableJQ.handleFormSubmit() },
+    handleFormSubmit(opts)  {
+      const o = opts || {}
+      if (this.embeddedMode || this.dualMode) window.NovaTableJQ.handleFormSubmit(this._vmKey, o)
+      else                                       window.NovaTableJQ.handleFormSubmit(null, o)
+    },
     handleAttachmentChange(f, event, appNovaName) {
       const files = Array.from(event.target.files || [])
       event.target.value = ''

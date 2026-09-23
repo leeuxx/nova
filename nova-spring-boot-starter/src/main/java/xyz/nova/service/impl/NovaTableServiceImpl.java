@@ -371,6 +371,11 @@ public class NovaTableServiceImpl implements NovaTableService {
         NovaTableBuild.Vo.Tooltip tooltip = new NovaTableBuild.Vo.Tooltip()
                 .setValue(tooltipInfo.getValue());
         vo.setTooltip(tooltip);
+        // 获取AI信息
+        NovaFieldUtils.AiInfo aiInfo = NovaFieldUtils.getAi(novaTableBuild.getNovaName());
+        NovaTableBuild.Vo.Ai ai = new NovaTableBuild.Vo.Ai()
+                .setReview(aiInfo.getReview());
+        vo.setAi(ai);
         return vo;
     }
 

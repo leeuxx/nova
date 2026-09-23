@@ -723,6 +723,29 @@ public class NovaFieldUtils {
                 .setRowSelect(sysBtnHide.rowSelect());
     }
 
+    /**
+     * 获取AI参数信息
+     *
+     * @param className 类名
+     * @return AI参数信息
+     */
+    public static AiInfo getAi(String className) {
+        AiInfo aiInfo = new AiInfo().setReview(false);
+        NovaApplication.ScanNova scanNova = getScanNova(className);
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
+            Edit edit = novaField.edit();
+            AI ai = edit.ai();
+            // 数据审查
+            AI.Review review = ai.review();
+            if (review.enable()) {
+                aiInfo.setReview(true);
+            }
+        });
+        return aiInfo;
+    }
+
     private static NovaApplication.ScanNova getScanNova(String className) {
         Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
         NovaApplication.ScanNova scanNova = scanNovas.get(className);
@@ -1156,6 +1179,15 @@ public class NovaFieldUtils {
 
         @Comment("选取框表达式（满足则隐藏）")
         private ShowBy rowSelect;
+
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class AiInfo {
+
+        @Comment("开启审查")
+        private Boolean review;
 
     }
 }

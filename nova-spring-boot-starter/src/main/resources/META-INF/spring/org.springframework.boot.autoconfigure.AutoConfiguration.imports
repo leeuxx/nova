@@ -5,3 +5,7 @@ xyz.nova.controller.NovaMessageController
 xyz.nova.error.NovaExceptionAdvice
 xyz.nova.service.impl.NovaTableServiceImpl
 xyz.nova.service.impl.NovaTplServiceImpl
+
+xyz.nova.config.NovaAiConfig
+xyz.nova.service.impl.NovaAiServiceImpl
+xyz.nova.controller.NovaAiController

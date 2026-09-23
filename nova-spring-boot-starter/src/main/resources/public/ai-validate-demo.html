@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>AI 数据质量分析</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    html, body { height: auto !important; overflow: auto !important; }
+    body { padding: 24px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f7fa; margin: 0; color: #333; }
+    body.dark { background: #101014; color: #d0d0d0; }
+
+    .wrap { max-width: 960px; margin: 0 auto; }
+    h1 { margin: 0 0 16px; font-size: 20px; font-weight: 600; }
+
+    .panel { background: #fff; border-radius: 8px; padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    body.dark .panel { background: #18181c; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+
+    label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #666; }
+    body.dark label { color: #aaa; }
+
+    textarea { width: 100%; box-sizing: border-box; min-height: 120px; padding: 10px 12px; font-family: Consolas, Monaco, monospace; font-size: 13px; border: 1px solid #dcdfe6; border-radius: 4px; background: #fafafa; color: #333; resize: vertical; }
+    body.dark textarea { background: #1f1f23; border-color: #2a2a2e; color: #d0d0d0; }
+    textarea:focus { outline: none; border-color: #18a058; }
+
+    .actions { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+    .btn { padding: 7px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: opacity .15s; }
+    .btn-primary { background: #18a058; color: #fff; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary:disabled { background: #999; cursor: not-allowed; opacity: 0.6; }
+    .btn-default { background: #f0f0f0; color: #333; }
+    body.dark .btn-default { background: #2a2a2e; color: #d0d0d0; }
+
+    .status { margin-left: auto; font-size: 13px; color: #666; }
+    body.dark .status { color: #aaa; }
+    .status.error { color: #d03050; }
+
+    .output { font-family: Consolas, Monaco, monospace; font-size: 13px; line-height: 1.9; min-height: 280px; max-height: 540px; overflow-y: auto; padding: 12px 16px; background: #fafafa; border-radius: 4px; border: 1px solid #ececec; }
+    body.dark .output { background: #1f1f23; border-color: #2a2a2e; }
+
+    .output .empty { color: #999; font-style: italic; text-align: center; padding: 80px 0; }
+    body.dark .output .empty { color: #666; }
+
+    /* ===== 行项 ===== */
+    .item { display: flex; gap: 8px; align-items: baseline; padding: 2px 0; }
+    .item .icon { flex: 0 0 18px; display: inline-flex; align-items: center; justify-content: center; height: 18px; }
+    .item .value { flex: 0 0 auto; max-width: 280px; word-break: break-all; }
+    .item .msg { color: #666; }
+    body.dark .item .msg { color: #aaa; }
+    .item.fail .msg { color: #d03050; }
+    body.dark .item.fail .msg { color: #ff6b85; }
+
+    /* 通过：绿色圆点 */
+    .dot-pass {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #18a058;
+    }
+    /* 注意：橙色三角 */
+    .tri-warn {
+      display: inline-block;
+      width: 0; height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 8px solid #faad14;
+    }
+
+    /* ===== 结论 ===== */
+    .result { margin-top: 12px; padding: 10px 14px; border-radius: 4px; font-weight: 500; }
+    .result.pass { background: rgba(24,160,88,0.12); color: #18a058; }
+    .result.fail { background: rgba(250,173,20,0.12); color: #d48806; }
+    body.dark .result.pass { background: rgba(24,160,88,0.18); }
+    body.dark .result.fail { background: rgba(250,173,20,0.18); color: #faad14; }
+
+    /* 打字机光标 */
+    .typing::after { content: '▋'; margin-left: 2px; animation: blink 1s steps(1) infinite; color: #999; }
+    @keyframes blink { 50% { opacity: 0; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>AI 数据质量分析</h1>
+
+  <div class="panel">
+    <label for="fields">提交数据（JSON）</label>
+    <textarea id="fields" spellcheck="false">{
+  "novaName": "userNova",
+  "formInfo": [
+    { "field": "name", "value": "刘丽敏" },
+    { "field": "age", "value": "28" },
+    { "field": "gender", "value": "男" },
+    { "field": "birthday", "value": "1990-01-01" },
+    { "field": "id_card", "value": "430104199001011234" },
+    { "field": "phone", "value": "13800138010" },
+    { "field": "email", "value": "wangmazi@example.com" },
+    { "field": "wechat", "value": "liulimin_2024" },
+    { "field": "address", "value": "湖南省长沙市岳麓区桐梓坡路沙湾村" },
+    { "field": "zip_code", "value": "410013" },
+    { "field": "height", "value": "150" },
+    { "field": "weight", "value": "70.5" },
+    { "field": "blood_type", "value": "O" },
+    { "field": "married", "value": "true" },
+    { "field": "hobbies", "value": "读书,下棋" },
+    { "field": "company", "value": "阿里爸爸科技有限公司" },
+    { "field": "job_title", "value": "高级搬砖工程师" },
+    { "field": "salary", "value": "999999999" },
+    { "field": "emergency_contact", "value": "张小明" },
+    { "field": "emergency_phone", "value": "1380013801" },
+    { "field": "remark", "value": "asdfghjkl" }
+  ],
+  "appendageFormInfo": {
+    "orgNova": [
+      { "field": "name", "value": "阿里云" },
+      { "field": "address", "value": "中国浙江省杭州市" }
+    ]
+  }
+}</textarea>
+    <div class="actions">
+      <button id="startBtn" class="btn btn-primary">开始分析</button>
+      <button id="clearBtn" class="btn btn-default">清空</button>
+      <span id="status" class="status">就绪</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <label>分析结果</label>
+    <div id="output" class="output"><div class="empty">点击「开始分析」后，结果会在这里逐字显示</div></div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var fieldsEl  = document.getElementById('fields')
+    var startBtn  = document.getElementById('startBtn')
+    var clearBtn  = document.getElementById('clearBtn')
+    var statusEl  = document.getElementById('status')
+    var outputEl  = document.getElementById('output')
+
+    function setStatus(text, isError) {
+      statusEl.textContent = text
+      statusEl.className = 'status' + (isError ? ' error' : '')
+    }
+
+    function clearOutput() {
+      outputEl.innerHTML = ''
+    }
+
+    if (window.__appDarkMode && window.__appDarkMode.value) {
+      document.body.classList.add('dark')
+    }
+
+    function typewrite(el, content, speed, done) {
+      el.classList.add('typing')
+      var i = 0
+      function step() {
+        if (i >= content.length) {
+          el.classList.remove('typing')
+          if (done) done()
+          return
+        }
+        el.appendChild(document.createTextNode(content.charAt(i)))
+        i++
+        outputEl.scrollTop = outputEl.scrollHeight
+        setTimeout(step, speed)
+      }
+      step()
+    }
+
+    var renderQueue = []
+    var isRendering = false
+
+    function pumpQueue() {
+      if (isRendering) return
+      var task = renderQueue.shift()
+      if (!task) {
+        isRendering = false
+        return
+      }
+      isRendering = true
+      if (task.kind === 'item') {
+        typeItemRow(task.data, function () {
+          isRendering = false
+          pumpQueue()
+        })
+      } else {
+        if (task.kind === 'result')     appendResultRow(task.data)
+        else if (task.kind === 'error') appendErrorRow(task.data)
+        isRendering = false
+        pumpQueue()
+      }
+    }
+
+    function enqueueTask(kind, data) {
+      renderQueue.push({ kind: kind, data: data })
+      pumpQueue()
+    }
+
+    function typeItemRow(item, done) {
+      var row = document.createElement('div')
+      row.className = 'item ' + (item.ok ? 'ok' : 'fail')
+
+      var icon = document.createElement('span')
+      icon.className = 'icon'
+      // 通过用绿色圆点，注意用橙色三角
+      icon.innerHTML = item.ok
+        ? '<span class="dot-pass"></span>'
+        : '<span class="tri-warn"></span>'
+
+      var value = document.createElement('span')
+      value.className = 'value'
+
+      var msg = document.createElement('span')
+      msg.className = 'msg'
+
+      row.appendChild(icon)
+      row.appendChild(value)
+      row.appendChild(msg)
+      outputEl.appendChild(row)
+      outputEl.scrollTop = outputEl.scrollHeight
+
+      var tail = item.ok ? '' : ' ' + (item.msg || '')
+
+      function afterValue() {
+        if (tail) {
+          typewrite(msg, tail, 3, done)
+        } else {
+          done()
+        }
+      }
+
+      if (item.value) {
+        typewrite(value, item.value, 3, afterValue)
+      } else {
+        afterValue()
+      }
+    }
+
+    function appendResultRow(result) {
+      var row = document.createElement('div')
+      row.className = 'result ' + (result.ok ? 'pass' : 'fail')
+      row.textContent = result.ok
+        ? '分析完成：数据看起来没问题'
+        : '分析完成：有几点建议您看看'
+      outputEl.appendChild(row)
+      outputEl.scrollTop = outputEl.scrollHeight
+    }
+
+    function appendErrorRow(message) {
+      var row = document.createElement('div')
+      row.className = 'item fail'
+      var icon = document.createElement('span')
+      icon.className = 'icon'
+      icon.innerHTML = '<span class="tri-warn"></span>'
+      var value = document.createElement('span')
+      value.className = 'value'
+      value.textContent = '[error] ' + message
+      row.appendChild(icon)
+      row.appendChild(value)
+      outputEl.appendChild(row)
+      outputEl.scrollTop = outputEl.scrollHeight
+    }
+
+    function renderItem(item)     { enqueueTask('item', item) }
+    function renderResult(result) { enqueueTask('result', result) }
+    function renderError(message) { enqueueTask('error', message) }
+
+    startBtn.addEventListener('click', function () {
+      var raw = fieldsEl.value.trim()
+      if (!raw) {
+        setStatus('数据不能为空', true)
+        return
+      }
+      var fields
+      try {
+        fields = JSON.parse(raw)
+      } catch (e) {
+        setStatus('JSON 解析失败：' + e.message, true)
+        return
+      }
+
+      clearOutput()
+      startBtn.disabled = true
+      setStatus('请求中…')
+
+      var ctrl = new AbortController()
+
+      fetch('/nova/ai/addSseEmitter', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(fields),
+        signal:  ctrl.signal
+      }).then(function (resp) {
+        if (!resp.ok) throw new Error('HTTP ' + resp.status)
+        var reader = resp.body.getReader()
+        var decoder = new TextDecoder('utf-8')
+        var buf = ''
+        var pendingEvent = 'message'
+
+        function readChunk() {
+          return reader.read().then(function (r) {
+            if (r.done) return null
+            buf += decoder.decode(r.value, { stream: true })
+            var lines = buf.split('\n')
+            buf = lines.pop()
+            for (var i = 0; i < lines.length; i++) {
+              var line = lines[i]
+              if (line.startsWith('event:')) {
+                pendingEvent = line.slice(6).trim()
+              } else if (line.startsWith('data:')) {
+                var data = line.slice(5).trim()
+                if (!data || data === '[DONE]') continue
+                try {
+                  var obj = JSON.parse(data)
+                  if (obj.type === 'item')      renderItem(obj)
+                  else if (obj.type === 'result') renderResult(obj)
+                  else if (obj.type === 'error')  renderError(obj.message || '未知错误')
+                } catch (e) {
+                  console.warn('解析失败:', data, e)
+                }
+              }
+            }
+            return readChunk()
+          })
+        }
+
+        setStatus('分析中…')
+        return readChunk().then(function () {
+          setStatus('完成')
+          startBtn.disabled = false
+        })
+      }).catch(function (e) {
+        if (e.name === 'AbortError') {
+          setStatus('已中止')
+        } else {
+          setStatus('请求失败：' + e.message, true)
+          renderError(e.message)
+        }
+        startBtn.disabled = false
+      })
+    })
+
+    clearBtn.addEventListener('click', function () {
+      fieldsEl.value = ''
+      clearOutput()
+      setStatus('就绪')
+    })
+  })()
+</script>
+</body>
+</html>

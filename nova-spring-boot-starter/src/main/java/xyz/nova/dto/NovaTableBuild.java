@@ -87,6 +87,9 @@ public class NovaTableBuild {
         @Comment("提示框信息")
         private Tooltip tooltip;
 
+        @Comment("ai信息")
+        private Ai ai;
+
         @Data
         @Accessors(chain = true)
         public static class Search {
@@ -645,6 +648,15 @@ public class NovaTableBuild {
 
             @Comment("提示内容")
             private String value;
+
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class Ai {
+
+            @Comment("开启审查")
+            private Boolean review;
 
         }
 
