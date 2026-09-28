@@ -83,16 +83,72 @@
       + '.nova-ai-drawer-btn-secondary:hover{border-color:#2563eb;color:#2563eb;box-shadow:0 2px 8px rgba(37,99,235,.12)}'
       + '.dark .nova-ai-drawer-btn-secondary{background:#18181c;border-color:#2a2a2e;color:#d0d0d0}'
       + '.dark .nova-ai-drawer-btn-secondary:hover{border-color:#3b82f6;color:#3b82f6;box-shadow:0 2px 8px rgba(59,130,246,.15)}'
-      + '.nova-ai-floating-wrap{position:absolute;right:0;top:50%;width:50px;height:120px;margin-top:-60px;z-index:9998;cursor:pointer;overflow:hidden;animation:naiFabPopIn .3s cubic-bezier(.22,.61,.36,1)}'
-      + '.nova-ai-floating-btn{position:absolute;right:-15px;top:38px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#18a058 0%,#36ad6a 100%);border:none;cursor:pointer;box-shadow:0 6px 20px rgba(24,160,88,.35);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;transition:right .3s cubic-bezier(.22,.61,.36,1),box-shadow .25s ease;overflow:visible;padding:0}'
-      + '.nova-ai-floating-wrap:hover .nova-ai-floating-btn{right:3px;box-shadow:0 10px 28px rgba(24,160,88,.45)}'
-      + '.nova-ai-floating-btn:active{box-shadow:0 4px 14px rgba(24,160,88,.4)}'
-      + '.nova-ai-floating-btn.has-fail{background:linear-gradient(135deg,#faad14 0%,#ffc53d 100%);box-shadow:0 6px 20px rgba(250,173,20,.4)}'
-      + '.nova-ai-floating-wrap:hover .nova-ai-floating-btn.has-fail{box-shadow:0 10px 28px rgba(250,173,20,.5)}'
-      + '.nova-ai-floating-badge{position:absolute;top:-4px;left:-2px;min-width:18px;height:18px;border-radius:9px;background:#fff;color:#faad14;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 6px rgba(0,0,0,.18);border:2px solid #faad14;line-height:1;pointer-events:none;box-sizing:border-box}'
-      + '.dark .nova-ai-floating-badge{background:#18181c;color:#ffc53d;border-color:#ffc53d}'
+      + '.nova-ai-floating-wrap{position:absolute;right:0;top:50%;width:64px;height:72px;margin-top:-36px;padding-top:20px;z-index:9998;cursor:pointer;overflow:hidden;animation:naiFabPopIn .3s cubic-bezier(.22,.61,.36,1)}'
       + '@keyframes naiFabPopIn{from{transform:scale(0)}to{transform:scale(1)}}'
-      + '.nova-ai-floating-icon{line-height:1;display:block;pointer-events:none}'
+      /* ── AI 头像（移植自 demo.html，橘黄色系） ── */
+      + '.nova-ai-avatar-visual{--size:52px;position:absolute;top:20px;right:calc(var(--size) * -0.33);width:var(--size);height:var(--size);pointer-events:none;transition:right .35s cubic-bezier(.34,1.56,.64,1)}'
+      + '.nova-ai-floating-wrap.active .nova-ai-avatar-visual{right:calc(var(--size) * 0.05)}'
+      + '.nova-ai-ai-inner{width:100%;height:100%;transform-origin:right center;transform:rotate(-18deg) scale(.9);transition:transform .35s cubic-bezier(.34,1.56,.64,1);position:relative;animation:naiWiggle 2.4s ease-in-out infinite}'
+      + '.nova-ai-floating-wrap.active .nova-ai-ai-inner{transform:rotate(0deg) scale(1);animation:none}'
+      + '@keyframes naiWiggle{0%,100%{transform:rotate(-18deg) scale(.9) translateY(0)}25%{transform:rotate(-14deg) scale(.92) translateY(-2px)}50%{transform:rotate(-18deg) scale(.9) translateY(0)}75%{transform:rotate(-22deg) scale(.92) translateY(-2px)}}'
+      + '.nova-ai-avatar-face{width:100%;height:100%;background:radial-gradient(circle at 30% 25%,#fff4e6,#ffd9b5);border-radius:50%;border:3px solid #ffffffd0;box-shadow:inset 0 -6px 8px rgba(180,120,70,.1),0 0 0 3px #ffe1c6;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}'
+      + '.nova-ai-face-features{position:relative;display:flex;flex-direction:column;align-items:center;margin-top:3px}'
+      + '.nova-ai-eyes{display:flex;gap:10px;margin-bottom:3px}'
+      + '.nova-ai-eye-wrap{width:8px;height:10px;position:relative;animation:naiBlink 5s infinite;transform-origin:center}'
+      + '.nova-ai-eye{width:100%;height:100%;background:#4f3a2b;border-radius:50% 50% 40% 40%;position:relative;transition:transform .2s}'
+      + '.nova-ai-eye::after{content:"";position:absolute;top:2px;left:2px;width:3px;height:3px;background:#fff9f0;border-radius:50%}'
+      + '@keyframes naiBlink{0%,94%{transform:scaleY(1)}95.5%,96.5%{transform:scaleY(.05)}98%,100%{transform:scaleY(1)}}'
+      + '.nova-ai-ai-inner .nova-ai-eye{transform:translateX(2px) scaleY(.9)}'
+      + '.nova-ai-floating-wrap.active .nova-ai-eye{transform:translateX(0) scaleY(1)}'
+      + '.nova-ai-mouth{width:11px;height:6px;border-bottom:2px solid #b35e2e;border-radius:0 0 50% 50%;margin-top:1px;transition:width .25s,height .25s,border-color .2s}'
+      + '.nova-ai-ai-inner .nova-ai-mouth{width:9px;height:4px;border-bottom-width:2px;opacity:.8}'
+      + '.nova-ai-floating-wrap.active .nova-ai-mouth{width:12px;height:7px;border-bottom:3px solid #d46b3a;opacity:1}'
+      + '.nova-ai-blush{position:absolute;top:60%;left:9%;width:8px;height:5px;background:#ffb6b6;border-radius:50%;opacity:.5;filter:blur(1.5px);transition:opacity .3s,transform .3s}'
+      + '.nova-ai-blush.right{left:auto;right:9%}'
+      + '.nova-ai-floating-wrap.active .nova-ai-blush{opacity:.9;transform:scale(1.2)}'
+      /* 睡帽 */
+      + '.nova-ai-nightcap{position:absolute;top:-15px;left:50%;transform:translateX(-50%);width:50px;height:24px;pointer-events:none;z-index:2;transition:transform .4s cubic-bezier(.34,1.56,.64,1)}'
+      + '.nova-ai-nightcap .nova-ai-cap-body{position:absolute;bottom:0;left:50%;transform:translateX(-50%) rotate(-10deg);transform-origin:bottom center;width:46px;height:19px;background:linear-gradient(160deg,#ffe9d4 0%,#ffd0a8 60%,#ffbe8c 100%);border:2px solid #ffffffd0;border-radius:50% 50% 35% 35% / 90% 90% 25% 25%;box-shadow:inset -2px -2px 4px rgba(200,130,80,.18),inset 2px 2px 3px rgba(255,255,255,.7);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}'
+      + '.nova-ai-nightcap .nova-ai-cap-brim{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%) rotate(-10deg);transform-origin:bottom center;width:48px;height:8px;background:linear-gradient(160deg,#ffd9b5,#ffc79b);border:2px solid #ffffffd0;border-radius:50%;box-shadow:0 2px 3px rgba(200,130,80,.18);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}'
+      + '.nova-ai-floating-wrap.active .nova-ai-nightcap{transform:translateX(-50%) translateY(-2px)}'
+      + '.nova-ai-floating-wrap.active .nova-ai-cap-body,.nova-ai-floating-wrap.active .nova-ai-cap-brim{transform:translateX(-50%) rotate(0deg)}'
+      /* 蝴蝶结 */
+      + '.nova-ai-bow{position:absolute;top:7px;left:-2px;width:13px;height:9px;pointer-events:none;z-index:3;transition:transform .4s cubic-bezier(.34,1.56,.64,1)}'
+      + '.nova-ai-bow::before,.nova-ai-bow::after{content:"";position:absolute;top:0;width:7px;height:9px;background:radial-gradient(circle at 30% 30%,#ffb0c0,#ff7a9a);border:1px solid #ffffffd0}'
+      + '.nova-ai-bow::before{left:0;border-radius:60% 40% 50% 50% / 50% 50% 50% 50%;transform:rotate(-8deg)}'
+      + '.nova-ai-bow::after{right:0;border-radius:40% 60% 50% 50% / 50% 50% 50% 50%;transform:rotate(8deg)}'
+      + '.nova-ai-bow .nova-ai-knot{position:absolute;top:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;background:#ff5a7a;border-radius:50%;border:1px solid #ffffffd0;z-index:1}'
+      + '.nova-ai-floating-wrap.active .nova-ai-bow{transform:scale(1.12) rotate(5deg)}'
+      /* 气泡（仅失败时显示） */
+      + '.nova-ai-bubble{position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:21px;height:17px;background:#fff;border:2px solid #ffb888;border-radius:50% 50% 50% 50% / 55% 55% 45% 45%;box-shadow:0 3px 8px rgba(200,130,80,.2);pointer-events:none;z-index:4;animation:naiBubbleFloat 1.8s ease-in-out infinite;transition:opacity .3s ease}'
+      + '.nova-ai-bubble .nova-ai-tail-down{position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #ffb888}'
+      + '.nova-ai-bubble .nova-ai-tail-down::after{content:"";position:absolute;top:-6px;left:-3px;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid #fff}'
+      + '.nova-ai-bubble .nova-ai-dots{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;gap:2px}'
+      + '.nova-ai-bubble .nova-ai-dots span{width:3px;height:3px;background:#ff8c5a;border-radius:50%;display:block;animation:naiDotBounce 1.4s ease-in-out infinite}'
+      + '.nova-ai-bubble .nova-ai-dots span:nth-child(2){animation-delay:.2s}'
+      + '.nova-ai-bubble .nova-ai-dots span:nth-child(3){animation-delay:.4s}'
+      + '@keyframes naiDotBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-3px)}}'
+      + '@keyframes naiBubbleFloat{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-3px)}}'
+      + '.nova-ai-floating-wrap.active .nova-ai-bubble{opacity:0}'
+      /* badge */
+      + '.nova-ai-floating-badge{position:absolute;top:-2px;left:-2px;min-width:16px;height:16px;border-radius:8px;background:#fff;color:#faad14;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;box-shadow:0 2px 6px rgba(0,0,0,.18);border:2px solid #faad14;line-height:1;pointer-events:none;box-sizing:border-box;z-index:5}'
+      + '.dark .nova-ai-floating-badge{background:#18181c;color:#ffc53d;border-color:#ffc53d}'
+      /* 暗色模式：保持暖白调，稍微压暗 */
+      + '.dark .nova-ai-avatar-face{background:radial-gradient(circle at 30% 25%,#e8d8c8,#d4bea8);border-color:rgba(255,255,255,.25);box-shadow:inset 0 -4px 6px rgba(120,80,50,.12),0 0 0 3px #d0b8a0}'
+      + '.dark .nova-ai-eye{background:#3f3024}'
+      + '.dark .nova-ai-eye::after{background:#f0ece4}'
+      + '.dark .nova-ai-mouth{border-color:#9a5028}'
+      + '.dark .nova-ai-floating-wrap.active .nova-ai-mouth{border-color:#b0602e}'
+      + '.dark .nova-ai-blush{background:#d89898;opacity:.45}'
+      + '.dark .nova-ai-floating-wrap.active .nova-ai-blush{opacity:.8}'
+      + '.dark .nova-ai-nightcap .nova-ai-cap-body{background:linear-gradient(160deg,#d8c8b0 0%,#c8a888 60%,#b89878 100%);border-color:rgba(255,255,255,.2);box-shadow:inset -2px -2px 4px rgba(160,100,60,.15),inset 2px 2px 3px rgba(255,255,255,.4)}'
+      + '.dark .nova-ai-nightcap .nova-ai-cap-brim{background:linear-gradient(160deg,#c8b098,#b89878);border-color:rgba(255,255,255,.2);box-shadow:0 2px 3px rgba(160,100,60,.15)}'
+      + '.dark .nova-ai-bow::before,.dark .nova-ai-bow::after{background:radial-gradient(circle at 30% 30%,#d09898,#b06878);border-color:rgba(255,255,255,.2)}'
+      + '.dark .nova-ai-bow .nova-ai-knot{background:#c05868;border-color:rgba(255,255,255,.2)}'
+      + '.dark .nova-ai-bubble{background:#e8e0d8;border-color:#c89878;box-shadow:0 3px 8px rgba(0,0,0,.25)}'
+      + '.dark .nova-ai-bubble .nova-ai-tail-down{border-top-color:#c89878}'
+      + '.dark .nova-ai-bubble .nova-ai-tail-down::after{border-top-color:#e8e0d8}'
+      + '.dark .nova-ai-bubble .nova-ai-dots span{background:#e87858}'
       + '.nova-ai-floating-tooltip{position:fixed;white-space:nowrap;padding:6px 10px;background:rgba(50,50,54,.96);color:#fff;font-size:12px;font-weight:400;line-height:1.5;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:99999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.25)}'
       + '.nova-ai-floating-tooltip.is-show{opacity:1}'
       + '.nova-ai-floating-tooltip::after{content:"";position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:6px solid rgba(50,50,54,.96)}'
@@ -175,20 +231,60 @@
     hideFloatingBtn()
     var wrap = document.createElement('div')
     wrap.className = 'nova-ai-floating-wrap'
-    var btn = document.createElement('button')
-    btn.className = 'nova-ai-floating-btn' + (failedCount > 0 ? ' has-fail' : '')
-    btn.type = 'button'
     var tipText = failedCount > 0
       ? '上次 AI 审查有 ' + failedCount + ' 个建议，点击查看'
       : '上次 AI 审查通过，点击查看'
-    btn.innerHTML = '<span class="nova-ai-floating-icon">AI</span>'
+
+    // 构建头像 HTML（移植自 demo.html）
+    var avatarHtml = '<div class="nova-ai-avatar-visual">'
+      + '<div class="nova-ai-ai-inner">'
+      + '<div class="nova-ai-avatar-face">'
+      // 气泡（仅失败时）
+      + (failedCount > 0
+          ? '<div class="nova-ai-bubble"><div class="nova-ai-dots"><span></span><span></span><span></span></div><div class="nova-ai-tail-down"></div></div>'
+          : '')
+      // 睡帽
+      + '<div class="nova-ai-nightcap"><div class="nova-ai-cap-body"></div><div class="nova-ai-cap-brim"></div></div>'
+      // 蝴蝶结
+      + '<div class="nova-ai-bow"><div class="nova-ai-knot"></div></div>'
+      // 五官
+      + '<div class="nova-ai-face-features">'
+      + '<div class="nova-ai-eyes">'
+      + '<div class="nova-ai-eye-wrap"><div class="nova-ai-eye"></div></div>'
+      + '<div class="nova-ai-eye-wrap"><div class="nova-ai-eye"></div></div>'
+      + '</div>'
+      + '<div class="nova-ai-mouth"></div>'
+      + '</div>'
+      // 腮红
+      + '<div class="nova-ai-blush left"></div>'
+      + '<div class="nova-ai-blush right"></div>'
+      // badge（仅失败时）
       + (failedCount > 0
           ? '<span class="nova-ai-floating-badge">' + failedCount + '</span>'
           : '')
-    btn.addEventListener('click', reopenDrawer)
-    wrap.addEventListener('mouseenter', function () { showFloatingTooltip(btn, tipText) })
-    wrap.addEventListener('mouseleave', hideFloatingTooltip)
-    wrap.appendChild(btn)
+      + '</div></div></div>'
+
+    wrap.innerHTML = avatarHtml
+    wrap.addEventListener('click', reopenDrawer)
+    wrap.addEventListener('mouseenter', function () {
+      wrap.classList.add('active')
+      // 延迟显示 tooltip，等头像滑出动画走一会
+      setTimeout(function () {
+        if (wrap.classList.contains('active')) {
+          showFloatingTooltip(wrap, tipText)
+        }
+      }, 200)
+    })
+    wrap.addEventListener('mouseleave', function () {
+      wrap.classList.remove('active')
+      hideFloatingTooltip()
+    })
+    // 随机眨眼周期
+    var eyeWraps = wrap.querySelectorAll('.nova-ai-eye-wrap')
+    var dur = (4 + Math.random() * 2.5).toFixed(1)
+    for (var i = 0; i < eyeWraps.length; i++) {
+      eyeWraps[i].style.animationDuration = dur + 's'
+    }
     var host = document.querySelector('.n-modal') || document.body
     host.appendChild(wrap)
     floatingBtn = wrap
