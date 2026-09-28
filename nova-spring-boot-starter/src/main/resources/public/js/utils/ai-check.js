@@ -83,18 +83,19 @@
       + '.nova-ai-drawer-btn-secondary:hover{border-color:#2563eb;color:#2563eb;box-shadow:0 2px 8px rgba(37,99,235,.12)}'
       + '.dark .nova-ai-drawer-btn-secondary{background:#18181c;border-color:#2a2a2e;color:#d0d0d0}'
       + '.dark .nova-ai-drawer-btn-secondary:hover{border-color:#3b82f6;color:#3b82f6;box-shadow:0 2px 8px rgba(59,130,246,.15)}'
-      + '.nova-ai-floating-btn{position:absolute;right:6px;top:50%;margin-top:-22px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#18a058 0%,#36ad6a 100%);border:none;cursor:pointer;box-shadow:0 6px 20px rgba(24,160,88,.35);z-index:9998;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;animation:naiFabPopIn .3s cubic-bezier(.22,.61,.36,1);transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease}'
-      + '.nova-ai-floating-btn:hover{transform:translateY(-2px) scale(1.08);box-shadow:0 10px 28px rgba(24,160,88,.45),0 0 0 6px rgba(24,160,88,.12)}'
-      + '.nova-ai-floating-btn:active{transform:translateY(0) scale(.96);box-shadow:0 4px 14px rgba(24,160,88,.4)}'
+      + '.nova-ai-floating-wrap{position:absolute;right:0;top:50%;width:50px;height:120px;margin-top:-60px;z-index:9998;cursor:pointer;overflow:hidden;animation:naiFabPopIn .3s cubic-bezier(.22,.61,.36,1)}'
+      + '.nova-ai-floating-btn{position:absolute;right:-22px;top:38px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#18a058 0%,#36ad6a 100%);border:none;cursor:pointer;box-shadow:0 6px 20px rgba(24,160,88,.35);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;transition:right .3s cubic-bezier(.22,.61,.36,1),box-shadow .25s ease;overflow:visible;padding:0}'
+      + '.nova-ai-floating-wrap:hover .nova-ai-floating-btn{right:3px;box-shadow:0 10px 28px rgba(24,160,88,.45)}'
+      + '.nova-ai-floating-btn:active{box-shadow:0 4px 14px rgba(24,160,88,.4)}'
       + '.nova-ai-floating-btn.has-fail{background:linear-gradient(135deg,#faad14 0%,#ffc53d 100%);box-shadow:0 6px 20px rgba(250,173,20,.4)}'
-      + '.nova-ai-floating-btn.has-fail:hover{transform:scale(1.05);box-shadow:0 10px 28px rgba(250,173,20,.5),0 0 0 6px rgba(250,173,20,.15)}'
+      + '.nova-ai-floating-wrap:hover .nova-ai-floating-btn.has-fail{box-shadow:0 10px 28px rgba(250,173,20,.5)}'
       + '@keyframes naiFabPopIn{from{transform:scale(0)}to{transform:scale(1)}}'
       + '.nova-ai-floating-icon{line-height:1;display:block;pointer-events:none}'
       + '.nova-ai-floating-badge{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;border-radius:9px;background:#fff;color:#faad14;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 6px rgba(0,0,0,.18);border:2px solid #faad14;line-height:1;pointer-events:none}'
       + '.dark .nova-ai-floating-badge{background:#18181c;color:#ffc53d;border-color:#ffc53d}'
-      + '.nova-ai-floating-tooltip{position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%);white-space:nowrap;padding:6px 10px;background:rgba(50,50,54,.96);color:#fff;font-size:12px;font-weight:400;line-height:1.5;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:9999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.25)}'
+      + '.nova-ai-floating-tooltip{position:fixed;white-space:nowrap;padding:6px 10px;background:rgba(50,50,54,.96);color:#fff;font-size:12px;font-weight:400;line-height:1.5;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:99999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.25)}'
+      + '.nova-ai-floating-tooltip.is-show{opacity:1}'
       + '.nova-ai-floating-tooltip::after{content:"";position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:6px solid rgba(50,50,54,.96)}'
-      + '.nova-ai-floating-btn:hover .nova-ai-floating-tooltip{opacity:1}'
       + '.dark .nova-ai-floating-tooltip{background:rgba(255,255,255,.9);color:#333;box-shadow:0 4px 16px rgba(0,0,0,.3)}'
       + '.dark .nova-ai-floating-tooltip::after{border-bottom-color:rgba(255,255,255,.9)}'
     document.head.appendChild(styleEl)
@@ -107,6 +108,7 @@
   var currentCtrl   = null
   var currentClose  = null
   var floatingBtn   = null
+  var floatingTip   = null
   var lastResult    = null    // { items: [...], failedCount: N }
 
   function registerNova(name, review) { registry[name] = !!review }
@@ -134,14 +136,45 @@
 
   // ── 浮动 AI 图标 ───────────────────────────────────────────────
   function hideFloatingBtn() {
+    if (floatingTip && floatingTip.parentNode) {
+      floatingTip.parentNode.removeChild(floatingTip)
+    }
+    floatingTip = null
     if (floatingBtn && floatingBtn.parentNode) {
       floatingBtn.parentNode.removeChild(floatingBtn)
     }
     floatingBtn = null
   }
 
+  function showFloatingTooltip(btn, text) {
+    if (!floatingTip) {
+      floatingTip = document.createElement('div')
+      floatingTip.className = 'nova-ai-floating-tooltip'
+      document.body.appendChild(floatingTip)
+    }
+    floatingTip.textContent = text
+    // 先显示以便测量尺寸
+    floatingTip.style.visibility = 'hidden'
+    floatingTip.classList.add('is-show')
+    var btnRect = btn.getBoundingClientRect()
+    var tipW = floatingTip.offsetWidth
+    var tipLeft = btnRect.left + btnRect.width / 2 - tipW / 2
+    var tipTop = btnRect.bottom + 10
+    floatingTip.style.left = tipLeft + 'px'
+    floatingTip.style.top = tipTop + 'px'
+    floatingTip.style.visibility = ''
+  }
+
+  function hideFloatingTooltip() {
+    if (floatingTip) {
+      floatingTip.classList.remove('is-show')
+    }
+  }
+
   function showFloatingBtn(items, failedCount) {
     hideFloatingBtn()
+    var wrap = document.createElement('div')
+    wrap.className = 'nova-ai-floating-wrap'
     var btn = document.createElement('button')
     btn.className = 'nova-ai-floating-btn' + (failedCount > 0 ? ' has-fail' : '')
     btn.type = 'button'
@@ -152,11 +185,13 @@
       + (failedCount > 0
           ? '<span class="nova-ai-floating-badge">' + failedCount + '</span>'
           : '')
-      + '<span class="nova-ai-floating-tooltip">' + tipText + '</span>'
     btn.addEventListener('click', reopenDrawer)
+    wrap.addEventListener('mouseenter', function () { showFloatingTooltip(btn, tipText) })
+    wrap.addEventListener('mouseleave', hideFloatingTooltip)
+    wrap.appendChild(btn)
     var host = document.querySelector('.n-modal') || document.body
-    host.appendChild(btn)
-    floatingBtn = btn
+    host.appendChild(wrap)
+    floatingBtn = wrap
   }
 
   function reopenDrawer() {
