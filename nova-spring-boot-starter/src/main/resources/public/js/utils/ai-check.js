@@ -69,6 +69,12 @@
       + '.nova-ai-drawer-spinner{width:18px;height:18px;border:2px solid #e0e0e0;border-top-color:#18a058;border-radius:50%;animation:naiSpinner .7s linear infinite}'
       + '.dark .nova-ai-drawer-spinner{border-color:#333;border-top-color:#36ad6a}'
       + '@keyframes naiSpinner{to{transform:rotate(360deg)}}'
+      + '.nova-ai-drawer-pass{display:flex;align-items:center;width:100%}'
+      + '.nova-ai-drawer-pass[hidden]{display:none}'
+      + '.nova-ai-drawer-pass-bar{flex:1;height:4px;background:#e8f5ee;border-radius:2px;overflow:hidden}'
+      + '.dark .nova-ai-drawer-pass-bar{background:rgba(24,160,88,.15)}'
+      + '.nova-ai-drawer-pass-bar-fill{height:100%;width:0%;background:#18a058;border-radius:2px;transition:width 1s linear}'
+      + '.dark .nova-ai-drawer-pass-bar-fill{background:#36ad6a}'
       + '.nova-ai-drawer-actions{display:flex;gap:10px;width:100%;justify-content:flex-end}'
       + '.nova-ai-drawer-actions[hidden]{display:none}'
       + '.nova-ai-drawer-btn-primary{padding:7px 18px;border:none;border-radius:4px;background:#faad14;color:#fff;font-size:13px;font-weight:500;cursor:pointer;transition:box-shadow .2s ease,filter .2s ease;box-shadow:0 2px 6px rgba(250,173,20,.25)}'
@@ -224,6 +230,8 @@
       closeBtn:        null,
       footerEl:        null,
       spinnerWrapEl:   null,
+      passWrapEl:      null,
+      passFillEl:      null,
       actionsEl:       null,
       editBtn:         null,
       stillBtn:        null,
@@ -252,6 +260,9 @@
       +   '<div class="nova-ai-drawer-spinner-wrap">'
       +     '<span class="nova-ai-drawer-spinner"></span>'
       +   '</div>'
+      +   '<div class="nova-ai-drawer-pass" hidden>'
+      +     '<div class="nova-ai-drawer-pass-bar"><div class="nova-ai-drawer-pass-bar-fill"></div></div>'
+      +   '</div>'
       +   '<div class="nova-ai-drawer-actions" hidden>'
       +     '<button class="nova-ai-drawer-btn-secondary nova-ai-drawer-btn-edit" type="button">返回修改</button>'
       +     '<button class="nova-ai-drawer-btn-primary nova-ai-drawer-btn-still" type="button">仍要提交</button>'
@@ -267,6 +278,8 @@
     state.closeBtn       = drawer.querySelector('.nova-ai-drawer-close')
     state.footerEl       = drawer.querySelector('.nova-ai-drawer-footer')
     state.spinnerWrapEl  = drawer.querySelector('.nova-ai-drawer-spinner-wrap')
+    state.passWrapEl     = drawer.querySelector('.nova-ai-drawer-pass')
+    state.passFillEl     = drawer.querySelector('.nova-ai-drawer-pass-bar-fill')
     state.actionsEl      = drawer.querySelector('.nova-ai-drawer-actions')
     state.editBtn        = drawer.querySelector('.nova-ai-drawer-btn-edit')
     state.stillBtn       = drawer.querySelector('.nova-ai-drawer-btn-still')
@@ -392,10 +405,12 @@
           state.actionsEl.hidden = false
           currentCtrl = null
         } else {
-          state.footerEl.hidden = true
+          state.spinnerWrapEl.hidden = true
+          state.passWrapEl.hidden = false
+          setTimeout(function () { state.passFillEl.style.width = '100%' }, 10)
           setTimeout(function () {
-            animateClose('pass')
-          }, 1100)
+            animateClose('pass', true)
+          }, 1500)
         }
       }
       checkFinish()
@@ -450,11 +465,13 @@
         state.actionsEl.hidden = false
         currentCtrl = null
       } else {
-        // 全部通过：隐藏底部 footer，等 1.1s 让用户看清绿色列表，然后从内收缩关闭
-        state.footerEl.hidden = true
+        // 全部通过：显示倒计时进度条，2秒后自动关闭
+        state.spinnerWrapEl.hidden = true
+        state.passWrapEl.hidden = false
+        setTimeout(function () { state.passFillEl.style.width = '100%' }, 10)
         setTimeout(function () {
-          if (!state.resolved) animateClose('pass')
-        }, 1100)
+          if (!state.resolved) animateClose('pass', true)
+        }, 1000)
       }
     } else {
       // fresh 模式：启动 fetch + SSE
