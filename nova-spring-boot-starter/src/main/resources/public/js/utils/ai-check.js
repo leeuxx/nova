@@ -45,44 +45,52 @@
       + '.dark .nova-ai-drawer-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18)}'
       + '.nova-ai-drawer-item{position:relative;display:block;padding:11px 18px;margin:4px 0;border-radius:8px;background:rgba(24,160,88,.04)}'
       + '.nova-ai-drawer-item:first-child{margin-top:0}'
-      + '.nova-ai-drawer-item.fail{background:rgba(208,48,80,.05)}'
+      + '.nova-ai-drawer-item.fail{background:rgba(250,173,20,.06)}'
       + '.dark .nova-ai-drawer-item{background:rgba(24,160,88,.08)}'
-      + '.dark .nova-ai-drawer-item.fail{background:rgba(208,48,80,.1)}'
+      + '.dark .nova-ai-drawer-item.fail{background:rgba(250,173,20,.12)}'
       + '.nova-ai-drawer-item-bar{position:absolute;left:4px;top:9px;bottom:9px;width:3px;border-radius:2px;background:#18a058}'
-      + '.nova-ai-drawer-item.fail .nova-ai-drawer-item-bar{background:#d03050}'
+      + '.nova-ai-drawer-item.fail .nova-ai-drawer-item-bar{background:#faad14}'
       + '.nova-ai-drawer-item .icon{display:inline-block;width:18px;vertical-align:baseline}'
       + '.nova-ai-drawer-item .value{color:#222;font-size:13px;letter-spacing:.2px;word-break:break-all;line-height:1.5}'
       + '.dark .nova-ai-drawer-item .value{color:#ececec}'
       + '.nova-ai-drawer-item .msg{display:block;margin:4px 0 0 18px;color:#999;font-size:12.5px;line-height:1.7;word-break:break-all}'
       + '.dark .nova-ai-drawer-item .msg{color:#aaa}'
-      + '.nova-ai-drawer-item.fail .msg{color:#d03050}'
-      + '.dark .nova-ai-drawer-item.fail .msg{color:#ff6b85}'
+      + '.nova-ai-drawer-item.fail .msg{color:#d48806}'
+      + '.dark .nova-ai-drawer-item.fail .msg{color:#ffc53d}'
       + '.dot-pass{display:inline-block;width:8px;height:8px;border-radius:50%;background:#18a058}'
       + '.tri-warn{display:inline-block;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:8px solid #faad14}'
       + '.typing::after{content:"▋";margin-left:2px;animation:naiCaretBlink 1s steps(1) infinite;color:#999;display:inline-block}'
       + '@keyframes naiCaretBlink{50%{opacity:0}}'
-      + '.nova-ai-drawer-footer{padding:14px 22px;min-height:56px;box-sizing:border-box;display:flex;align-items:center;border-top:1px solid #eee;flex-shrink:0}'
+      + '.nova-ai-drawer-footer{padding:14px 22px;min-height:56px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;flex-shrink:0}'
+      + '.nova-ai-drawer-footer[hidden]{display:none}'
       + '.dark .nova-ai-drawer-footer{border-top-color:rgba(255,255,255,.06)}'
-      + '.nova-ai-drawer-progress{flex:1;height:4px;background:#ececec;border-radius:2px;overflow:hidden;transition:opacity .3s}'
-      + '.dark .nova-ai-drawer-progress{background:#2a2a2e}'
-      + '.nova-ai-drawer-progress-bar{height:100%;background:#18a058;width:0%;transition:width 1s ease;border-radius:2px}'
+      + '.nova-ai-drawer-spinner-wrap{display:flex;align-items:center;justify-content:center;width:100%}'
+      + '.nova-ai-drawer-spinner-wrap[hidden]{display:none}'
+      + '.nova-ai-drawer-spinner{width:18px;height:18px;border:2px solid #e0e0e0;border-top-color:#18a058;border-radius:50%;animation:naiSpinner .7s linear infinite}'
+      + '.dark .nova-ai-drawer-spinner{border-color:#333;border-top-color:#36ad6a}'
+      + '@keyframes naiSpinner{to{transform:rotate(360deg)}}'
       + '.nova-ai-drawer-actions{display:flex;gap:10px;width:100%;justify-content:flex-end}'
-      + '.nova-ai-drawer-btn-primary{padding:7px 18px;border:none;border-radius:4px;background:#faad14;color:#fff;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s,transform .15s;box-shadow:0 2px 6px rgba(250,173,20,.25)}'
-      + '.nova-ai-drawer-btn-primary:hover{opacity:.92}'
-      + '.nova-ai-drawer-btn-primary:active{transform:scale(.97)}'
-      + '.nova-ai-drawer-btn-secondary{padding:7px 18px;border:1px solid #dcdfe6;background:#fff;border-radius:4px;color:#333;font-size:13px;cursor:pointer;transition:border-color .15s,color .15s}'
-      + '.nova-ai-drawer-btn-secondary:hover{border-color:#18a058;color:#18a058}'
+      + '.nova-ai-drawer-actions[hidden]{display:none}'
+      + '.nova-ai-drawer-btn-primary{padding:7px 18px;border:none;border-radius:4px;background:#faad14;color:#fff;font-size:13px;font-weight:500;cursor:pointer;transition:box-shadow .2s ease,filter .2s ease;box-shadow:0 2px 6px rgba(250,173,20,.25)}'
+      + '.nova-ai-drawer-btn-primary:hover{box-shadow:0 4px 12px rgba(250,173,20,.35);filter:brightness(1.05)}'
+      + '.nova-ai-drawer-btn-secondary{padding:7px 18px;border:1px solid #dcdfe6;background:#fff;border-radius:4px;color:#333;font-size:13px;cursor:pointer;transition:border-color .15s,color .15s,box-shadow .2s ease}'
+      + '.nova-ai-drawer-btn-secondary:hover{border-color:#2563eb;color:#2563eb;box-shadow:0 2px 8px rgba(37,99,235,.12)}'
       + '.dark .nova-ai-drawer-btn-secondary{background:#18181c;border-color:#2a2a2e;color:#d0d0d0}'
-      + '.dark .nova-ai-drawer-btn-secondary:hover{border-color:#36ad6a;color:#36ad6a}'
-      + '.nova-ai-floating-btn{position:absolute;right:6px;top:50%;margin-top:-22px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#18a058 0%,#36ad6a 100%);border:none;cursor:pointer;box-shadow:0 6px 20px rgba(24,160,88,.35);z-index:9998;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;animation:naiFabPopIn .3s cubic-bezier(.22,.61,.36,1)}'
-      + '.nova-ai-floating-btn:hover{box-shadow:0 8px 26px rgba(24,160,88,.5)}'
-      + '.nova-ai-floating-btn:active{box-shadow:0 4px 14px rgba(24,160,88,.4)}'
-      + '.nova-ai-floating-btn.has-fail{background:linear-gradient(135deg,#d03050 0%,#e85575 100%);box-shadow:0 6px 20px rgba(208,48,80,.4)}'
-      + '.nova-ai-floating-btn.has-fail:hover{box-shadow:0 8px 26px rgba(208,48,80,.55)}'
+      + '.dark .nova-ai-drawer-btn-secondary:hover{border-color:#3b82f6;color:#3b82f6;box-shadow:0 2px 8px rgba(59,130,246,.15)}'
+      + '.nova-ai-floating-btn{position:absolute;right:6px;top:50%;margin-top:-22px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#18a058 0%,#36ad6a 100%);border:none;cursor:pointer;box-shadow:0 6px 20px rgba(24,160,88,.35);z-index:9998;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;animation:naiFabPopIn .3s cubic-bezier(.22,.61,.36,1);transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease}'
+      + '.nova-ai-floating-btn:hover{transform:translateY(-2px) scale(1.08);box-shadow:0 10px 28px rgba(24,160,88,.45),0 0 0 6px rgba(24,160,88,.12)}'
+      + '.nova-ai-floating-btn:active{transform:translateY(0) scale(.96);box-shadow:0 4px 14px rgba(24,160,88,.4)}'
+      + '.nova-ai-floating-btn.has-fail{background:linear-gradient(135deg,#faad14 0%,#ffc53d 100%);box-shadow:0 6px 20px rgba(250,173,20,.4)}'
+      + '.nova-ai-floating-btn.has-fail:hover{transform:scale(1.05);box-shadow:0 10px 28px rgba(250,173,20,.5),0 0 0 6px rgba(250,173,20,.15)}'
       + '@keyframes naiFabPopIn{from{transform:scale(0)}to{transform:scale(1)}}'
       + '.nova-ai-floating-icon{line-height:1;display:block;pointer-events:none}'
-      + '.nova-ai-floating-badge{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;border-radius:9px;background:#fff;color:#d03050;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 6px rgba(0,0,0,.18);border:2px solid #d03050;line-height:1;pointer-events:none}'
-      + '.dark .nova-ai-floating-badge{background:#18181c;color:#ff6b85;border-color:#ff6b85}'
+      + '.nova-ai-floating-badge{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;border-radius:9px;background:#fff;color:#faad14;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 6px rgba(0,0,0,.18);border:2px solid #faad14;line-height:1;pointer-events:none}'
+      + '.dark .nova-ai-floating-badge{background:#18181c;color:#ffc53d;border-color:#ffc53d}'
+      + '.nova-ai-floating-tooltip{position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%);white-space:nowrap;padding:6px 10px;background:rgba(50,50,54,.96);color:#fff;font-size:12px;font-weight:400;line-height:1.5;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:9999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.25)}'
+      + '.nova-ai-floating-tooltip::after{content:"";position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:6px solid rgba(50,50,54,.96)}'
+      + '.nova-ai-floating-btn:hover .nova-ai-floating-tooltip{opacity:1}'
+      + '.dark .nova-ai-floating-tooltip{background:rgba(255,255,255,.9);color:#333;box-shadow:0 4px 16px rgba(0,0,0,.3)}'
+      + '.dark .nova-ai-floating-tooltip::after{border-bottom-color:rgba(255,255,255,.9)}'
     document.head.appendChild(styleEl)
   }
 
@@ -131,13 +139,14 @@
     var btn = document.createElement('button')
     btn.className = 'nova-ai-floating-btn' + (failedCount > 0 ? ' has-fail' : '')
     btn.type = 'button'
-    btn.title = failedCount > 0
-      ? '上次 AI 审查发现 ' + failedCount + ' 个问题，点击查看'
+    var tipText = failedCount > 0
+      ? '上次 AI 审查有 ' + failedCount + ' 个建议，点击查看'
       : '上次 AI 审查通过，点击查看'
     btn.innerHTML = '<span class="nova-ai-floating-icon">AI</span>'
       + (failedCount > 0
           ? '<span class="nova-ai-floating-badge">' + failedCount + '</span>'
           : '')
+      + '<span class="nova-ai-floating-tooltip">' + tipText + '</span>'
     btn.addEventListener('click', reopenDrawer)
     var host = document.querySelector('.n-modal') || document.body
     host.appendChild(btn)
@@ -213,8 +222,8 @@
       loaderWrapEl:    null,
       statusLoaderEl:  null,
       closeBtn:        null,
-      progressEl:      null,
-      progressBarEl:   null,
+      footerEl:        null,
+      spinnerWrapEl:   null,
       actionsEl:       null,
       editBtn:         null,
       stillBtn:        null,
@@ -240,7 +249,9 @@
       +   '<div class="nova-ai-drawer-list"></div>'
       + '</div>'
       + '<div class="nova-ai-drawer-footer">'
-      +   '<div class="nova-ai-drawer-progress"><div class="nova-ai-drawer-progress-bar"></div></div>'
+      +   '<div class="nova-ai-drawer-spinner-wrap">'
+      +     '<span class="nova-ai-drawer-spinner"></span>'
+      +   '</div>'
       +   '<div class="nova-ai-drawer-actions" hidden>'
       +     '<button class="nova-ai-drawer-btn-secondary nova-ai-drawer-btn-edit" type="button">返回修改</button>'
       +     '<button class="nova-ai-drawer-btn-primary nova-ai-drawer-btn-still" type="button">仍要提交</button>'
@@ -254,8 +265,8 @@
     state.loaderWrapEl   = drawer.querySelector('.nova-ai-drawer-loader-wrap')
     state.statusLoaderEl = drawer.querySelector('.nova-ai-drawer-status-loader')
     state.closeBtn       = drawer.querySelector('.nova-ai-drawer-close')
-    state.progressEl     = drawer.querySelector('.nova-ai-drawer-progress')
-    state.progressBarEl  = drawer.querySelector('.nova-ai-drawer-progress-bar')
+    state.footerEl       = drawer.querySelector('.nova-ai-drawer-footer')
+    state.spinnerWrapEl  = drawer.querySelector('.nova-ai-drawer-spinner-wrap')
     state.actionsEl      = drawer.querySelector('.nova-ai-drawer-actions')
     state.editBtn        = drawer.querySelector('.nova-ai-drawer-btn-edit')
     state.stillBtn       = drawer.querySelector('.nova-ai-drawer-btn-still')
@@ -377,10 +388,11 @@
           return
         }
         if (state.failedCount > 0) {
-          state.progressEl.hidden = true
+          state.spinnerWrapEl.hidden = true
           state.actionsEl.hidden = false
           currentCtrl = null
         } else {
+          state.footerEl.hidden = true
           setTimeout(function () {
             animateClose('pass')
           }, 1100)
@@ -434,11 +446,12 @@
       state.firstItemSeen = true
 
       if (state.failedCount > 0) {
-        state.progressEl.hidden = true
+        state.spinnerWrapEl.hidden = true
         state.actionsEl.hidden = false
         currentCtrl = null
       } else {
-        // 全部通过：等 1.1s 让用户看清绿色列表，然后从内收缩关闭
+        // 全部通过：隐藏底部 footer，等 1.1s 让用户看清绿色列表，然后从内收缩关闭
+        state.footerEl.hidden = true
         setTimeout(function () {
           if (!state.resolved) animateClose('pass')
         }, 1100)
