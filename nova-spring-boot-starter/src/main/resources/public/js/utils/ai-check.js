@@ -91,7 +91,7 @@
       + '.nova-ai-floating-wrap:hover .nova-ai-floating-btn.has-fail{box-shadow:0 10px 28px rgba(250,173,20,.5)}'
       + '@keyframes naiFabPopIn{from{transform:scale(0)}to{transform:scale(1)}}'
       + '.nova-ai-floating-icon{line-height:1;display:block;pointer-events:none}'
-      + '.nova-ai-floating-badge{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;border-radius:9px;background:#fff;color:#faad14;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 6px rgba(0,0,0,.18);border:2px solid #faad14;line-height:1;pointer-events:none}'
+      + '.nova-ai-floating-badge{position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);min-width:20px;height:14px;border-radius:7px;background:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:2px;padding:0 5px;box-shadow:0 2px 6px rgba(0,0,0,.18);border:2px solid #faad14;line-height:1;pointer-events:none;letter-spacing:1px;color:#faad14}'
       + '.dark .nova-ai-floating-badge{background:#18181c;color:#ffc53d;border-color:#ffc53d}'
       + '.nova-ai-floating-tooltip{position:fixed;white-space:nowrap;padding:6px 10px;background:rgba(50,50,54,.96);color:#fff;font-size:12px;font-weight:400;line-height:1.5;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:99999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.25)}'
       + '.nova-ai-floating-tooltip.is-show{opacity:1}'
@@ -183,7 +183,7 @@
       : '上次 AI 审查通过，点击查看'
     btn.innerHTML = '<span class="nova-ai-floating-icon">AI</span>'
       + (failedCount > 0
-          ? '<span class="nova-ai-floating-badge">' + failedCount + '</span>'
+          ? '<span class="nova-ai-floating-badge">•••</span>'
           : '')
     btn.addEventListener('click', reopenDrawer)
     wrap.addEventListener('mouseenter', function () { showFloatingTooltip(btn, tipText) })
