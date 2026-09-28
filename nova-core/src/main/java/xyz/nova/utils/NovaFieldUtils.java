@@ -746,6 +746,32 @@ public class NovaFieldUtils {
         return aiInfo;
     }
 
+    /**
+     * 获取AI数据审查提示词
+     *
+     * @param className 类名
+     * @return AI提示信息
+     */
+    public static Map<String, String> getAiReviewPrompts(String className) {
+        Map<String, String> result = new HashMap<>();
+        NovaApplication.ScanNova scanNova = getScanNova(className);
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
+            Edit edit = novaField.edit();
+            AI ai = edit.ai();
+            // 数据审查
+            AI.Review review = ai.review();
+            if (review.enable()) {
+                String prompt = review.prompt();
+                if (prompt != null && !prompt.isEmpty()) {
+                    result.put(field, review.prompt());
+                }
+            }
+        });
+        return result;
+    }
+
     private static NovaApplication.ScanNova getScanNova(String className) {
         Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
         NovaApplication.ScanNova scanNova = scanNovas.get(className);

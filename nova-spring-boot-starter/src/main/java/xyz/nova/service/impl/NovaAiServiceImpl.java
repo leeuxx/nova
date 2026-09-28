@@ -10,6 +10,7 @@ import xyz.nova.constant.NovaAiConst;
 import xyz.nova.dto.NovaTableAdd;
 import xyz.nova.service.NovaAiService;
 import xyz.nova.utils.AiStreamUtils;
+import xyz.nova.utils.NovaFieldUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,20 +30,28 @@ public class NovaAiServiceImpl implements NovaAiService {
         Map<String, List<NovaTableAdd.FormInfo>> appendageFormInfo = novaTableAdd.getAppendageFormInfo();
         JSONObject fields = new JSONObject();
         if (formInfo != null) {
+            Map<String, String> prompts = NovaFieldUtils.getAiReviewPrompts(novaTableAdd.getNovaName());
             for (NovaTableAdd.FormInfo info : formInfo) {
-                fields.set(info.getField(), new JSONObject()
-                        .set("value", info.getValue())
-                        .set("rule", "请检查合理性")
-                );
+                String prompt = prompts.get(info.getField());
+                if (prompt != null) {
+                    fields.set(info.getField(), new JSONObject()
+                            .set("value", info.getValue())
+                            .set("rule", prompt)
+                    );
+                }
             }
         }
         if (appendageFormInfo != null) {
             appendageFormInfo.forEach((novaName, formInfos) -> {
+                Map<String, String> prompts = NovaFieldUtils.getAiReviewPrompts(novaName);
                 for (NovaTableAdd.FormInfo info : formInfos) {
-                    fields.set(novaName + "." + info.getField(), new JSONObject()
-                            .set("value", info.getValue())
-                            .set("rule", "请检查合理性")
-                    );
+                    String prompt = prompts.get(info.getField());
+                    if (prompt != null) {
+                        fields.set(novaName + "." + info.getField(), new JSONObject()
+                                .set("value", info.getValue())
+                                .set("rule", prompt)
+                        );
+                    }
                 }
             });
         }
