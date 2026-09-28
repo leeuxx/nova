@@ -151,9 +151,9 @@
       + '.dark .nova-ai-bubble .nova-ai-dots span{background:#e87858}'
       + '.nova-ai-floating-tooltip{position:fixed;white-space:nowrap;padding:6px 10px;background:rgba(50,50,54,.96);color:#fff;font-size:12px;font-weight:400;line-height:1.5;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:99999;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.25)}'
       + '.nova-ai-floating-tooltip.is-show{opacity:1}'
-      + '.nova-ai-floating-tooltip::after{content:"";position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:6px solid rgba(50,50,54,.96)}'
+      + '.nova-ai-floating-tooltip::after{content:"";position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid rgba(50,50,54,.96)}'
       + '.dark .nova-ai-floating-tooltip{background:rgba(255,255,255,.9);color:#333;box-shadow:0 4px 16px rgba(0,0,0,.3)}'
-      + '.dark .nova-ai-floating-tooltip::after{border-bottom-color:rgba(255,255,255,.9)}'
+      + '.dark .nova-ai-floating-tooltip::after{border-top-color:rgba(255,255,255,.9)}'
     document.head.appendChild(styleEl)
   }
 
@@ -214,8 +214,9 @@
     floatingTip.classList.add('is-show')
     var btnRect = btn.getBoundingClientRect()
     var tipW = floatingTip.offsetWidth
+    var tipH = floatingTip.offsetHeight
     var tipLeft = btnRect.left + btnRect.width / 2 - tipW / 2
-    var tipTop = btnRect.bottom + 10
+    var tipTop = btnRect.top - tipH - 10
     floatingTip.style.left = tipLeft + 'px'
     floatingTip.style.top = tipTop + 'px'
     floatingTip.style.visibility = ''
