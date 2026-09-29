@@ -26,6 +26,11 @@
       + '@keyframes nadExpand{from{transform:scaleX(0)}to{transform:scaleX(1)}}'
       + '.nova-ai-drawer.is-closing{animation:nadCollapse .3s cubic-bezier(.22,.61,.36,1) forwards}'
       + '@keyframes nadCollapse{from{transform:scaleX(1)}to{transform:scaleX(0)}}'
+      + '.nova-ai-mask{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.22);z-index:98;animation:naiMaskFadeIn .3s ease}'
+      + '.nova-ai-mask.is-closing{animation:naiMaskFadeOut .3s ease forwards}'
+      + '@keyframes naiMaskFadeIn{from{opacity:0}to{opacity:1}}'
+      + '@keyframes naiMaskFadeOut{from{opacity:1}to{opacity:0}}'
+      + '.dark .nova-ai-mask{background:rgba(0,0,0,.35)}'
       + '.nova-ai-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #eee;flex-shrink:0}'
       + '.dark .nova-ai-drawer-header{border-bottom-color:rgba(255,255,255,.06)}'
       + '.nova-ai-drawer-title{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:#333}'
@@ -392,6 +397,8 @@
       onAfterClose:    opts.onAfterClose
     }
 
+    var mask = document.createElement('div')
+    mask.className = 'nova-ai-mask'
     var drawer = document.createElement('div')
     drawer.className = 'nova-ai-drawer'
     drawer.innerHTML = ''
@@ -420,6 +427,7 @@
       +   '</div>'
       + '</div>'
     var host = document.querySelector('.n-modal') || document.body
+    host.appendChild(mask)
     host.appendChild(drawer)
     state.drawer = drawer
 
@@ -521,6 +529,7 @@
       if (state.ctrl)  { try { state.ctrl.abort() } catch (e) {} state.ctrl = null }
       if (currentCtrl === state.ctrl) currentCtrl = null
       currentClose = null
+      if (mask.parentNode) mask.parentNode.removeChild(mask)
       if (drawer.parentNode) drawer.parentNode.removeChild(drawer)
     }
 
@@ -540,6 +549,7 @@
       if (state.timer) { clearTimeout(state.timer); state.timer = null }
       if (state.ctrl)  { try { state.ctrl.abort() } catch (e) {} state.ctrl = null }
       currentClose = null
+      if (mask.parentNode) mask.parentNode.removeChild(mask)
       if (drawer.parentNode) drawer.parentNode.removeChild(drawer)
       if (state.onAfterClose) state.onAfterClose(state)
     }
@@ -547,6 +557,7 @@
     function animateClose(kind, proceed) {
       if (state.resolved) return
       state.acted = true
+      mask.classList.add('is-closing')
       drawer.classList.add('is-closing')
       setTimeout(function () {
         finish({ proceed: proceed, kind: kind })
@@ -581,6 +592,7 @@
     function onEditBack() {
       if (state.acted) return
       state.acted = true
+      mask.classList.add('is-closing')
       drawer.classList.add('is-closing')
       setTimeout(function () {
         softClose()
