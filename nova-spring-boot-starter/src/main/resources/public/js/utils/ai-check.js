@@ -297,11 +297,12 @@
       mode:                'replay',
       preloadedItems:      lastResult.items,
       preloadedFailedCount: lastResult.failedCount,
-      onResolve:           function () {},
+      onResolve:           lastResult.onResolve,
       onAfterClose:        function (state) {
         lastResult = {
             items:       state.itemsSnapshot.slice(),
-            failedCount: state.failedCount
+            failedCount: state.failedCount,
+            onResolve:   lastResult.onResolve
         }
         showFloatingBtn(lastResult.items, lastResult.failedCount)
       }
@@ -330,7 +331,8 @@
         onAfterClose: function (state) {
           lastResult = {
               items:       state.itemsSnapshot.slice(),
-              failedCount: state.failedCount
+              failedCount: state.failedCount,
+              onResolve:   resolve
           }
           showFloatingBtn(lastResult.items, lastResult.failedCount)
         }
@@ -511,6 +513,17 @@
       if (state.onAfterClose) state.onAfterClose(state)
     }
 
+    function softClose() {
+      if (state.resolved) return
+      state.acted = false
+      if (state.novaName) inflight[state.novaName] = false
+      if (state.timer) { clearTimeout(state.timer); state.timer = null }
+      if (state.ctrl)  { try { state.ctrl.abort() } catch (e) {} state.ctrl = null }
+      currentClose = null
+      if (drawer.parentNode) drawer.parentNode.removeChild(drawer)
+      if (state.onAfterClose) state.onAfterClose(state)
+    }
+
     function animateClose(kind, proceed) {
       if (state.resolved) return
       state.acted = true
@@ -545,9 +558,16 @@
     }
 
     function onStillSubmit() { if (state.acted) return; animateClose('stillSubmit', true) }
-    function onEditBack()    { if (state.acted) return; animateClose('editBack', false) }
+    function onEditBack() {
+      if (state.acted) return
+      state.acted = true
+      drawer.classList.add('is-closing')
+      setTimeout(function () {
+        softClose()
+      }, CLOSE_DURATION)
+    }
     function onClose()       { if (state.acted) return; animateClose('cancelled', false) }
-    function forceClose()    { finish({ proceed: false, kind: 'cancelled' }) }
+    function forceClose()    { softClose() }
 
     currentClose = forceClose
 
