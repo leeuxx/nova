@@ -53,6 +53,6 @@ public @interface Nova {
     Tooltip tooltip() default @Tooltip;
 
     @Comment("AI配置")
-    AiConfig aiConfig() default @AiConfig;
+    AiConfig aiConfig() default @AiConfig(name = "");
 
 }
