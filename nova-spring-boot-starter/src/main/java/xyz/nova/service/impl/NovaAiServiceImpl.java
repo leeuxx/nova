@@ -16,6 +16,7 @@ import xyz.nova.utils.NovaUtils;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -85,7 +86,7 @@ public class NovaAiServiceImpl implements NovaAiService {
         int[] braceCount = {0};      // 当前大括号深度
         boolean[] inString = {false};  // 是否在字符串内
         boolean[] escaped = {false};   // 上一个字符是否是转义符 \
-        Thread thread = new Thread(() -> AiStreamUtils.stream(
+        CompletableFuture.runAsync(() -> AiStreamUtils.stream(
                 openAiConfig.getBaseUrl(),
                 openAiConfig.getApiKey(),
                 openAiConfig.getModel(),
@@ -95,7 +96,6 @@ public class NovaAiServiceImpl implements NovaAiService {
                 content -> {
                     for (int i = 0; i < content.length(); i++) {
                         char c = content.charAt(i);
-
                         // 转义处理
                         if (escaped[0]) {
                             escaped[0] = false;
@@ -153,7 +153,6 @@ public class NovaAiServiceImpl implements NovaAiService {
                     emitter.complete();
                 }
         ));
-        thread.start();
         emitter.onTimeout(() -> {
             log.error("SSE超时");
             emitter.complete();

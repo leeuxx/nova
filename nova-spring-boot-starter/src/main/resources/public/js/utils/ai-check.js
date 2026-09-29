@@ -663,9 +663,20 @@
         animateClose('timeout', true)
       }, 5000)
 
+      // 构建鉴权请求头（与 fetch.js 保持一致）
+      var sseHeaders = { 'Content-Type': 'application/json' }
+      var sseToken = localStorage.getItem('nova_token') || ''
+      if (sseToken) sseHeaders['token'] = sseToken
+      var sseNovaName = opts.payload && opts.payload.novaName
+      if (sseNovaName && window.__novaMenuCode) {
+        var mc = window.__novaMenuCode(sseNovaName)
+        if (mc && mc.menuCode) sseHeaders['menuCode'] = mc.menuCode
+      }
+      sseHeaders['Accept-Language'] = (window.__appLocale && window.__appLocale.value) || 'zh'
+
       fetch('/nova/ai/addSseEmitter', {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: sseHeaders,
         body:    JSON.stringify(opts.payload),
         signal:  state.ctrl.signal
       }).then(function (resp) {
@@ -674,6 +685,43 @@
         var reader = resp.body.getReader()
         var decoder = new TextDecoder('utf-8')
         var buf = ''
+        var currentEvent = ''
+
+        // SSE 鉴权失败处理（520 登录过期 / 521 无权限）
+        function handleSseAuthError(code) {
+          if (state.ctrl)  { try { state.ctrl.abort() } catch (e) {} state.ctrl = null }
+          if (state.timer) { clearTimeout(state.timer); state.timer = null }
+          if (mask.parentNode) mask.parentNode.removeChild(mask)
+          if (drawer.parentNode) drawer.parentNode.removeChild(drawer)
+          if (state.novaName) inflight[state.novaName] = false
+          state.resolved = true
+          if (code === 520) {
+            if (window.modal && window.modal.confirm) {
+              window.modal.confirm(
+                window.__t ? window.__t('dialog.token_expired') : '登录状态已过期，请重新登录',
+                {
+                  title: window.__t ? window.__t('dialog.system_tip') : '系统提示',
+                  positiveText: window.__t ? window.__t('dialog.token_expired_action') : '重新登录',
+                  onConfirm: function () {
+                    localStorage.removeItem('nova_token')
+                    localStorage.removeItem('nova_user')
+                    localStorage.removeItem('nova_alias')
+                    localStorage.removeItem('nova_avatar')
+                    history.replaceState(null, '', '#/login')
+                    window.location.reload()
+                  }
+                }
+              )
+            } else {
+              localStorage.removeItem('nova_token')
+              history.replaceState(null, '', '#/login')
+              window.location.reload()
+            }
+          } else if (code === 521) {
+            history.replaceState(null, '', '#/404')
+            window.location.reload()
+          }
+        }
 
         function readChunk() {
           return reader.read().then(function (r) {
@@ -683,9 +731,19 @@
             buf = lines.pop()
             for (var i = 0; i < lines.length; i++) {
               var line = lines[i]
+              // 空行：SSE 事件分隔，重置 event
+              if (line === '') { currentEvent = ''; continue }
+              // event: 行，记录事件名
+              if (line.indexOf('event:') === 0) {
+                currentEvent = line.slice(6).trim()
+                continue
+              }
               if (line.indexOf('data:') === 0) {
                 var data = line.slice(5).trim()
                 if (!data || data === '[DONE]') continue
+                // 520 登录过期 / 521 无权限
+                if (currentEvent === '520') { handleSseAuthError(520); return null }
+                if (currentEvent === '521') { handleSseAuthError(521); return null }
                 try {
                   var obj = JSON.parse(data)
                   if (obj.type === 'item') {
