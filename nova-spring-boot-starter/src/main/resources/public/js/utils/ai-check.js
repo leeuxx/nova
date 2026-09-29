@@ -358,7 +358,6 @@
       listEl:          null,
       loaderWrapEl:    null,
       statusLoaderEl:  null,
-      closeBtn:        null,
       footerEl:        null,
       spinnerWrapEl:   null,
       passWrapEl:      null,
@@ -379,7 +378,6 @@
       +     '<span class="nova-ai-drawer-title-icon">AI</span>'
       +     '数据质量审查'
       +   '</span>'
-      +   '<button class="nova-ai-drawer-close" type="button" aria-label="close">×</button>'
       + '</div>'
       + '<div class="nova-ai-drawer-body">'
       +   '<div class="nova-ai-drawer-loader-wrap">'
@@ -406,7 +404,6 @@
     state.listEl         = drawer.querySelector('.nova-ai-drawer-list')
     state.loaderWrapEl   = drawer.querySelector('.nova-ai-drawer-loader-wrap')
     state.statusLoaderEl = drawer.querySelector('.nova-ai-drawer-status-loader')
-    state.closeBtn       = drawer.querySelector('.nova-ai-drawer-close')
     state.footerEl       = drawer.querySelector('.nova-ai-drawer-footer')
     state.spinnerWrapEl  = drawer.querySelector('.nova-ai-drawer-spinner-wrap')
     state.passWrapEl     = drawer.querySelector('.nova-ai-drawer-pass')
@@ -554,7 +551,6 @@
 
     currentClose = forceClose
 
-    state.closeBtn.addEventListener('click', onClose)
     state.editBtn.addEventListener('click', onEditBack)
     state.stillBtn.addEventListener('click', onStillSubmit)
 
