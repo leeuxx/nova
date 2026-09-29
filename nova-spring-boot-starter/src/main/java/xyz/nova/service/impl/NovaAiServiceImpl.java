@@ -63,8 +63,14 @@ public class NovaAiServiceImpl implements NovaAiService {
         // 如果aiName为空, 则直接返回放行
         if (aiName == null || aiName.isEmpty()) {
             try {
-                emitter.send(SseEmitter.event().name("result")
-                        .data(new JSONObject().set("type", "result").set("ok", true).toString()));
+                emitter.send(SseEmitter.event()
+                        .name("result")
+                        .data(new JSONObject()
+                                .set("type", "result")
+                                .set("ok", true)
+                                .toString()
+                        )
+                );
             } catch (IOException ignored) {
             }
             emitter.complete();
@@ -74,8 +80,14 @@ public class NovaAiServiceImpl implements NovaAiService {
         // 如果openAiConfig为空, 则直接返回放行
         if (openAiConfig == null) {
             try {
-                emitter.send(SseEmitter.event().name("result")
-                        .data(new JSONObject().set("type", "result").set("ok", true).toString()));
+                emitter.send(SseEmitter.event()
+                        .name("result")
+                        .data(new JSONObject()
+                                .set("type", "result")
+                                .set("ok", true)
+                                .toString()
+                        )
+                );
             } catch (IOException ignored) {
             }
             emitter.complete();
@@ -146,18 +158,24 @@ public class NovaAiServiceImpl implements NovaAiService {
                 // onError
                 msg -> {
                     try {
-                        emitter.send(SseEmitter.event().name("error")
-                                .data(new JSONObject().set("type", "error").set("message", msg).toString()));
+                        emitter.send(SseEmitter.event()
+                                .name("error")
+                                .data(new JSONObject()
+                                        .set("type", "error")
+                                        .set("message", msg)
+                                        .toString()
+                                )
+                        );
                     } catch (IOException ignored) {
                     }
                     emitter.complete();
                 }
         ));
         emitter.onTimeout(() -> {
-            log.error("SSE超时");
+            log.error("SSE Timeout");
             emitter.complete();
         });
-        emitter.onError((e) -> log.error("SSE错误", e));
+        emitter.onError((e) -> log.error("SSE error", e));
         return emitter;
     }
 
@@ -178,15 +196,18 @@ public class NovaAiServiceImpl implements NovaAiService {
             String name = obj.getStr("name", "");
             boolean ok = obj.getBool("ok", true);
             String review = obj.getStr("review", "");
-            emitter.send(SseEmitter.event().name("item")
+            emitter.send(SseEmitter.event()
+                    .name("item")
                     .data(new JSONObject()
                             .set("type", "item")
                             .set("name", name)
                             .set("ok", ok)
                             .set("msg", review)
-                            .toString()));
+                            .toString()
+                    )
+            );
         } catch (Exception e) {
-            log.warn("解析AI返回JSON失败: {}", jsonStr, e);
+            log.warn("Error: AI failed to return JSON response: {}", jsonStr, e);
         }
     }
 }

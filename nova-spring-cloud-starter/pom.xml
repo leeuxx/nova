@@ -30,12 +30,12 @@
         <dependency>
             <groupId>io.github.leeuxx</groupId>
             <artifactId>nova-core</artifactId>
-            <version>1.2.0</version>
+            <version>1.2.2</version>
         </dependency>
         <dependency>
             <groupId>io.github.leeuxx</groupId>
             <artifactId>nova-spring-boot-starter</artifactId>
-            <version>1.2.0</version>
+            <version>1.2.2</version>
         </dependency>
 
         <!-- ============ Apache HttpClient 5.x（RestTemplate池化需要用到） ============ -->
@@ -78,6 +78,11 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-context</artifactId>
+        </dependency>
+        <!-- ============ Spring WebFlux ============ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
     </dependencies>
 

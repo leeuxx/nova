@@ -8,4 +8,3 @@ xyz.nova.service.impl.NovaTplServiceImpl
 
 xyz.nova.config.NovaAiConfig
 xyz.nova.service.impl.NovaAiServiceImpl
-xyz.nova.controller.NovaAiController

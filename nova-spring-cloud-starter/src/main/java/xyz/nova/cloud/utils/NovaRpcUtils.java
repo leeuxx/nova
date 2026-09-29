@@ -8,6 +8,8 @@ import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.util.UriComponentsBuilder;
 import xyz.nova.cloud.config.NovaRestTemplateConfig;
 import xyz.nova.service.authority.AuthorityProxy;
@@ -15,6 +17,7 @@ import xyz.nova.utils.AuthorityUtils;
 import xyz.nova.utils.R;
 import xyz.nova.utils.SpringBeanUtils;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -72,6 +75,37 @@ public class NovaRpcUtils {
         HttpEntity<Object> requestEntity = new HttpEntity<>(requestBody, headers);
         RestTemplate restTemplate = SpringBeanUtils.getBean(NovaRestTemplateConfig.REST_TEMPLATE_NAME, RestTemplate.class);
         return restTemplate.postForObject(url, requestEntity, R.class);
+    }
+
+    /**
+     * POST + JSON + SseEmitter流式 调用
+     */
+    public static SseEmitter postStream(String novaName, String path, Object requestBody, SseEmitter emitter, Supplier<SseEmitter> supplier) {
+        String serviceName = getServiceName(novaName);
+        // 服务名为空或等于自身，尝试执行本地
+        if (serviceName == null || serviceName.isEmpty() || isSameService(serviceName)) {
+            return supplier.get();
+        }
+        String url = "http://" + serviceName + "/" + path;
+        WebClient webClient = SpringBeanUtils.getBean("novaWebClientBuilder", WebClient.Builder.class).build();
+        webClient.post()
+                .uri(url)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.TEXT_EVENT_STREAM)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToFlux(String.class)
+                .subscribe(data -> {
+                            try {
+                                emitter.send(data);
+                            } catch (IOException e) {
+                                emitter.completeWithError(e);
+                            }
+                        },
+                        emitter::completeWithError,
+                        emitter::complete
+                );
+        return emitter;
     }
 
     /**
