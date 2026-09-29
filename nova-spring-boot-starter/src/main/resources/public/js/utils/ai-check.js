@@ -322,12 +322,32 @@
       lastCallAt[novaName] = Date.now()
     }
 
+    // 构建字段值映射表（主表 + 附表），AI 返回的 name 直接查表取值
+    var valueMap = {}
+    if (payload && payload.formInfo) {
+      for (var i = 0; i < payload.formInfo.length; i++) {
+        var fi = payload.formInfo[i]
+        if (fi.field) valueMap[fi.field] = fi.value
+      }
+    }
+    if (payload && payload.appendageFormInfo) {
+      for (var subNovaName in payload.appendageFormInfo) {
+        if (!Object.prototype.hasOwnProperty.call(payload.appendageFormInfo, subNovaName)) continue
+        var subList = payload.appendageFormInfo[subNovaName]
+        for (var j = 0; j < subList.length; j++) {
+          var sf = subList[j]
+          if (sf.field) valueMap[subNovaName + '.' + sf.field] = sf.value
+        }
+      }
+    }
+
     return new Promise(function (resolve) {
       runDrawer({
-        mode:        'fresh',
-        novaName:    novaName,
-        payload:     payload,
-        onResolve:   resolve,
+        mode:           'fresh',
+        novaName:       novaName,
+        payload:        payload,
+        valueMap:       valueMap,
+        onResolve:      resolve,
         onAfterClose: function (state) {
           lastResult = {
               items:       state.itemsSnapshot.slice(),
@@ -658,9 +678,11 @@
                   var obj = JSON.parse(data)
                   if (obj.type === 'item') {
                     if (!obj.ok) state.failedCount++
+                    // AI 不再返回 value，从本地 valueMap 按 name 查表取值
+                    var lookedUpValue = (opts.valueMap && obj.name) ? opts.valueMap[obj.name] : ''
                     enqueueRender({
                       ok:    !!obj.ok,
-                      value: obj.value || '',
+                      value: lookedUpValue || '',
                       msg:   obj.msg || ''
                     })
                   }

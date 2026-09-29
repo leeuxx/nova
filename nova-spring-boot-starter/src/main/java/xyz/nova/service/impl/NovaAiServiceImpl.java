@@ -55,34 +55,69 @@ public class NovaAiServiceImpl implements NovaAiService {
                 }
             });
         }
-        StringBuilder lineBuf = new StringBuilder();
+        // 流式 JSON 解析状态
+        StringBuilder jsonBuf = new StringBuilder();
+        int[] braceCount = {0};      // 当前大括号深度
+        boolean[] inString = {false};  // 是否在字符串内
+        boolean[] escaped = {false};   // 上一个字符是否是转义符 \
         Thread thread = new Thread(() -> AiStreamUtils.stream(
                 novaAiConfig.getBaseUrl(),
                 novaAiConfig.getApiKey(),
                 novaAiConfig.getModel(),
                 NovaAiConst.ADD_SSE_EMITTER_PROMPT,
                 fields.toString(),
-                // onChunk: 追加 + 切行
+                // onChunk: 逐字符扫描, 用大括号计数判断完整 JSON 对象
                 content -> {
-                    lineBuf.append(content);
-                    int idx;
-                    while ((idx = lineBuf.indexOf("\n")) >= 0) {
-                        String oneLine = lineBuf.substring(0, idx).trim();
-                        lineBuf.delete(0, idx + 1);
-                        if (oneLine.isEmpty()) continue;
-                        handleLine(emitter, oneLine);
-                    }
-                },
-                // onDone: 处理残留 + 结束
-                () -> {
-                    if (!lineBuf.isEmpty()) {
-                        String last = lineBuf.toString().trim();
-                        if (!last.isEmpty()) {
-                            handleLine(emitter, last);
+                    for (int i = 0; i < content.length(); i++) {
+                        char c = content.charAt(i);
+
+                        // 转义处理
+                        if (escaped[0]) {
+                            escaped[0] = false;
+                            jsonBuf.append(c);
+                            continue;
+                        }
+                        if (c == '\\' && inString[0]) {
+                            escaped[0] = true;
+                            jsonBuf.append(c);
+                            continue;
+                        }
+                        // 字符串边界
+                        if (c == '"') {
+                            inString[0] = !inString[0];
+                            jsonBuf.append(c);
+                            continue;
+                        }
+                        // 字符串内直接追加, 不计数
+                        if (inString[0]) {
+                            jsonBuf.append(c);
+                            continue;
+                        }
+                        // 大括号计数
+                        if (c == '{') {
+                            braceCount[0]++;
+                            jsonBuf.append(c);
+                        } else if (c == '}') {
+                            jsonBuf.append(c);
+                            braceCount[0]--;
+                            // 一个顶层 JSON 对象闭合
+                            if (braceCount[0] == 0) {
+                                String jsonStr = jsonBuf.toString().trim();
+                                jsonBuf.setLength(0);
+                                if (!jsonStr.isEmpty()) {
+                                    handleJson(emitter, jsonStr);
+                                }
+                            }
+                        } else {
+                            // 非 JSON 内容（换行、空白等），仅当已有缓冲时才追加
+                            if (braceCount[0] > 0) {
+                                jsonBuf.append(c);
+                            }
                         }
                     }
-                    emitter.complete();
                 },
+                // onDone
+                emitter::complete,
                 // onError
                 msg -> {
                     try {
@@ -94,53 +129,40 @@ public class NovaAiServiceImpl implements NovaAiService {
                 }
         ));
         thread.start();
-
         emitter.onTimeout(() -> {
             log.error("SSE超时");
             emitter.complete();
         });
         emitter.onError((e) -> log.error("SSE错误", e));
-
         return emitter;
     }
 
     /**
-     * 解析一行并推送
+     * 解析一条 JSON 并推送
      */
-    private void handleLine(SseEmitter emitter, String line) {
+    private void handleJson(SseEmitter emitter, String jsonStr) {
         try {
-            // 结论行: 分析完成: 数据看起来没问题 / 有几点建议您看看
-            if (line.contains("分析完成")) {
-                boolean ok = line.contains("没问题");
+            JSONObject obj = new JSONObject(jsonStr);
+            // 结论行
+            if (obj.getBool("done", false)) {
+                boolean ok = obj.getBool("ok", false);
                 emitter.send(SseEmitter.event().name("result")
                         .data(new JSONObject().set("type", "result").set("ok", ok).toString()));
                 return;
             }
-            // 通过行: ✓ <字段值>
-            if (line.startsWith("✓")) {
-                emitter.send(SseEmitter.event().name("item")
-                        .data(new JSONObject().set("type", "item").set("ok", true)
-                                .set("value", line.substring(1).trim()).toString()));
-                return;
-            }
-            // 注意行: ✗ <字段值>: <说明>
-            if (line.startsWith("✗")) {
-                String rest = line.substring(1).trim();
-                String value, msg = "";
-                int c = rest.indexOf(":");
-                if (c < 0) c = rest.indexOf("：");
-                if (c > 0) {
-                    value = rest.substring(0, c).trim();
-                    msg = rest.substring(c + 1).trim();
-                } else {
-                    value = rest;
-                }
-                emitter.send(SseEmitter.event().name("item")
-                        .data(new JSONObject().set("type", "item").set("ok", false)
-                                .set("value", value).set("msg", msg).toString()));
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            // 字段分析行
+            String name = obj.getStr("name", "");
+            boolean ok = obj.getBool("ok", true);
+            String review = obj.getStr("review", "");
+            emitter.send(SseEmitter.event().name("item")
+                    .data(new JSONObject()
+                            .set("type", "item")
+                            .set("name", name)
+                            .set("ok", ok)
+                            .set("msg", review)
+                            .toString()));
+        } catch (Exception e) {
+            log.warn("解析AI返回JSON失败: {}", jsonStr, e);
         }
     }
 }
