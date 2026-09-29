@@ -659,7 +659,7 @@
 
       state.timer = setTimeout(function () {
         if (state.resolved) return
-        console.warn('[ai-check] 5s 无响应，自动放行')
+        console.warn('[ai-check] 无响应，自动放行')
         animateClose('timeout', true)
       }, 5000)
 

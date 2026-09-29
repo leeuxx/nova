@@ -177,6 +177,22 @@ public class NovaUtils {
         return tooltipInfo;
     }
 
+    /**
+     * 获取AI名称
+     *
+     * @param className 类名
+     * @return AI名称
+     */
+    public static String getAiName(String className) {
+        NovaApplication.ScanNova scanNova = NovaApplication.getScanNovas().get(className);
+        if (scanNova == null) {
+            return null;
+        }
+        Nova nova = scanNova.getNova();
+        AiConfig aiConfig = nova.aiConfig();
+        return aiConfig.name();
+    }
+
     public static boolean exprBool(boolean show, ExprBool exprBool) {
         if (!show || !exprBool.value()) {
             return false;

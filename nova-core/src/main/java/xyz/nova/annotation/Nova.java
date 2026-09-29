@@ -52,4 +52,7 @@ public @interface Nova {
     @Comment("提示框配置")
     Tooltip tooltip() default @Tooltip;
 
+    @Comment("AI配置")
+    AiConfig aiConfig() default @AiConfig;
+
 }

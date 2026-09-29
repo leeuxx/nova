@@ -4,23 +4,37 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @Data
 @Configuration
-@ConfigurationProperties(prefix = "nova.open-ai")
+@ConfigurationProperties(prefix = "nova")
 public class NovaAiConfig {
 
     /**
-     * 大模型的baseUrl
+     * 大模型配置列表
      */
-    private String baseUrl;
+    private Map<String, OpenAiConfig> openAis = new LinkedHashMap<>();
 
-    /**
-     * 认证的API key
-     */
-    private String apiKey;
+    @Data
+    public static class OpenAiConfig {
 
-    /**
-     * 要使用的模型名称
-     */
-    private String model;
+        /**
+         * 大模型的baseUrl
+         */
+        private String baseUrl;
+
+        /**
+         * 认证的API key
+         */
+        private String apiKey;
+
+        /**
+         * 要使用的模型名称
+         */
+        private String model;
+    }
+
+
 }

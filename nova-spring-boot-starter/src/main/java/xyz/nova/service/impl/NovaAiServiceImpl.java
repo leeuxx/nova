@@ -11,6 +11,7 @@ import xyz.nova.dto.NovaTableAdd;
 import xyz.nova.service.NovaAiService;
 import xyz.nova.utils.AiStreamUtils;
 import xyz.nova.utils.NovaFieldUtils;
+import xyz.nova.utils.NovaUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -55,15 +56,39 @@ public class NovaAiServiceImpl implements NovaAiService {
                 }
             });
         }
+        // 获取大模型
+        Map<String, NovaAiConfig.OpenAiConfig> openAis = novaAiConfig.getOpenAis();
+        String aiName = NovaUtils.getAiName(novaTableAdd.getNovaName());
+        // 如果aiName为空, 则直接返回放行
+        if (aiName == null || aiName.isEmpty()) {
+            try {
+                emitter.send(SseEmitter.event().name("result")
+                        .data(new JSONObject().set("type", "result").set("ok", true).toString()));
+            } catch (IOException ignored) {
+            }
+            emitter.complete();
+            return emitter;
+        }
+        NovaAiConfig.OpenAiConfig openAiConfig = openAis != null ? openAis.get(aiName) : null;
+        // 如果openAiConfig为空, 则直接返回放行
+        if (openAiConfig == null) {
+            try {
+                emitter.send(SseEmitter.event().name("result")
+                        .data(new JSONObject().set("type", "result").set("ok", true).toString()));
+            } catch (IOException ignored) {
+            }
+            emitter.complete();
+            return emitter;
+        }
         // 流式 JSON 解析状态
         StringBuilder jsonBuf = new StringBuilder();
         int[] braceCount = {0};      // 当前大括号深度
         boolean[] inString = {false};  // 是否在字符串内
         boolean[] escaped = {false};   // 上一个字符是否是转义符 \
         Thread thread = new Thread(() -> AiStreamUtils.stream(
-                novaAiConfig.getBaseUrl(),
-                novaAiConfig.getApiKey(),
-                novaAiConfig.getModel(),
+                openAiConfig.getBaseUrl(),
+                openAiConfig.getApiKey(),
+                openAiConfig.getModel(),
                 NovaAiConst.ADD_SSE_EMITTER_PROMPT,
                 fields.toString(),
                 // onChunk: 逐字符扫描, 用大括号计数判断完整 JSON 对象
