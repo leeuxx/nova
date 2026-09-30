@@ -7,6 +7,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -92,6 +94,17 @@ public class NovaRpcUtils {
                 .uri(url)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.TEXT_EVENT_STREAM)
+                .headers(headers -> {
+                    // 透传鉴权 token
+                    headers.set("token", AuthorityUtils.getToken());
+                    // 透传菜单编码
+                    headers.set("menuCode", AuthorityUtils.getMenuCode());
+                    // 透传语言标识（来自当前入站请求），无请求上下文时跳过
+                    ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+                    if (attributes != null) {
+                        headers.set("accept-language", attributes.getRequest().getHeader("accept-language"));
+                    }
+                })
                 .bodyValue(requestBody)
                 .retrieve()
                 .bodyToFlux(String.class)
