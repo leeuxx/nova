@@ -35,9 +35,10 @@ public class NovaAiServiceImpl implements NovaAiService {
             Map<String, String> prompts = NovaFieldUtils.getAiReviewPrompts(novaTableAdd.getNovaName());
             for (NovaTableAdd.FormInfo info : formInfo) {
                 String prompt = prompts.get(info.getField());
-                if (prompt != null) {
+                String value = info.getValue();
+                if (prompt != null && value != null && !value.isEmpty()) {
                     fields.set(info.getField(), new JSONObject()
-                            .set("value", info.getValue())
+                            .set("value", value)
                             .set("rule", prompt)
                     );
                 }
@@ -48,9 +49,10 @@ public class NovaAiServiceImpl implements NovaAiService {
                 Map<String, String> prompts = NovaFieldUtils.getAiReviewPrompts(novaName);
                 for (NovaTableAdd.FormInfo info : formInfos) {
                     String prompt = prompts.get(info.getField());
-                    if (prompt != null) {
+                    String value = info.getValue();
+                    if (prompt != null && value != null && !value.isEmpty()) {
                         fields.set(novaName + "." + info.getField(), new JSONObject()
-                                .set("value", info.getValue())
+                                .set("value", value)
                                 .set("rule", prompt)
                         );
                     }
