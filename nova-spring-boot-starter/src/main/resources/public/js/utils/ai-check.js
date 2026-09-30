@@ -21,12 +21,12 @@
     var styleEl = document.createElement('style')
     styleEl.id = '__nova_ai_check_css__'
     styleEl.textContent = ''
-      + '.nova-ai-drawer{position:absolute;top:0;right:0;bottom:0;width:380px;background:#fff;border-top-right-radius:12px;border-bottom-right-radius:12px;box-shadow:-8px 0 32px rgba(0,0,0,.12);z-index:99;display:flex;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;transform-origin:right center;animation:nadExpand .3s cubic-bezier(.22,.61,.36,1);overflow:hidden}'
+      + '.nova-ai-drawer{position:absolute;top:0;right:0;bottom:0;min-height:60vh;width:380px;background:#fff;border-top-right-radius:12px;border-bottom-right-radius:12px;box-shadow:-8px 0 32px rgba(0,0,0,.12);z-index:99;display:flex;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;transform-origin:right center;animation:nadExpand .3s cubic-bezier(.22,.61,.36,1);overflow:hidden}'
       + '.dark .nova-ai-drawer{background:#18181c;box-shadow:-8px 0 32px rgba(0,0,0,.5)}'
       + '@keyframes nadExpand{from{transform:scaleX(0)}to{transform:scaleX(1)}}'
       + '.nova-ai-drawer.is-closing{animation:nadCollapse .3s cubic-bezier(.22,.61,.36,1) forwards}'
       + '@keyframes nadCollapse{from{transform:scaleX(1)}to{transform:scaleX(0)}}'
-      + '.nova-ai-mask{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.22);z-index:98;animation:naiMaskFadeIn .3s ease}'
+      + '.nova-ai-mask{position:absolute;top:0;left:0;right:0;bottom:0;min-height:60vh;background:rgba(0,0,0,.22);z-index:98;animation:naiMaskFadeIn .3s ease}'
       + '.nova-ai-mask.is-closing{animation:naiMaskFadeOut .3s ease forwards}'
       + '@keyframes naiMaskFadeIn{from{opacity:0}to{opacity:1}}'
       + '@keyframes naiMaskFadeOut{from{opacity:1}to{opacity:0}}'
@@ -430,6 +430,18 @@
     host.appendChild(mask)
     host.appendChild(drawer)
     state.drawer = drawer
+
+    // 如果 modal 内容区高度小于 min-height，审查框加宽完全遮住编辑框
+    var DRAWER_MIN = 60 * window.innerHeight / 100  // 60vh → px
+    var hostHeight = host.offsetHeight
+    if (hostHeight > 0 && hostHeight < DRAWER_MIN) {
+      drawer.style.width = '100%'
+      drawer.style.borderRadius = '12px'
+      mask.style.width = '100%'
+      mask.style.minHeight = '100%'
+      drawer.classList.add('nova-ai-drawer--full')
+      mask.classList.add('nova-ai-mask--full')
+    }
 
     state.listEl         = drawer.querySelector('.nova-ai-drawer-list')
     state.loaderWrapEl   = drawer.querySelector('.nova-ai-drawer-loader-wrap')
