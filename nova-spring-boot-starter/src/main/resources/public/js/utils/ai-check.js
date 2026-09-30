@@ -21,12 +21,12 @@
     var styleEl = document.createElement('style')
     styleEl.id = '__nova_ai_check_css__'
     styleEl.textContent = ''
-      + '.nova-ai-drawer{position:absolute;top:0;right:0;bottom:0;min-height:60vh;width:380px;background:#fff;border-top-right-radius:12px;border-bottom-right-radius:12px;box-shadow:-8px 0 32px rgba(0,0,0,.12);z-index:99;display:flex;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;transform-origin:right center;animation:nadExpand .3s cubic-bezier(.22,.61,.36,1);overflow:hidden}'
+      + '.nova-ai-drawer{position:absolute;top:0;right:0;bottom:0;min-height:60vh;width:380px;background:#fff;border-top-right-radius:12px;border-bottom-right-radius:12px;box-shadow:-8px 0 32px rgba(0,0,0,.12);z-index:9999;display:flex;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;transform-origin:right center;animation:nadExpand .3s cubic-bezier(.22,.61,.36,1);overflow:hidden}'
       + '.dark .nova-ai-drawer{background:#18181c;box-shadow:-8px 0 32px rgba(0,0,0,.5)}'
       + '@keyframes nadExpand{from{transform:scaleX(0)}to{transform:scaleX(1)}}'
       + '.nova-ai-drawer.is-closing{animation:nadCollapse .3s cubic-bezier(.22,.61,.36,1) forwards}'
       + '@keyframes nadCollapse{from{transform:scaleX(1)}to{transform:scaleX(0)}}'
-      + '.nova-ai-mask{position:absolute;top:0;left:0;right:0;bottom:0;min-height:60vh;background:rgba(0,0,0,.22);z-index:98;animation:naiMaskFadeIn .3s ease}'
+      + '.nova-ai-mask{position:absolute;top:0;left:0;right:0;bottom:0;min-height:60vh;background:rgba(0,0,0,.22);z-index:9998;animation:naiMaskFadeIn .3s ease}'
       + '.nova-ai-mask.is-closing{animation:naiMaskFadeOut .3s ease forwards}'
       + '@keyframes naiMaskFadeIn{from{opacity:0}to{opacity:1}}'
       + '@keyframes naiMaskFadeOut{from{opacity:1}to{opacity:0}}'
@@ -290,8 +290,9 @@
     for (var i = 0; i < eyeWraps.length; i++) {
       eyeWraps[i].style.animationDuration = dur + 's'
     }
-    var host = document.querySelector('.n-modal') || document.body
-    host.appendChild(wrap)
+    var fabModals = document.querySelectorAll('.n-modal')
+    var fabHost = (fabModals.length > 0 ? fabModals[fabModals.length - 1] : null) || document.body
+    fabHost.appendChild(wrap)
     floatingBtn = wrap
   }
 
@@ -426,7 +427,8 @@
       +     '<button class="nova-ai-drawer-btn-primary nova-ai-drawer-btn-still" type="button">仍要提交</button>'
       +   '</div>'
       + '</div>'
-    var host = document.querySelector('.n-modal') || document.body
+    var modals = document.querySelectorAll('.n-modal')
+    var host = (modals.length > 0 ? modals[modals.length - 1] : null) || document.body
     host.appendChild(mask)
     host.appendChild(drawer)
     state.drawer = drawer
