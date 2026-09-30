@@ -59,39 +59,16 @@ public class NovaAiServiceImpl implements NovaAiService {
         }
         // 获取大模型
         Map<String, NovaAiConfig.OpenAiConfig> openAis = novaAiConfig.getOpenAis();
-        String aiName = NovaUtils.getAiName(novaTableAdd.getNovaName());
-        // 如果aiName为空, 则直接返回放行
-        if (aiName == null || aiName.isEmpty()) {
-            try {
-                emitter.send(SseEmitter.event()
-                        .name("result")
-                        .data(new JSONObject()
-                                .set("type", "result")
-                                .set("ok", true)
-                                .toString()
-                        )
-                );
-            } catch (IOException ignored) {
-            }
-            emitter.complete();
-            return emitter;
+        // 如果openAis为空, 则直接返回放行
+        if (openAis.isEmpty()) {
+            return defaultSseEmitter(emitter);
         }
-        NovaAiConfig.OpenAiConfig openAiConfig = openAis != null ? openAis.get(aiName) : null;
+        String aiName = NovaUtils.getAiName(novaTableAdd.getNovaName());
+        // 获取openAiConfig，如果aiName为空则默认选择第一个
+        NovaAiConfig.OpenAiConfig openAiConfig = (aiName == null || aiName.isEmpty()) ? openAis.values().iterator().next() : openAis.get(aiName);
         // 如果openAiConfig为空, 则直接返回放行
         if (openAiConfig == null) {
-            try {
-                emitter.send(SseEmitter.event()
-                        .name("result")
-                        .data(new JSONObject()
-                                .set("type", "result")
-                                .set("ok", true)
-                                .toString()
-                        )
-                );
-            } catch (IOException ignored) {
-            }
-            emitter.complete();
-            return emitter;
+            return defaultSseEmitter(emitter);
         }
         // 流式 JSON 解析状态
         StringBuilder jsonBuf = new StringBuilder();
@@ -210,4 +187,21 @@ public class NovaAiServiceImpl implements NovaAiService {
             log.warn("Error: AI failed to return JSON response: {}", jsonStr, e);
         }
     }
+
+    private SseEmitter defaultSseEmitter(SseEmitter emitter) {
+        try {
+            emitter.send(SseEmitter.event()
+                    .name("result")
+                    .data(new JSONObject()
+                            .set("type", "result")
+                            .set("ok", true)
+                            .toString()
+                    )
+            );
+        } catch (IOException ignored) {
+        }
+        emitter.complete();
+        return emitter;
+    }
+
 }

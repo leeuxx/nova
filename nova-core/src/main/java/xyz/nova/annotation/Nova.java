@@ -2,8 +2,8 @@ package xyz.nova.annotation;
 
 import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.sub.nova.*;
-import xyz.nova.service.data.DataProxy;
 import xyz.nova.annotation.sub.nova.row.RowOperation;
+import xyz.nova.service.data.DataProxy;
 import xyz.nova.service.data.DefaultDataProxy;
 
 import java.lang.annotation.*;
@@ -53,6 +53,6 @@ public @interface Nova {
     Tooltip tooltip() default @Tooltip;
 
     @Comment("AI配置")
-    AiConfig aiConfig() default @AiConfig(name = "");
+    AiConfig aiConfig() default @AiConfig;
 
 }
