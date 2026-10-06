@@ -593,7 +593,11 @@
         } else {
           state.spinnerWrapEl.hidden = true
           state.passWrapEl.hidden = false
-          setTimeout(function () { state.passFillEl.style.width = '100%' }, 10)
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              state.passFillEl.style.width = '100%'
+            })
+          })
           setTimeout(function () {
             animateClose('pass', true)
           }, 1500)
@@ -661,7 +665,11 @@
         // 全部通过：显示倒计时进度条，2秒后自动关闭
         state.spinnerWrapEl.hidden = true
         state.passWrapEl.hidden = false
-        setTimeout(function () { state.passFillEl.style.width = '100%' }, 10)
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            state.passFillEl.style.width = '100%'
+          })
+        })
         setTimeout(function () {
           if (!state.resolved) animateClose('pass', true)
         }, 1000)
