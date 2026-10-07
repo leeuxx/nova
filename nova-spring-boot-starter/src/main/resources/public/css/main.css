@@ -197,23 +197,27 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   box-sizing: border-box;
   border-radius: 6px 6px 0 0 !important;
   font-size: 13px;
-  transition: background-color 0.2s, color 0.2s;
   position: relative;
   z-index: 1;
-}
-.n-tabs .n-tabs-tab:hover {
-  background-color: #f5f7fa;
 }
 .n-tabs .n-tabs-tab--active {
   color: #2563eb;
   font-weight: 500;
-  background-color: #eff6ff;
   z-index: 2;
 }
-.n-tabs .n-tabs-tab--active:hover {
-  background-color: #dbeafe;
+/* 用 @property 定义可动画的颜色变量，保证 tab 背景和弧线完全同步过渡 */
+@property --tab-bg-color {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #ffffff;
 }
-/* 所有 tab 底部都有弧线（未选中时和背景同色，选中时变色），避免切换时闪烁 */
+/* 所有 tab 底部都有弧线（颜色通过 CSS 变量同步，完全不闪） */
+.n-tabs .n-tabs-tab {
+  position: relative;
+  --tab-bg-color: #ffffff;
+  background-color: var(--tab-bg-color) !important;
+  transition: --tab-bg-color 0.2s ease, color 0.2s ease;
+}
 .n-tabs .n-tabs-tab::before,
 .n-tabs .n-tabs-tab::after {
   content: '';
@@ -224,64 +228,29 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   background: transparent;
   pointer-events: none;
   z-index: 1;
-  transition: box-shadow 0.2s;
+  box-shadow: 5px 5px 0 5px var(--tab-bg-color);
 }
 .n-tabs .n-tabs-tab::before {
   left: -10px;
   border-bottom-right-radius: 10px;
-  box-shadow: 5px 5px 0 5px #fff;
 }
 .n-tabs .n-tabs-tab::after {
   right: -10px;
   border-bottom-left-radius: 10px;
-  box-shadow: -5px 5px 0 5px #fff;
+  box-shadow: -5px 5px 0 5px var(--tab-bg-color);
 }
-.n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover::before {
-  box-shadow: 5px 5px 0 5px #f5f7fa;
+.n-tabs .n-tabs-tab:hover {
+  --tab-bg-color: #f5f7fa;
 }
-.n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover::after {
-  box-shadow: -5px 5px 0 5px #f5f7fa;
+.n-tabs .n-tabs-tab--active {
+  --tab-bg-color: #eff6ff;
 }
-.n-tabs .n-tabs-tab--active::before {
-  box-shadow: 5px 5px 0 5px #eff6ff;
-}
-.n-tabs .n-tabs-tab--active::after {
-  box-shadow: -5px 5px 0 5px #eff6ff;
-}
-.n-tabs .n-tabs-tab--active:hover::before {
-  box-shadow: 5px 5px 0 5px #dbeafe;
-}
-.n-tabs .n-tabs-tab--active:hover::after {
-  box-shadow: -5px 5px 0 5px #dbeafe;
+.n-tabs .n-tabs-tab--active:hover {
+  --tab-bg-color: #dbeafe;
 }
 /* 滚动容器不裁剪 tab 弧线 */
 .tab-scroll-wrap { overflow-x: auto; overflow-y: visible !important; }
 .tab-scroll-wrap .n-tabs { overflow: visible !important; }
-/* 暗色模式下的弧线颜色（和下方暗色 tab 背景色保持一致） */
-.dark .n-tabs .n-tabs-tab::before {
-  box-shadow: 5px 5px 0 5px #1f1f1f;
-}
-.dark .n-tabs .n-tabs-tab::after {
-  box-shadow: -5px 5px 0 5px #1f1f1f;
-}
-.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover::before {
-  box-shadow: 5px 5px 0 5px #2a2a2e;
-}
-.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover::after {
-  box-shadow: -5px 5px 0 5px #2a2a2e;
-}
-.dark .n-tabs .n-tabs-tab--active::before {
-  box-shadow: 5px 5px 0 5px #1e293b;
-}
-.dark .n-tabs .n-tabs-tab--active::after {
-  box-shadow: -5px 5px 0 5px #1e293b;
-}
-.dark .n-tabs .n-tabs-tab--active:hover::before {
-  box-shadow: 5px 5px 0 5px #1e3a5f;
-}
-.dark .n-tabs .n-tabs-tab--active:hover::after {
-  box-shadow: -5px 5px 0 5px #1e3a5f;
-}
 /* 隐藏原生下划线 */
 .n-tabs .n-tabs-bar { display: none !important; }
 /* 未选中 tab 的关闭按钮淡化 */
@@ -803,15 +772,19 @@ body.dark { background: #151515 !important; }
   background: #1f1f1f !important;
   border-color: #333 !important;
 }
+/* 暗色模式 tab 背景色 */
+.dark .n-tabs .n-tabs-tab {
+  --tab-bg-color: #1f1f1f;
+}
 .dark .n-tabs .n-tabs-tab:hover {
-  background-color: #2a2a2e;
+  --tab-bg-color: #2a2a2e;
 }
 .dark .n-tabs .n-tabs-tab--active {
   color: #60a5fa;
-  background-color: #1e293b;
+  --tab-bg-color: #1e293b;
 }
 .dark .n-tabs .n-tabs-tab--active:hover {
-  background-color: #1e3a5f;
+  --tab-bg-color: #1e3a5f;
 }
 .dark .page-content    { background: #151515 !important; }
 .dark .page-card       { background: #1f1f1f !important; border-color: #333 !important; }
