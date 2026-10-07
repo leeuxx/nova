@@ -429,6 +429,13 @@
       + '</div>'
     var modals = document.querySelectorAll('.n-modal')
     var host = (modals.length > 0 ? modals[modals.length - 1] : null) || document.body
+
+    // 从全局 z-index 管理器取层级，后打开的弹窗一定在上面
+    var drawerZ = (window.NovaZIndex && window.NovaZIndex.acquire()) || 9999
+    drawer.style.zIndex = drawerZ
+    mask.style.zIndex = drawerZ - 1
+    state._zIndex = drawerZ
+
     host.appendChild(mask)
     host.appendChild(drawer)
     state.drawer = drawer
@@ -545,6 +552,7 @@
       currentClose = null
       if (mask.parentNode) mask.parentNode.removeChild(mask)
       if (drawer.parentNode) drawer.parentNode.removeChild(drawer)
+      if (state._zIndex && window.NovaZIndex) { window.NovaZIndex.release(state._zIndex); state._zIndex = null }
     }
 
     function finish(result) {
@@ -565,6 +573,7 @@
       currentClose = null
       if (mask.parentNode) mask.parentNode.removeChild(mask)
       if (drawer.parentNode) drawer.parentNode.removeChild(drawer)
+      if (state._zIndex && window.NovaZIndex) { window.NovaZIndex.release(state._zIndex); state._zIndex = null }
       if (state.onAfterClose) state.onAfterClose(state)
     }
 

@@ -391,6 +391,7 @@ const NovaTable = {
       linkTabBuild:     {},
       linkFormData:     {},
       linkPickerShow:            false,
+      linkPickerZIndex:          3500,
       linkPickerTargetNova:       '',
       linkPickerCurrentTab:       '',
       linkPickerSelectedKeys:     [],
@@ -421,6 +422,7 @@ const NovaTable = {
 
       // ── 操作表单（novaClassName）── 独立弹窗 + 独立状态 ────
       opFormShow:     false,
+      opFormZIndex:   3000,
       opFormErrors:   {},
       opFormLoading:  false,
       opFormNovaName: '',
@@ -441,6 +443,8 @@ const NovaTable = {
       // ── TPL 自定义模板弹窗/抽屉 ──
       tplModalShow:       false,
       tplDrawerShow:      false,
+      tplModalZIndex:     3000,
+      tplDrawerZIndex:    3000,
       tplUrl:             '',
       tplTitle:           '',
       tplDrawerSize:      '50%',
@@ -470,6 +474,7 @@ const NovaTable = {
       loading:          false,
       buildLoading:       true,   // 主表 /build 构建中，显示 loading 覆盖层（首帧即遮住表格；整页加载阶段由 setBuildLoading 关闭，避免与首屏 loading 重叠）
       previewModalShow: false,
+      previewModalZIndex: 3000,
       previewField:     null,
       previewAppNovaName: null,
       previewIndex:     0,
@@ -477,6 +482,7 @@ const NovaTable = {
       slideDirection:  'right',
       // 表格附件预览弹窗
       tableAttachPreviewShow: false,
+      tableAttachPreviewZIndex: 9999,
       tableAttachPreviewField: null,
       tableAttachPreviewUrls: [],
       tableAttachPreviewType: null,
@@ -1696,7 +1702,7 @@ const NovaTable = {
     openOpReferenceModal(f) {
       var refInfo = this.opFormRefMap[f.field]
       if (!refInfo || !refInfo.referenceName) return
-      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, target: 'opForm', visible: false })
+      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, target: 'opForm', visible: false, zIndex: window.NovaZIndex ? window.NovaZIndex.acquire() : 3000 })
       var self = this
       this.$nextTick(function() {
         var picker = self.refPickerStack[self.refPickerStack.length - 1]
@@ -1707,7 +1713,7 @@ const NovaTable = {
       var refMap = (this.opFormAppTabBuild[novaName] || {}).referenceMap || {}
       var refInfo = refMap[f.field]
       if (!refInfo || !refInfo.referenceName) return
-      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, target: 'opFormApp', appNovaName: novaName, visible: false })
+      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, target: 'opFormApp', appNovaName: novaName, visible: false, zIndex: window.NovaZIndex ? window.NovaZIndex.acquire() : 3000 })
       var self = this
       this.$nextTick(function() {
         var picker = self.refPickerStack[self.refPickerStack.length - 1]
@@ -2189,12 +2195,14 @@ const NovaTable = {
           // 左右抽屉取 width，上下抽屉取 height
           var isVertical = self.tplDrawerPlacement === 'top' || self.tplDrawerPlacement === 'bottom'
           self.tplDrawerSize = isVertical ? tpl.height : tpl.width
+          self.tplDrawerZIndex = window.NovaZIndex ? window.NovaZIndex.acquire() : 3000
           self.tplDrawerShow = true
         } else {
           self.tplUrl = url
           self.tplTitle = btn.title || ''
           self.tplWidth = tpl.width
           self.tplHeight = self._pctToVh(tpl.height)
+          self.tplModalZIndex = window.NovaZIndex ? window.NovaZIndex.acquire() : 3000
           self.tplModalShow = true
         }
       }).catch(function() { if (window.$message) window.$message.error(window.__t('table.template_load_failed')) })
@@ -2207,8 +2215,16 @@ const NovaTable = {
       return value
     },
     closeTpl() {
-      this.tplModalShow = false
-      this.tplDrawerShow = false
+      if (this.tplModalShow) {
+        var mz = this.tplModalZIndex
+        if (mz && window.NovaZIndex) window.NovaZIndex.release(mz)
+        this.tplModalShow = false
+      }
+      if (this.tplDrawerShow) {
+        var dz = this.tplDrawerZIndex
+        if (dz && window.NovaZIndex) window.NovaZIndex.release(dz)
+        this.tplDrawerShow = false
+      }
       this.tplUrl = ''
       this.tplTitle = ''
     },
@@ -2303,6 +2319,7 @@ const NovaTable = {
           })
           self.opFormData = fd
           self.opFormErrors = {}
+          self.opFormZIndex = window.NovaZIndex ? window.NovaZIndex.acquire() : 3000
           self.opFormShow = true
           // 加载表单初始值（handler.novaFormValue 返回的数据）
           self.loadOpFormInitialValues()
@@ -2312,6 +2329,10 @@ const NovaTable = {
         })
     },
     closeOpForm() {
+      if (this.opFormShow) {
+        var z = this.opFormZIndex
+        if (z && window.NovaZIndex) window.NovaZIndex.release(z)
+      }
       this.opFormShow = false
       this.opFormBtn = null
       this.opFormRow = null
@@ -2756,6 +2777,7 @@ const NovaTable = {
           if (this.$refs.novaImagePreviewRef) this.$refs.novaImagePreviewRef.open(0)
         })
       } else {
+        this.previewModalZIndex = window.NovaZIndex ? window.NovaZIndex.acquire() : 3000
         this.previewModalShow = true
       }
     },
@@ -2783,6 +2805,10 @@ const NovaTable = {
       }
     },
     closePreview() {
+      if (this.previewModalShow) {
+        var z = this.previewModalZIndex
+        if (z && window.NovaZIndex) window.NovaZIndex.release(z)
+      }
       this.previewModalShow = false
       this.previewField = null
       this.previewAppNovaName = null
@@ -2809,6 +2835,7 @@ const NovaTable = {
       this.tableAttachPreviewUrls = urls
       this.tableAttachPreviewType = type
       this.tableAttachPreviewIndex = 0
+      this.tableAttachPreviewZIndex = window.NovaZIndex ? window.NovaZIndex.acquire() : 9999
       this.tableAttachPreviewShow = true
     },
     // 打开表格富文本预览弹窗
@@ -2940,11 +2967,13 @@ const NovaTable = {
       this._opEditorToolbars.clear()
     },
     closeTableAttachPreview() {
+      var zIdx = this.tableAttachPreviewZIndex
       this.tableAttachPreviewShow = false
       this.tableAttachPreviewField = null
       this.tableAttachPreviewUrls = []
       this.tableAttachPreviewType = null
       this.tableAttachPreviewIndex = 0
+      if (zIdx && window.NovaZIndex) window.NovaZIndex.release(zIdx)
     },
     handleTableAttachDelete(e) {
       this.tableAttachPreviewUrls.splice(e.index, 1)
@@ -3001,7 +3030,7 @@ const NovaTable = {
       if (this.isReadonly(f)) return
       const refInfo = this.referenceMap[f.field]
       if (!refInfo || !refInfo.referenceName) return
-      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, visible: false })
+      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, visible: false, zIndex: window.NovaZIndex ? window.NovaZIndex.acquire() : 3000 })
       this.$nextTick(() => {
         const picker = this.refPickerStack[this.refPickerStack.length - 1]
         if (picker) picker.visible = true
@@ -3011,7 +3040,7 @@ const NovaTable = {
       if (this.isReadonly(f)) return
       var refInfo = (this.appBuild(n).referenceMap || {})[f.field]
       if (!refInfo || !refInfo.referenceName) return
-      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, appNovaName: n, visible: false })
+      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: false, appNovaName: n, visible: false, zIndex: window.NovaZIndex ? window.NovaZIndex.acquire() : 3000 })
       this.$nextTick(() => {
         const picker = this.refPickerStack[this.refPickerStack.length - 1]
         if (picker) picker.visible = true
@@ -3020,7 +3049,7 @@ const NovaTable = {
     openReferenceModalForFilter(f) {
       const refInfo = this.referenceMap[f.field]
       if (!refInfo || !refInfo.referenceName) return
-      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: true, visible: false })
+      this.refPickerStack.push({ level: 1, novaName: refInfo.referenceName, field: f, row: null, isForFilter: true, visible: false, zIndex: window.NovaZIndex ? window.NovaZIndex.acquire() : 3000 })
       this.$nextTick(() => {
         const picker = this.refPickerStack[this.refPickerStack.length - 1]
         if (picker) picker.visible = true
@@ -3029,7 +3058,7 @@ const NovaTable = {
     openAppendageModalForFilter(f) {
       const appInfo = this.appendageMap && this.appendageMap[f.field]
       if (!appInfo || !appInfo.referenceName) return
-      this.refPickerStack.push({ level: 1, novaName: appInfo.referenceName, field: f, row: null, isForFilter: true, visible: false })
+      this.refPickerStack.push({ level: 1, novaName: appInfo.referenceName, field: f, row: null, isForFilter: true, visible: false, zIndex: window.NovaZIndex ? window.NovaZIndex.acquire() : 3000 })
       this.$nextTick(() => {
         const picker = this.refPickerStack[this.refPickerStack.length - 1]
         if (picker) picker.visible = true
@@ -3039,7 +3068,7 @@ const NovaTable = {
       const linkInfo = this.linkMap && this.linkMap[f.field]
       const selectInfo = linkInfo && linkInfo.selectInfo
       if (!selectInfo || !selectInfo.referenceName) return
-      this.refPickerStack.push({ level: 1, novaName: selectInfo.referenceName, field: f, row: null, isForFilter: true, visible: false })
+      this.refPickerStack.push({ level: 1, novaName: selectInfo.referenceName, field: f, row: null, isForFilter: true, visible: false, zIndex: window.NovaZIndex ? window.NovaZIndex.acquire() : 3000 })
       this.$nextTick(() => {
         const picker = this.refPickerStack[this.refPickerStack.length - 1]
         if (picker) picker.visible = true
@@ -3072,8 +3101,11 @@ const NovaTable = {
       const picker = this.refPickerStack.find(p => p.level === level)
       if (picker) {
         picker.visible = false
+        var zIdx = picker.zIndex
+        var self = this
         setTimeout(() => {
-          this.refPickerStack = this.refPickerStack.filter(p => p.level < level)
+          self.refPickerStack = self.refPickerStack.filter(p => p.level < level)
+          if (zIdx && window.NovaZIndex) window.NovaZIndex.release(zIdx)
         }, 300)
       } else {
         this.refPickerStack = this.refPickerStack.filter(p => p.level < level)
@@ -3179,13 +3211,16 @@ const NovaTable = {
       this.linkPickerCurrentTab = linkNovaName
       this.linkPickerSelectedKeys = []
       this.linkPickerSourceFields = srcFields
+      this.linkPickerZIndex = window.NovaZIndex ? window.NovaZIndex.acquire() : 3500
       this.linkPickerShow = true
     },
     closeLinkPicker() {
+      var zIdx = this.linkPickerZIndex
       this.linkPickerShow = false
       this.linkPickerTargetNova = ''
       this.linkPickerCurrentTab = ''
       this.linkPickerSelectedKeys = []
+      if (zIdx && window.NovaZIndex) window.NovaZIndex.release(zIdx)
     },
     onLinkPickerPick(selectedKeys) {
       this.linkPickerSelectedKeys = selectedKeys || []
@@ -4160,7 +4195,7 @@ const NovaTable = {
           </div>
         </template>
       </div>
-      <n-modal v-model:show="previewModalShow" preset="card" style="width:760px;margin-top:60px;padding:0">
+      <n-modal v-model:show="previewModalShow" preset="card" style="width:760px;margin-top:60px;padding:0" :z-index="previewModalZIndex">
         <template #header>
           <div class="gallery-header">
             <span class="gallery-title">{{ previewField ? (previewField.title || __t('table.attach_preview')) : __t('table.attach_preview') }}</span>
@@ -4840,7 +4875,7 @@ const NovaTable = {
         @delete="deleteFromPreview($event.index)" />
 
       <!-- 附件文件列表弹窗（非图片类型） -->
-      <n-modal v-model:show="previewModalShow" preset="card" style="width:760px;margin-top:60px;padding:0">
+      <n-modal v-model:show="previewModalShow" preset="card" style="width:760px;margin-top:60px;padding:0" :z-index="previewModalZIndex">
         <template #header>
           <div class="gallery-header">
             <span class="gallery-title">{{ previewField ? (previewField.title || __t('table.attach_preview')) : __t('table.attach_preview') }}</span>
@@ -4855,7 +4890,7 @@ const NovaTable = {
       </n-modal>
 
       <!-- 关联引用选择弹窗 -->
-      <n-modal v-for="picker in refPickerStack" :key="picker.level" :show="picker.visible" @update:show="(v) => { if (!v) closePickerAtLevel(picker.level) }" preset="card" class="ref-picker-modal" :title="__t('table.picker_title', { name: picker.field.title })" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="3000 + picker.level">
+      <n-modal v-for="picker in refPickerStack" :key="picker.level" :show="picker.visible" @update:show="(v) => { if (!v) closePickerAtLevel(picker.level) }" preset="card" class="ref-picker-modal" :title="__t('table.picker_title', { name: picker.field.title })" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="picker.zIndex">
         <div :style="{ height: 'calc(100vh - 180px)', maxHeight: '700px', overflow: 'hidden' }">
           <nova-table :picker-mode="true" :nova-name-prop="picker.novaName" :source-nova-name-prop="novaName" :source-fields-prop="buildPickerSourceFields(picker)" @pick="onPickerPick(picker.level, $event)" />
         </div>
@@ -4868,7 +4903,7 @@ const NovaTable = {
       </n-modal>
 
       <!-- LINK 多选关联弹窗 -->
-      <n-modal v-model:show="linkPickerShow" preset="card" class="ref-picker-modal" :title="linkPickerTitle || __t('table.link_picker_title_default')" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="3500">
+      <n-modal v-model:show="linkPickerShow" preset="card" class="ref-picker-modal" :title="linkPickerTitle || __t('table.link_picker_title_default')" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="linkPickerZIndex">
         <div :style="{ height: 'calc(100vh - 180px)', maxHeight: '700px', overflow: 'hidden' }">
           <nova-table v-if="linkPickerShow" :picker-mode="true" :picker-multi="true" :nova-name-prop="linkPickerTargetNova" :source-nova-name-prop="novaName" :source-fields-prop="linkPickerSourceFields" @check="onLinkPickerPick" />
         </div>
@@ -4885,7 +4920,8 @@ const NovaTable = {
         :title="(opFormBtn && opFormBtn.title) || __t('table.actions')"
         style="width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column"
         :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}"
-        :header-style="{paddingBottom:'8px'}">
+        :header-style="{paddingBottom:'8px'}"
+        :z-index="opFormZIndex">
         <n-tabs v-model:value="opFormTab" type="line"
           style="padding:0 20px;margin-top:-4px"
           @update:value="onOpFormTabChange">
@@ -5186,12 +5222,12 @@ const NovaTable = {
       </n-modal>
 
       <!-- TPL 对话框模式：宽高为 vw/vh 视口单位，100% = 撑满页面 -->
-      <n-modal v-model:show="tplModalShow" display-directive="if" preset="card" :title="tplTitle" :style="'width:' + tplWidth + ';height:' + tplHeight + ';display:flex;flex-direction:column'" :content-style="{padding:'0',overflow:'hidden',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
+      <n-modal v-model:show="tplModalShow" display-directive="if" preset="card" :title="tplTitle" :style="'width:' + tplWidth + ';height:' + tplHeight + ';display:flex;flex-direction:column'" :content-style="{padding:'0',overflow:'hidden',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}" :z-index="tplModalZIndex">
         <iframe v-if="tplUrl" :src="tplUrl" style="width:100%;height:100%;border:none;flex:1"></iframe>
       </n-modal>
 
       <!-- TPL 抽屉模式 -->
-      <n-drawer v-model:show="tplDrawerShow" :placement="tplDrawerPlacement" display-directive="if" :style="tplDrawerPlacement === 'top' || tplDrawerPlacement === 'bottom' ? 'height:' + tplDrawerSize : 'width:' + tplDrawerSize">
+      <n-drawer v-model:show="tplDrawerShow" :placement="tplDrawerPlacement" display-directive="if" :style="tplDrawerPlacement === 'top' || tplDrawerPlacement === 'bottom' ? 'height:' + tplDrawerSize : 'width:' + tplDrawerSize" :z-index="tplDrawerZIndex">
         <n-drawer-content :title="tplTitle" :header-style="{borderBottom:'none'}" :body-content-style="{padding:'0',overflow:'hidden',display:'flex',flexDirection:'column'}">
           <iframe v-if="tplUrl" :src="tplUrl" style="width:100%;height:100%;border:none;flex:1"></iframe>
         </n-drawer-content>
@@ -5234,7 +5270,7 @@ const NovaTable = {
       </Teleport>
 
       <!-- 表格附件预览弹窗（放到主 div 内，保持单根节点，避免 transition 死锁） -->
-    <n-modal v-model:show="tableAttachPreviewShow" preset="card" style="width:760px;margin-top:60px;padding:0" :z-index="9999">
+    <n-modal v-model:show="tableAttachPreviewShow" preset="card" style="width:760px;margin-top:60px;padding:0" :z-index="tableAttachPreviewZIndex" @update:show="(v) => { if (!v) closeTableAttachPreview() }">
       <template #header>
         <div class="gallery-header">
           <span class="gallery-title">{{ tableAttachPreviewField ? (tableAttachPreviewField.title || __t('table.attach_preview')) : __t('table.attach_preview') }}</span>

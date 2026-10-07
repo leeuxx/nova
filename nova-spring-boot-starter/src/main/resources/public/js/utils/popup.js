@@ -57,6 +57,7 @@
           ' :header-style="{paddingBottom:\'8px\'}"' +
           ' :internal-appear="true"' +
           ' :close-on-esc="true"' +
+          ' :z-index="zIndex"' +
         '>' +
           '<iframe v-if="payload.path" :src="payload.path" style="width:100%;height:100%;border:none;flex:1"></iframe>' +
         '</n-modal>' +
@@ -75,6 +76,7 @@
           ' :style="drawerStyle"' +
           ' :internal-appear="true"' +
           ' :close-on-esc="true"' +
+          ' :z-index="zIndex"' +
         '>' +
           '<n-drawer-content' +
             ' :title="payload.title || window.__t(\'common.no_title\')"' +
@@ -103,6 +105,10 @@
     var payloadRef = Vue.reactive(Object.assign({ path: path }, opts))
     var onCloseCb = opts.onClose
 
+    // 从全局 z-index 管理器取层级，后打开的一定在上面
+    var zIndexVal = (window.NovaZIndex && window.NovaZIndex.acquire()) || 3000
+    var zIndexRef = ref(zIndexVal)
+
     // 挂载容器
     var el = document.createElement('div')
     el.id = '__nova_popup_' + id
@@ -116,7 +122,7 @@
           var dark = window.__appDarkMode && window.__appDarkMode.value
           return dark ? naive.darkTheme : null
         })
-        return { show: showRef, payload: payloadRef, theme: themeRef }
+        return { show: showRef, payload: payloadRef, theme: themeRef, zIndex: zIndexRef }
       },
       computed: {
         modalStyle: function () {
@@ -145,6 +151,8 @@
           if (openedPopups[id]) {
             try { app.unmount() } catch (e) {}
             if (el.parentNode) el.parentNode.removeChild(el)
+            // 归还 z-index
+            if (window.NovaZIndex) window.NovaZIndex.release(zIndexVal)
             delete openedPopups[id]
             if (typeof onCloseCb === 'function') {
               try { onCloseCb() } catch (e) { console.error('[popup] onClose error:', e) }

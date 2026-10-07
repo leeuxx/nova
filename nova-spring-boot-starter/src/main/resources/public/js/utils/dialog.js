@@ -6,7 +6,37 @@
   function openDialog(opts) {
     // $dialog 不可用时，若配置了确认回调则直接执行
     if (!window.$dialog) { if (opts.onPositiveClick) opts.onPositiveClick(); return }
-    window.$dialog.create(opts)
+
+    // 从全局 z-index 管理器取层级
+    var zIndexVal = (window.NovaZIndex && window.NovaZIndex.acquire()) || 3000
+    var released = false
+    function releaseZ() {
+      if (!released && zIndexVal && window.NovaZIndex) {
+        released = true
+        window.NovaZIndex.release(zIndexVal)
+      }
+    }
+
+    var mergedOpts = Object.assign({}, opts, { zIndex: zIndexVal })
+
+    // 各个关闭路径都包一下，确保无论怎么关都能归还
+    var origPositive = mergedOpts.onPositiveClick
+    mergedOpts.onPositiveClick = function () {
+      releaseZ()
+      if (origPositive) return origPositive.apply(this, arguments)
+    }
+    var origNegative = mergedOpts.onNegativeClick
+    mergedOpts.onNegativeClick = function () {
+      releaseZ()
+      if (origNegative) return origNegative.apply(this, arguments)
+    }
+    var origClose = mergedOpts.onClose
+    mergedOpts.onClose = function () {
+      releaseZ()
+      if (origClose) return origClose.apply(this, arguments)
+    }
+
+    window.$dialog.create(mergedOpts)
   }
 
   window.modal = {
