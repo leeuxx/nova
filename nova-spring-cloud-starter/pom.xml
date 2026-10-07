@@ -8,7 +8,7 @@
     <parent>
         <groupId>io.github.leeuxx</groupId>
         <artifactId>nova</artifactId>
-        <version>1.2.2</version>
+        <version>1.3.0</version>
     </parent>
 
     <artifactId>nova-spring-cloud-starter</artifactId>
@@ -30,12 +30,10 @@
         <dependency>
             <groupId>io.github.leeuxx</groupId>
             <artifactId>nova-core</artifactId>
-            <version>1.2.2</version>
         </dependency>
         <dependency>
             <groupId>io.github.leeuxx</groupId>
             <artifactId>nova-spring-boot-starter</artifactId>
-            <version>1.2.2</version>
         </dependency>
 
         <!-- ============ Apache HttpClient 5.x（RestTemplate池化需要用到） ============ -->
