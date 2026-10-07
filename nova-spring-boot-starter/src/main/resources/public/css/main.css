@@ -212,6 +212,12 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   -ms-overflow-style: none;
   position: relative;
   padding: 8px 16px 0;
+  transition: padding .2s;
+}
+/* 有箭头时，两侧留出箭头位置，避免 tab 被箭头盖住 */
+.tab-scroll-wrap.has-arrows {
+  padding-left: 36px;
+  padding-right: 36px;
 }
 .tab-scroll-wrap::-webkit-scrollbar { display: none; }
 /* n-tabs 宽度由内容撑开，内容少时不小于容器宽度 */
@@ -220,57 +226,22 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   min-width: 100%;
   max-width: none !important;
 }
-/* 左右渐变遮罩 */
-.tab-scroll-wrap::before,
-.tab-scroll-wrap::after {
-  content: '';
+
+/* 内嵌式左右箭头：嵌在 tab 栏两端，和导航栏融为一体 */
+.tab-scroll-arrow {
   position: absolute;
   top: 0;
   bottom: 0;
   width: 28px;
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0;
-  transition: opacity .2s;
-}
-.tab-scroll-wrap::before {
-  left: 0;
-  background: linear-gradient(to right, #fff 0%, rgba(255,255,255,0.8) 40%, rgba(255,255,255,0) 100%);
-}
-.tab-scroll-wrap::after {
-  right: 0;
-  background: linear-gradient(to left, #fff 0%, rgba(255,255,255,0.8) 40%, rgba(255,255,255,0) 100%);
-}
-.dark .tab-scroll-wrap::before {
-  background: linear-gradient(to right, #1f1f1f 0%, rgba(31,31,31,0.8) 40%, rgba(31,31,31,0) 100%);
-}
-.dark .tab-scroll-wrap::after {
-  background: linear-gradient(to left, #1f1f1f 0%, rgba(31,31,31,0.8) 40%, rgba(31,31,31,0) 100%);
-}
-.tab-scroll-wrap.has-arrows::before,
-.tab-scroll-wrap.has-arrows::after {
-  opacity: 1;
-}
-
-/* 左右滚动箭头：绝对定位在外层 */
-.tab-scroll-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 26px;
-  height: 26px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  color: #555;
+  color: #888;
   cursor: pointer;
-  transition: background .15s, color .15s, opacity .2s, transform .15s, border-color .15s;
+  transition: color .15s, background .15s, opacity .2s;
   user-select: none;
   background: #fff;
   z-index: 10;
-  box-shadow: 0 2px 6px rgba(0,0,0,.08);
-  border: 1px solid #e5e7eb;
   opacity: 0;
   pointer-events: none;
 }
@@ -278,31 +249,33 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   opacity: 1;
   pointer-events: auto;
 }
-.tab-scroll-arrow.left { left: 4px; }
-.tab-scroll-arrow.right { right: 4px; }
+.tab-scroll-arrow.left {
+  left: 0;
+}
+.tab-scroll-arrow.right {
+  right: 0;
+}
 .tab-scroll-arrow:hover {
-  background: #f0f4ff;
   color: #2563eb;
-  border-color: #bfdbfe;
-  transform: translateY(-50%) scale(1.08);
+  background: #f5f7fa;
 }
 .tab-scroll-arrow:active {
-  background: #e0e8ff;
-  transform: translateY(-50%) scale(0.95);
+  color: #1d4ed8;
+  background: #eef0f3;
 }
 .dark .tab-scroll-arrow {
-  color: #bbb;
-  background: #2a2a2e;
-  box-shadow: 0 2px 8px rgba(0,0,0,.4);
-  border-color: #3a3a40;
+  color: #888;
+  background: #1f1f1f;
 }
+.dark .tab-scroll-arrow.left { border-right-color: #2e2e32; }
+.dark .tab-scroll-arrow.right { border-left-color: #2e2e32; }
 .dark .tab-scroll-arrow:hover {
-  background: #35353b;
   color: #3b82f6;
-  border-color: #4a6fa5;
+  background: #2a2a2e;
 }
 .dark .tab-scroll-arrow:active {
-  background: #404048;
+  color: #60a5fa;
+  background: #35353b;
 }
 
 
