@@ -399,10 +399,10 @@
   padding: 8px 16px 0;
   transition: padding .2s;
 }
-/* 有箭头时，两侧留出箭头位置，避免 tab 被箭头盖住 */
-.tab-scroll-wrap.has-arrows {
-  padding-left: 36px;
-  padding-right: 36px;
+/* 箭头一直显示，两侧固定留出箭头位置 */
+.tab-scroll-wrap {
+  padding-left: 26px;
+  padding-right: 26px;
 }
 .tab-scroll-wrap::-webkit-scrollbar { display: none; }
 /* n-tabs 宽度由内容撑开，内容少时不小于容器宽度 */
@@ -417,7 +417,7 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 28px;
+  width: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -427,12 +427,13 @@
   user-select: none;
   background: #fff;
   z-index: 10;
-  opacity: 0;
-  pointer-events: none;
-}
-.tab-scroll-arrow.is-show {
   opacity: 1;
   pointer-events: auto;
+}
+.tab-scroll-arrow.is-disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
 }
 .tab-scroll-arrow.left {
   left: 0;

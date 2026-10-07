@@ -694,6 +694,8 @@ function mountApp(menuList, config, loginExpired) {
       const tabScrollRef = ref(null)
       const tabsRef = ref(null)
       const showTabArrows = ref(false)
+      const canScrollLeft = ref(false)
+      const canScrollRight = ref(false)
 
       // 同步 n-tabs 下划线位置（修复 max-content 容器内首次渲染 bar 不显示的问题）
       const syncTabBar = () => {
@@ -704,11 +706,14 @@ function mountApp(menuList, config, loginExpired) {
         })
       }
 
-      // 检测 tab 是否溢出
+      // 检测 tab 是否溢出及左右可滚动状态
       const checkTabOverflow = () => {
-        if (!tabScrollRef.value) { showTabArrows.value = false; return }
+        if (!tabScrollRef.value) { showTabArrows.value = false; canScrollLeft.value = false; canScrollRight.value = false; return }
         const el = tabScrollRef.value
-        showTabArrows.value = el.scrollWidth > el.clientWidth + 1
+        const overflow = el.scrollWidth > el.clientWidth + 1
+        showTabArrows.value = overflow
+        canScrollLeft.value = overflow && el.scrollLeft > 1
+        canScrollRight.value = overflow && el.scrollLeft + el.clientWidth < el.scrollWidth - 1
       }
 
       // 按像素滚动
@@ -745,16 +750,21 @@ function mountApp(menuList, config, loginExpired) {
       watch(openedTabs, () => {
         nextTick(() => { checkTabOverflow(); scrollActiveIntoView(false); syncTabBar() })
       }, { deep: true })
-      // 初始化 + resize 监听
+      // 初始化 + resize 监听 + 滚动监听
       let _tabResizeHandler = null
+      let _tabScrollHandler = null
       watch(tabScrollRef, (el) => {
         if (el) {
           nextTick(() => { checkTabOverflow(); syncTabBar() })
           _tabResizeHandler = () => { checkTabOverflow(); syncTabBar() }
+          _tabScrollHandler = () => { checkTabOverflow() }
           window.addEventListener('resize', _tabResizeHandler)
+          el.addEventListener('scroll', _tabScrollHandler, { passive: true })
         } else {
           if (_tabResizeHandler) window.removeEventListener('resize', _tabResizeHandler)
+          if (_tabScrollHandler && tabScrollRef.value) tabScrollRef.value.removeEventListener('scroll', _tabScrollHandler)
           _tabResizeHandler = null
+          _tabScrollHandler = null
         }
       }, { immediate: false })
 
@@ -765,7 +775,7 @@ function mountApp(menuList, config, loginExpired) {
         handleMenuSelect, handleTabClose, handleTabClick, showRightSeparator, goHome, userDropdown, userToolButtons, handleUserMenuSelect,
         localeDropdown, handleLocaleSelect, currentLocale, localeNodeProps,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
-        tabScrollRef, tabsRef, showTabArrows, scrollTabBy,
+        tabScrollRef, tabsRef, showTabArrows, canScrollLeft, canScrollRight, scrollTabBy,
         userName, userAlias, userAvatar, logoText, logoImg,
         showProfile, profileSaving, profileFormRef, profileForm, profileRules, submitProfile,
         userEdit: config.user.edit,
@@ -865,10 +875,10 @@ function mountApp(menuList, config, loginExpired) {
 
                     <!-- Tab 栏 -->
                     <div class="tab-bar tab-bar-wrap" style="position:relative;flex-shrink:0">
-                      <div :class="['tab-scroll-arrow', 'left', { 'is-show': showTabArrows }]" @click="scrollTabBy(-240)" title="向左滚动">
+                      <div :class="['tab-scroll-arrow', 'left', { 'is-disabled': !canScrollLeft }]" @click="canScrollLeft && scrollTabBy(-240)" title="向左滚动">
                         <n-icon :size="16"><iconify-icon icon="material-symbols:keyboard-double-arrow-left"></iconify-icon></n-icon>
                       </div>
-                      <div class="tab-scroll-wrap" ref="tabScrollRef" :class="{ 'has-arrows': showTabArrows }">
+                      <div class="tab-scroll-wrap" ref="tabScrollRef">
                         <n-tabs type="line" class="menu-tabs" :key="tabsKey" ref="tabsRef" :value="activeTab" :tabs-padding="0" @update:value="handleTabClick">
                           <n-tab
                             v-for="tab in openedTabs" :key="tab.key" :name="tab.key"
@@ -887,7 +897,7 @@ function mountApp(menuList, config, loginExpired) {
                           </n-tab>
                         </n-tabs>
                       </div>
-                      <div :class="['tab-scroll-arrow', 'right', { 'is-show': showTabArrows }]" @click="scrollTabBy(240)" title="向右滚动">
+                      <div :class="['tab-scroll-arrow', 'right', { 'is-disabled': !canScrollRight }]" @click="canScrollRight && scrollTabBy(240)" title="向右滚动">
                         <n-icon :size="16"><iconify-icon icon="material-symbols:keyboard-double-arrow-right"></iconify-icon></n-icon>
                       </div>
                     </div>
