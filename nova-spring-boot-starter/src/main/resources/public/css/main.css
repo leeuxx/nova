@@ -541,6 +541,13 @@ body.table-wrap-cell .n-data-table-td {
   background: #1f1f1f;
 }
 
+/* 内嵌表格（APPENDAGES/LINK tab）loading 居中修复：
+   主表用 min-height: calc(100vh - 110px) 确保全屏高度，
+   内嵌模式下容器高度有限，用 100% 让动画在容器内垂直居中，避免偏下 */
+.embedded-table .table-build-overlay {
+  min-height: 100%;
+}
+
 /* ─── 暗色模式 ─────────────────────────────────────────── */
 .dark { background: #151515; }
 body.dark { background: #151515 !important; }
