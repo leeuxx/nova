@@ -196,6 +196,93 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 .n-tabs .n-tabs-tab--active { color: #2563eb; }
 /* 原生下划线颜色 */
 .n-tabs .n-tabs-bar { background: #2563eb !important; }
+/* 未选中 tab 的关闭按钮淡化 */
+.n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .n-tabs-tab__close,
+.n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon,
+.n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon iconify-icon {
+  color: #606266;
+  opacity: 0.65;
+  transition: opacity 0.2s, color 0.15s, background-color 0.15s;
+}
+.n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .n-tabs-tab__close,
+.n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .tab-close-icon,
+.n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .tab-close-icon iconify-icon {
+  opacity: 0.85;
+}
+/* 未选中 tab 关闭按钮 hover 变深灰 */
+.n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon:hover,
+.n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon:hover iconify-icon {
+  color: #303133;
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.06);
+}
+/* 选中 tab 的关闭按钮保持灰色，不跟随主题色 */
+.n-tabs .n-tabs-tab--active .tab-close-icon,
+.n-tabs .n-tabs-tab--active .tab-close-icon iconify-icon {
+  color: #606266;
+}
+.n-tabs .n-tabs-tab--active .tab-close-icon:hover,
+.n-tabs .n-tabs-tab--active .tab-close-icon:hover iconify-icon {
+  color: #303133;
+  background-color: rgba(0, 0, 0, 0.06);
+}
+.n-tabs .n-tabs-tab--active .tab-close-icon:hover iconify-icon {
+  transform: scale(1.15);
+}
+/* 暗色模式下选中 tab 关闭按钮 */
+.dark .n-tabs .n-tabs-tab--active .tab-close-icon,
+.dark .n-tabs .n-tabs-tab--active .tab-close-icon iconify-icon {
+  color: #a0a0a0;
+}
+.dark .n-tabs .n-tabs-tab--active .tab-close-icon:hover,
+.dark .n-tabs .n-tabs-tab--active .tab-close-icon:hover iconify-icon {
+  color: #e0e0e0;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+/* tab 关闭按钮 hover 圆形背景 */
+.n-tabs .n-tabs-tab .tab-close-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-left: 0 !important;
+  transition: background-color 0.15s;
+}
+.n-tabs .n-tabs-tab .tab-close-icon iconify-icon {
+  font-size: 13px !important;
+  transition: transform 0.15s;
+}
+.n-tabs .n-tabs-tab .tab-close-icon:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+.n-tabs .n-tabs-tab .tab-close-icon:hover iconify-icon {
+  transform: scale(1.15);
+}
+/* 暗色模式下关闭按钮 hover 背景 */
+.dark .n-tabs .n-tabs-tab .tab-close-icon:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+/* 暗色模式下未选中 tab 关闭按钮淡化 */
+.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .n-tabs-tab__close,
+.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon,
+.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon iconify-icon {
+  color: #a0a0a0;
+  opacity: 0.5;
+}
+.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .n-tabs-tab__close,
+.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .tab-close-icon,
+.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .tab-close-icon iconify-icon {
+  opacity: 0.75;
+}
+/* 暗色模式下未选中 tab 关闭按钮 hover 变浅灰 */
+.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon:hover,
+.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon:hover iconify-icon {
+  color: #e0e0e0;
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+}
 .tab-bar-wrap {
   position: relative;
   display: flex;

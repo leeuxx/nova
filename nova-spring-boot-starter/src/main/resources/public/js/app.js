@@ -871,7 +871,7 @@ function mountApp(menuList, config, loginExpired) {
                             <span style="display:inline-flex;align-items:center;gap:4px">
                               <n-icon :size="14" v-if="tab.icon"><iconify-icon :icon="tab.icon"></iconify-icon></n-icon>
                               {{ tab.title }}
-                              <n-icon v-if="tab.closable && openedTabs.length > 1" :size="12" style="cursor:pointer;margin-left:4px" @click.stop="handleTabClose(tab.key)">
+                              <n-icon v-if="tab.closable && openedTabs.length > 1" :size="12" class="tab-close-icon" style="cursor:pointer;margin-left:4px" @click.stop="handleTabClose(tab.key)">
                                 <iconify-icon icon="material-symbols:close"></iconify-icon>
                               </n-icon>
                             </span>
