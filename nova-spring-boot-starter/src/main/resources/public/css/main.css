@@ -277,6 +277,16 @@
 /* tab 栏底部完整分隔线（盖在弧线之上，避免被弧线遮断） */
 .menu-tabs .n-tabs-nav {
   position: relative;
+  overflow: visible !important;
+}
+/* 修复第一个/最后一个 tab 弧线被裁剪：
+   .n-tabs-nav-scroll-wrapper 的 overflow:hidden 是裁剪元凶，设为 visible
+   .v-x-scroll 是实际滚动容器，给内部内容加左右 padding 让弧线在滚动范围内 */
+.menu-tabs .n-tabs-nav-scroll-wrapper {
+  overflow: visible !important;
+}
+.menu-tabs .n-tabs-nav-scroll-content {
+  padding: 0 12px !important;
 }
 .menu-tabs .n-tabs-nav::after {
   content: '';
@@ -401,8 +411,8 @@
 }
 /* 箭头一直显示，两侧固定留出箭头位置 */
 .tab-scroll-wrap {
-  padding-left: 26px;
-  padding-right: 26px;
+  padding-left: 18px;
+  padding-right: 18px;
 }
 .tab-scroll-wrap::-webkit-scrollbar { display: none; }
 /* n-tabs 宽度由内容撑开，内容少时不小于容器宽度 */
