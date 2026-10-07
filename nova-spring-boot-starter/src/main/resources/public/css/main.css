@@ -635,6 +635,128 @@ body.dark { background: #151515 !important; }
 .dark .n-layout-header { background: #1f1f1f !important; border-color: #333 !important; }
 .dark .n-layout-sider  { background: #1f1f1f !important; border-color: #333 !important; }
 .dark .n-layout-content{ background: #151515; }
+
+/* ─── 左侧菜单栏细滚动条（原生滚动条） ─────────────────────── */
+.n-layout-sider-scroll-container,
+.n-layout-sider .n-menu {
+  scrollbar-width: thin;
+  scrollbar-color: #c0c4cc #f5f7fa;
+  scrollbar-gutter: stable;
+}
+.n-layout-sider-scroll-container::-webkit-scrollbar,
+.n-layout-sider .n-menu::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.n-layout-sider-scroll-container::-webkit-scrollbar-track,
+.n-layout-sider .n-menu::-webkit-scrollbar-track {
+  background: #f5f7fa;
+}
+.n-layout-sider-scroll-container::-webkit-scrollbar-thumb,
+.n-layout-sider .n-menu::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 3px;
+}
+.n-layout-sider-scroll-container::-webkit-scrollbar-thumb:hover,
+.n-layout-sider .n-menu::-webkit-scrollbar-thumb:hover {
+  background: #909399;
+}
+/* 暗色模式 */
+.dark .n-layout-sider-scroll-container,
+.dark .n-layout-sider .n-menu {
+  scrollbar-color: #555 #1f1f1f;
+}
+.dark .n-layout-sider-scroll-container::-webkit-scrollbar-track,
+.dark .n-layout-sider .n-menu::-webkit-scrollbar-track {
+  background: #1f1f1f;
+}
+.dark .n-layout-sider-scroll-container::-webkit-scrollbar-thumb,
+.dark .n-layout-sider .n-menu::-webkit-scrollbar-thumb {
+  background: #555;
+}
+.dark .n-layout-sider-scroll-container::-webkit-scrollbar-thumb:hover,
+.dark .n-layout-sider .n-menu::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* ─── 主内容区细滚动条 ─────────────────────── */
+.n-layout-content,
+.n-layout-content-scroll-container,
+.n-layout-content > .n-scrollbar,
+.n-layout-content .n-scrollbar-content-wrapper,
+.page-content,
+.page-content > * {
+  scrollbar-width: thin;
+  scrollbar-color: #c0c4cc #f5f7fa;
+  scrollbar-gutter: stable;
+}
+.n-layout-content::-webkit-scrollbar,
+.n-layout-content-scroll-container::-webkit-scrollbar,
+.n-layout-content > .n-scrollbar::-webkit-scrollbar,
+.n-layout-content .n-scrollbar-content-wrapper::-webkit-scrollbar,
+.page-content::-webkit-scrollbar,
+.page-content > *::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+.n-layout-content::-webkit-scrollbar-track,
+.n-layout-content-scroll-container::-webkit-scrollbar-track,
+.n-layout-content > .n-scrollbar::-webkit-scrollbar-track,
+.n-layout-content .n-scrollbar-content-wrapper::-webkit-scrollbar-track,
+.page-content::-webkit-scrollbar-track,
+.page-content > *::-webkit-scrollbar-track {
+  background: #f5f7fa;
+}
+.n-layout-content::-webkit-scrollbar-thumb,
+.n-layout-content-scroll-container::-webkit-scrollbar-thumb,
+.n-layout-content > .n-scrollbar::-webkit-scrollbar-thumb,
+.n-layout-content .n-scrollbar-content-wrapper::-webkit-scrollbar-thumb,
+.page-content::-webkit-scrollbar-thumb,
+.page-content > *::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 3px;
+}
+.n-layout-content::-webkit-scrollbar-thumb:hover,
+.n-layout-content-scroll-container::-webkit-scrollbar-thumb:hover,
+.n-layout-content > .n-scrollbar::-webkit-scrollbar-thumb:hover,
+.n-layout-content .n-scrollbar-content-wrapper::-webkit-scrollbar-thumb:hover,
+.page-content::-webkit-scrollbar-thumb:hover,
+.page-content > *::-webkit-scrollbar-thumb:hover {
+  background: #909399;
+}
+/* 暗色模式 */
+.dark .n-layout-content,
+.dark .n-layout-content-scroll-container,
+.dark .n-layout-content > .n-scrollbar,
+.dark .n-layout-content .n-scrollbar-content-wrapper,
+.dark .page-content,
+.dark .page-content > * {
+  scrollbar-color: #555 #151515;
+}
+.dark .n-layout-content::-webkit-scrollbar-track,
+.dark .n-layout-content-scroll-container::-webkit-scrollbar-track,
+.dark .n-layout-content > .n-scrollbar::-webkit-scrollbar-track,
+.dark .n-layout-content .n-scrollbar-content-wrapper::-webkit-scrollbar-track,
+.dark .page-content::-webkit-scrollbar-track,
+.dark .page-content > *::-webkit-scrollbar-track {
+  background: #151515;
+}
+.dark .n-layout-content::-webkit-scrollbar-thumb,
+.dark .n-layout-content-scroll-container::-webkit-scrollbar-thumb,
+.dark .n-layout-content > .n-scrollbar::-webkit-scrollbar-thumb,
+.dark .n-layout-content .n-scrollbar-content-wrapper::-webkit-scrollbar-thumb,
+.dark .page-content::-webkit-scrollbar-thumb,
+.dark .page-content > *::-webkit-scrollbar-thumb {
+  background: #555;
+}
+.dark .n-layout-content::-webkit-scrollbar-thumb:hover,
+.dark .n-layout-content-scroll-container::-webkit-scrollbar-thumb:hover,
+.dark .n-layout-content > .n-scrollbar::-webkit-scrollbar-thumb:hover,
+.dark .n-layout-content .n-scrollbar-content-wrapper::-webkit-scrollbar-thumb:hover,
+.dark .page-content::-webkit-scrollbar-thumb:hover,
+.dark .page-content > *::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
 .dark .n-card          { background: #1f1f1f !important; border-color: #333 !important; }
 .dark .n-card__content { background: #1f1f1f; }
 
