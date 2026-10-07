@@ -682,33 +682,73 @@ function mountApp(menuList, config, loginExpired) {
       // 删除头像时清空必填值
       const onAvatarRemove = () => { profileForm.value.avatar = '' }
 
-      // 自定义下横线
-      const barStyle = ref({ transform: 'translateX(0px)', width: '0px', opacity: 0 })
-      const barReady = ref(false)
-      const tabBarRef = ref(null)
+      // Tab 栏滚动箭头
+      const tabScrollRef = ref(null)
+      const tabsRef = ref(null)
+      const showTabArrows = ref(false)
 
-      const updateBar = (animate) => {
+      // 同步 n-tabs 下划线位置（修复 max-content 容器内首次渲染 bar 不显示的问题）
+      const syncTabBar = () => {
         nextTick(() => {
-          if (!tabBarRef.value) return
-          const wrapEl   = tabBarRef.value
-          const activeEl = wrapEl.querySelector('.n-tabs-tab--active')
-          if (!activeEl) return
-          let left = 0
-          let el   = activeEl
-          while (el && el !== wrapEl) {
-            left += el.offsetLeft
-            el    = el.offsetParent
+          if (tabsRef.value && typeof tabsRef.value.syncBarPosition === 'function') {
+            tabsRef.value.syncBarPosition()
           }
-          if (!animate) barReady.value = false
-          barStyle.value = { transform: 'translateX(' + left + 'px)', width: activeEl.offsetWidth + 'px', opacity: 1 }
-          if (!animate) nextTick(() => { barReady.value = true })
         })
       }
 
-      watch(activeTab, () => updateBar(true))
-      watch(openedTabs, () => updateBar(true), { deep: true })
-      // 首次定位不播动画
-      watch(tabBarRef, (el) => { if (el) updateBar(false) }, { once: true })
+      // 检测 tab 是否溢出
+      const checkTabOverflow = () => {
+        if (!tabScrollRef.value) { showTabArrows.value = false; return }
+        const el = tabScrollRef.value
+        showTabArrows.value = el.scrollWidth > el.clientWidth + 1
+      }
+
+      // 按像素滚动
+      const scrollTabBy = (delta) => {
+        if (!tabScrollRef.value) return
+        tabScrollRef.value.scrollBy({ left: delta, behavior: 'smooth' })
+      }
+
+      // 让激活的 tab 滚动到可视区
+      const scrollActiveIntoView = (animate) => {
+        if (!tabScrollRef.value) return
+        const wrapEl = tabScrollRef.value
+        const activeEl = wrapEl.querySelector('.n-tabs-tab--active')
+        if (!activeEl) return
+        const wrapRect = wrapEl.getBoundingClientRect()
+        const tabRect = activeEl.getBoundingClientRect()
+        const wrapStyle = getComputedStyle(wrapEl)
+        const paddingLeft = parseFloat(wrapStyle.paddingLeft) || 0
+        const paddingRight = parseFloat(wrapStyle.paddingRight) || 0
+        // tab 相对于滚动内容起点的距离
+        const tabLeft = tabRect.left - wrapRect.left - paddingLeft + wrapEl.scrollLeft
+        const tabRight = tabLeft + activeEl.offsetWidth
+        const visibleWidth = wrapEl.clientWidth - paddingLeft - paddingRight
+        const scrollLeft = wrapEl.scrollLeft
+        const edgePadding = 36
+        if (tabLeft < scrollLeft + edgePadding) {
+          wrapEl.scrollTo({ left: Math.max(0, tabLeft - edgePadding), behavior: animate ? 'smooth' : 'auto' })
+        } else if (tabRight > scrollLeft + visibleWidth - edgePadding) {
+          wrapEl.scrollTo({ left: tabRight - visibleWidth + edgePadding, behavior: animate ? 'smooth' : 'auto' })
+        }
+      }
+
+      watch(activeTab, () => { nextTick(() => scrollActiveIntoView(true)); syncTabBar() })
+      watch(openedTabs, () => {
+        nextTick(() => { checkTabOverflow(); scrollActiveIntoView(false); syncTabBar() })
+      }, { deep: true })
+      // 初始化 + resize 监听
+      let _tabResizeHandler = null
+      watch(tabScrollRef, (el) => {
+        if (el) {
+          nextTick(() => { checkTabOverflow(); syncTabBar() })
+          _tabResizeHandler = () => { checkTabOverflow(); syncTabBar() }
+          window.addEventListener('resize', _tabResizeHandler)
+        } else {
+          if (_tabResizeHandler) window.removeEventListener('resize', _tabResizeHandler)
+          _tabResizeHandler = null
+        }
+      }, { immediate: false })
 
       return {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
@@ -717,7 +757,8 @@ function mountApp(menuList, config, loginExpired) {
         handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, userToolButtons, handleUserMenuSelect,
         localeDropdown, handleLocaleSelect, currentLocale, localeNodeProps,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
-        barStyle, barReady, tabBarRef, userName, userAlias, userAvatar, logoText, logoImg,
+        tabScrollRef, tabsRef, showTabArrows, scrollTabBy,
+        userName, userAlias, userAvatar, logoText, logoImg,
         showProfile, profileSaving, profileFormRef, profileForm, profileRules, submitProfile,
         userEdit: config.user.edit,
         avatarFileList, handleAvatarUpload, onAvatarRemove
@@ -815,24 +856,31 @@ function mountApp(menuList, config, loginExpired) {
                     </n-layout-header>
 
                     <!-- Tab 栏 -->
-                    <div class="tab-bar tab-bar-wrap" style="padding:8px 16px 0;display:flex;align-items:flex-start;gap:4px;flex-shrink:0" ref="tabBarRef">
-                      <n-tabs type="line" :key="tabsKey" :value="activeTab" :tabs-padding="0" @update:value="handleTabClick" style="flex:1;min-width:0">
-                        <n-tab
-                          v-for="tab in openedTabs" :key="tab.key" :name="tab.key"
-                          :closable="tab.closable && openedTabs.length > 1" @close.stop="handleTabClose(tab.key)"
-                          @contextmenu.prevent="handleTabContextMenu($event, tab.key)"
-                          style="padding:6px 12px;font-size:13px"
-                        >
-                          <span style="display:inline-flex;align-items:center;gap:4px">
-                            <n-icon :size="14" v-if="tab.icon"><iconify-icon :icon="tab.icon"></iconify-icon></n-icon>
-                            {{ tab.title }}
-                            <n-icon v-if="tab.closable && openedTabs.length > 1" :size="12" style="cursor:pointer;margin-left:4px" @click.stop="handleTabClose(tab.key)">
-                              <iconify-icon icon="material-symbols:close"></iconify-icon>
-                            </n-icon>
-                          </span>
-                        </n-tab>
-                      </n-tabs>
-                      <div class="tab-bar-line" :class="{ 'bar-ready': barReady }" :style="barStyle"></div>
+                    <div class="tab-bar tab-bar-wrap" style="position:relative;flex-shrink:0">
+                      <div :class="['tab-scroll-arrow', 'left', { 'is-show': showTabArrows }]" @click="scrollTabBy(-240)" title="向左滚动">
+                        <n-icon :size="16"><iconify-icon icon="material-symbols:keyboard-double-arrow-left"></iconify-icon></n-icon>
+                      </div>
+                      <div class="tab-scroll-wrap" ref="tabScrollRef" :class="{ 'has-arrows': showTabArrows }">
+                        <n-tabs type="line" :key="tabsKey" ref="tabsRef" :value="activeTab" :tabs-padding="0" @update:value="handleTabClick">
+                          <n-tab
+                            v-for="tab in openedTabs" :key="tab.key" :name="tab.key"
+                            :closable="tab.closable && openedTabs.length > 1" @close.stop="handleTabClose(tab.key)"
+                            @contextmenu.prevent="handleTabContextMenu($event, tab.key)"
+                            style="padding:6px 12px;font-size:13px"
+                          >
+                            <span style="display:inline-flex;align-items:center;gap:4px">
+                              <n-icon :size="14" v-if="tab.icon"><iconify-icon :icon="tab.icon"></iconify-icon></n-icon>
+                              {{ tab.title }}
+                              <n-icon v-if="tab.closable && openedTabs.length > 1" :size="12" style="cursor:pointer;margin-left:4px" @click.stop="handleTabClose(tab.key)">
+                                <iconify-icon icon="material-symbols:close"></iconify-icon>
+                              </n-icon>
+                            </span>
+                          </n-tab>
+                        </n-tabs>
+                      </div>
+                      <div :class="['tab-scroll-arrow', 'right', { 'is-show': showTabArrows }]" @click="scrollTabBy(240)" title="向右滚动">
+                        <n-icon :size="16"><iconify-icon icon="material-symbols:keyboard-double-arrow-right"></iconify-icon></n-icon>
+                      </div>
                     </div>
 
                     <!-- 内容区 -->
