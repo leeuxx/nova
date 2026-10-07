@@ -251,6 +251,24 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 /* 滚动容器不裁剪 tab 弧线 */
 .tab-scroll-wrap { overflow-x: auto; overflow-y: visible !important; }
 .tab-scroll-wrap .n-tabs { overflow: visible !important; }
+/* tab 栏底部完整分隔线（盖在弧线之上，避免被弧线遮断） */
+.n-tabs-nav {
+  position: relative;
+}
+.n-tabs-nav::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background-color: #eef0f3;
+  z-index: 10;
+  pointer-events: none;
+}
+.dark .n-tabs-nav::after {
+  background-color: #2e2e32;
+}
 /* 隐藏原生下划线 */
 .n-tabs .n-tabs-bar { display: none !important; }
 /* 未选中 tab 的关闭按钮淡化 */
