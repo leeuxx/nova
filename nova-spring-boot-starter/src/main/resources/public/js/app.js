@@ -861,7 +861,7 @@ function mountApp(menuList, config, loginExpired) {
                         <n-icon :size="16"><iconify-icon icon="material-symbols:keyboard-double-arrow-left"></iconify-icon></n-icon>
                       </div>
                       <div class="tab-scroll-wrap" ref="tabScrollRef" :class="{ 'has-arrows': showTabArrows }">
-                        <n-tabs type="line" :key="tabsKey" ref="tabsRef" :value="activeTab" :tabs-padding="0" @update:value="handleTabClick">
+                        <n-tabs type="line" class="menu-tabs" :key="tabsKey" ref="tabsRef" :value="activeTab" :tabs-padding="0" @update:value="handleTabClick">
                           <n-tab
                             v-for="tab in openedTabs" :key="tab.key" :name="tab.key"
                             :closable="tab.closable && openedTabs.length > 1" @close.stop="handleTabClose(tab.key)"

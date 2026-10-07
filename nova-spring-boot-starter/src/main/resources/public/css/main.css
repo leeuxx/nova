@@ -1,4 +1,4 @@
-html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+﻿html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 
 .logo-text {
   font-weight: 700;
@@ -191,8 +191,8 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 .tab-bar {
   background: #fff;
 }
-.n-tabs { --n-tab-gap: 4px !important; }
-.n-tabs .n-tabs-tab {
+.menu-tabs { --n-tab-gap: 4px !important; }
+.menu-tabs .n-tabs-tab {
   padding: 6px 14px !important;
   box-sizing: border-box;
   border-radius: 6px 6px 0 0 !important;
@@ -200,7 +200,7 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   position: relative;
   z-index: 1;
 }
-.n-tabs .n-tabs-tab--active {
+.menu-tabs .n-tabs-tab--active {
   color: #2563eb;
   font-weight: 500;
   z-index: 2;
@@ -212,14 +212,14 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   initial-value: #ffffff;
 }
 /* 所有 tab 底部都有弧线（颜色通过 CSS 变量同步，完全不闪） */
-.n-tabs .n-tabs-tab {
+.menu-tabs .n-tabs-tab {
   position: relative;
   --tab-bg-color: #ffffff;
   background-color: var(--tab-bg-color) !important;
   transition: --tab-bg-color 0.2s ease, color 0.2s ease;
 }
-.n-tabs .n-tabs-tab::before,
-.n-tabs .n-tabs-tab::after {
+.menu-tabs .n-tabs-tab::before,
+.menu-tabs .n-tabs-tab::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -230,32 +230,32 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   z-index: 1;
   box-shadow: 5px 5px 0 5px var(--tab-bg-color);
 }
-.n-tabs .n-tabs-tab::before {
+.menu-tabs .n-tabs-tab::before {
   left: -10px;
   border-bottom-right-radius: 10px;
 }
-.n-tabs .n-tabs-tab::after {
+.menu-tabs .n-tabs-tab::after {
   right: -10px;
   border-bottom-left-radius: 10px;
   box-shadow: -5px 5px 0 5px var(--tab-bg-color);
 }
-.n-tabs .n-tabs-tab:hover {
+.menu-tabs .n-tabs-tab:hover {
   --tab-bg-color: #f5f7fa;
 }
-.n-tabs .n-tabs-tab--active {
+.menu-tabs .n-tabs-tab--active {
   --tab-bg-color: #dbeafe;
 }
-.n-tabs .n-tabs-tab--active:hover {
+.menu-tabs .n-tabs-tab--active:hover {
   --tab-bg-color: #bfdbfe;
 }
 /* 滚动容器不裁剪 tab 弧线 */
 .tab-scroll-wrap { overflow-x: auto; overflow-y: visible !important; }
-.tab-scroll-wrap .n-tabs { overflow: visible !important; }
+.tab-scroll-wrap .menu-tabs { overflow: visible !important; }
 /* tab 栏底部完整分隔线（盖在弧线之上，避免被弧线遮断） */
-.n-tabs-nav {
+.menu-tabs .n-tabs-nav {
   position: relative;
 }
-.n-tabs-nav::after {
+.menu-tabs .n-tabs-nav::after {
   content: '';
   position: absolute;
   left: 0;
@@ -266,56 +266,56 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   z-index: 10;
   pointer-events: none;
 }
-.dark .n-tabs-nav::after {
+.dark .menu-tabs .n-tabs-nav::after {
   background-color: #2e2e32;
 }
 /* 隐藏原生下划线 */
-.n-tabs .n-tabs-bar { display: none !important; }
+.menu-tabs .n-tabs-bar { display: none !important; }
 /* 未选中 tab 的关闭按钮淡化 */
-.n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .n-tabs-tab__close,
-.n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon,
-.n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon iconify-icon {
+.menu-tabs .n-tabs-tab:not(.n-tabs-tab--active) .n-tabs-tab__close,
+.menu-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon,
+.menu-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon iconify-icon {
   color: #606266;
   opacity: 0.65;
   transition: opacity 0.2s, color 0.15s, background-color 0.15s;
 }
-.n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .n-tabs-tab__close,
-.n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .tab-close-icon,
-.n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .tab-close-icon iconify-icon {
+.menu-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .n-tabs-tab__close,
+.menu-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .tab-close-icon,
+.menu-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .tab-close-icon iconify-icon {
   opacity: 0.85;
 }
 /* 未选中 tab 关闭按钮 hover 变深灰 */
-.n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon:hover,
-.n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon:hover iconify-icon {
+.menu-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon:hover,
+.menu-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon:hover iconify-icon {
   color: #303133;
   opacity: 1;
   background-color: rgba(0, 0, 0, 0.06);
 }
 /* 选中 tab 的关闭按钮保持灰色，不跟随主题色 */
-.n-tabs .n-tabs-tab--active .tab-close-icon,
-.n-tabs .n-tabs-tab--active .tab-close-icon iconify-icon {
+.menu-tabs .n-tabs-tab--active .tab-close-icon,
+.menu-tabs .n-tabs-tab--active .tab-close-icon iconify-icon {
   color: #606266;
 }
-.n-tabs .n-tabs-tab--active .tab-close-icon:hover,
-.n-tabs .n-tabs-tab--active .tab-close-icon:hover iconify-icon {
+.menu-tabs .n-tabs-tab--active .tab-close-icon:hover,
+.menu-tabs .n-tabs-tab--active .tab-close-icon:hover iconify-icon {
   color: #303133;
   background-color: rgba(0, 0, 0, 0.06);
 }
-.n-tabs .n-tabs-tab--active .tab-close-icon:hover iconify-icon {
+.menu-tabs .n-tabs-tab--active .tab-close-icon:hover iconify-icon {
   transform: scale(1.15);
 }
 /* 暗色模式下选中 tab 关闭按钮 */
-.dark .n-tabs .n-tabs-tab--active .tab-close-icon,
-.dark .n-tabs .n-tabs-tab--active .tab-close-icon iconify-icon {
+.dark .menu-tabs .n-tabs-tab--active .tab-close-icon,
+.dark .menu-tabs .n-tabs-tab--active .tab-close-icon iconify-icon {
   color: #a0a0a0;
 }
-.dark .n-tabs .n-tabs-tab--active .tab-close-icon:hover,
-.dark .n-tabs .n-tabs-tab--active .tab-close-icon:hover iconify-icon {
+.dark .menu-tabs .n-tabs-tab--active .tab-close-icon:hover,
+.dark .menu-tabs .n-tabs-tab--active .tab-close-icon:hover iconify-icon {
   color: #e0e0e0;
   background-color: rgba(255, 255, 255, 0.1);
 }
 /* tab 关闭按钮 hover 圆形背景 */
-.n-tabs .n-tabs-tab .tab-close-icon {
+.menu-tabs .n-tabs-tab .tab-close-icon {
   width: 18px;
   height: 18px;
   display: inline-flex;
@@ -325,35 +325,35 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   margin-left: 0 !important;
   transition: background-color 0.15s;
 }
-.n-tabs .n-tabs-tab .tab-close-icon iconify-icon {
+.menu-tabs .n-tabs-tab .tab-close-icon iconify-icon {
   font-size: 13px !important;
   transition: transform 0.15s;
 }
-.n-tabs .n-tabs-tab .tab-close-icon:hover {
+.menu-tabs .n-tabs-tab .tab-close-icon:hover {
   background-color: rgba(0, 0, 0, 0.06);
 }
-.n-tabs .n-tabs-tab .tab-close-icon:hover iconify-icon {
+.menu-tabs .n-tabs-tab .tab-close-icon:hover iconify-icon {
   transform: scale(1.15);
 }
 /* 暗色模式下关闭按钮 hover 背景 */
-.dark .n-tabs .n-tabs-tab .tab-close-icon:hover {
+.dark .menu-tabs .n-tabs-tab .tab-close-icon:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 /* 暗色模式下未选中 tab 关闭按钮淡化 */
-.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .n-tabs-tab__close,
-.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon,
-.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon iconify-icon {
+.dark .menu-tabs .n-tabs-tab:not(.n-tabs-tab--active) .n-tabs-tab__close,
+.dark .menu-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon,
+.dark .menu-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon iconify-icon {
   color: #a0a0a0;
   opacity: 0.5;
 }
-.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .n-tabs-tab__close,
-.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .tab-close-icon,
-.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .tab-close-icon iconify-icon {
+.dark .menu-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .n-tabs-tab__close,
+.dark .menu-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .tab-close-icon,
+.dark .menu-tabs .n-tabs-tab:not(.n-tabs-tab--active):hover .tab-close-icon iconify-icon {
   opacity: 0.75;
 }
 /* 暗色模式下未选中 tab 关闭按钮 hover 变浅灰 */
-.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon:hover,
-.dark .n-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon:hover iconify-icon {
+.dark .menu-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon:hover,
+.dark .menu-tabs .n-tabs-tab:not(.n-tabs-tab--active) .tab-close-icon:hover iconify-icon {
   color: #e0e0e0;
   opacity: 1;
   background-color: rgba(255, 255, 255, 0.1);
@@ -383,7 +383,7 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 }
 .tab-scroll-wrap::-webkit-scrollbar { display: none; }
 /* n-tabs 宽度由内容撑开，内容少时不小于容器宽度 */
-.tab-scroll-wrap .n-tabs {
+.tab-scroll-wrap .menu-tabs {
   width: max-content;
   min-width: 100%;
   max-width: none !important;
@@ -791,17 +791,17 @@ body.dark { background: #151515 !important; }
   border-color: #333 !important;
 }
 /* 暗色模式 tab 背景色 */
-.dark .n-tabs .n-tabs-tab {
+.dark .menu-tabs .n-tabs-tab {
   --tab-bg-color: #1f1f1f;
 }
-.dark .n-tabs .n-tabs-tab:hover {
+.dark .menu-tabs .n-tabs-tab:hover {
   --tab-bg-color: #2a2a2e;
 }
-.dark .n-tabs .n-tabs-tab--active {
+.dark .menu-tabs .n-tabs-tab--active {
   color: #60a5fa;
   --tab-bg-color: #1e293b;
 }
-.dark .n-tabs .n-tabs-tab--active:hover {
+.dark .menu-tabs .n-tabs-tab--active:hover {
   --tab-bg-color: #1e3a5f;
 }
 .dark .page-content    { background: #151515 !important; }
@@ -963,7 +963,7 @@ body.dark { background: #151515 !important; }
 .dark .n-breadcrumb-item { color: #b0b0b0 !important; }
 .dark .n-tab             { color: #b0b0b0; }
 .dark .n-tab--active     { color: #2563eb !important; }
-.dark .n-tabs .n-tabs-bar { background: #2563eb !important; }
+.dark .menu-tabs .n-tabs-bar { background: #2563eb !important; }
 .dark .n-form-item-label { color: #e0e0e0; }
 .dark .n-pagination      { color: #e0e0e0; }
 .dark .n-pagination-item { background: #252525; }
@@ -996,8 +996,18 @@ body.dark { background: #151515 !important; }
 .dark .header-action:hover { background-color: rgba(37,99,235,0.25); }
 .dark .form-label          { color: #e0e0e0; }
 
-.tabs-nav-hidden .n-tabs-nav { display: none; }
-.n-modal-body-wrapper .n-tabs-nav { position: sticky; top: 0; z-index: 10; background: var(--n-color); }
+.tabs-nav-hidden .menu-tabs .n-tabs-nav { display: none; }
+.n-modal-body-wrapper .menu-tabs .n-tabs-nav { position: sticky; top: 0; z-index: 10; background: var(--n-color); }
+/* 非菜单 tab（弹窗/查询条件等原生 tab）增加点击区域，去掉多余 pad */
+.n-tabs:not(.menu-tabs) .n-tabs-tab {
+  padding: 6px 0 !important;
+}
+.n-tabs:not(.menu-tabs) .n-tabs-tab__label {
+  padding: 0 16px;
+}
+.n-tabs:not(.menu-tabs) .n-tabs-tab-pad {
+  display: none;
+}
 .n-modal-scroll-content { padding-bottom: 60px !important; }
 .ref-picker-modal .n-modal-scroll-content { padding-bottom: 8px !important; }
 .ref-picker-modal .n-modal__footer { padding-top: 8px !important; padding-bottom: 12px !important; }
