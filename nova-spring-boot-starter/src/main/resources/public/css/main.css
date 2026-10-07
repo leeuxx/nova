@@ -728,7 +728,6 @@ body.dark { background: #151515 !important; }
 .n-layout-sider .n-menu {
   scrollbar-width: thin;
   scrollbar-color: #c0c4cc #f5f7fa;
-  scrollbar-gutter: stable;
 }
 .n-layout-sider-scroll-container::-webkit-scrollbar,
 .n-layout-sider .n-menu::-webkit-scrollbar {
@@ -775,7 +774,6 @@ body.dark { background: #151515 !important; }
 .page-content > * {
   scrollbar-width: thin;
   scrollbar-color: #c0c4cc #f5f7fa;
-  scrollbar-gutter: stable;
 }
 .n-layout-content::-webkit-scrollbar,
 .n-layout-content-scroll-container::-webkit-scrollbar,
