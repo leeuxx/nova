@@ -243,10 +243,10 @@ html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
   --tab-bg-color: #f5f7fa;
 }
 .n-tabs .n-tabs-tab--active {
-  --tab-bg-color: #eff6ff;
+  --tab-bg-color: #dbeafe;
 }
 .n-tabs .n-tabs-tab--active:hover {
-  --tab-bg-color: #dbeafe;
+  --tab-bg-color: #bfdbfe;
 }
 /* 滚动容器不裁剪 tab 弧线 */
 .tab-scroll-wrap { overflow-x: auto; overflow-y: visible !important; }
