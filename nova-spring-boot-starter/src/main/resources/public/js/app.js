@@ -514,6 +514,14 @@ function mountApp(menuList, config, loginExpired) {
       const cachedNames = Vue.computed(() => openedTabs.value.map(t => t.cmpName))
 
       const handleTabClick = (key) => router.push(key)
+      // 判断 tab 右侧是否显示分隔线
+      const showRightSeparator = (tabKey) => {
+        const idx = openedTabs.value.findIndex(t => t.key === tabKey)
+        if (idx < 0 || idx >= openedTabs.value.length - 1) return false // 最后一个没有
+        if (openedTabs.value[idx].key === activeTab.value) return false // 选中 tab 右侧没有
+        if (openedTabs.value[idx + 1].key === activeTab.value) return false // 下一个是选中 tab，当前右侧没有
+        return true
+      }
       const goHome = () => {
         // replaceState 改 hash 不触发 SPA 导航，直接整页刷新，避免先闪主页元素再出动画
         history.replaceState(null, '', '#/home')
@@ -754,7 +762,7 @@ function mountApp(menuList, config, loginExpired) {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
         menuTree, breadcrumbItems, naiveLocale, routeKey, isStandaloneRoute, pageTransitionName, menuSelectedKey, route,
         pageComponent, cachedNames,
-        handleMenuSelect, handleTabClose, handleTabClick, goHome, userDropdown, userToolButtons, handleUserMenuSelect,
+        handleMenuSelect, handleTabClose, handleTabClick, showRightSeparator, goHome, userDropdown, userToolButtons, handleUserMenuSelect,
         localeDropdown, handleLocaleSelect, currentLocale, localeNodeProps,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
         tabScrollRef, tabsRef, showTabArrows, scrollTabBy,
@@ -866,6 +874,7 @@ function mountApp(menuList, config, loginExpired) {
                             v-for="tab in openedTabs" :key="tab.key" :name="tab.key"
                             :closable="tab.closable && openedTabs.length > 1" @close.stop="handleTabClose(tab.key)"
                             @contextmenu.prevent="handleTabContextMenu($event, tab.key)"
+                            :class="{ 'has-right-separator': showRightSeparator(tab.key) }"
                             style="padding:6px 12px;font-size:13px"
                           >
                             <span style="display:inline-flex;align-items:center;gap:4px">

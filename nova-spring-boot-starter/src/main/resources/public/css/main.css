@@ -234,6 +234,29 @@
   left: -10px;
   border-bottom-right-radius: 10px;
 }
+/* 菜单 tab 分隔符：用 tab 右侧背景渐变画短竖线
+   右侧弧线阴影只在底部 10px 区域，中间部分无遮挡，分隔线清晰可见 */
+.menu-tabs .n-tabs-tab.has-right-separator {
+  background-image: linear-gradient(to bottom,
+    transparent 0,
+    transparent 30%,
+    #c9cdd4 30%,
+    #c9cdd4 70%,
+    transparent 70%,
+    transparent 100%) !important;
+  background-repeat: no-repeat !important;
+  background-size: 1px 100% !important;
+  background-position: right center !important;
+}
+.dark .menu-tabs .n-tabs-tab.has-right-separator {
+  background-image: linear-gradient(to bottom,
+    transparent 0,
+    transparent 30%,
+    #55555a 30%,
+    #55555a 70%,
+    transparent 70%,
+    transparent 100%) !important;
+}
 .menu-tabs .n-tabs-tab::after {
   right: -10px;
   border-bottom-left-radius: 10px;
