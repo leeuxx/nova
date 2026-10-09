@@ -657,14 +657,23 @@ const NovaTable = {
         ? 100 / specifiedPct
         : 1
 
+      // 累计取整法：误差分散到各列，总和精确等于预期宽度，避免一丢丢横向滚动条
+      let cumFloat = 0
+      let cumInt = 0
       const widths = this.tableColumns.map(function(col) {
+        let px
         if (!col.width) {
-          // 弹性列：分到平均宽度
-          return Math.round(flexPct / 100 * available)
+          px = flexPct / 100 * available
+        } else {
+          const w = parseWidthPct(col.width)
+          if (w < 0) { px = -w } // 固定像素列
+          else { px = w * ratio / 100 * available }
         }
-        const w = parseWidthPct(col.width)
-        if (w < 0) return -w // 固定像素列直接返回
-        return Math.round(w * ratio / 100 * available)
+        cumFloat += px
+        const nextInt = Math.round(cumFloat)
+        const colWidth = nextInt - cumInt
+        cumInt = nextInt
+        return colWidth
       })
 
       // 双表模式：列宽等比缩放（系数由各表 build 返回）

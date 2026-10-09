@@ -874,7 +874,7 @@ function mountApp(menuList, config, loginExpired) {
                     </n-layout-header>
 
                     <!-- Tab 栏 -->
-                    <div class="tab-bar tab-bar-wrap" style="position:relative;flex-shrink:0">
+                    <div class="tab-bar tab-bar-wrap" v-if="openedTabs.length > 0" style="position:relative;flex-shrink:0">
                       <div :class="['tab-scroll-arrow', 'left', { 'is-disabled': !canScrollLeft }]" @click="canScrollLeft && scrollTabBy(-240)" title="向左滚动">
                         <n-icon :size="16"><iconify-icon icon="material-symbols:keyboard-double-arrow-left"></iconify-icon></n-icon>
                       </div>
