@@ -799,6 +799,36 @@ window.NovaTableJQ = (function ($) {
     target.paginationConfig.page = 1
   }
 
+  // ── 翻译 formInfo 为显示值（CHOICE/BOOLEAN/REFERENCE） ──────────
+  function translateFormInfoForDisplay(formInfo, choiceMap, formData, refMap) {
+    var cm = choiceMap || {}
+    var rm = refMap || {}
+    var fd = formData || {}
+    return formInfo.map(function(item) {
+      var newItem = { field: item.field, value: item.value, type: item.type }
+      if (item.reference) newItem.reference = item.reference
+      if (!item.value || !item.type) return newItem
+      if (item.type === 'CHOICE') {
+        var ci = cm[item.field]
+        if (ci && ci.values) {
+          var vals = ci.selectType === 'MULTI' ? String(item.value).split(',') : [String(item.value)]
+          newItem.value = vals.map(function(v) {
+            var o = ci.values.find(function(x) { return x.value === v })
+            return o ? o.label : v
+          }).join(',')
+        }
+      } else if (item.type === 'BOOLEAN') {
+        newItem.value = (item.value === 'true' || item.value === true)
+          ? (window.__t ? window.__t('common.yes') : '是')
+          : (window.__t ? window.__t('common.no') : '否')
+      } else if (item.type === 'REFERENCE') {
+        var disp = fd[item.field + '_display']
+        if (disp) newItem.value = String(disp)
+      }
+      return newItem
+    })
+  }
+
   // ── 打开新增弹窗 ──────────────────────────────────────────────
   function handleAdd(vmKey) {
     var target = vmKey ? (window.vmMap && window.vmMap[vmKey]) : vm()
@@ -1067,11 +1097,18 @@ window.NovaTableJQ = (function ($) {
     if (!window.NovaAiCheck || !window.NovaAiCheck.shouldCheck(novaName)) return doSave(target, vmKey, novaName, formInfo, appendageFormInfo, 'add')
     if (window.NovaAiCheck.shouldThrottle(novaName)) return doSave(target, vmKey, novaName, formInfo, appendageFormInfo, 'add')
 
-    // AI 门禁
+    // AI 门禁：翻译为显示值后传给 AI（doSave 仍用原始 formInfo）
+    var aiFormInfo = translateFormInfoForDisplay(formInfo, target.choiceMap, formData, target.referenceMap)
+    var aiAppendageFormInfo = {}
+    Object.keys(appendageFormInfo).forEach(function(n) {
+      var build = (target.appendageTabBuild || {})[n] || {}
+      var appFd = (target.appendageFormData || {})[n] || {}
+      aiAppendageFormInfo[n] = translateFormInfoForDisplay(appendageFormInfo[n], build.choiceMap, appFd, build.referenceMap)
+    })
     window.NovaAiCheck.gate({
       novaName:           novaName,
-      formInfo:           formInfo,
-      appendageFormInfo:  appendageFormInfo
+      formInfo:           aiFormInfo,
+      appendageFormInfo:  aiAppendageFormInfo
     }, { timeoutMs: 3000 }).then(function (result) {
       // showForm 可能已因用户取消而被关掉；这种情况 doSave 内部还会再读一次 vmMap
       var t = vmKey ? (window.vmMap && window.vmMap[vmKey]) : (window.vmMap && window.vmMap[novaName])
