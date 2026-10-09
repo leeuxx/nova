@@ -1,5 +1,12 @@
 ﻿html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 
+/* 主题切换 View Transition：仅 .theme-transitioning 时生效，避免影响页面加载/路由切换 */
+html.theme-transitioning::view-transition-old(root),
+html.theme-transitioning::view-transition-new(root) {
+  animation-duration: 0.8s;
+  animation-timing-function: ease;
+}
+
 .logo-text {
   font-weight: 700;
   font-size: 16px;

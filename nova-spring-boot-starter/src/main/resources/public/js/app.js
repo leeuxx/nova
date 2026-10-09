@@ -316,9 +316,25 @@ function mountApp(menuList, config, loginExpired) {
         return 'fade'
       })
 
-      watch(isDark, (val) => {
-        document.body.classList.toggle('dark', val)
-        localStorage.setItem('nova-theme', val ? 'night' : 'daytime')
+      watch(isDark, (val, oldVal) => {
+        const doSwitch = () => {
+          document.body.classList.toggle('dark', val)
+          localStorage.setItem('nova-theme', val ? 'night' : 'daytime')
+        }
+        // 首次 immediate 执行或不支持 View Transition：直接切换
+        if (oldVal === undefined || !document.startViewTransition ||
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          doSwitch()
+          return
+        }
+        // 主题切换时柔和交叉溶解
+        document.documentElement.classList.add('theme-transitioning')
+        const transition = document.startViewTransition(() => {
+          doSwitch()
+        })
+        transition.finished.finally(() => {
+          document.documentElement.classList.remove('theme-transitioning')
+        })
       }, { immediate: true })
 
       // 暴露黑夜模式状态给子组件
