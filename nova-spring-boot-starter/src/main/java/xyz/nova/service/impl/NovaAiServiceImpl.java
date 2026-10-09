@@ -59,6 +59,10 @@ public class NovaAiServiceImpl implements NovaAiService {
                 }
             });
         }
+        // 如果fields为空, 则直接返回放行
+        if (fields.isEmpty()) {
+            return defaultSseEmitter(emitter);
+        }
         // 获取大模型
         Map<String, NovaAiConfig.OpenAiConfig> openAis = novaAiConfig.getOpenAis();
         // 如果openAis为空, 则直接返回放行
