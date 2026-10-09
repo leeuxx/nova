@@ -193,7 +193,7 @@
 }
 .menu-tabs { --n-tab-gap: 4px !important; }
 .menu-tabs .n-tabs-tab {
-  padding: 6px 14px !important;
+  padding: 8px 14px 6px 14px !important;
   box-sizing: border-box;
   border-radius: 6px 6px 0 0 !important;
   font-size: 13px;
