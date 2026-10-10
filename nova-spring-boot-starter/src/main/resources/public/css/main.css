@@ -1014,14 +1014,14 @@ body.dark { background: #151515 !important; }
 .dark .n-data-table-th { background: #252525 !important; color: #e0e0e0; }
 
 .dark .n-input             { background: #252525 !important; }
-.dark .n-input__border     { border-color: #4a4a4f !important; }
+.dark .n-input__border     { border-color: #38383d !important; }
 .dark .n-input__input-el   { color: #e0e0e0; }
 .dark .n-input__placeholder,
 .dark ::-webkit-input-placeholder { color: #888 !important; }
 
 .dark .n-select            { background: #252525 !important; }
 .dark .n-base-selection    { background: #252525 !important; }
-.dark .n-base-selection__border { border-color: #4a4a4f !important; }
+.dark .n-base-selection__border { border-color: #38383d !important; }
 .dark .n-select__placeholder { color: #888; }
 
 .dark .n-button            { background: #252525; color: #e0e0e0; }
@@ -1030,6 +1030,10 @@ body.dark { background: #151515 !important; }
 .dark .n-button--primary-type:active { background: #1d4ed8 !important; }
 /* 表单按钮：暗色模式下提亮，让颜色在深色背景上更醒目 */
 .dark .n-button.form-btn { filter: brightness(1.5) saturate(1.2); }
+
+/* 暗色模式按钮式单选：蓝底白字 */
+.dark .n-radio-button--checked { color: #fff !important; }
+.dark .n-radio-button--checked .n-radio__label { color: #fff !important; }
 
 .dark .n-modal             { background: #1f1f1f; }
 .dark .n-modal-header      { color: #e0e0e0; }
