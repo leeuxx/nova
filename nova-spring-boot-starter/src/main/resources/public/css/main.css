@@ -1028,6 +1028,13 @@ body.dark { background: #151515 !important; }
 .dark .n-button--primary-type { background: #2563eb !important; color: #fff !important; }
 .dark .n-button--primary-type:hover { background: #3b82f6 !important; }
 .dark .n-button--primary-type:active { background: #1d4ed8 !important; }
+
+/* 暗色模式危险按钮（批量删除）：红底白字，去掉内部多余边框 */
+.dark .n-button--error-type { background: #dc2626 !important; color: #fff !important; }
+.dark .n-button--error-type:hover { background: #ef4444 !important; }
+.dark .n-button--error-type:active { background: #b91c1c !important; }
+.dark .n-button--error-type .n-button__border,
+.dark .n-button--error-type .n-button__state-border { border-color: transparent !important; }
 /* 表单按钮：暗色模式下提亮，让颜色在深色背景上更醒目 */
 .dark .n-button.form-btn { filter: brightness(1.5) saturate(1.2); }
 
