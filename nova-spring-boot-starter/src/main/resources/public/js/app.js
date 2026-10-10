@@ -308,6 +308,8 @@ function mountApp(menuList, config, loginExpired) {
             : { locale: zhCN, dateLocale: dateZhCN }
       // 是否为独立页面（登录/注册/404 等，无布局）
       const isStandaloneRoute = computed(() => route.path === '/login' || route.path === '/register' || route.path === '/404')
+      // 刷新按钮仅在有 tab 的页面显示（home 等 noTab 路由不显示）
+      const showRefreshBtn = computed(() => !isStandaloneRoute.value && !(route.meta && route.meta.noTab))
 
       // 独立页面（登录/注册）切换的左右切入方向：去注册向右滑入，回登录向左滑入
       const pageTransitionName = computed(() => {
@@ -792,7 +794,7 @@ function mountApp(menuList, config, loginExpired) {
 
       return {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
-        menuTree, breadcrumbItems, naiveLocale, routeKey, isStandaloneRoute, pageTransitionName, menuSelectedKey, route,
+        menuTree, breadcrumbItems, naiveLocale, routeKey, isStandaloneRoute, showRefreshBtn, pageTransitionName, menuSelectedKey, route,
         pageComponent, cachedNames,
         handleMenuSelect, handleTabClose, handleTabClick, showRightSeparator, goHome, handleRefresh, userDropdown, userToolButtons, handleUserMenuSelect,
         localeDropdown, handleLocaleSelect, currentLocale, localeNodeProps,
@@ -849,12 +851,14 @@ function mountApp(menuList, config, loginExpired) {
 
                     <!-- 顶部 Header -->
                     <n-layout-header bordered style="height:50px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-                      <div style="display:flex;align-items:center;gap:12px">
-                        <n-icon v-if="togglePos !== 'down'" size="20" style="cursor:pointer" @click="collapsed=!collapsed">
-                          <iconify-icon icon="material-symbols:menu"></iconify-icon>
-                        </n-icon>
-                        <div class="header-action header-refresh-btn" :data-tip="__t('tabs.reload')" style="cursor:pointer" @click="handleRefresh">
-                          <n-icon size="18"><iconify-icon icon="material-symbols:refresh"></iconify-icon></n-icon>
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <div style="display:flex;align-items:center;gap:2px;margin-left:-4px">
+                          <div v-if="togglePos !== 'down'" class="header-action header-tool-btn" style="cursor:pointer" @click="collapsed=!collapsed">
+                            <n-icon size="20"><iconify-icon icon="material-symbols:menu"></iconify-icon></n-icon>
+                          </div>
+                          <div v-if="showRefreshBtn" class="header-action header-refresh-btn header-tool-btn" :data-tip="__t('tabs.reload')" style="cursor:pointer" @click="handleRefresh">
+                            <n-icon size="20"><iconify-icon icon="material-symbols:refresh"></iconify-icon></n-icon>
+                          </div>
                         </div>
                         <n-breadcrumb separator=">">
                           <n-breadcrumb-item v-for="(item, index) in breadcrumbItems" :key="item.label" class="breadcrumb-slide-in" :style="{ '--i': index }">
