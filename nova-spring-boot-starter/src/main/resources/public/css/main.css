@@ -1,10 +1,24 @@
 ﻿html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 
-/* 主题切换 View Transition：仅 .theme-transitioning 时生效，避免影响页面加载/路由切换 */
-html.theme-transitioning::view-transition-old(root),
-html.theme-transitioning::view-transition-new(root) {
-  animation-duration: 0.8s;
-  animation-timing-function: ease;
+/* 主题切换 View Transition：卷帘式
+   切暗色：从右往左（夜晚从右侧降临）
+   切亮色：从左往右（白天从左侧铺开） */
+html.theme-transitioning::view-transition-old(root) {
+  animation: none; /* 旧页面保持不动 */
+}
+html.theme-transitioning.to-dark::view-transition-new(root) {
+  animation: curtain-right-to-left 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+html.theme-transitioning.to-light::view-transition-new(root) {
+  animation: curtain-left-to-right 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes curtain-right-to-left {
+  from { clip-path: inset(0 0 0 100%); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+@keyframes curtain-left-to-right {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0 0 0); }
 }
 
 .logo-text {

@@ -327,13 +327,14 @@ function mountApp(menuList, config, loginExpired) {
           doSwitch()
           return
         }
-        // 主题切换时柔和交叉溶解
-        document.documentElement.classList.add('theme-transitioning')
+        // 主题切换：双向卷帘过渡（切暗色右→左，切亮色左→右）
+        const direction = val ? 'to-dark' : 'to-light'
+        document.documentElement.classList.add('theme-transitioning', direction)
         const transition = document.startViewTransition(() => {
           doSwitch()
         })
         transition.finished.finally(() => {
-          document.documentElement.classList.remove('theme-transitioning')
+          document.documentElement.classList.remove('theme-transitioning', direction)
         })
       }, { immediate: true })
 
