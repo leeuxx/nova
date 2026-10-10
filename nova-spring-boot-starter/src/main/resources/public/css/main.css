@@ -1063,7 +1063,10 @@ body.dark { background: #151515 !important; }
 .dark .menu-tabs .n-tabs-bar { background: #2563eb !important; }
 .dark .n-form-item-label { color: #e0e0e0; }
 .dark .n-pagination      { color: #e0e0e0; }
-.dark .n-pagination-item { background: #252525; }
+.dark .n-pagination-item { background: #252525; color: #e0e0e0; }
+.dark .n-pagination-item--active { background: #2563eb !important; color: #fff !important; border-color: transparent !important; }
+.dark .n-pagination-item--active:hover { background: #3b82f6 !important; }
+.dark .n-pagination-item--button:not(.n-pagination-item--disabled):hover { background: #333 !important; }
 
 /* ─── 页面切换动画 ──────────────────────────────────────── */
 
