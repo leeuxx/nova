@@ -862,7 +862,7 @@ function mountApp(menuList, config, loginExpired) {
                         </div>
                         <n-breadcrumb separator=">">
                           <n-breadcrumb-item v-for="(item, index) in breadcrumbItems" :key="item.label" class="breadcrumb-slide-in" :style="{ '--i': index }">
-                            <n-icon :size="14" style="margin-right:4px;vertical-align:middle" v-if="item.icon">
+                            <n-icon :size="16" style="vertical-align:middle" v-if="item.icon">
                               <iconify-icon :icon="item.icon"></iconify-icon>
                             </n-icon>
                             {{ item.label }}
