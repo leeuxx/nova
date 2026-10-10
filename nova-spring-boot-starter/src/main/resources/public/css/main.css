@@ -112,6 +112,21 @@ html.theme-transitioning.to-light::view-transition-new(root) {
 .dark .msg-drawer .n-drawer-body-content-wrapper::-webkit-scrollbar-track { background: #1a1a1a; }
 .dark .msg-drawer .n-drawer-body-content-wrapper::-webkit-scrollbar-thumb { background: #555; }
 .dark .msg-drawer .n-drawer-body-content-wrapper::-webkit-scrollbar-thumb:hover { background: #777; }
+
+/* 暗色模式抽屉：左侧阴影营造层次感，避免和深色背景融为一体 */
+.dark .n-drawer {
+  background: #1f1f1f !important;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.4);
+}
+.dark .n-drawer .n-drawer-header,
+.dark .n-drawer .n-drawer-body,
+.dark .n-drawer .n-drawer-footer {
+  background: #1f1f1f !important;
+  color: #e0e0e0 !important;
+}
+.dark .n-drawer .n-drawer-header__content {
+  color: #e0e0e0 !important;
+}
 .msg-center-loading,
 .msg-center-empty { padding: 32px; text-align: center; color: #999; font-size: 14px; }
 .msg-center-list { padding: 4px 0 20px; }
