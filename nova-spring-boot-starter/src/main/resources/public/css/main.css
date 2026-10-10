@@ -47,6 +47,11 @@ html.theme-transitioning.to-light::view-transition-new(root) {
 .header-action:hover {
   background-color: rgba(37, 99, 235, 0.1);
 }
+/* 刷新按钮 hover 时图标旋转一圈 */
+.header-refresh-btn:hover iconify-icon {
+  transform: rotate(360deg);
+  transition: transform 0.6s ease;
+}
 /* userTools(button) 悬浮提示：data-tip 非空时 hover 立即显示（比原生 title 灵敏） */
 .header-action[data-tip] { position: relative; }
 .header-action[data-tip]:hover::after {

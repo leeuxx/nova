@@ -544,6 +544,11 @@ function mountApp(menuList, config, loginExpired) {
         history.replaceState(null, '', '#/home')
         window.location.reload()
       }
+      // 刷新当前 tab：自增版本号让 routeKey 变化，组件重新构建
+      const handleRefresh = () => {
+        const path = route.path
+        tabVersions.value = { ...tabVersions.value, [path]: (tabVersions.value[path] || 0) + 1 }
+      }
       // 用户信息（从 localStorage 读取）
       const userName   = ref(localStorage.getItem('nova_user') || '未登录')
       const userAlias  = ref(localStorage.getItem('nova_alias') || '')
@@ -789,7 +794,7 @@ function mountApp(menuList, config, loginExpired) {
         collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
         menuTree, breadcrumbItems, naiveLocale, routeKey, isStandaloneRoute, pageTransitionName, menuSelectedKey, route,
         pageComponent, cachedNames,
-        handleMenuSelect, handleTabClose, handleTabClick, showRightSeparator, goHome, userDropdown, userToolButtons, handleUserMenuSelect,
+        handleMenuSelect, handleTabClose, handleTabClick, showRightSeparator, goHome, handleRefresh, userDropdown, userToolButtons, handleUserMenuSelect,
         localeDropdown, handleLocaleSelect, currentLocale, localeNodeProps,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
         tabScrollRef, tabsRef, showTabArrows, canScrollLeft, canScrollRight, scrollTabBy,
@@ -848,6 +853,9 @@ function mountApp(menuList, config, loginExpired) {
                         <n-icon v-if="togglePos !== 'down'" size="20" style="cursor:pointer" @click="collapsed=!collapsed">
                           <iconify-icon icon="material-symbols:menu"></iconify-icon>
                         </n-icon>
+                        <div class="header-action header-refresh-btn" :data-tip="__t('tabs.reload')" style="cursor:pointer" @click="handleRefresh">
+                          <n-icon size="18"><iconify-icon icon="material-symbols:refresh"></iconify-icon></n-icon>
+                        </div>
                         <n-breadcrumb separator=">">
                           <n-breadcrumb-item v-for="(item, index) in breadcrumbItems" :key="item.label" class="breadcrumb-slide-in" :style="{ '--i': index }">
                             <n-icon :size="14" style="margin-right:4px;vertical-align:middle" v-if="item.icon">
