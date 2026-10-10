@@ -1013,12 +1013,13 @@ body.dark { background: #151515 !important; }
 .dark .n-data-table-td { background: #1f1f1f; color: #e0e0e0; }
 .dark .n-data-table-th { background: #252525 !important; color: #e0e0e0; }
 
-.dark .n-input             { background: #252525 !important; }
+.dark .n-input             { background: #252525 !important; border: 1px solid #3a3a3d !important; box-shadow: none !important; }
 .dark .n-input__input-el   { color: #e0e0e0; }
 .dark .n-input__placeholder,
 .dark ::-webkit-input-placeholder { color: #888 !important; }
 
 .dark .n-select            { background: #252525 !important; }
+.dark .n-base-selection    { background: #252525 !important; border: 1px solid #3a3a3d !important; box-shadow: none !important; }
 .dark .n-select__placeholder { color: #888; }
 
 .dark .n-button            { background: #252525; color: #e0e0e0; }

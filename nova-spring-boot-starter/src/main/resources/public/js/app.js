@@ -144,7 +144,16 @@ function processMenus(list) {
 const themeOverrides = {
   common: {
     borderRadius: '6px', borderRadiusSmall: '4px',
-    primaryColor: '#2563eb', primaryColorHover: '#1d4ed8', primaryColorPressed: '#1e40af'
+    primaryColor: '#2563eb', primaryColorHover: '#1d4ed8', primaryColorPressed: '#1e40af',
+    baseColor: '#ffffff'
+  }
+}
+const darkThemeOverrides = {
+  common: {
+    baseColor: '#1f1f1f',
+    popoverColor: '#27272a',
+    inputColor: '#252525',
+    borderColor: '#3a3a3d'
   }
 }
 
@@ -297,6 +306,9 @@ function mountApp(menuList, config, loginExpired) {
       })
 
       const theme = computed(() => isDark.value ? darkTheme : null)
+      const curThemeOverrides = computed(() => isDark.value
+        ? { common: { ...themeOverrides.common, ...darkThemeOverrides.common } }
+        : themeOverrides)
       // Naive UI locale：跟随前端 locale（zh/en/ja/ko），切换语言通过整页刷新触发，无需响应式
       var _curLoc = window.__appLocale && window.__appLocale.value
       var naiveLocale = _curLoc === 'en'
@@ -793,7 +805,7 @@ function mountApp(menuList, config, loginExpired) {
       }, { immediate: false })
 
       return {
-        collapsed, isDark, togglePos, theme, themeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
+        collapsed, isDark, togglePos, theme, curThemeOverrides, openedTabs, activeTab, expandedKeys, tabsKey,
         menuTree, breadcrumbItems, naiveLocale, routeKey, isStandaloneRoute, showRefreshBtn, pageTransitionName, menuSelectedKey, route,
         pageComponent, cachedNames,
         handleMenuSelect, handleTabClose, handleTabClick, showRightSeparator, goHome, handleRefresh, userDropdown, userToolButtons, handleUserMenuSelect,
@@ -808,7 +820,7 @@ function mountApp(menuList, config, loginExpired) {
     },
 
     template: `
-      <n-config-provider :theme="theme" :theme-overrides="themeOverrides" :locale="naiveLocale.locale" :date-locale="naiveLocale.dateLocale">
+      <n-config-provider :theme="theme" :theme-overrides="curThemeOverrides" :locale="naiveLocale.locale" :date-locale="naiveLocale.dateLocale">
         <n-loading-bar-provider>
         <n-message-provider>
           <n-dialog-provider>
