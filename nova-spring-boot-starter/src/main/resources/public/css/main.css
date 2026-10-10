@@ -1025,7 +1025,9 @@ body.dark { background: #151515 !important; }
 .dark .n-select__placeholder { color: #888; }
 
 .dark .n-button            { background: #252525; color: #e0e0e0; }
-.dark .n-button--primary   { background: #2563eb; color: #fff; }
+.dark .n-button--primary-type { background: #2563eb !important; color: #fff !important; }
+.dark .n-button--primary-type:hover { background: #3b82f6 !important; }
+.dark .n-button--primary-type:active { background: #1d4ed8 !important; }
 /* 表单按钮：暗色模式下提亮，让颜色在深色背景上更醒目 */
 .dark .n-button.form-btn { filter: brightness(1.5) saturate(1.2); }
 
