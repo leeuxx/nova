@@ -391,11 +391,11 @@ var NovaRefForm = {
               <div v-if="item.field.type === 'TEXTAREA'" class="ref-textarea-box" style="background:rgba(0,0,0,0.02);border-left:3px solid #2563eb;padding:8px 12px;border-radius:4px;font-family:monospace;font-size:13px;white-space:pre-wrap;word-break:break-word;line-height:1.6;max-height:150px;overflow-y:auto">{{ displayText(item.field) || '-' }}</div>
               <div v-else-if="item.field.type === 'CHOICE' && getChoiceTags(item.field, viewData).length > 0" style="display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center">
                 <template v-for="(tag, idx) in getChoiceTags(item.field, viewData).slice(0, 2)" :key="idx">
-                  <span :style="'display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;background:' + (tag.color ? tag.color + '20' : 'rgba(128,128,128,0.1)') + ';color:' + (tag.color ? darkenHex(tag.color, 0.35) : 'inherit')">{{ tag.label }}</span>
+                  <span :class="tag.color ? 'choice-tag choice-tag-colored' : 'choice-tag choice-tag-gray'" :style="'display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;background:' + (tag.color ? tag.color + '20' : 'rgba(128,128,128,0.1)') + ';color:' + (tag.color ? darkenHex(tag.color, 0.35) : 'inherit') + (tag.color ? ';border:1px solid ' + tag.color + '30' : '')">{{ tag.label }}</span>
                 </template>
                 <n-tooltip v-if="getChoiceRest(item.field, viewData) > 0" trigger="hover" placement="top">
                   <template #trigger>
-                    <span style="flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 8px;background:rgba(128,128,128,0.1);border-radius:4px">+{{ getChoiceRest(item.field, viewData) }}</span>
+                    <span class="choice-tag choice-tag-gray" style="flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 8px;background:rgba(128,128,128,0.1);border-radius:4px">+{{ getChoiceRest(item.field, viewData) }}</span>
                   </template>
                   <div style="max-width:400px">
                     <div v-for="(tag, idx) in getChoiceRestTags(item.field, viewData)" :key="idx" style="padding:4px 0">{{ tag.label }}</div>
@@ -404,11 +404,11 @@ var NovaRefForm = {
               </div>
               <div v-else-if="item.field.type === 'TAG' && getTagTags(item.field, viewData).length > 0" style="display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center">
                 <template v-for="(tag, idx) in getTagTags(item.field, viewData).slice(0, 2)" :key="idx">
-                  <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;background:rgba(37,99,235,0.08);color:#2563eb">{{ tag.label }}</span>
+                  <span class="choice-tag choice-tag-colored" style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;background:rgba(37,99,235,0.08);color:#2563eb;border:1px solid rgba(37,99,235,0.2)">{{ tag.label }}</span>
                 </template>
                 <n-tooltip v-if="getTagRest(item.field, viewData) > 0" trigger="hover" placement="top">
                   <template #trigger>
-                    <span style="flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 8px;background:rgba(128,128,128,0.1);border-radius:4px">+{{ getTagRest(item.field, viewData) }}</span>
+                    <span class="choice-tag choice-tag-gray" style="flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 8px;background:rgba(128,128,128,0.1);border-radius:4px">+{{ getTagRest(item.field, viewData) }}</span>
                   </template>
                   <div style="max-width:400px">
                     <div v-for="(tag, idx) in getTagRestTags(item.field, viewData)" :key="idx" style="padding:4px 0">{{ tag.label }}</div>

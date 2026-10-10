@@ -1497,7 +1497,7 @@ body.dark { background: #151515 !important; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.dark .ref-desc-label { color: #666; }
+.dark .ref-desc-label { color: #999; }
 
 .ref-form-value {
   font-size: 15px;
@@ -1785,4 +1785,14 @@ body.dark .nova-tiptap-content .ProseMirror p.is-editor-empty:first-child::befor
 .dark .link-tree-detail-editor blockquote { border-left-color:#555; color:#aaa }
 .dark .link-tree-detail-editor pre,
 .dark .link-tree-detail-editor code { background:#2a2a2a; color:#e0e0e0 }
+
+/* ─── 表格选择字段标签（CHOICE tag）边框 ────────────────────────
+   有颜色的标签：边框由 JS 内联设置（同色系）
+   灰色兜底的标签：边框由 CSS 控制，主题切换自动生效 */
+.choice-tag-gray {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+.dark .choice-tag-gray {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
 

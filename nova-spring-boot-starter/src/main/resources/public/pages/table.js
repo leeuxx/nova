@@ -877,9 +877,9 @@ const NovaTable = {
             const tags = String(val).split(',').map(t => t.trim()).filter(Boolean)
             const visible = tags.slice(0, 1)
             const rest = tags.length - 1
-            const nodes = visible.map(t => h('span', { style: 'flex-shrink:0;display:inline-block;padding:1px 6px;border-radius:3px;font-size:12px;background:rgba(37,99,235,0.08);color:#2563eb' }, t))
+            const nodes = visible.map(t => h('span', { class: 'choice-tag choice-tag-colored', style: 'flex-shrink:0;display:inline-block;padding:1px 6px;border-radius:4px;font-size:12px;background:rgba(37,99,235,0.08);color:#2563eb;border:1px solid rgba(37,99,235,0.2)' }, t))
             if (rest > 0) nodes.push(h(NTooltip, { trigger: 'hover' }, {
-              trigger: () => h('span', { style: 'flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px' }, '+' + rest),
+              trigger: () => h('span', { style: 'flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:4px' }, '+' + rest),
               default: () => tags.slice(1).join('，')
             }))
             return h('span', { style: 'display:inline-flex;gap:4px;align-items:center' }, nodes)
@@ -946,7 +946,7 @@ const NovaTable = {
               ])
             }
             const color = isTrue ? '#18a058' : '#d03050'
-            return h('span', { style: 'display:inline-block;padding:1px 6px;border-radius:3px;font-size:12px;background:' + color + '20;color:' + darkenHex(color, 0.15) }, isTrue ? window.__t('common.yes') : window.__t('common.no'))
+            return h('span', { class: 'choice-tag choice-tag-colored', style: 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:12px;background:' + color + '20;color:' + darkenHex(color, 0.15) + ';border:1px solid ' + color + '30' }, isTrue ? window.__t('common.yes') : window.__t('common.no'))
           }
         }
 
@@ -964,7 +964,13 @@ const NovaTable = {
             const makeTag = (label, color) => {
               const bg = color ? color + '20' : 'rgba(128,128,128,0.1)'
               const tc = color ? darkenHex(color, 0.35) : 'inherit'
-              return h('span', { style: 'display:inline-block;padding:1px 6px;border-radius:3px;font-size:12px;background:' + bg + ';color:' + tc }, label)
+              // 边框：有颜色时用同色系低透明度版本，比背景稍深但很淡
+              // 灰色兜底时由 CSS 的 .choice-tag-gray 控制，确保主题切换自动生效
+              const borderStyle = color
+                ? ';border:1px solid ' + color + '30'
+                : ''
+              const cls = color ? 'choice-tag choice-tag-colored' : 'choice-tag choice-tag-gray'
+              return h('span', { class: cls, style: 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:12px;background:' + bg + ';color:' + tc + borderStyle }, label)
             }
             if (isMulti) {
               const labels = String(text).split(',').map(s => s.trim()).filter(Boolean)
@@ -973,7 +979,7 @@ const NovaTable = {
               const rest = labels.length - 1
               const nodes = visible.map((label, i) => makeTag(label, colors[i] || null))
               if (rest > 0) nodes.push(h(NTooltip, { trigger: 'hover' }, {
-                trigger: () => h('span', { style: 'flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:3px' }, '+' + rest),
+                trigger: () => h('span', { style: 'flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:4px' }, '+' + rest),
                 default: () => labels.slice(1).join('，')
               }))
               return h('span', { style: 'display:inline-flex;gap:4px;align-items:center' }, nodes)
