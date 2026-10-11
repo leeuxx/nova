@@ -879,19 +879,22 @@ body.dark { background: #151515 !important; }
   background: #1f1f1f !important;
   border-color: #333 !important;
 }
-/* 暗色模式 tab 背景色 */
+/* 暗色模式 tab 背景色：灰底白字 */
 .dark .menu-tabs .n-tabs-tab {
   --tab-bg-color: #1f1f1f;
+  color: rgba(255, 255, 255, 0.65) !important;
 }
 .dark .menu-tabs .n-tabs-tab:hover {
   --tab-bg-color: #2a2a2e;
+  color: rgba(255, 255, 255, 0.85) !important;
 }
 .dark .menu-tabs .n-tabs-tab--active {
-  color: #60a5fa;
-  --tab-bg-color: #1e293b;
+  color: rgba(255, 255, 255, 0.92) !important;
+  --tab-bg-color: #303035;
 }
 .dark .menu-tabs .n-tabs-tab--active:hover {
-  --tab-bg-color: #1e3a5f;
+  --tab-bg-color: #38383d;
+  color: rgba(255, 255, 255, 0.92) !important;
 }
 .dark .page-content    { background: #151515 !important; }
 .dark .page-card       { background: #1f1f1f !important; border-color: #333 !important; }
@@ -941,6 +944,31 @@ body.dark { background: #151515 !important; }
 .dark .n-layout-sider-scroll-container::-webkit-scrollbar-thumb:hover,
 .dark .n-layout-sider .n-menu::-webkit-scrollbar-thumb:hover {
   background: #777;
+}
+
+/* 暗色模式左侧菜单：灰底白字 */
+.dark .n-layout-sider .n-menu {
+  --n-item-text-color: rgba(255, 255, 255, 0.65) !important;
+  --n-item-text-color-hover: rgba(255, 255, 255, 0.85) !important;
+  --n-item-text-color-active: rgba(255, 255, 255, 0.92) !important;
+  --n-item-text-color-active-hover: rgba(255, 255, 255, 0.92) !important;
+  --n-item-text-color-child-active: rgba(255, 255, 255, 0.65) !important;
+  --n-item-text-color-child-active-hover: rgba(255, 255, 255, 0.85) !important;
+  --n-item-icon-color: rgba(255, 255, 255, 0.65) !important;
+  --n-item-icon-color-hover: rgba(255, 255, 255, 0.85) !important;
+  --n-item-icon-color-active: rgba(255, 255, 255, 0.92) !important;
+  --n-item-icon-color-active-hover: rgba(255, 255, 255, 0.92) !important;
+  --n-item-icon-color-child-active: rgba(255, 255, 255, 0.65) !important;
+  --n-item-icon-color-child-active-hover: rgba(255, 255, 255, 0.85) !important;
+  --n-item-color-hover: #2a2a2e !important;
+  --n-item-color-active: #2a2a2e !important;
+  --n-item-color-active-hover: #333338 !important;
+  --n-arrow-color: rgba(255, 255, 255, 0.65) !important;
+  --n-arrow-color-hover: rgba(255, 255, 255, 0.85) !important;
+  --n-arrow-color-active: rgba(255, 255, 255, 0.92) !important;
+  --n-arrow-color-active-hover: rgba(255, 255, 255, 0.92) !important;
+  --n-arrow-color-child-active: rgba(255, 255, 255, 0.65) !important;
+  --n-arrow-color-child-active-hover: rgba(255, 255, 255, 0.85) !important;
 }
 
 /* ─── 主内容区细滚动条 ─────────────────────── */
