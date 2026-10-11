@@ -1267,8 +1267,8 @@ body.dark { background: #151515 !important; }
 .dark .form-panel        { box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
 
 /* 弹窗表单标签页底色：仅对含分组卡片的标签页生效，让卡片凸显（不影响 APPENDAGE 表格等无卡片 tab） */
-.n-modal .n-tab-pane:has(.form-panel)   { background: #fbfbfb; }
-.dark .n-modal .n-tab-pane:has(.form-panel) { background: #1a1a1a; }
+.n-modal .n-tab-pane:has(.form-panel)   { background: #fbfbfb; padding: 8px 8px 12px 8px !important; box-sizing: border-box; }
+.dark .n-modal .n-tab-pane:has(.form-panel) { background: #1a1a1a; padding: 8px 8px 12px 8px !important; box-sizing: border-box; }
 
 /* ─── 弹窗卡片内容滚动条（跟随主题） ─────────────────────── */
 .n-modal .n-card-content    { scrollbar-width: thin; scrollbar-color: #bbb #fafafa; scrollbar-gutter: stable; }
