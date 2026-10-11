@@ -409,10 +409,10 @@ window.NovaLinkForm = {
       <div v-html="novaLoadingHtml"></div>
     </div>
     <template v-if="linkTreeData[linkNovaName]">
-      <div style="display:flex;gap:16px;flex:1;min-height:0;overflow:hidden">
+      <div style="display:flex;gap:8px;flex:1;min-height:0;overflow:hidden">
         <!-- 左侧：搜索框 + 树 -->
         <div style="flex:1;min-width:0;display:flex;flex-direction:column">
-          <div v-if="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField" style="flex-shrink:0;padding:12px 0 8px 0">
+          <div v-if="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField" style="flex-shrink:0;padding:0px 0 8px 0">
             <n-input
               :value="linkTreeSearchKeyword[linkNovaName]"
               :placeholder="linkTreeSearchPlaceholder()"
@@ -448,13 +448,13 @@ window.NovaLinkForm = {
               @update:selected-keys="onTreeSelected"
             />
           </div>
-          <div class="link-tree-bottom-bar" style="flex-shrink:0;padding:8px 0;display:flex;justify-content:flex-end;border-top:1px solid #eee">
+          <div class="link-tree-bottom-bar" style="flex-shrink:0;padding:8px 0;display:flex;justify-content:flex-end;">
             <n-button v-if="hasAddPermission" type="primary" @click="onSave">{{ __t('common.save') }}</n-button>
           </div>
         </div>
         <!-- 右侧：节点详情面板（与 NovaRefForm 完全一致的反显风格） -->
         <div class="link-tree-divider" style="width:1px;background:#eee;margin:8px 0;flex-shrink:0"></div>
-        <div class="ref-detail link-tree-detail" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:auto;padding:0 4px">
+        <div class="ref-detail link-tree-detail" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:auto">
           <div v-if="!selectedNode" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#999;gap:8px">
             <iconify-icon icon="mdi:file-tree-outline" style="font-size:48px;color:#ccc"></iconify-icon>
             <span>{{ __t('table.link_tree_detail_empty') }}</span>
