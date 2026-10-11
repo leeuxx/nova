@@ -318,10 +318,10 @@ html.theme-transitioning.to-light::view-transition-new(root) {
   --tab-bg-color: #f5f7fa;
 }
 .menu-tabs .n-tabs-tab--active {
-  --tab-bg-color: #dbeafe;
+  --tab-bg-color: #e9effd;
 }
 .menu-tabs .n-tabs-tab--active:hover {
-  --tab-bg-color: #bfdbfe;
+  --tab-bg-color: #dbe5fb;
 }
 /* 滚动容器不裁剪 tab 弧线 */
 .tab-scroll-wrap { overflow-x: auto; overflow-y: visible !important; }
@@ -890,10 +890,10 @@ body.dark { background: #151515 !important; }
 }
 .dark .menu-tabs .n-tabs-tab--active {
   color: rgba(255, 255, 255, 0.92) !important;
-  --tab-bg-color: #303035;
+  --tab-bg-color: #2a2a2e;
 }
 .dark .menu-tabs .n-tabs-tab--active:hover {
-  --tab-bg-color: #38383d;
+  --tab-bg-color: #333338;
   color: rgba(255, 255, 255, 0.92) !important;
 }
 .dark .page-content    { background: #151515 !important; }
