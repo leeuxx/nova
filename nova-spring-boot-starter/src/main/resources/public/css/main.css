@@ -871,6 +871,15 @@ body.table-wrap-cell .n-data-table-td {
   min-height: 100%;
 }
 
+/* picker 弹窗内加载层：向外扩张覆盖四周留白 */
+.ref-picker-body .table-build-overlay {
+  margin: -16px;
+  min-height: 100%;
+}
+.dark .ref-picker-body .table-build-overlay {
+  background: #151515;
+}
+
 /* ─── 暗色模式 ─────────────────────────────────────────── */
 .dark { background: #151515; }
 body.dark { background: #151515 !important; }
