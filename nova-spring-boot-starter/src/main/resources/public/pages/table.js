@@ -877,7 +877,7 @@ const NovaTable = {
             const tags = String(val).split(',').map(t => t.trim()).filter(Boolean)
             const visible = tags.slice(0, 1)
             const rest = tags.length - 1
-            const nodes = visible.map(t => h('span', { class: 'choice-tag choice-tag-colored', style: 'flex-shrink:0;display:inline-block;padding:1px 6px;border-radius:4px;font-size:12px;background:rgba(37,99,235,0.08);color:#2563eb;border:1px solid rgba(37,99,235,0.2)' }, t))
+            const nodes = visible.map(t => h('span', { class: 'table-tag', style: 'flex-shrink:0;display:inline-block' }, t))
             if (rest > 0) nodes.push(h(NTooltip, { trigger: 'hover' }, {
               trigger: () => h('span', { style: 'flex-shrink:0;cursor:default;font-size:12px;color:#888;padding:2px 6px;background:rgba(128,128,128,0.1);border-radius:4px' }, '+' + rest),
               default: () => tags.slice(1).join('，')

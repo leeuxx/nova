@@ -1867,6 +1867,21 @@ body.dark .nova-tiptap-content .ProseMirror p.is-editor-empty:first-child::befor
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+/* ─── 表格 TAG 标签 ──────────────────────────────────── */
+.table-tag {
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+.dark .table-tag {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
 /* ─── 表格选择字段标签（CHOICE tag）边框 ────────────────────────
    有颜色的标签：边框由 JS 内联设置（同色系）
    灰色兜底的标签：边框由 CSS 控制，主题切换自动生效 */

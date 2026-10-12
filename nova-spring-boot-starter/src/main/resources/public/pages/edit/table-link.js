@@ -501,7 +501,7 @@ window.NovaLinkForm = {
                       </div>
                       <div v-else-if="item.field.type === 'TAG' && getTagTags(item.field, selectedNode).length > 0" style="display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center">
                         <template v-for="(tag, idx) in getTagTags(item.field, selectedNode).slice(0, 2)" :key="idx">
-                          <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;background:rgba(37,99,235,0.08);color:#2563eb">{{ tag.label }}</span>
+                          <span class="table-tag" style="display:inline-block;padding:2px 8px;">{{ tag.label }}</span>
                         </template>
                         <n-tooltip v-if="getTagRest(item.field, selectedNode) > 0" trigger="hover" placement="top">
                           <template #trigger>
