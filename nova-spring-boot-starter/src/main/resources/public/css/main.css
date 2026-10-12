@@ -701,7 +701,7 @@ html.theme-transitioning.to-light::view-transition-new(root) {
   margin-bottom: 12px;
 }
 .embedded-table .table-card-header {
-  margin-bottom: 6px;
+  margin-bottom: 12px;
 }
 
 /* ─── CHOICE tap 搜索栏 ────────────────────────────────────── */
@@ -1204,6 +1204,18 @@ body.dark { background: #151515 !important; }
 }
 .ref-picker-body .filter-card {
   margin-bottom: 12px;
+}
+
+/* ─── 编辑弹窗 APPENDAGES tab：浅灰底 + 卡片化搜索栏和表格 ─── */
+.appendages-tab-pane {
+  background: #f5f7fa;
+}
+.dark .appendages-tab-pane {
+  background: #151515;
+}
+.appendages-tab-pane .embedded-table {
+  padding: 16px 16px 0 16px;
+  gap: 12px;
 }
 
 @keyframes picker-modal-in {

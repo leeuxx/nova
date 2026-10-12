@@ -4287,7 +4287,7 @@ const NovaTable = {
       </div>
 
       <!-- 树形表格搜索 -->
-      <component v-if="isTree && !linkMode && treeSearchField" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''">
+      <component v-if="isTree && !linkMode && treeSearchField" :is="'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''" :content-style="pickerMode ? 'padding:12px' : ''">
         <div style="display:flex;align-items:center;gap:12px">
           <span class="form-label" :title="treeSearchFieldTitle">{{ treeSearchFieldTitle }}</span>
           <n-input
@@ -4315,8 +4315,8 @@ const NovaTable = {
         </div>
       </component>
       <!-- 普通表格筛选卡片 -->
-      <component v-else-if="!linkMode" :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card filter-card" :style="'flex-shrink:0'">
-        <div :class="['filter-grid', embeddedMode ? 'embedded' : '', (dualMode || dualTableViewActive) ? 'dual' : '']" :style="embeddedMode ? 'padding:8px 0' : ''">
+      <component v-else-if="!linkMode" :is="'n-card'" :bordered="false" class="page-card filter-card" :style="'flex-shrink:0'" :content-style="pickerMode ? 'padding:12px' : ''">
+        <div :class="['filter-grid', embeddedMode ? 'embedded' : '', (dualMode || dualTableViewActive) ? 'dual' : '']">
           <template v-for="(field, index) in searchFields" :key="field.field">
             <div v-if="filterExpanded || index < ((dualMode || dualTableViewActive) ? 1 : 3)" style="display:flex;align-items:center;gap:8px;width:100%">
               <span class="form-label" :title="field.title">{{ field.title }}</span>
@@ -4572,7 +4572,7 @@ const NovaTable = {
       </component>
 
       <!-- 表格卡片 -->
-      <component :is="embeddedMode ? 'div' : 'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (dualMode ? 'flex:1;min-height:0' : embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : (dualMode ? 'display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:8px' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:8px')">
+      <component :is="'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (dualMode ? 'flex:1;min-height:0' : embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : (dualMode ? 'display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:8px' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:8px')">
         <div v-if="!pickerMode" class="table-card-header" :style="embeddedMode ? 'flex-shrink:0' : ''">
           <!-- 标题/tap + 操作按钮行 -->
             <n-tabs v-if="tapSearchField" type="line" :tabs-padding="0"
@@ -4800,7 +4800,8 @@ const NovaTable = {
         <n-tab-pane v-if="tab.tapShow !== false && (tab.tapType !== 'referenceForm' || formMode !== 'add') && (tab.tapType !== 'appendagesTable' || formMode !== 'add') && (tab.tapType !== 'linkForm' || formMode !== 'add') && (!tab.tapShowByExpr || evalShowExprSafe(tab.tapShowByExpr, formData))"
           :name="(tab.tapType === 'referenceForm' ? 'ref_' : tab.tapType === 'appendagesTable' ? 'emb_' : tab.tapType === 'linkForm' ? 'link_' : 'app_') + tab.tapNovaName"
           display-directive="if"
-          :style="tab.tapType === 'appendagesTable' ? ('padding:0 0 15px 0;overflow:hidden;height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px')) : 'padding:8px 8px 12px 8px'">
+          :class="tab.tapType === 'appendagesTable' ? 'appendages-tab-pane' : ''"
+          :style="tab.tapType === 'appendagesTable' ? ('padding:0;overflow:hidden;height:' + (isEmbTab ? 'calc(100vh - 240px)' : '460px')) : 'padding:8px 8px 12px 8px'">
           <template #tab><iconify-icon :icon="tab.tapType === 'referenceForm' ? 'mdi:eye-outline' : tab.tapType === 'appendagesTable' ? 'mdi:table' : tab.tapType === 'linkForm' ? 'mdi:link-variant' : 'mdi:note-outline'" style="font-size:14px;vertical-align:-2px;margin-right:4px"></iconify-icon>{{ tab.tapTitle || tab.tapNovaName }}<template v-if="tab.tapType === 'appendageForm' && appendageTabReady[tab.tapNovaName]"><span v-if="tabRequiredCount('app_' + tab.tapNovaName) > 0" style="margin-left:4px;background:#d03050;color:#fff;border-radius:10px;padding:0 5px;font-size:11px;line-height:16px;display:inline-block;vertical-align:middle">{{ tabRequiredCount('app_' + tab.tapNovaName) }}</span><span v-else-if="tabTotalRequired('app_' + tab.tapNovaName) > 0" style="margin-left:4px;display:inline-block;width:7px;height:7px;background:#18a058;border-radius:50%;vertical-align:middle"></span></template></template>
           <div :key="tab.tapNovaName" style="animation:tabFadeIn .5s cubic-bezier(0.22,0.61,0.36,1)">
 
