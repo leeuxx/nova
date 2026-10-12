@@ -1207,15 +1207,51 @@ body.dark { background: #151515 !important; }
 }
 
 /* ─── 编辑弹窗 APPENDAGES tab：浅灰底 + 卡片化搜索栏和表格 ─── */
-.appendages-tab-pane {
+.appendages-tab-pane,
+.link-tab-pane {
   background: #f5f7fa;
 }
-.dark .appendages-tab-pane {
+.n-modal .n-tab-pane.appendages-tab-pane,
+.n-modal .n-tab-pane.link-tab-pane {
+  padding: 0 !important;
+}
+.dark .appendages-tab-pane,
+.dark .link-tab-pane {
   background: #151515;
 }
-.appendages-tab-pane .embedded-table {
+.appendages-tab-pane .embedded-table,
+.link-tab-pane .embedded-table {
   padding: 16px 16px 0 16px;
   gap: 12px;
+}
+.appendages-tab-pane .embedded-table .page-card,
+.link-tab-pane .embedded-table .page-card {
+  border-radius: 6px;
+}
+
+/* ─── 编辑弹窗 LINK 树模式：左右双卡片布局 ─── */
+.link-tab-pane .link-tree-pane {
+  padding: 16px !important;
+  box-sizing: border-box;
+}
+.link-tab-pane .link-tree-body {
+  flex: 1;
+  min-height: 0;
+}
+.link-tab-pane .link-tree-left-card {
+  flex-shrink: 0;
+  width: 38%;
+  min-width: 220px;
+  margin-bottom: 0;
+}
+.link-tab-pane .link-tree-detail .form-panel {
+  margin-bottom: 0;
+}
+.link-tab-pane .link-tree-detail {
+  scrollbar-gutter: auto;
+}
+.dark .link-tab-pane .link-tree-detail > div:first-child:not(.form-panel) {
+  background: #1f1f1f !important;
 }
 
 @keyframes picker-modal-in {
@@ -1317,8 +1353,8 @@ body.dark { background: #151515 !important; }
 .dark .form-panel        { }
 
 /* 弹窗表单标签页底色：仅对含分组卡片的标签页生效，让卡片凸显（不影响 APPENDAGE 表格等无卡片 tab） */
-.n-modal .n-tab-pane:has(.form-panel)   { padding: 8px 8px 8px 8px !important; box-sizing: border-box; }
-.dark .n-modal .n-tab-pane:has(.form-panel) { padding: 8px 8px 8px 8px !important; box-sizing: border-box; }
+.n-modal .n-tab-pane:has(.form-panel):not(.appendages-tab-pane):not(.link-tab-pane)   { padding: 8px 8px 8px 8px !important; box-sizing: border-box; }
+.dark .n-modal .n-tab-pane:has(.form-panel):not(.appendages-tab-pane):not(.link-tab-pane) { padding: 8px 8px 8px 8px !important; box-sizing: border-box; }
 
 /* ─── 弹窗卡片内容滚动条（跟随主题） ─────────────────────── */
 .n-modal .n-card-content    { scrollbar-width: thin; scrollbar-color: #bbb #fafafa; scrollbar-gutter: stable; }

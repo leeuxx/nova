@@ -402,6 +402,7 @@ window.NovaLinkForm = {
   <!-- 树模式（含加载遮罩）：/build 返回 linkTarget.linkTree=true 就立即进入树分支（T2 间隙不再空白），
        内部 v-if="linkTreeData" 保证搜索框和树等数据就绪再渲染，loading 遮罩覆盖整个加载过程 -->
   <div v-else-if="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig || ((linkTabBuild[linkNovaName] || {}).linkTarget || {}).linkTree"
+    class="link-tree-pane"
     style="position:relative;display:flex;flex-direction:column;flex:1;min-height:200px">
     <!-- 树数据加载遮罩：跳跃方块动画 -->
     <div v-if="linkTreeLoading[linkNovaName]"
@@ -409,18 +410,19 @@ window.NovaLinkForm = {
       <div v-html="novaLoadingHtml"></div>
     </div>
     <template v-if="linkTreeData[linkNovaName]">
-      <div style="display:flex;gap:8px;flex:1;min-height:0;overflow:hidden">
-        <!-- 左侧：搜索框 + 树 -->
-        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
-          <div v-if="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField" style="flex-shrink:0;padding:0px 0 8px 0">
+      <div class="link-tree-body" style="display:flex;gap:12px;flex:1;min-height:0;overflow:hidden">
+        <!-- 左侧：搜索框 + 树（卡片） -->
+        <n-card :bordered="false" class="page-card link-tree-left-card" size="small" :content-style="'padding:12px;display:flex;flex-direction:column;height:100%;box-sizing:border-box'">
+          <div v-if="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField" style="flex-shrink:0;padding:0 0 10px 0">
             <n-input
               :value="linkTreeSearchKeyword[linkNovaName]"
               :placeholder="linkTreeSearchPlaceholder()"
               clearable
               @update:value="onSearchUpdate"
+              size="small"
               style="width:100%" />
           </div>
-          <div class="link-tree-scroll" style="flex:1;overflow:auto;padding:0 0 12px 0">
+          <div class="link-tree-scroll" style="flex:1;overflow:auto;padding:4px 0">
             <n-tree v-if="!linkTreeFilteredData[linkNovaName] && linkTreeData[linkNovaName]"
               :default-expanded-keys="linkTreeDefaultExpandedKeys[linkNovaName] || []"
               :data="linkTreeData[linkNovaName]"
@@ -448,19 +450,18 @@ window.NovaLinkForm = {
               @update:selected-keys="onTreeSelected"
             />
           </div>
-          <div class="link-tree-bottom-bar" style="flex-shrink:0;padding:8px 0;display:flex;justify-content:flex-end;">
+          <div class="link-tree-bottom-bar" style="flex-shrink:0;padding:10px 0 0 0;display:flex;justify-content:flex-end;">
             <n-button v-if="hasAddPermission" type="primary" @click="onSave">{{ __t('common.save') }}</n-button>
           </div>
-        </div>
+        </n-card>
         <!-- 右侧：节点详情面板（与 NovaRefForm 完全一致的反显风格） -->
-        <div class="link-tree-divider" style="width:1px;background:#eee;margin:8px 0;flex-shrink:0"></div>
-        <div class="ref-detail link-tree-detail" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:auto">
-          <div v-if="!selectedNode" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#999;gap:8px">
+        <div class="ref-detail link-tree-detail" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:auto;gap:12px">
+          <div v-if="!selectedNode" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#999;gap:8px;background:#fff;border-radius:6px">
             <iconify-icon icon="mdi:file-tree-outline" style="font-size:48px;color:#ccc"></iconify-icon>
             <span>{{ __t('table.link_tree_detail_empty') }}</span>
           </div>
-          <div v-else>
-            <n-card v-for="sec in sections" :key="sec.key" class="form-panel" size="small" :bordered="true">
+          <template v-else>
+            <n-card v-for="sec in sections" :key="sec.key" class="form-panel page-card" size="small" :bordered="false">
               <template v-if="sec.title" #header>
                 <span>{{ sec.title }}</span>
               </template>
@@ -521,7 +522,7 @@ window.NovaLinkForm = {
                 </template>
               </div>
             </n-card>
-          </div>
+          </template>
         </div>
       </div>
     </template>
