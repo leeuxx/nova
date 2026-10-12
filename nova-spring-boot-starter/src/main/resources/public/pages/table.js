@@ -4763,7 +4763,7 @@ const NovaTable = {
       </component>
 
       <!-- 新增/编辑弹窗 -->
-      <n-modal v-model:show="showForm" display-directive="if" preset="card" :mask-closable="false" :title="formMode === 'add' ? __t('common.add') : __t('common.edit')" :style="isEmbTab ? 'width:calc(100vw - 80px);max-width:1600px;margin-top:40px;max-height:calc(100vh - 80px);display:flex;flex-direction:column;transition:width 0.3s ease,max-height 0.3s ease,margin-top 0.3s ease' : 'width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column'" :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
+      <n-modal v-model:show="showForm" class="form-edit-modal" display-directive="if" preset="card" :mask-closable="false" :title="formMode === 'add' ? __t('common.add') : __t('common.edit')" :style="isEmbTab ? 'width:calc(100vw - 80px);max-width:1600px;margin-top:40px;max-height:calc(100vh - 80px);display:flex;flex-direction:column;transition:width 0.3s ease,max-height 0.3s ease,margin-top 0.3s ease' : 'width:960px;margin-top:60px;max-height:calc(100vh - 120px);display:flex;flex-direction:column'" :content-style="{padding:'0',overflow:'auto',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}">
         <n-tabs v-model:value="formTab" type="line"
           style="padding:0 20px;margin-top:-4px"
           :class="''"

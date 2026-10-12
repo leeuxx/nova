@@ -1383,6 +1383,11 @@ body.dark { background: #151515 !important; }
 .dark .n-modal .n-card-content::-webkit-scrollbar-thumb { background: #555; }
 .dark .n-modal .n-card-content::-webkit-scrollbar-thumb:hover { background: #777; }
 
+/* 新增/编辑弹窗：取消滚动条预留，让左右留白对称 */
+.form-edit-modal .n-card-content {
+  scrollbar-gutter: auto !important;
+}
+
 /* ─── 附件预览弹窗通用样式 ────────────────────────────── */
 .preview-pager           { text-align: center; font-size: 12px; color: #888; }
 .dark .preview-pager     { color: #b0b0b0; }
