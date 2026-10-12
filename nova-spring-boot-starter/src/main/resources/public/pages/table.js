@@ -4256,7 +4256,7 @@ const NovaTable = {
         {{ __t('tabs.reload') }}
       </n-button>
     </div>
-    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="'position:relative;' + (pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;padding:0 16px' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;' + dualPanelLeftPadding : 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;' + dualPanelLeftPadding))">
+    <div v-else :class="embeddedMode ? 'embedded-table' : ''" :style="'position:relative;' + (pickerMode ? 'height:100%;display:flex;flex-direction:column;overflow:hidden' : (embeddedMode ? '' : dualMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden' : isTree ? 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;' + dualPanelLeftPadding : 'height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;' + dualPanelLeftPadding))">
 
       <!-- 顶部提示面板：纯手动浮层（仅主 nova 视图）。触发 chip + 面板均为 absolute，不参与布局、不占高度 -->
       <div v-if="showNovaTip" class="nova-tip-bar">
@@ -4905,7 +4905,7 @@ const NovaTable = {
 
       <!-- 关联引用选择弹窗 -->
       <n-modal v-for="picker in refPickerStack" :key="picker.level" :show="picker.visible" @update:show="(v) => { if (!v) closePickerAtLevel(picker.level) }" preset="card" class="ref-picker-modal" :title="__t('table.picker_title', { name: picker.field.title })" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="picker.zIndex">
-        <div :style="{ height: 'calc(100vh - 180px)', maxHeight: '700px', overflow: 'hidden' }">
+        <div class="ref-picker-body" :style="{ height: 'calc(100vh - 180px)', maxHeight: '700px', overflow: 'hidden' }">
           <nova-table :picker-mode="true" :nova-name-prop="picker.novaName" :source-nova-name-prop="novaName" :source-fields-prop="buildPickerSourceFields(picker)" @pick="onPickerPick(picker.level, $event)" />
         </div>
         <template #footer>
@@ -4918,7 +4918,7 @@ const NovaTable = {
 
       <!-- LINK 多选关联弹窗 -->
       <n-modal v-model:show="linkPickerShow" preset="card" class="ref-picker-modal" :title="linkPickerTitle || __t('table.link_picker_title_default')" style="width:calc(100vw - 80px);max-width:1600px;margin-top:20px" :content-style="{ padding: '0' }" :z-index="linkPickerZIndex">
-        <div :style="{ height: 'calc(100vh - 180px)', maxHeight: '700px', overflow: 'hidden' }">
+        <div class="ref-picker-body" :style="{ height: 'calc(100vh - 180px)', maxHeight: '700px', overflow: 'hidden' }">
           <nova-table v-if="linkPickerShow" :picker-mode="true" :picker-multi="true" :nova-name-prop="linkPickerTargetNova" :source-nova-name-prop="novaName" :source-fields-prop="linkPickerSourceFields" @check="onLinkPickerPick" />
         </div>
         <template #footer>

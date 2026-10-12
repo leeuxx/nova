@@ -21,6 +21,10 @@ html.theme-transitioning.to-light::view-transition-new(root) {
   to   { clip-path: inset(0 0 0 0); }
 }
 
+.n-card > .n-card__footer {
+    padding: 8px var(--n-padding-left) 16px var(--n-padding-left);
+}
+
 .logo-text {
   font-weight: 700;
   font-size: 16px;
@@ -1167,6 +1171,31 @@ body.dark { background: #151515 !important; }
 .ref-picker-modal .n-modal__footer { padding-top: 8px !important; padding-bottom: 12px !important; }
 .ref-picker-modal .n-card__content { padding-bottom: 8px !important; }
 .ref-picker-modal .n-card { animation: picker-modal-in .45s cubic-bezier(0.22,0.61,0.36,1) both; }
+
+/* picker 弹窗内容区底色：让搜索卡片和表格卡片凸显，和主页面风格一致 */
+.ref-picker-body {
+  background: #f5f7fa;
+  padding: 16px 16px 0 16px;
+  box-sizing: border-box;
+}
+.dark .ref-picker-body {
+  background: #151515;
+}
+
+/* picker 弹窗内卡片左右留白 */
+.ref-picker-body .filter-card .n-card__content {
+  padding: 12px 12px !important;
+}
+.ref-picker-body .table-card .n-card__content,
+.ref-picker-body .page-card .n-card__content {
+  padding: 0 12px !important;
+}
+.ref-picker-body .page-card {
+  margin-bottom: 12px;
+}
+.ref-picker-body .filter-card {
+  margin-bottom: 12px;
+}
 
 @keyframes picker-modal-in {
   from { opacity: 0; transform: scale(0.93) translateY(-14px); }
