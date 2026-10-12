@@ -1238,6 +1238,11 @@ body.dark { background: #151515 !important; }
 .link-tab-pane .embedded-table .page-card {
   border-radius: 6px;
 }
+/* 修复 APPENDAGES / LINK 表格模式下卡片滚动条预留导致左右不对称 */
+.appendages-tab-pane .embedded-table .n-card-content,
+.link-tab-pane .embedded-table .n-card-content {
+  scrollbar-gutter: auto !important;
+}
 
 /* ─── 编辑弹窗 LINK 树模式：左右双卡片布局 ─── */
 .link-tab-pane .link-tree-pane {
