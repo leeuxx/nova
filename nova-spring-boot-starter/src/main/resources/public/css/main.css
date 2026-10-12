@@ -1885,6 +1885,9 @@ body.dark .nova-tiptap-content .ProseMirror p.is-editor-empty:first-child::befor
 /* ─── 表格选择字段标签（CHOICE tag）边框 ────────────────────────
    有颜色的标签：边框由 JS 内联设置（同色系）
    灰色兜底的标签：边框由 CSS 控制，主题切换自动生效 */
+.dark .choice-tag-colored {
+  filter: brightness(1.25) saturate(1.1);
+}
 .choice-tag-gray {
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
