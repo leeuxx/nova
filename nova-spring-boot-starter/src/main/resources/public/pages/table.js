@@ -945,8 +945,7 @@ const NovaTable = {
                 h('span', { style: `position:absolute;top:3px;left:${isTrue ? '26px' : '3px'};width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)` })
               ])
             }
-            const color = isTrue ? '#18a058' : '#d03050'
-            return h('span', { class: 'choice-tag choice-tag-colored', style: 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:12px;background:' + color + '20;color:' + darkenHex(color, 0.15) + ';border:1px solid ' + color + '30' }, isTrue ? window.__t('common.yes') : window.__t('common.no'))
+            return h('span', { class: 'bool-tag bool-tag--' + (isTrue ? 'true' : 'false') }, isTrue ? window.__t('common.yes') : window.__t('common.no'))
           }
         }
 
@@ -2163,7 +2162,7 @@ const NovaTable = {
             valueNode = h('span', { style: 'display:inline-flex;flex-wrap:wrap;gap:4px' }, tags.map((t) => h(naive.NTag, { size: 'small', bordered: false }, { default: () => t })))
           } else if (item.type === 'BOOLEAN') {
             const isTrue = String(item.value) === 'true' || item.value === true
-            valueNode = h(naive.NTag, { size: 'small', bordered: false, type: isTrue ? 'success' : 'error' }, { default: () => (isTrue ? window.__t('common.yes') : window.__t('common.no')) })
+            valueNode = h('span', { class: 'bool-tag bool-tag--' + (isTrue ? 'true' : 'false') }, isTrue ? window.__t('common.yes') : window.__t('common.no'))
           } else {
             valueNode = h('span', { style: 'word-break:break-all' }, String(item.value ?? ''))
           }

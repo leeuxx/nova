@@ -1836,6 +1836,37 @@ body.dark .nova-tiptap-content .ProseMirror p.is-editor-empty:first-child::befor
 .dark .link-tree-detail-editor pre,
 .dark .link-tree-detail-editor code { background:#2a2a2a; color:#e0e0e0 }
 
+/* ─── 表格布尔值标签（是/否） ────────────────────────────────
+   "是"用蓝色（激活/启用），"否"用灰色（未启用/中性），亮暗色自动切换 */
+.bool-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  border: 1px solid transparent;
+  line-height: 1.5;
+}
+.bool-tag--true {
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  border-color: rgba(37, 99, 235, 0.2);
+}
+.bool-tag--false {
+  background: rgba(128, 128, 128, 0.1);
+  color: #666;
+  border-color: rgba(128, 128, 128, 0.15);
+}
+.dark .bool-tag--true {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+.dark .bool-tag--false {
+  background: rgba(255, 255, 255, 0.06);
+  color: #9ca3af;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
 /* ─── 表格选择字段标签（CHOICE tag）边框 ────────────────────────
    有颜色的标签：边框由 JS 内联设置（同色系）
    灰色兜底的标签：边框由 CSS 控制，主题切换自动生效 */
