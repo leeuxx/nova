@@ -4572,8 +4572,8 @@ const NovaTable = {
       </component>
 
       <!-- 表格卡片 -->
-      <component :is="'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (dualMode ? 'flex:1;min-height:0' : embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:8px' : (dualMode ? 'display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:8px' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:8px')">
-        <div v-if="!pickerMode" class="table-card-header" :style="embeddedMode ? 'flex-shrink:0' : ''">
+      <component :is="'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (dualMode ? 'flex:1;min-height:0' : embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:8px' : (dualMode ? 'display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:8px' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:8px')">
+        <div class="table-card-header" :style="embeddedMode ? 'flex-shrink:0' : ''">
           <!-- 标题/tap + 操作按钮行 -->
             <n-tabs v-if="tapSearchField" type="line" :tabs-padding="0"
               :value="tapSearchValue === null ? '__all__' : tapSearchValue"
@@ -4619,11 +4619,11 @@ const NovaTable = {
               <template #icon><n-icon><iconify-icon icon="material-symbols:delete-outline"></iconify-icon></n-icon></template>
               {{ __t('common.delete.spaced') }}
             </n-button>
-            <n-button v-if="tbStandardShow.linkAdd" :size="embSize" type="primary" @click="$emit('link-add')">
+            <n-button v-if="tbStandardShow.linkAdd && !pickerMode" :size="embSize" type="primary" @click="$emit('link-add')">
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
               {{ __t('common.add') }}
             </n-button>
-            <n-button v-if="tbStandardShow.add" :size="embSize" type="primary" @click="handleAdd">
+            <n-button v-if="tbStandardShow.add && !pickerMode" :size="embSize" type="primary" @click="handleAdd">
               <template #icon><n-icon><iconify-icon icon="material-symbols:add"></iconify-icon></n-icon></template>
               {{ __t('common.add.spaced') }}
             </n-button>
