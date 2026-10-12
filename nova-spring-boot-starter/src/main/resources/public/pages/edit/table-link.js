@@ -410,7 +410,7 @@ window.NovaLinkForm = {
       <div v-html="novaLoadingHtml"></div>
     </div>
     <template v-if="linkTreeData[linkNovaName]">
-      <div class="link-tree-body" style="display:flex;gap:12px;flex:1;min-height:0;overflow:hidden">
+      <div class="link-tree-body" style="display:flex;gap:10px;flex:1;min-height:0;overflow:hidden">
         <!-- 左侧：搜索框 + 树（卡片） -->
         <n-card :bordered="false" class="page-card link-tree-left-card" size="small" :content-style="'padding:12px;display:flex;flex-direction:column;height:100%;box-sizing:border-box'">
           <div v-if="(linkTabBuild[linkNovaName] || {}).linkTreeTargetConfig.treeSearchField" style="flex-shrink:0;padding:0 0 10px 0">
@@ -455,7 +455,7 @@ window.NovaLinkForm = {
           </div>
         </n-card>
         <!-- 右侧：节点详情面板（与 NovaRefForm 完全一致的反显风格） -->
-        <div class="ref-detail link-tree-detail" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:auto;gap:12px">
+        <div class="ref-detail link-tree-detail" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:auto;gap:10px">
           <div v-if="!selectedNode" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#999;gap:8px;background:#fff;border-radius:6px">
             <iconify-icon icon="mdi:file-tree-outline" style="font-size:48px;color:#ccc"></iconify-icon>
             <span>{{ __t('table.link_tree_detail_empty') }}</span>

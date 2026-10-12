@@ -1221,8 +1221,8 @@ body.dark { background: #151515 !important; }
 }
 .appendages-tab-pane .embedded-table,
 .link-tab-pane .embedded-table {
-  padding: 16px 16px 0 16px;
-  gap: 12px;
+  padding: 12px 12px 0 12px;
+  gap: 10px;
 }
 .appendages-tab-pane .embedded-table .page-card,
 .link-tab-pane .embedded-table .page-card {
@@ -1231,12 +1231,13 @@ body.dark { background: #151515 !important; }
 
 /* ─── 编辑弹窗 LINK 树模式：左右双卡片布局 ─── */
 .link-tab-pane .link-tree-pane {
-  padding: 16px !important;
+  padding: 12px !important;
   box-sizing: border-box;
 }
 .link-tab-pane .link-tree-body {
   flex: 1;
   min-height: 0;
+  gap: 10px;
 }
 .link-tab-pane .link-tree-left-card {
   flex-shrink: 0;
