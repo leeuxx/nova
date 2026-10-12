@@ -4287,7 +4287,7 @@ const NovaTable = {
       </div>
 
       <!-- 树形表格搜索 -->
-      <component v-if="isTree && !linkMode && treeSearchField" :is="'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''" :content-style="pickerMode ? 'padding:12px' : ''">
+      <component v-if="isTree && !linkMode && treeSearchField" :is="'n-card'" :bordered="false" class="page-card filter-card" :style="embeddedMode ? 'flex-shrink:0' : ''" :content-style="pickerMode ? 'padding:16px 24px;scrollbar-gutter:auto' : ''">
         <div style="display:flex;align-items:center;gap:12px">
           <span class="form-label" :title="treeSearchFieldTitle">{{ treeSearchFieldTitle }}</span>
           <n-input
@@ -4315,7 +4315,7 @@ const NovaTable = {
         </div>
       </component>
       <!-- 普通表格筛选卡片 -->
-      <component v-else-if="!linkMode" :is="'n-card'" :bordered="false" class="page-card filter-card" :style="'flex-shrink:0'" :content-style="pickerMode ? 'padding:12px' : ''">
+      <component v-else-if="!linkMode" :is="'n-card'" :bordered="false" class="page-card filter-card" :style="'flex-shrink:0'" :content-style="pickerMode ? 'padding:16px 24px;scrollbar-gutter:auto' : ''">
         <div :class="['filter-grid', embeddedMode ? 'embedded' : '', (dualMode || dualTableViewActive) ? 'dual' : '']">
           <template v-for="(field, index) in searchFields" :key="field.field">
             <div v-if="filterExpanded || index < ((dualMode || dualTableViewActive) ? 1 : 3)" style="display:flex;align-items:center;gap:8px;width:100%">
@@ -4572,7 +4572,7 @@ const NovaTable = {
       </component>
 
       <!-- 表格卡片 -->
-      <component :is="'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (dualMode ? 'flex:1;min-height:0' : embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:8px' : (dualMode ? 'display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:8px' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:8px')">
+      <component :is="'n-card'" :bordered="false" class="page-card table-card" :style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : (dualMode ? 'flex:1;min-height:0' : embeddedMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0')" :content-style="pickerMode ? 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding:24px 24px 8px 24px;scrollbar-gutter:auto' : (dualMode ? 'display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:8px' : 'flex:1;display:flex;flex-direction:column;overflow:hidden;padding-bottom:8px')">
         <div class="table-card-header" :style="embeddedMode ? 'flex-shrink:0' : ''">
           <!-- 标题/tap + 操作按钮行 -->
             <n-tabs v-if="tapSearchField" type="line" :tabs-padding="0"

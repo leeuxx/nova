@@ -1191,13 +1191,22 @@ body.dark { background: #151515 !important; }
   background: #151515;
 }
 
-/* picker 弹窗内卡片左右留白 */
+/* picker 弹窗内卡片左右留白（与主表一致：filter 16px 24px，table 左右 24px + 关闭滚动条预留） */
 .ref-picker-body .filter-card .n-card__content {
-  padding: 12px 12px !important;
+  padding: 16px 24px !important;
+  scrollbar-gutter: auto !important;
+}
+.ref-picker-body .filter-card .n-card-content {
+  scrollbar-gutter: auto !important;
 }
 .ref-picker-body .table-card .n-card__content,
 .ref-picker-body .page-card .n-card__content {
-  padding: 0 12px !important;
+  padding: 24px 24px 8px 24px !important;
+  scrollbar-gutter: auto !important;
+}
+.ref-picker-body .table-card .n-card-content,
+.ref-picker-body .page-card .n-card-content {
+  scrollbar-gutter: auto !important;
 }
 .ref-picker-body .page-card {
   margin-bottom: 12px;
