@@ -2926,7 +2926,7 @@ const NovaTable = {
       }
       window.popup.drawer('/editor-preview.html#' + encoded, {
         title: title || window.__t('table.rich_preview'),
-        size: '35%'
+        size: '30%'
       })
     },
     // ── 操作表单 EDITOR (Tiptap) 生命周期 ──
