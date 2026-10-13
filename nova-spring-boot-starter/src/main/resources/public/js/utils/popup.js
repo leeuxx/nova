@@ -46,7 +46,7 @@
   // 外层包 n-config-provider 以注入暗色 theme。
   function modalTemplate() {
     return (
-      '<n-config-provider :theme="theme">' +
+      '<n-config-provider :theme="theme" :theme-overrides="themeOverrides">' +
         '<n-modal' +
           ' v-model:show="show"' +
           ' display-directive="if"' +
@@ -68,7 +68,7 @@
   // drawer 模板：与 page/table.js line 4791 逐字相同
   function drawerTemplate() {
     return (
-      '<n-config-provider :theme="theme">' +
+      '<n-config-provider :theme="theme" :theme-overrides="themeOverrides">' +
         '<n-drawer' +
           ' v-model:show="show"' +
           ' :placement="payload.placement || \'right\'"' +
@@ -122,7 +122,16 @@
           var dark = window.__appDarkMode && window.__appDarkMode.value
           return dark ? naive.darkTheme : null
         })
-        return { show: showRef, payload: payloadRef, theme: themeRef, zIndex: zIndexRef }
+        // 同步主应用的 themeOverrides（borderRadius 等），确保独立弹窗圆角一致
+        var themeOverridesRef = computed(function () {
+          var dark = window.__appDarkMode && window.__appDarkMode.value
+          var base = window.__novaThemeOverrides || {}
+          var darkOv = window.__novaDarkThemeOverrides || {}
+          return dark
+            ? { common: Object.assign({}, base.common, darkOv.common) }
+            : base
+        })
+        return { show: showRef, payload: payloadRef, theme: themeRef, themeOverrides: themeOverridesRef, zIndex: zIndexRef }
       },
       computed: {
         modalStyle: function () {

@@ -156,6 +156,9 @@ const darkThemeOverrides = {
     borderColor: '#3a3a3d'
   }
 }
+// 暴露给 popup.js 等独立 Vue app 使用，确保圆角等全局样式一致
+window.__novaThemeOverrides = themeOverrides
+window.__novaDarkThemeOverrides = darkThemeOverrides
 
 // 从脚本开始执行起计时（此时首屏 loading 已在 DOM 中显示）
 var _bootLoadingStart = Date.now()
