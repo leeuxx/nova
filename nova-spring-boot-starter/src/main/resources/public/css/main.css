@@ -414,6 +414,23 @@ html.theme-transitioning.to-light::view-transition-new(root) {
   margin-left: 0 !important;
   transition: background-color 0.15s;
 }
+/* tab 锁图标（不可关闭时显示，保持宽度对称） */
+.menu-tabs .n-tabs-tab .tab-lock-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0 !important;
+  opacity: 0.35;
+  cursor: default;
+}
+.menu-tabs .n-tabs-tab .tab-lock-icon iconify-icon {
+  font-size: 13px !important;
+}
+.dark .menu-tabs .n-tabs-tab .tab-lock-icon {
+  opacity: 0.4;
+}
 .menu-tabs .n-tabs-tab .tab-close-icon iconify-icon {
   font-size: 13px !important;
   transition: transform 0.15s;

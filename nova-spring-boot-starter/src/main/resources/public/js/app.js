@@ -934,6 +934,9 @@ function mountApp(menuList, config, loginExpired) {
                               <n-icon v-if="tab.closable && openedTabs.length > 1" :size="12" class="tab-close-icon" style="cursor:pointer;margin-left:4px" @click.stop="handleTabClose(tab.key)">
                                 <iconify-icon icon="material-symbols:close"></iconify-icon>
                               </n-icon>
+                              <n-icon v-else :size="12" class="tab-lock-icon" style="margin-left:4px">
+                                <iconify-icon icon="material-symbols:lock-outline"></iconify-icon>
+                              </n-icon>
                             </span>
                           </n-tab>
                         </n-tabs>
