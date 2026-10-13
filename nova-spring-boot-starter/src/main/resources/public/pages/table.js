@@ -254,6 +254,36 @@ window.evalShowExpr = evalShowExpr
     })
   }
 
+  // 翻译 formInfo 为显示值（CHOICE/BOOLEAN/REFERENCE），供 AI 审查使用
+  function _translateFormInfoForDisplay(formInfo, choiceMap, formData, refMap) {
+    var cm = choiceMap || {}
+    var rm = refMap || {}
+    var fd = formData || {}
+    return formInfo.map(function(item) {
+      var newItem = { field: item.field, value: item.value, type: item.type }
+      if (item.reference) newItem.reference = item.reference
+      if (!item.value || !item.type) return newItem
+      if (item.type === 'CHOICE') {
+        var ci = cm[item.field]
+        if (ci && ci.values) {
+          var vals = ci.selectType === 'MULTI' ? String(item.value).split(',') : [String(item.value)]
+          newItem.value = vals.map(function(v) {
+            var o = ci.values.find(function(x) { return x.value === v })
+            return o ? o.label : v
+          }).join(',')
+        }
+      } else if (item.type === 'BOOLEAN') {
+        newItem.value = (item.value === 'true' || item.value === true)
+          ? (window.__t ? window.__t('common.yes') : '是')
+          : (window.__t ? window.__t('common.no') : '否')
+      } else if (item.type === 'REFERENCE') {
+        var disp = fd[item.field + '_display']
+        if (disp) newItem.value = String(disp)
+      }
+      return newItem
+    })
+  }
+
   // 工具函数：父级值变化时，自动选中子级第一个匹配选项，无匹配则清空
   function clearCascadeChildren(formData, choiceMap, parentField) {
     var parentVal = formData[parentField]
@@ -2303,6 +2333,10 @@ const NovaTable = {
           self.opFormAttachmentMap = d.attachment || {}
           self.opFormButtons    = d.buttons || {}
           self.opFormLayoutObj   = d.layout || {}
+          // AI 审查：buildVo.ai.review === true 才走门禁
+          if (window.NovaAiCheck && d.ai && d.ai.review === true) {
+            window.NovaAiCheck.registerNova(btn.novaClassName, true)
+          }
           var allEdit = d.edit || []
           // 基本信息 tab 名称：读后端 thisForm.tapTitle，方便后续按 nova 配置改名
           var thisFormEdit = allEdit.find(function(e) { return e.tapType === 'thisForm' })
@@ -2673,24 +2707,50 @@ const NovaTable = {
         var fd = self.opFormAppFormData[n] || {}
         appendageFormInfo[n] = _buildFormInfoList(build.editFields || [], fd, build.referenceMap || {}, build.attachmentMap || {})
       })
-      window.fetchApi.post('/nova/table/rowOperationSubmit', {
-          novaName: this.novaName,
-          type: this.opFormBtn.type,
-          novaIds: novaIds,
-          operationHandler: this.opFormBtn.operationHandler,
-          operationParam: this.opFormBtn.operationParam || '',
-          novaFromName: this.opFormBtn.novaClassName,
-          formInfo: formInfo,
-          appendageFormInfo: appendageFormInfo
-        }).then(function(resp) {
-          self.closeOpForm()
-          if (window.$message) window.$message.success(window.__t('table.op_success'))
-          if (resp.data && resp.data.jsExpression) {
-            try { new Function(resp.data.jsExpression)() } catch(e) { console.error('[OpForm] jsExpression error:', e) }
-          } else {
-            if (window.NovaTableJQ) window.NovaTableJQ.loadData(self.vmKey || self.novaName)
-          }
-        }).catch(function(err) { if (!err || !err.code) { if (window.$message) window.$message.error(window.__t('table.request_failed')) } })
+
+      // 提交操作：抽成函数，供 AI 审查通过后调用
+      function doSubmit() {
+        window.fetchApi.post('/nova/table/rowOperationSubmit', {
+            novaName: self.novaName,
+            type: self.opFormBtn.type,
+            novaIds: novaIds,
+            operationHandler: self.opFormBtn.operationHandler,
+            operationParam: self.opFormBtn.operationParam || '',
+            novaFromName: self.opFormBtn.novaClassName,
+            formInfo: formInfo,
+            appendageFormInfo: appendageFormInfo
+          }).then(function(resp) {
+            self.closeOpForm()
+            if (window.$message) window.$message.success(window.__t('table.op_success'))
+            if (resp.data && resp.data.jsExpression) {
+              try { new Function(resp.data.jsExpression)() } catch(e) { console.error('[OpForm] jsExpression error:', e) }
+            } else {
+              if (window.NovaTableJQ) window.NovaTableJQ.loadData(self.vmKey || self.novaName)
+            }
+          }).catch(function(err) { if (!err || !err.code) { if (window.$message) window.$message.error(window.__t('table.request_failed')) } })
+      }
+
+      // AI 审查：跳过的几个分支
+      if (!window.NovaAiCheck || !window.NovaAiCheck.shouldCheck(this.opFormNovaName)) { doSubmit(); return }
+      if (window.NovaAiCheck.shouldThrottle(this.opFormNovaName)) { doSubmit(); return }
+
+      // AI 门禁：翻译为显示值后传给 AI（doSubmit 仍用原始 formInfo）
+      var aiFormInfo = _translateFormInfoForDisplay(formInfo, this.opFormChoiceMap, this.opFormData, this.opFormRefMap)
+      var aiAppendageFormInfo = {}
+      var self2 = this
+      Object.keys(appendageFormInfo).forEach(function(n) {
+        var build = (self2.opFormAppTabBuild || {})[n] || {}
+        var appFd = (self2.opFormAppFormData || {})[n] || {}
+        aiAppendageFormInfo[n] = _translateFormInfoForDisplay(appendageFormInfo[n], build.choiceMap || {}, appFd, build.referenceMap || {})
+      })
+      window.NovaAiCheck.gate({
+        novaName:           this.opFormNovaName,
+        formInfo:           aiFormInfo,
+        appendageFormInfo:  aiAppendageFormInfo
+      }, { timeoutMs: 3000 }).then(function (result) {
+        if (!self2.opFormShow) return
+        if (result.proceed) doSubmit()
+      })
     },
     handleOpAttachmentChange(f, event) {
       var files = Array.from(event.target.files || [])

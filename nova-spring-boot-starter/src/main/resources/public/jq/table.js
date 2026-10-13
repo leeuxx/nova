@@ -828,6 +828,8 @@ window.NovaTableJQ = (function ($) {
       return newItem
     })
   }
+  // 暴露到全局，供自定义按钮 opForm 等场景复用
+  if (window.NovaAiCheck) window.NovaAiCheck.translateFormInfoForDisplay = translateFormInfoForDisplay
 
   // ── 打开新增弹窗 ──────────────────────────────────────────────
   function handleAdd(vmKey) {
