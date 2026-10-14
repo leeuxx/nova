@@ -658,6 +658,9 @@ public class NovaTableBuild {
             @Comment("开启审查")
             private Boolean review;
 
+            @Comment("开启搜索")
+            private Boolean search;
+
         }
 
     }

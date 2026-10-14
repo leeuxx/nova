@@ -388,6 +388,9 @@ const NovaTable = {
       filterForm:     {},
       tapSearchField:  null,
       tapSearchValue:  null,
+      aiSearchEnabled: false,
+      aiPrompt:        '',
+      aiConditions:    null,
       showForm:       false,
       formTab:        'form',
       openingForm:    false,         // 弹窗打开瞬间置 true，nextTick 置 false，期间忽略 onFormTabChange
@@ -1985,7 +1988,13 @@ const NovaTable = {
         t._lastFilterSnapshot = snapshot
       }
       const key = (t.pickerMode || t.embeddedMode || t.dualMode) ? t._vmKey : t.novaName
-      window.NovaTableJQ.loadData(key)
+      // AI 查询：有提示词时走 AI 接口（接口就绪后对接），目前直接走普通查询
+      if (t.aiSearchEnabled && t.aiPrompt && t.aiPrompt.trim()) {
+        // TODO: 对接 AI 查询接口
+        window.NovaTableJQ.loadData(key)
+      } else {
+        window.NovaTableJQ.loadData(key)
+      }
     },
     applyTreeSearch() {
       const keyword = this.treeSearchKeyword.trim()
@@ -4378,9 +4387,25 @@ const NovaTable = {
       <component v-else-if="!linkMode" :is="'n-card'" :bordered="false" class="page-card filter-card" :style="'flex-shrink:0'" :content-style="pickerMode ? 'padding:16px 24px;scrollbar-gutter:auto' : ''">
         <div :class="['filter-grid', embeddedMode ? 'embedded' : '', (dualMode || dualTableViewActive) ? 'dual' : '']">
           <template v-for="(field, index) in searchFields" :key="field.field">
-            <div v-if="filterExpanded || index < ((dualMode || dualTableViewActive) ? 1 : 3)" style="display:flex;align-items:center;gap:8px;width:100%">
-              <span class="form-label" :title="field.title">{{ field.title }}</span>
-              <n-select v-if="field.type === 'CHOICE' && choiceMap[field.field] && choiceMap[field.field].selectType === 'SINGLE' && !field.vague"
+            <div v-if="filterExpanded || index < ((dualMode || dualTableViewActive) ? 1 : 3)" :class="field.type === 'AI_SEARCH' ? 'ai-search-field' : ''" style="display:flex;align-items:center;gap:8px;width:100%">
+              <span class="form-label" :title="field.type === 'AI_SEARCH' ? __t('table.ai_search_label') : field.title">{{ field.type === 'AI_SEARCH' ? __t('table.ai_search_label') : field.title }}</span>
+              <!-- AI 搜索 -->
+              <n-input v-if="field.type === 'AI_SEARCH'"
+                v-model:value="aiPrompt"
+                :size="embSize"
+                clearable
+                :placeholder="__t('table.ai_search_placeholder')"
+                class="ai-search-input"
+                @keydown.enter="handleQuery"
+              >
+                <template #prefix>
+                  <iconify-icon icon="material-symbols:magic-button" style="font-size:16px"></iconify-icon>
+                </template>
+                <template #suffix>
+                  <span class="ai-search-tag">AI</span>
+                </template>
+              </n-input>
+              <n-select v-else-if="field.type === 'CHOICE' && choiceMap[field.field] && choiceMap[field.field].selectType === 'SINGLE' && !field.vague"
                 v-model:value="filterForm[field.field]"
                 @update:value="onFilterChoiceUpdate(field.field)"
                 :options="fieldOptions(field)"

@@ -117,6 +117,8 @@
   "table.search_placeholder": "検索...",
   "table.search_input_tip": "入力して絞り込み",
   "table.searching": "検索中...",
+  "table.ai_search_label": "スマート検索",
+  "table.ai_search_placeholder": "自然言語で記述",
   "table.load_more": "さらに読み込む",
   "table.loaded_all": "すべて読み込み済み",
   "table.all": "すべて",

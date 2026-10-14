@@ -117,6 +117,8 @@
   "table.search_placeholder": "Search...",
   "table.search_input_tip": "Type to filter",
   "table.searching": "Searching...",
+  "table.ai_search_label": "Smart Search",
+  "table.ai_search_placeholder": "Describe in natural language",
   "table.load_more": "Load more",
   "table.loaded_all": "End of list",
   "table.all": "All",

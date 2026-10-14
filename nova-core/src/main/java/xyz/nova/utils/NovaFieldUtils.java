@@ -2,6 +2,7 @@ package xyz.nova.utils;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
+import xyz.nova.annotation.Nova;
 import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.sub.nova.SysBtnHide;
@@ -736,13 +737,17 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            AI ai = edit.ai();
+            AiField aiField = edit.ai();
             // 数据审查
-            AI.Review review = ai.review();
+            AiField.Review review = aiField.review();
             if (review.enable()) {
                 aiInfo.setReview(true);
             }
         });
+        // 数据搜索
+        Nova nova = scanNova.getNova();
+        Ai ai = nova.ai();
+        aiInfo.setSearch(ai.search());
         return aiInfo;
     }
 
@@ -759,9 +764,9 @@ public class NovaFieldUtils {
         novaFields.forEach((field, novaFieldInfo) -> {
             NovaField novaField = novaFieldInfo.getNovaField();
             Edit edit = novaField.edit();
-            AI ai = edit.ai();
+            AiField aiField = edit.ai();
             // 数据审查
-            AI.Review review = ai.review();
+            AiField.Review review = aiField.review();
             if (review.enable()) {
                 String prompt = review.prompt();
                 if (prompt != null && !prompt.isEmpty()) {
@@ -1214,6 +1219,9 @@ public class NovaFieldUtils {
 
         @Comment("开启审查")
         private Boolean review;
+
+        @Comment("开启搜索")
+        private Boolean search;
 
     }
 }

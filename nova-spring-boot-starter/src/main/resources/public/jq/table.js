@@ -190,6 +190,11 @@ window.NovaTableJQ = (function ($) {
     if (window.NovaAiCheck && resp.data.ai && resp.data.ai.review === true) {
       window.NovaAiCheck.registerNova(target.novaName, true)
     }
+    // AI 自然语言搜索：buildVo.ai.search === true，作为第一个条件项塞进 searchFields
+    var aiSearchEnabled = !!(resp.data.ai && resp.data.ai.search === true)
+    target.aiSearchEnabled = aiSearchEnabled
+    target.aiPrompt = ''
+    target.aiConditions = null
     var fields = resp.data.search || []
     // 提取 tapSearch 字段，从 searchFields 中移除
     var tapSearchField = null
@@ -206,6 +211,9 @@ window.NovaTableJQ = (function ($) {
         : (tsChoiceVals.length > 0 ? tsChoiceVals[0].value : null)
     } else {
       target.tapSearchValue = null
+    }
+    if (aiSearchEnabled) {
+      normalFields.unshift({ field: '__ai_search__', title: 'AI 搜索', type: 'AI_SEARCH' })
     }
     target.searchFields = normalFields
     var form = {}

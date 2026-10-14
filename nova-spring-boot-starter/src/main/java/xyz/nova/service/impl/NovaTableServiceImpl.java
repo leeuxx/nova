@@ -374,7 +374,8 @@ public class NovaTableServiceImpl implements NovaTableService {
         // 获取AI信息
         NovaFieldUtils.AiInfo aiInfo = NovaFieldUtils.getAi(novaTableBuild.getNovaName());
         NovaTableBuild.Vo.Ai ai = new NovaTableBuild.Vo.Ai()
-                .setReview(aiInfo.getReview());
+                .setReview(aiInfo.getReview())
+                .setSearch(aiInfo.getSearch());
         vo.setAi(ai);
         return vo;
     }

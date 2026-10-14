@@ -2,7 +2,7 @@ package xyz.nova.annotation.sub.nova.field.edit;
 
 import xyz.nova.annotation.comment.Comment;
 
-public @interface AI {
+public @interface AiField {
 
     @Comment("数据审查")
     Review review() default @Review(enable = false);

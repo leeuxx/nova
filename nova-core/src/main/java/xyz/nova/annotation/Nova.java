@@ -2,6 +2,7 @@ package xyz.nova.annotation;
 
 import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.sub.nova.*;
+import xyz.nova.annotation.sub.nova.field.edit.Ai;
 import xyz.nova.annotation.sub.nova.row.RowOperation;
 import xyz.nova.service.data.DataProxy;
 import xyz.nova.service.data.DefaultDataProxy;
@@ -54,5 +55,8 @@ public @interface Nova {
 
     @Comment("AI配置")
     AiConfig aiConfig() default @AiConfig;
+
+    @Comment("AI功能集成")
+    Ai ai() default @Ai;
 
 }

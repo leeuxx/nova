@@ -117,6 +117,8 @@
   "table.search_placeholder": "검색...",
   "table.search_input_tip": "입력하여 필터링",
   "table.searching": "검색 중...",
+  "table.ai_search_label": "스마트 검색",
+  "table.ai_search_placeholder": "자연어로 설명",
   "table.load_more": "더 불러오기",
   "table.loaded_all": "모두 불러옴",
   "table.all": "전체",
