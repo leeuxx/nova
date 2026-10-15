@@ -117,7 +117,7 @@
   "table.search_placeholder": "请输入关键词",
   "table.search_input_tip": "输入关键字以过滤数据",
   "table.searching": "搜索中",
-  "table.ai_search_label": "智能搜索",
+  "table.ai_search_label": "提示词",
   "table.ai_search_placeholder": "自然语言描述",
   "table.load_more": "点击加载更多",
   "table.loaded_all": "已加载全部",
