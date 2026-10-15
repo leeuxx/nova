@@ -1,4 +1,4 @@
-﻿html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+﻿﻿﻿﻿html, body, #app { margin: 0; padding: 0; height: 100%; overflow: hidden; }
 
 /* 主题切换 View Transition：卷帘式
    切暗色：从右往左（夜晚从右侧降临）
@@ -694,49 +694,84 @@ html.theme-transitioning.to-light::view-transition-new(root) {
   opacity: 0;
   margin-top: 0;
 }
+/* AI 搜索：两段式 input-group —— 外层统一框，左 label 前缀块 + 右输入区 */
+.ai-search-field {
+  gap: 0 !important;
+  border-radius: 999px !important;
+  background: #FFFCF8;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(162, 99, 26, 0.28);
+  transition: box-shadow 0.2s ease;
+}
+.ai-search-field:focus-within {
+  box-shadow:
+    0 0 0 1px rgba(162, 99, 26, 0.5),
+    0 0 0 4px rgba(162, 99, 26, 0.12);
+}
+/* 左侧前缀块 */
+.ai-search-field .form-label {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  justify-content: center;
+  width: auto;
+  flex-shrink: 0;
+  padding: 0 12px;
+  font-size: 13px;
+  color: #B45309;
+  background: rgba(162, 99, 26, 0.07);
+  border-right: 1px solid rgba(162, 99, 26, 0.22);
+}
+/* 右侧输入区：去掉自身描边/背景，融进外框 */
 .ai-search-field .ai-search-input {
   flex: 1;
   min-width: 0;
 }
-.ai-search-field .n-input__wrapper {
-  border-color: #D97706 !important;
+.ai-search-field .ai-search-input .n-input__border,
+.ai-search-field .ai-search-input .n-input__state-border {
+  display: none !important;
 }
-.ai-search-field .n-input--focus .n-input__wrapper,
-.ai-search-field .n-input__wrapper:hover {
-  border-color: #B45309 !important;
-  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.15) !important;
-}
-.ai-search-field .n-input__prefix .i {
-  color: #D97706;
+.ai-search-field .ai-search-input .n-input-wrapper {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding-left: 12px;
+  padding-right: 12px;
+  box-shadow: none !important;
 }
 .ai-search-tag {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 20px;
-  padding: 0 6px;
+  height: 18px;
+  padding: 0 7px;
   font-size: 11px;
-  font-weight: 600;
-  color: #fff;
-  background: linear-gradient(135deg, #D97706, #F59E0B);
-  border-radius: 4px;
-  letter-spacing: 0.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
   line-height: 1;
+  color: #B45309;
+  background: rgba(162, 99, 26, 0.08);
+  border: 1px solid rgba(162, 99, 26, 0.2);
+  border-radius: 999px;
 }
-.dark .ai-search-field .n-input__wrapper {
-  border-color: #F59E0B !important;
+.dark .ai-search-field {
+  background: #231A12;
+  box-shadow: 0 0 0 1px rgba(162, 99, 26, 0.45);
 }
-.dark .ai-search-field .n-input--focus .n-input__wrapper,
-.dark .ai-search-field .n-input__wrapper:hover {
-  border-color: #FBBF24 !important;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+.dark .ai-search-field:focus-within {
+  box-shadow:
+    0 0 0 1px rgba(226, 160, 90, 0.6),
+    0 0 0 4px rgba(162, 99, 26, 0.22);
 }
-.dark .ai-search-field .n-input__prefix .i {
-  color: #F59E0B;
+.dark .ai-search-field .form-label {
+  color: #E3AC72;
+  background: rgba(162, 99, 26, 0.16);
+  border-right-color: rgba(162, 99, 26, 0.32);
 }
 .dark .ai-search-tag {
-  background: linear-gradient(135deg, #B45309, #F59E0B);
-  color: #1C1917;
+  color: #E3AC72;
+  background: rgba(162, 99, 26, 0.16);
+  border-color: rgba(162, 99, 26, 0.3);
 }
 .filter-grid {
   display: grid;

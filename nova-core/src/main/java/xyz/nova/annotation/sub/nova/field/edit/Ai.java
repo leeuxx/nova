@@ -4,7 +4,7 @@ import xyz.nova.annotation.comment.Comment;
 
 public @interface Ai {
 
-    @Comment("是否开启ai搜索")
+    @Comment("是否开启智能搜索")
     boolean search() default false;
 
 }

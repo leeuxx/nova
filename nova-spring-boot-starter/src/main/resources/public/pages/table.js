@@ -4398,9 +4398,6 @@ const NovaTable = {
                 class="ai-search-input"
                 @keydown.enter="handleQuery"
               >
-                <template #prefix>
-                  <iconify-icon icon="material-symbols:magic-button" style="font-size:16px"></iconify-icon>
-                </template>
                 <template #suffix>
                   <span class="ai-search-tag">AI</span>
                 </template>
