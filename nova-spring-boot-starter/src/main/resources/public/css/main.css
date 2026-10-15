@@ -773,6 +773,37 @@ html.theme-transitioning.to-light::view-transition-new(root) {
   background: rgba(162, 99, 26, 0.16);
   border-color: rgba(162, 99, 26, 0.3);
 }
+/* AI 解析结果只读展示 */
+.ai-expr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-top: 10px;
+}
+.ai-expr-prefix {
+  font-size: 12px;
+  color: #999;
+}
+.ai-expr-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  font-size: 12px;
+  color: #B45309;
+  background: rgba(162, 99, 26, 0.08);
+  border: 1px solid rgba(162, 99, 26, 0.2);
+  border-radius: 999px;
+}
+.dark .ai-expr-prefix {
+  color: #8a8a8a;
+}
+.dark .ai-expr-chip {
+  color: #E3AC72;
+  background: rgba(162, 99, 26, 0.16);
+  border-color: rgba(162, 99, 26, 0.3);
+}
 .filter-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

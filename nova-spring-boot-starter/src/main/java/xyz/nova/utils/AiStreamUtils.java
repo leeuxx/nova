@@ -5,11 +5,14 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import xyz.nova.error.NovaException;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -91,5 +94,39 @@ public class AiStreamUtils {
             log.error("AI流式异常", e);
             onError.accept("异常: " + e.getMessage());
         }
+    }
+
+    /**
+     * 流式调用并同步等待完整结果
+     *
+     * @param timeoutMs 整体超时上限（毫秒）
+     * @return 拼接后的完整文本
+     */
+    public static String complete(String baseUrl, String apiKey, String model,
+                                  String system, String prompt, long timeoutMs) {
+        StringBuilder buffer = new StringBuilder();
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<String> error = new AtomicReference<>();
+        Thread worker = new Thread(() -> stream(baseUrl, apiKey, model, system, prompt,
+                buffer::append,
+                latch::countDown,
+                msg -> {
+                    error.set(msg);
+                    latch.countDown();
+                }), "nova-ai-complete");
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            if (!latch.await(timeoutMs, TimeUnit.MILLISECONDS)) {
+                throw new NovaException("AI 解析超时");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new NovaException("AI 解析被中断");
+        }
+        if (error.get() != null) {
+            throw new NovaException("AI 调用失败: " + error.get());
+        }
+        return buffer.toString();
     }
 }

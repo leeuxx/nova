@@ -25,4 +25,9 @@ public class NovaTableData {
 
     @Comment("来源上下文属性集合")
     private Map<String, String> sourceFields;
+
+
+    @Comment("AI搜索提示词")
+    private String searchPrompt;
+
 }

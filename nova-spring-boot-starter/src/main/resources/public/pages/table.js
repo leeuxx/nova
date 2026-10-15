@@ -390,7 +390,7 @@ const NovaTable = {
       tapSearchValue:  null,
       aiSearchEnabled: false,
       aiPrompt:        '',
-      aiConditions:    null,
+      aiExprs:         null,
       showForm:       false,
       formTab:        'form',
       openingForm:    false,         // 弹窗打开瞬间置 true，nextTick 置 false，期间忽略 onFormTabChange
@@ -1966,6 +1966,11 @@ const NovaTable = {
         })
         this.filterForm = form
         this.paginationConfig.page = 1
+        // 重置 AI 搜索状态（提示词、展示结果、翻页复用缓存）
+        this.aiPrompt = ''
+        this.aiExprs = null
+        this._appliedConditions = null
+        this._appliedExprs = null
         window.NovaTableJQ.loadData(this._vmKey)
       } else {
         window.NovaTableJQ.handleReset()
@@ -1982,19 +1987,23 @@ const NovaTable = {
         t.applyTreeSearch()
         return
       }
-      const snapshot = JSON.stringify(t.filterForm)
+      const snapshot = JSON.stringify([t.filterForm, t.aiPrompt])
       if (snapshot !== t._lastFilterSnapshot) {
         t.paginationConfig.page = 1
         t._lastFilterSnapshot = snapshot
       }
       const key = (t.pickerMode || t.embeddedMode || t.dualMode) ? t._vmKey : t.novaName
-      // AI 查询：有提示词时走 AI 接口（接口就绪后对接），目前直接走普通查询
-      if (t.aiSearchEnabled && t.aiPrompt && t.aiPrompt.trim()) {
-        // TODO: 对接 AI 查询接口
-        window.NovaTableJQ.loadData(key)
-      } else {
-        window.NovaTableJQ.loadData(key)
-      }
+      // 有提示词则携带，交由后端解析；翻页时不再重复解析
+      const usePrompt = !!(t.aiSearchEnabled && t.aiPrompt && t.aiPrompt.trim())
+      window.NovaTableJQ.loadData(key, usePrompt)
+    },
+    // AI 解析出的查询条件展示文本：字段标题 + 操作符 + 值
+    exprText(e) {
+      const op = String(e.op || 'eq')
+      const head = (e.title || e.field) + ' ' + window.__t('table.ai_op_' + op.toLowerCase())
+      if (op === 'IS_NULL' || op === 'IS_NOT_NULL') return head
+      const vals = (e.values || []).join(op === 'BETWEEN' ? ' ~ ' : '、')
+      return head + ' ' + vals
     },
     applyTreeSearch() {
       const keyword = this.treeSearchKeyword.trim()
@@ -4651,6 +4660,13 @@ const NovaTable = {
             </n-button>
           </div>
         </div>
+        <!-- AI 解析出的查询条件（只读展示，出现/收起带伸展动画） -->
+        <n-collapse-transition :show="!!(aiExprs && aiExprs.length)">
+          <div class="ai-expr-chips">
+            <span class="ai-expr-prefix">{{ __t('table.ai_parsed_prefix') }}</span>
+            <span v-for="(e, i) in aiExprs" :key="i" class="ai-expr-chip">{{ exprText(e) }}</span>
+          </div>
+        </n-collapse-transition>
       </component>
 
       <!-- 表格卡片 -->

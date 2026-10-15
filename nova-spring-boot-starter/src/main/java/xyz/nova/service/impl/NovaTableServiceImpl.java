@@ -16,6 +16,7 @@ import xyz.nova.dto.*;
 import xyz.nova.dto.page.PageBean;
 import xyz.nova.entity.data.*;
 import xyz.nova.i18n.NovaI18nUtils;
+import xyz.nova.service.NovaAiService;
 import xyz.nova.service.NovaTableService;
 import xyz.nova.service.data.DataProxy;
 import xyz.nova.utils.*;
@@ -29,6 +30,8 @@ import java.util.stream.Collectors;
 public class NovaTableServiceImpl implements NovaTableService {
 
     private ConversionService conversionService;
+
+    private NovaAiService novaAiService;
 
     @Override
     public NovaTableBuild.Vo build(NovaTableBuild novaTableBuild) {
@@ -387,6 +390,18 @@ public class NovaTableServiceImpl implements NovaTableService {
         List<OrderItemBean> orders = pageBean.getOrders();
         // 搜索条件（conditions 值已为 JSON 数组字符串，直接透传给 mapToSearchObj）
         Map<String, String> requestConditions = novaTableData.getConditions();
+        String searchPrompt = novaTableData.getSearchPrompt();
+        // AI表达式条件：首次由提示词解析，翻页复用前端回传的 exprs
+        List<NovaExpr> exprs;
+        if (searchPrompt != null && !searchPrompt.isBlank()) {
+            exprs = novaAiService.parseSearch(novaName, searchPrompt);
+            // 手选已有该字段则移除对应 AI 表达式（手选优先）
+            if (requestConditions != null && !requestConditions.isEmpty()) {
+                exprs.removeIf(expr -> requestConditions.containsKey(expr.getField()));
+            }
+        } else {
+            exprs = pageBean.getExprs();
+        }
         // 排序
         List<OrderItemBean> requestOrders = new ArrayList<>();
         if (orders != null && !orders.isEmpty()) {
@@ -398,7 +413,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         Fetch queryRequest = new Fetch()
                 .setCurrent(pageBean.getCurrent())
                 .setSize(pageBean.getSize())
-                .setCondition(DataProxyUtils.mapToSearchObj(novaName, requestConditions))
+                .setCondition(DataProxyUtils.mapToSearchObj(novaName, requestConditions, exprs))
                 .setOrders(requestOrders)
                 .setNovaName(novaTableData.getSourceNovaName())
                 .setContext(novaTableData.getSourceFields());
@@ -409,8 +424,8 @@ public class NovaTableServiceImpl implements NovaTableService {
         // 转换Map
         List<Map<String, Object>> maps = new ArrayList<>();
         records.forEach(record -> maps.add(DataProxyUtils.toMapWithTimestamp(record)));
-        // 分页返回结果信息
-        pageBean.setTotal(fetch.getTotal()).setRecords(maps);
+        // 分页返回结果信息（回传 AI 解析出的表达式条件，供前端翻页复用；手选条件前端已有，不再回传）
+        pageBean.setTotal(fetch.getTotal()).setRecords(maps).setExprs(exprs);
         return pageBean;
     }
 

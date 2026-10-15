@@ -7,6 +7,7 @@ import org.springframework.core.convert.ConversionService;
 import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.sub.nova.field.edit.LinkTargetType;
 import xyz.nova.config.NovaApplication;
+import xyz.nova.entity.data.NovaExpr;
 import xyz.nova.error.NovaException;
 import xyz.nova.service.data.DataProxy;
 
@@ -221,11 +222,14 @@ public class DataProxyUtils {
      * 查询条件转换为查询条件构造类
      *
      * @param novaName   Nova类名
-     * @param conditions 查询条件
+     * @param conditions 普通查询条件（手选）
+     * @param exprs      AI表达式查询条件
      * @return 查询条件构造对象
      */
-    public static Object mapToSearchObj(String novaName, Map<String, String> conditions) {
-        if (conditions == null || conditions.isEmpty()) {
+    public static Object mapToSearchObj(String novaName, Map<String, String> conditions, List<NovaExpr> exprs) {
+        boolean hasCond = conditions != null && !conditions.isEmpty();
+        boolean hasExpr = exprs != null && !exprs.isEmpty();
+        if (!hasCond && !hasExpr) {
             return null;
         }
         Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
@@ -235,6 +239,9 @@ public class DataProxyUtils {
         }
         Class<?> conditionClass = scanNova.getNova().conditionClass();
         if (conditionClass == void.class) {
+            if (hasExpr) {
+                throw new NovaException("Nova '" + novaName + "' 未声明查询条件类, 无法接收AI表达式条件");
+            }
             return null;
         }
         Object searchObj;
@@ -243,23 +250,45 @@ public class DataProxyUtils {
         } catch (ReflectiveOperationException e) {
             throw new NovaException("Failed to instantiate query condition class '" + conditionClass.getName() + "'");
         }
-        for (Map.Entry<String, String> entry : conditions.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            if (value == null || value.isBlank()) {
-                continue;
-            }
-            try {
-                Field field = conditionClass.getDeclaredField(key);
-                field.setAccessible(true);
-                field.set(searchObj, convertConditionValue(field, value));
-            } catch (NoSuchFieldException e) {
-                // 没有这个字段，跳过
-            } catch (IllegalAccessException e) {
-                throw new NovaException("Failed to set query condition property: " + key);
+        if (hasCond) {
+            for (Map.Entry<String, String> entry : conditions.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                if (value == null || value.isBlank()) {
+                    continue;
+                }
+                try {
+                    Field field = conditionClass.getDeclaredField(key);
+                    field.setAccessible(true);
+                    field.set(searchObj, convertConditionValue(field, value));
+                } catch (NoSuchFieldException e) {
+                    // 没有这个字段，跳过
+                } catch (IllegalAccessException e) {
+                    throw new NovaException("Failed to set query condition property: " + key);
+                }
             }
         }
+        if (hasExpr) {
+            injectExprs(conditionClass, searchObj, exprs);
+        }
         return searchObj;
+    }
+
+    /**
+     * 把AI表达式注入查询条件类的约定集合字段（List&lt;NovaExpr&gt;）
+     */
+    private static void injectExprs(Class<?> conditionClass, Object searchObj, List<NovaExpr> exprs) {
+        Field exprField = NovaFieldUtils.findExprField(conditionClass);
+        if (exprField == null) {
+            throw new NovaException("查询条件类 '" + conditionClass.getName()
+                    + "' 未声明接收AI表达式的 List<NovaExpr> 约定字段");
+        }
+        exprField.setAccessible(true);
+        try {
+            exprField.set(searchObj, exprs);
+        } catch (IllegalAccessException e) {
+            throw new NovaException("Failed to set AI expression condition: " + exprField.getName());
+        }
     }
 
     /**

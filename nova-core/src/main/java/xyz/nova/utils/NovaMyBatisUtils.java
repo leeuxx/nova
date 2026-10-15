@@ -94,7 +94,12 @@ public class NovaMyBatisUtils {
      */
     private static Map<String, Object> reflectConditions(Object condition) {
         Map<String, Object> map = new LinkedHashMap<>();
+        Field exprField = NovaFieldUtils.findExprField(condition.getClass());
         for (Field f : condition.getClass().getDeclaredFields()) {
+            // AI 表达式集合字段由开发者在 DataProxy 中自行处理，不参与自动 wrapper 构造
+            if (f.equals(exprField)) {
+                continue;
+            }
             f.setAccessible(true);
             try {
                 Object value = f.get(condition);

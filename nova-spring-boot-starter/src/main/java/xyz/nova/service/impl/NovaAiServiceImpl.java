@@ -1,20 +1,31 @@
 package xyz.nova.service.impl;
 
+import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import xyz.nova.annotation.NovaField;
+import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.config.NovaAiConfig;
+import xyz.nova.config.NovaApplication;
 import xyz.nova.constant.NovaAiConst;
 import xyz.nova.dto.NovaTableAdd;
+import xyz.nova.entity.data.NovaExpr;
+import xyz.nova.error.NovaException;
+import xyz.nova.i18n.NovaI18nUtils;
 import xyz.nova.service.NovaAiService;
 import xyz.nova.utils.AiStreamUtils;
 import xyz.nova.utils.NovaFieldUtils;
 import xyz.nova.utils.NovaUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -208,6 +219,147 @@ public class NovaAiServiceImpl implements NovaAiService {
         }
         emitter.complete();
         return emitter;
+    }
+
+    @Override
+    public List<NovaExpr> parseSearch(String novaName, String prompt) {
+        Locale locale = LocaleContextHolder.getLocale();
+        // 可查询字段：取实体全部字段（含未开放为搜索字段的条件字段），排除不可查询组件
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        NovaApplication.ScanNova scanNova = scanNovas.get(novaName);
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        JSONArray fields = new JSONArray();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            if (!NovaFieldUtils.isQueryType(novaFieldInfo.getType())) {
+                return;
+            }
+            NovaField novaField = novaFieldInfo.getNovaField();
+            String title = NovaI18nUtils.get(novaField.edit().title(), locale, NovaI18nUtils.SourceType.ANNOTATE);
+            fields.put(new JSONObject()
+                    .set("field", field)
+                    .set("title", title)
+            );
+        });
+        // 组装输入
+        JSONObject input = new JSONObject()
+                .set("prompt", prompt)
+                .set("fields", fields);
+        // 模型配置
+        Map<String, NovaAiConfig.OpenAiConfig> openAis = novaAiConfig.getOpenAis();
+        if (openAis.isEmpty()) {
+            throw aiParseFail("AI model not configured, cannot parse prompt");
+        }
+        String aiName = NovaUtils.getAiName(novaName);
+        NovaAiConfig.OpenAiConfig openAiConfig = (aiName == null || aiName.isEmpty())
+                ? openAis.values().iterator().next() : openAis.get(aiName);
+        if (openAiConfig == null) {
+            throw aiParseFail("AI model config not found: " + aiName);
+        }
+        // 流式调用并同步等待结果
+        String text = AiStreamUtils.complete(
+                openAiConfig.getBaseUrl(), openAiConfig.getApiKey(), openAiConfig.getModel(),
+                NovaAiConst.SEARCH_PARSE_PROMPT, input.toString(), 30000L);
+        JSONObject result;
+        try {
+            result = JSONUtil.parseObj(text);
+        } catch (Exception e) {
+            throw aiParseFail("AI response is not a parseable query condition");
+        }
+        if (result.isEmpty()) {
+            throw aiParseFail("No query condition parsed from prompt");
+        }
+        // 元数据
+        Map<String, NovaFieldUtils.ChoiceInfo> choices = NovaFieldUtils.getChoice(novaName, locale);
+        Map<String, NovaFieldUtils.ReferenceTypeInfo> references = NovaFieldUtils.getReference(novaName);
+        Map<String, NovaFieldUtils.AppendageTypeInfo> appendages = NovaFieldUtils.getAppendage(novaName);
+        // 逐字段转为表达式
+        List<NovaExpr> exprs = new ArrayList<>();
+        for (String field : result.keySet()) {
+            NovaApplication.ScanNova.NovaFieldInfo novaFieldInfo = novaFields.get(field);
+            if (novaFieldInfo == null || !NovaFieldUtils.isQueryType(novaFieldInfo.getType())) {
+                throw aiParseFail("AI returned unknown field: " + field);
+            }
+            JSONArray array = result.getJSONArray(field);
+            if (array == null || array.isEmpty()) {
+                throw aiParseFail("AI returned malformed field expression: " + field);
+            }
+            Edit.Type type = novaFieldInfo.getType();
+            String title = NovaI18nUtils.get(novaFieldInfo.getNovaField().edit().title(), locale, NovaI18nUtils.SourceType.ANNOTATE);
+            // 实际查询字段
+            String actualField = field;
+            if (type == Edit.Type.REFERENCE) {
+                NovaFieldUtils.ReferenceTypeInfo reference = references.get(field);
+                if (reference != null) {
+                    actualField = reference.getRef();
+                }
+            } else if (type == Edit.Type.APPENDAGE || type == Edit.Type.APPENDAGES) {
+                NovaFieldUtils.AppendageTypeInfo appendage = appendages.get(field);
+                if (appendage != null) {
+                    actualField = appendage.getBy();
+                }
+            }
+            for (Object element : array) {
+                JSONObject expr = JSONUtil.parseObj(element);
+                String opStr = expr.getStr("op", "eq");
+                NovaExpr.Op op;
+                try {
+                    op = NovaExpr.Op.valueOf(opStr.trim().toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    throw aiParseFail("AI returned unknown operator: " + field + "=" + opStr);
+                }
+                JSONArray valueArr = expr.getJSONArray("values");
+                // 值原样透传，仅 CHOICE 需要标签转值以匹配存储值
+                List<String> values = new ArrayList<>();
+                if (valueArr != null) {
+                    for (Object raw : valueArr) {
+                        String value = String.valueOf(raw);
+                        if (type == Edit.Type.CHOICE) {
+                            boolean found = false;
+                            for (NovaFieldUtils.ChoiceInfo.ValueInfo info : choices.get(field).getValues()) {
+                                if (value.equals(info.getLabel()) || value.equals(info.getValue())) {
+                                    value = info.getValue();
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                throw aiParseFail("Cannot match choice value: " + field + "=" + value);
+                            }
+                        }
+                        values.add(value);
+                    }
+                }
+                // 操作符对值数量的约定
+                if (op == NovaExpr.Op.IS_NULL || op == NovaExpr.Op.IS_NOT_NULL) {
+                    // is_null / is_not_null：不带值
+                    if (!values.isEmpty()) {
+                        throw aiParseFail("Field " + field + " operator " + op.name().toLowerCase() + " takes no values");
+                    }
+                } else if (op == NovaExpr.Op.BETWEEN) {
+                    // between：恰好 2 个（起、止）
+                    if (values.size() != 2) {
+                        throw aiParseFail("Field " + field + " between requires 2 values");
+                    }
+                } else if (op == NovaExpr.Op.IN) {
+                    // in：至少 1 个
+                    if (values.isEmpty()) {
+                        throw aiParseFail("Field " + field + " in requires at least 1 value");
+                    }
+                } else if (values.size() != 1) {
+                    // 其余操作符：恰好 1 个
+                    throw aiParseFail("Field " + field + " operator " + op.name().toLowerCase() + " requires exactly 1 value");
+                }
+                exprs.add(new NovaExpr().setField(actualField).setTitle(title).setOp(op).setValues(values));
+            }
+        }
+        return exprs;
+    }
+
+    /**
+     * AI 解析失败：前端统一提示，具体原因写入 detail 供日志排查
+     */
+    private NovaException aiParseFail(String detail) {
+        return new NovaException(NovaI18nUtils.get("ai.parse.fail", NovaI18nUtils.SourceType.CODE), detail);
     }
 
 }

@@ -3,6 +3,7 @@ package xyz.nova.dto.page;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import xyz.nova.annotation.comment.Comment;
+import xyz.nova.entity.data.NovaExpr;
 import xyz.nova.entity.data.OrderItemBean;
 
 import java.util.ArrayList;
@@ -27,5 +28,9 @@ public class PageBean<T> {
 
     @Comment("查询数据列表")
     private List<T> records = Collections.emptyList();
+
+
+    @Comment("AI表达式查询条件")
+    private List<NovaExpr> exprs;
 
 }

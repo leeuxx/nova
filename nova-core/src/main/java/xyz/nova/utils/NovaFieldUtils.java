@@ -13,10 +13,13 @@ import xyz.nova.annotation.sub.nova.field.view.Pop;
 import xyz.nova.annotation.sub.nova.field.view.PopHandler;
 import xyz.nova.annotation.sub.nova.row.ExprBool;
 import xyz.nova.config.NovaApplication;
+import xyz.nova.entity.data.NovaExpr;
 import xyz.nova.error.NovaException;
 import xyz.nova.i18n.NovaI18nUtils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.*;
 
 public class NovaFieldUtils {
@@ -775,6 +778,37 @@ public class NovaFieldUtils {
             }
         });
         return result;
+    }
+
+    /**
+     * 查找查询条件类中接收AI表达式的约定字段（类型为 List&lt;NovaExpr&gt;）
+     *
+     * @param conditionClass 查询条件类
+     * @return 约定字段，无则返回 null
+     */
+    public static Field findExprField(Class<?> conditionClass) {
+        for (Field field : conditionClass.getDeclaredFields()) {
+            if (!List.class.isAssignableFrom(field.getType())) {
+                continue;
+            }
+            Type genericType = field.getGenericType();
+            if (genericType instanceof ParameterizedType parameterizedType
+                    && parameterizedType.getActualTypeArguments().length == 1
+                    && parameterizedType.getActualTypeArguments()[0] == NovaExpr.class) {
+                return field;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 是否为可作为查询条件的组件类型
+     *
+     * @param type 组件类型
+     * @return 可查询返回 true
+     */
+    public static boolean isQueryType(Edit.Type type) {
+        return !SEARCH_SKIP_TYPES.contains(type);
     }
 
     private static NovaApplication.ScanNova getScanNova(String className) {

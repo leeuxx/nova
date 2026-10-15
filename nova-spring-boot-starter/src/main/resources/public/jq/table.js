@@ -194,7 +194,7 @@ window.NovaTableJQ = (function ($) {
     var aiSearchEnabled = !!(resp.data.ai && resp.data.ai.search === true)
     target.aiSearchEnabled = aiSearchEnabled
     target.aiPrompt = ''
-    target.aiConditions = null
+    target.aiExprs = null
     var fields = resp.data.search || []
     // 提取 tapSearch 字段，从 searchFields 中移除
     var tapSearchField = null
@@ -458,7 +458,10 @@ window.NovaTableJQ = (function ($) {
 
   // ── 加载表格数据 ──────────────────────────────────────────────
   // vmKey: vmMap 中的 key（普通表格 = novaName，picker = __picker_xxx）
-  function loadData(vmKey) {
+  // usePrompt: true  → 新查询，携带 AI 提示词交由后端解析
+  //            false → 新查询，不带提示词（清空缓存重建条件）
+  //            缺省  → 翻页/排序等，复用后端上次返回的最终条件（含 AI 解析结果），避免重复解析
+  function loadData(vmKey, usePrompt) {
     var target = window.vmMap && window.vmMap[vmKey]
     if (!target) return
     target.loading = true
@@ -468,73 +471,87 @@ window.NovaTableJQ = (function ($) {
     }
     // 实际请求后端用的表名，picker 模式下 vmKey 不等于 novaName
     var queryName = target.novaName || vmKey
-    // 过滤空值条件，按后端结构组装
-    var conditions = {}
     var sourceFields = Object.assign({}, target._sourceFields || {})
     var sourceNovaName = target._sourceNovaName || queryName
-    var form = target.filterForm || {}
-    var searchFields = target.searchFields || []
-    searchFields.forEach(function (fieldDef) {
-      var val = form[fieldDef.field]
-      if (val === null || val === undefined || val === '') return
-      if (Array.isArray(val) && val.every(function(v){ return v === null || v === undefined })) return
-      if (Array.isArray(val) && val.length === 0) return
-      var arr
-      if (fieldDef.type === 'NUMBER' && fieldDef.vague) {
-        var lo = (val[0] === null || val[0] === undefined) ? null : String(val[0])
-        var hi = (val[1] === null || val[1] === undefined) ? null : String(val[1])
-        if (lo === null && hi === null) return
-        arr = [lo, hi]
-      } else if (Array.isArray(val)) {
-        arr = val.map(function(v){ return v === null || v === undefined ? null : String(v) })
-      } else {
-        arr = [String(val)]
+    var conditions = {}
+    var searchPrompt = null
+    var exprs = null
+    // 翻页/排序复用服务端最终条件；新查询则重建条件
+    if (usePrompt === undefined && (target._appliedConditions || target._appliedExprs)) {
+      conditions = target._appliedConditions || {}
+      exprs = target._appliedExprs || null
+    } else {
+      target._appliedConditions = null
+      target._appliedExprs = null
+      // 过滤空值条件，按后端结构组装
+      var form = target.filterForm || {}
+      var searchFields = target.searchFields || []
+      searchFields.forEach(function (fieldDef) {
+        var val = form[fieldDef.field]
+        if (val === null || val === undefined || val === '') return
+        if (Array.isArray(val) && val.every(function(v){ return v === null || v === undefined })) return
+        if (Array.isArray(val) && val.length === 0) return
+        var arr
+        if (fieldDef.type === 'NUMBER' && fieldDef.vague) {
+          var lo = (val[0] === null || val[0] === undefined) ? null : String(val[0])
+          var hi = (val[1] === null || val[1] === undefined) ? null : String(val[1])
+          if (lo === null && hi === null) return
+          arr = [lo, hi]
+        } else if (Array.isArray(val)) {
+          arr = val.map(function(v){ return v === null || v === undefined ? null : String(v) })
+        } else {
+          arr = [String(val)]
+        }
+        // 条件值统一为 JSON 数组字符串，后端据此还原标量或 List；元素先转 String（避免数字转科学计数法），空段保留为 null
+        var strVal = JSON.stringify(arr)
+        // LINK 字段：作为跨表条件放入 conditions；key 即 search 下的字段名，后端据此反查关联表
+        if (fieldDef.type === 'LINK') {
+          conditions[fieldDef.field] = strVal
+          return
+        }
+        // REFERENCE 字段：使用 referenceField 作为实际查询字段
+        var actualField = fieldDef.field
+        if (fieldDef.type === 'REFERENCE') {
+          var refInfo = (target.referenceMap && target.referenceMap[fieldDef.field]) || {}
+          actualField = refInfo.referenceField || refInfo.storageField || fieldDef.field
+        }
+        // APPENDAGE / APPENDAGES 字段：使用 storageField 作为实际查询字段
+        if (fieldDef.type === 'APPENDAGE' || fieldDef.type === 'APPENDAGES') {
+          var appInfo = (target.appendageMap && target.appendageMap[fieldDef.field]) || {}
+          actualField = appInfo.storageField || fieldDef.field
+        }
+        // 反向映射字段（APPENDAGE/APPENDAGES 的 by、REFERENCE 的 ref）可能落到同一键：已存在则数组合并
+        var existingCond = conditions[actualField]
+        if (existingCond) {
+          conditions[actualField] = JSON.stringify(JSON.parse(existingCond).concat(arr))
+        } else {
+          conditions[actualField] = strVal
+        }
+      })
+      // tapSearch 字段：注入 tab 选中值到 conditions
+      var tsf = target.tapSearchField
+      if (tsf && target.tapSearchValue != null) {
+        conditions[tsf.field] = JSON.stringify([String(target.tapSearchValue)])
       }
-      // 条件值统一为 JSON 数组字符串，后端据此还原标量或 List；元素先转 String（避免数字转科学计数法），空段保留为 null
-      var strVal = JSON.stringify(arr)
-      // LINK 字段：作为跨表条件放入 conditions；key 即 search 下的字段名，后端据此反查关联表
-      if (fieldDef.type === 'LINK') {
-        conditions[fieldDef.field] = strVal
-        return
+      // embedded 模式：把 _sourceRefFields 中的 referenceField 注入 conditions
+      var sourceRefFields = target._sourceRefFields || []
+      sourceRefFields.forEach(function(rf) {
+        if (rf.referenceField && rf.value != null && rf.value !== '') {
+          conditions[rf.referenceField] = JSON.stringify([String(rf.value)])
+        }
+      })
+      // AI 搜索：携带提示词，由后端解析为查询条件
+      if (usePrompt === true && target.aiSearchEnabled && target.aiPrompt && target.aiPrompt.trim()) {
+        searchPrompt = target.aiPrompt.trim()
       }
-      // REFERENCE 字段：使用 referenceField 作为实际查询字段
-      var actualField = fieldDef.field
-      if (fieldDef.type === 'REFERENCE') {
-        var refInfo = (target.referenceMap && target.referenceMap[fieldDef.field]) || {}
-        actualField = refInfo.referenceField || refInfo.storageField || fieldDef.field
-      }
-      // APPENDAGE / APPENDAGES 字段：使用 storageField 作为实际查询字段
-      if (fieldDef.type === 'APPENDAGE' || fieldDef.type === 'APPENDAGES') {
-        var appInfo = (target.appendageMap && target.appendageMap[fieldDef.field]) || {}
-        actualField = appInfo.storageField || fieldDef.field
-      }
-      // 反向映射字段（APPENDAGE/APPENDAGES 的 by、REFERENCE 的 ref）可能落到同一键：已存在则数组合并
-      var existingCond = conditions[actualField]
-      if (existingCond) {
-        conditions[actualField] = JSON.stringify(JSON.parse(existingCond).concat(arr))
-      } else {
-        conditions[actualField] = strVal
-      }
-    })
+    }
     var pageBean = {
       current: (target.paginationConfig && target.paginationConfig.page) || 1,
       size:    (target.paginationConfig && target.paginationConfig.pageSize) || 10,
-      orders:  buildOrderItems(target.sortStates)
+      orders:  buildOrderItems(target.sortStates),
+      exprs:   exprs
     }
-    target.loading = true
-    // tapSearch 字段：注入 tab 选中值到 conditions
-    var tsf = target.tapSearchField
-    if (tsf && target.tapSearchValue != null) {
-      conditions[tsf.field] = JSON.stringify([String(target.tapSearchValue)])
-    }
-    // embedded 模式：把 _sourceRefFields 中的 referenceField 注入 conditions
-    var sourceRefFields = target._sourceRefFields || []
-    sourceRefFields.forEach(function(rf) {
-      if (rf.referenceField && rf.value != null && rf.value !== '') {
-        conditions[rf.referenceField] = JSON.stringify([String(rf.value)])
-      }
-    })
-    window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, pageBean: pageBean, conditions: conditions }, window.__novaMenuCode(queryName), { withLoading: false }).then(function (resp) {
+    window.fetchApi.post('/nova/table/data', { novaName: queryName, sourceNovaName: sourceNovaName, sourceFields: sourceFields, pageBean: pageBean, conditions: conditions, searchPrompt: searchPrompt }, window.__novaMenuCode(queryName), { withLoading: false }).then(function (resp) {
       var t = window.vmMap && window.vmMap[vmKey]
       if (!t) return
       // 动画期间（首屏 boot 或切 tab 表格加载动画）保持主线程空闲：
@@ -547,12 +564,12 @@ window.NovaTableJQ = (function ($) {
           if (tt && tt._pendingDataResp) {
             var r = tt._pendingDataResp
             tt._pendingDataResp = null
-            applyDataResp(vmKey, r, pageBean)
+            applyDataResp(vmKey, r, pageBean, conditions)
           }
         })
         return
       }
-      applyDataResp(vmKey, resp, pageBean)
+      applyDataResp(vmKey, resp, pageBean, conditions)
     }).catch(function () {
       var t2 = window.vmMap && window.vmMap[vmKey]
       if (t2) {
@@ -566,7 +583,7 @@ window.NovaTableJQ = (function ($) {
   }
 
   // 应用表格数据响应：设置表格数据 + 翻译，触发 Vue 渲染
-  function applyDataResp(vmKey, resp, pageBean) {
+  function applyDataResp(vmKey, resp, pageBean, conditions) {
     var t = window.vmMap && window.vmMap[vmKey]
     if (!t) return
     t.loading = false
@@ -578,6 +595,11 @@ window.NovaTableJQ = (function ($) {
     t.paginationConfig.itemCount   = resp.data.total      || 0
     t.paginationConfig.page        = resp.data.current    || pageBean.current
     t.paginationConfig.pageSize    = resp.data.size       || pageBean.size
+    // 缓存本次最终条件，供翻页/排序复用（手选条件前端本地保留，AI 表达式条件取服务端解析结果）
+    t._appliedConditions = conditions || null
+    t._appliedExprs = resp.data.exprs || null
+    // AI 解析结果（只读展示）
+    t.aiExprs = resp.data.exprs || null
     if (resp.data.novaIdFieldName)     t.novaIdFieldName          = resp.data.novaIdFieldName
     translateData(vmKey)
     // dual 右表 build 遮罩持续标记：数据已渲染，关闭遮罩，无缝衔接不露空表格
@@ -805,6 +827,11 @@ window.NovaTableJQ = (function ($) {
     })
     target.filterForm = form
     target.paginationConfig.page = 1
+    // 重置 AI 搜索状态（提示词、展示结果、翻页复用缓存）
+    target.aiPrompt = ''
+    target.aiExprs = null
+    target._appliedConditions = null
+    target._appliedExprs = null
   }
 
   // ── 翻译 formInfo 为显示值（CHOICE/BOOLEAN/REFERENCE） ──────────
