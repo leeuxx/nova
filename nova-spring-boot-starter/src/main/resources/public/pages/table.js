@@ -1997,12 +1997,18 @@ const NovaTable = {
       const usePrompt = !!(t.aiSearchEnabled && t.aiPrompt && t.aiPrompt.trim())
       window.NovaTableJQ.loadData(key, usePrompt)
     },
-    // AI 解析出的查询条件展示文本：字段标题 + 操作符 + 值
+    // AI 解析出的查询条件展示文本：字段标题 + 操作符 + 值（CHOICE 转选项标签，BOOLEAN 转是/否）
     exprText(e) {
       const op = String(e.op || 'eq')
       const head = (e.title || e.field) + ' ' + window.__t('table.ai_op_' + op.toLowerCase())
       if (op === 'IS_NULL' || op === 'IS_NOT_NULL') return head
-      const vals = (e.values || []).join(op === 'BETWEEN' ? ' ~ ' : '、')
+      const ci = this.choiceMap[e.field]
+      const bi = this.booleanMap[e.field]
+      const vals = (e.values || []).map(v => {
+        if (ci) return ci.values.find(o => String(o.value) === String(v)).label
+        if (bi && (v === 'true' || v === 'false')) return v === 'true' ? window.__t('table.yes') : window.__t('table.no')
+        return v
+      }).join(op === 'BETWEEN' ? ' ~ ' : '、')
       return head + ' ' + vals
     },
     applyTreeSearch() {

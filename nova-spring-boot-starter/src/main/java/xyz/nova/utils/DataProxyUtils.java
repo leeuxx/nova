@@ -240,7 +240,7 @@ public class DataProxyUtils {
         Class<?> conditionClass = scanNova.getNova().conditionClass();
         if (conditionClass == void.class) {
             if (hasExpr) {
-                throw new NovaException("Nova '" + novaName + "' 未声明查询条件类, 无法接收AI表达式条件");
+                throw new NovaException("Nova '" + novaName + "' does not declare a query condition class, cannot accept AI expression conditions");
             }
             return null;
         }
@@ -280,8 +280,7 @@ public class DataProxyUtils {
     private static void injectExprs(Class<?> conditionClass, Object searchObj, List<NovaExpr> exprs) {
         Field exprField = NovaFieldUtils.findExprField(conditionClass);
         if (exprField == null) {
-            throw new NovaException("查询条件类 '" + conditionClass.getName()
-                    + "' 未声明接收AI表达式的 List<NovaExpr> 约定字段");
+            throw new NovaException("Query condition class '" + conditionClass.getName() + "' does not declare the List<NovaExpr> convention field for AI expressions");
         }
         exprField.setAccessible(true);
         try {

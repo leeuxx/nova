@@ -734,23 +734,20 @@ public class NovaFieldUtils {
      * @return AI参数信息
      */
     public static AiInfo getAi(String className) {
-        AiInfo aiInfo = new AiInfo().setReview(false);
+        AiInfo aiInfo = new AiInfo().setReview(false).setSearch(false);
         NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
-            NovaField novaField = novaFieldInfo.getNovaField();
-            Edit edit = novaField.edit();
-            AiField aiField = edit.ai();
+            AiField aiField = novaFieldInfo.getNovaField().edit().ai();
             // 数据审查
-            AiField.Review review = aiField.review();
-            if (review.enable()) {
+            if (aiField.review().enable()) {
                 aiInfo.setReview(true);
             }
+            // 数据搜索
+            if (aiField.search().enable()) {
+                aiInfo.setSearch(true);
+            }
         });
-        // 数据搜索
-        Nova nova = scanNova.getNova();
-        Ai ai = nova.ai();
-        aiInfo.setSearch(ai.search());
         return aiInfo;
     }
 

@@ -70,15 +70,16 @@ public class NovaAiConst {
             ## 输入
             user 消息是一个 JSON 对象：
             - prompt: 用户的自然语言提示词
-            - fields: 可搜索字段列表，每项包含 field(属性名) 和 title(字段中文名)
+            - fields: 可搜索字段列表，每项包含 field(属性名)、title(字段中文名)、type(字段类型)
 
             ## 解析逻辑
             1. 从 prompt 中识别出查询意图，匹配到 fields 中对应的 field
             2. 识别比较关系，选择合适的操作符 op；未明确比较关系时用 eq
-            3. 值一律原样输出，不要校验其正确性或真实性，不要纠正、替换；即便某个值看起来不是真实存在的名称或数据（例如不存在的地名、不常见的人名），也必须原样保留
+            3. 除布尔字段外，值一律原样输出，不要校验其正确性或真实性，不要纠正、替换；即便某个值看起来不是真实存在的名称或数据（例如不存在的地名、不常见的人名），也必须原样保留
             4. 日期类字段要把相对时间（如“最近三天”）换算成绝对日期，格式 yyyy-MM-dd，区间用 between
-            5. 只输出能明确匹配到字段的条件，无法匹配的字段不要输出
-            6. 没有匹配到任何字段时，输出 {}
+            5. 布尔(BOOLEAN)类型字段只能理解为是/否，其值只输出 true 或 false：肯定含义（是、有、开、启用、上架等）输出 true，否定含义（否、无、关、停用、下架等）输出 false；若提示词对某个布尔字段没有表达明确的肯定或否定含义（例如给的是一个无关的值），则该字段整条不要输出，严禁输出 true/false 之外的任何值
+            6. 只输出能明确匹配到字段的条件，无法匹配的字段不要输出
+            7. 没有匹配到任何字段时，输出 {}
 
             ## 输出格式
             只输出一个 JSON 对象，key 为 fields 中的 field(属性名)，value 为表达式数组，每个表达式包含 op 和 values：
@@ -100,14 +101,20 @@ public class NovaAiConst {
             - 不要输出 fields 中不存在的属性名
             - 不要输出 op/values 之外的结构
             - 不要在 JSON 之外输出任何字符
-            - 不要因为值看起来不合理、不存在或像错别字就丢弃该条件或改写其值，任何值都要原样输出
+            - 不要因为值看起来不合理、不存在或像错别字就丢弃该条件或改写其值，除布尔字段外任何值都要原样输出
+            - 布尔字段只能输出 true 或 false，不得输出其它任何值；无法判断是/否时整条不输出
 
             ## 示例
             输入：
-            {"prompt": "金额大于900、名称为张三、最近三天创建的记录", "fields": [{"field": "name", "title": "名称"}, {"field": "amount", "title": "金额"}, {"field": "createTime", "title": "创建时间"}]}
+            {"prompt": "金额大于900、名称为张三、最近三天创建的已上架记录", "fields": [{"field": "name", "title": "名称", "type": "INPUT"}, {"field": "amount", "title": "金额", "type": "NUMBER"}, {"field": "createTime", "title": "创建时间", "type": "DATE"}, {"field": "onSale", "title": "是否上架", "type": "BOOLEAN"}]}
             输出：
-            {"name":[{"op":"eq","values":["张三"]}],"amount":[{"op":"gt","values":["900"]}],"createTime":[{"op":"between","values":["2026-10-13","2026-10-15"]}]}
+            {"name":[{"op":"eq","values":["张三"]}],"amount":[{"op":"gt","values":["900"]}],"createTime":[{"op":"between","values":["2026-10-13","2026-10-15"]}],"onSale":[{"op":"eq","values":["true"]}]}
             （示例中的日期仅为格式示意，请按实际当前日期换算）
+
+            输入：
+            {"prompt": "布尔值1为张三", "fields": [{"field": "onSale", "title": "布尔值1", "type": "BOOLEAN"}]}
+            输出：
+            {}
             """;
 
 }

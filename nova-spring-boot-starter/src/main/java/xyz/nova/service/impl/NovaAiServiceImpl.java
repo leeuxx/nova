@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.sub.nova.field.Edit;
+import xyz.nova.annotation.sub.nova.field.View;
+import xyz.nova.annotation.sub.nova.field.edit.AiField;
 import xyz.nova.config.NovaAiConfig;
 import xyz.nova.config.NovaApplication;
 import xyz.nova.constant.NovaAiConst;
@@ -24,9 +26,11 @@ import xyz.nova.utils.NovaUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -224,20 +228,45 @@ public class NovaAiServiceImpl implements NovaAiService {
     @Override
     public List<NovaExpr> parseSearch(String novaName, String prompt) {
         Locale locale = LocaleContextHolder.getLocale();
-        // 可查询字段：取实体全部字段（含未开放为搜索字段的条件字段），排除不可查询组件
+        // 词表：仅取字段级 @AiField.Search(enable=true) 声明的字段，排除不可查询组件与集合引用
         Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
         NovaApplication.ScanNova scanNova = scanNovas.get(novaName);
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         JSONArray fields = new JSONArray();
         novaFields.forEach((field, novaFieldInfo) -> {
-            if (!NovaFieldUtils.isQueryType(novaFieldInfo.getType())) {
+            Edit.Type type = novaFieldInfo.getType();
+            // 集合引用(APPENDAGES)不支持 AI 搜索
+            if (!NovaFieldUtils.isQueryType(type) || type == Edit.Type.APPENDAGES) {
                 return;
             }
             NovaField novaField = novaFieldInfo.getNovaField();
+            // 字段级 AI 搜索开关
+            AiField.Search search = novaField.edit().ai().search();
+            if (!search.enable()) {
+                return;
+            }
+            // 引用/附属：展开声明的 @View，views 为空表示全部；用「字段.column」命名，避免与主 Nova 属性重名
+            if (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE) {
+                Map<String, NovaApplication.ScanNova.NovaFieldInfo> refFields =
+                        scanNovas.get(novaFieldInfo.getFieldClass().getSimpleName()).getNovaFields();
+                Set<String> views = new HashSet<>(List.of(search.views()));
+                for (View view : novaField.views()) {
+                    if (!views.isEmpty() && !views.contains(view.column())) {
+                        continue;
+                    }
+                    fields.put(new JSONObject()
+                            .set("field", field + "." + view.column())
+                            .set("title", NovaI18nUtils.get(view.title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
+                            .set("type", refFields.get(view.column()).getType().name())
+                    );
+                }
+                return;
+            }
             String title = NovaI18nUtils.get(novaField.edit().title(), locale, NovaI18nUtils.SourceType.ANNOTATE);
             fields.put(new JSONObject()
                     .set("field", field)
                     .set("title", title)
+                    .set("type", type.name())
             );
         });
         // 组装输入
@@ -270,33 +299,42 @@ public class NovaAiServiceImpl implements NovaAiService {
         }
         // 元数据
         Map<String, NovaFieldUtils.ChoiceInfo> choices = NovaFieldUtils.getChoice(novaName, locale);
-        Map<String, NovaFieldUtils.ReferenceTypeInfo> references = NovaFieldUtils.getReference(novaName);
-        Map<String, NovaFieldUtils.AppendageTypeInfo> appendages = NovaFieldUtils.getAppendage(novaName);
         // 逐字段转为表达式
         List<NovaExpr> exprs = new ArrayList<>();
         for (String field : result.keySet()) {
-            NovaApplication.ScanNova.NovaFieldInfo novaFieldInfo = novaFields.get(field);
-            if (novaFieldInfo == null || !NovaFieldUtils.isQueryType(novaFieldInfo.getType())) {
-                throw aiParseFail("AI returned unknown field: " + field);
-            }
             JSONArray array = result.getJSONArray(field);
             if (array == null || array.isEmpty()) {
                 throw aiParseFail("AI returned malformed field expression: " + field);
             }
-            Edit.Type type = novaFieldInfo.getType();
-            String title = NovaI18nUtils.get(novaFieldInfo.getNovaField().edit().title(), locale, NovaI18nUtils.SourceType.ANNOTATE);
-            // 实际查询字段
-            String actualField = field;
-            if (type == Edit.Type.REFERENCE) {
-                NovaFieldUtils.ReferenceTypeInfo reference = references.get(field);
-                if (reference != null) {
-                    actualField = reference.getRef();
+            // 引用/附属子属性「对象.column」：校验主字段类型与声明的 @View，标题取 view.title；顶层字段按自身类型校验
+            Edit.Type type = null;
+            String title;
+            int dot = field.indexOf('.');
+            if (dot >= 0) {
+                String base = field.substring(0, dot);
+                String sub = field.substring(dot + 1);
+                NovaApplication.ScanNova.NovaFieldInfo baseInfo = novaFields.get(base);
+                if (baseInfo == null
+                        || (baseInfo.getType() != Edit.Type.REFERENCE && baseInfo.getType() != Edit.Type.APPENDAGE)) {
+                    throw aiParseFail("AI returned unknown field: " + field);
                 }
-            } else if (type == Edit.Type.APPENDAGE || type == Edit.Type.APPENDAGES) {
-                NovaFieldUtils.AppendageTypeInfo appendage = appendages.get(field);
-                if (appendage != null) {
-                    actualField = appendage.getBy();
+                title = null;
+                for (View view : baseInfo.getNovaField().views()) {
+                    if (view.column().equals(sub)) {
+                        title = NovaI18nUtils.get(view.title(), locale, NovaI18nUtils.SourceType.ANNOTATE);
+                        break;
+                    }
                 }
+                if (title == null) {
+                    throw aiParseFail("AI returned unknown field: " + field);
+                }
+            } else {
+                NovaApplication.ScanNova.NovaFieldInfo novaFieldInfo = novaFields.get(field);
+                if (novaFieldInfo == null || !NovaFieldUtils.isQueryType(novaFieldInfo.getType())) {
+                    throw aiParseFail("AI returned unknown field: " + field);
+                }
+                type = novaFieldInfo.getType();
+                title = NovaI18nUtils.get(novaFieldInfo.getNovaField().edit().title(), locale, NovaI18nUtils.SourceType.ANNOTATE);
             }
             for (Object element : array) {
                 JSONObject expr = JSONUtil.parseObj(element);
@@ -308,7 +346,7 @@ public class NovaAiServiceImpl implements NovaAiService {
                     throw aiParseFail("AI returned unknown operator: " + field + "=" + opStr);
                 }
                 JSONArray valueArr = expr.getJSONArray("values");
-                // 值原样透传，仅 CHOICE 需要标签转值以匹配存储值
+                // 值原样透传，仅顶层 CHOICE 需要标签转值以匹配存储值；引用/附属子属性的值由开发者自行解析
                 List<String> values = new ArrayList<>();
                 if (valueArr != null) {
                     for (Object raw : valueArr) {
@@ -349,7 +387,7 @@ public class NovaAiServiceImpl implements NovaAiService {
                     // 其余操作符：恰好 1 个
                     throw aiParseFail("Field " + field + " operator " + op.name().toLowerCase() + " requires exactly 1 value");
                 }
-                exprs.add(new NovaExpr().setField(actualField).setTitle(title).setOp(op).setValues(values));
+                exprs.add(new NovaExpr().setField(field).setTitle(title).setOp(op).setValues(values));
             }
         }
         return exprs;
