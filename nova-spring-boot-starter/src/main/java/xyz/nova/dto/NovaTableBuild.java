@@ -3,6 +3,7 @@ package xyz.nova.dto;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import xyz.nova.annotation.comment.Comment;
+import xyz.nova.utils.NovaFieldUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -660,6 +661,9 @@ public class NovaTableBuild {
 
             @Comment("开启搜索")
             private Boolean search;
+
+            @Comment("可搜索字段")
+            private List<NovaFieldUtils.AiSearchFieldInfo> fields;
 
         }
 

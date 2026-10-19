@@ -389,6 +389,7 @@ const NovaTable = {
       tapSearchField:  null,
       tapSearchValue:  null,
       aiSearchEnabled: false,
+      aiSearchFields:  [],
       aiPrompt:        '',
       aiExprs:         null,
       showForm:       false,
@@ -4414,7 +4415,19 @@ const NovaTable = {
                 @keydown.enter="handleQuery"
               >
                 <template #suffix>
-                  <span class="ai-search-tag">AI</span>
+                  <n-popover v-if="aiSearchFields.length" trigger="hover" placement="bottom-end" :show-arrow="false" style="max-width:420px">
+                    <template #trigger>
+                      <span class="ai-search-tag ai-fields-trigger">AI</span>
+                    </template>
+                    <div class="ai-fields-pop">
+                      <div class="ai-fields-title">{{ __t('table.ai_search_fields_title') }}</div>
+                      <div class="ai-fields-list">
+                        <div v-for="f in aiSearchFields" :key="f.field" class="ai-fields-item">
+                          <span class="ai-fields-name">{{ f.title }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </n-popover>
                 </template>
               </n-input>
               <n-select v-else-if="field.type === 'CHOICE' && choiceMap[field.field] && choiceMap[field.field].selectType === 'SINGLE' && !field.vague"

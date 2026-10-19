@@ -8,10 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.sub.nova.field.Edit;
 import xyz.nova.annotation.sub.nova.field.View;
-import xyz.nova.annotation.sub.nova.field.edit.AiField;
 import xyz.nova.config.NovaAiConfig;
 import xyz.nova.config.NovaApplication;
 import xyz.nova.constant.NovaAiConst;
@@ -26,11 +24,9 @@ import xyz.nova.utils.NovaUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -228,47 +224,18 @@ public class NovaAiServiceImpl implements NovaAiService {
     @Override
     public List<NovaExpr> parseSearch(String novaName, String prompt) {
         Locale locale = LocaleContextHolder.getLocale();
-        // 词表：仅取字段级 @AiField.Search(enable=true) 声明的字段，排除不可查询组件与集合引用
         Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
         NovaApplication.ScanNova scanNova = scanNovas.get(novaName);
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        // 词表：字段级 @AiField.Search 声明的可搜字段（与表头下拉提示同源）
         JSONArray fields = new JSONArray();
-        novaFields.forEach((field, novaFieldInfo) -> {
-            Edit.Type type = novaFieldInfo.getType();
-            // 集合引用(APPENDAGES)不支持 AI 搜索
-            if (!NovaFieldUtils.isQueryType(type) || type == Edit.Type.APPENDAGES) {
-                return;
-            }
-            NovaField novaField = novaFieldInfo.getNovaField();
-            // 字段级 AI 搜索开关
-            AiField.Search search = novaField.edit().ai().search();
-            if (!search.enable()) {
-                return;
-            }
-            // 引用/附属：展开声明的 @View，views 为空表示全部；用「字段.column」命名，避免与主 Nova 属性重名
-            if (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE) {
-                Map<String, NovaApplication.ScanNova.NovaFieldInfo> refFields =
-                        scanNovas.get(novaFieldInfo.getFieldClass().getSimpleName()).getNovaFields();
-                Set<String> views = new HashSet<>(List.of(search.views()));
-                for (View view : novaField.views()) {
-                    if (!views.isEmpty() && !views.contains(view.column())) {
-                        continue;
-                    }
-                    fields.put(new JSONObject()
-                            .set("field", field + "." + view.column())
-                            .set("title", NovaI18nUtils.get(view.title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
-                            .set("type", refFields.get(view.column()).getType().name())
-                    );
-                }
-                return;
-            }
-            String title = NovaI18nUtils.get(novaField.edit().title(), locale, NovaI18nUtils.SourceType.ANNOTATE);
-            fields.put(new JSONObject()
-                    .set("field", field)
-                    .set("title", title)
-                    .set("type", type.name())
-            );
-        });
+        NovaFieldUtils.getAiSearchFields(novaName, locale).forEach(f ->
+                fields.put(new JSONObject()
+                        .set("field", f.getField())
+                        .set("title", f.getTitle())
+                        .set("type", f.getType().name())
+                )
+        );
         // 组装输入
         JSONObject input = new JSONObject()
                 .set("prompt", prompt)

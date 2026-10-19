@@ -2,6 +2,7 @@ package xyz.nova.utils;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.springframework.context.i18n.LocaleContextHolder;
 import xyz.nova.annotation.Nova;
 import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.comment.Comment;
@@ -734,21 +735,67 @@ public class NovaFieldUtils {
      * @return AI参数信息
      */
     public static AiInfo getAi(String className) {
-        AiInfo aiInfo = new AiInfo().setReview(false).setSearch(false);
+        AiInfo aiInfo = new AiInfo().setReview(false);
         NovaApplication.ScanNova scanNova = getScanNova(className);
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         novaFields.forEach((field, novaFieldInfo) -> {
-            AiField aiField = novaFieldInfo.getNovaField().edit().ai();
             // 数据审查
-            if (aiField.review().enable()) {
+            if (novaFieldInfo.getNovaField().edit().ai().review().enable()) {
                 aiInfo.setReview(true);
             }
-            // 数据搜索
-            if (aiField.search().enable()) {
-                aiInfo.setSearch(true);
-            }
         });
+        // 数据搜索：与解析词表同源，有可搜字段即开启
+        List<AiSearchFieldInfo> searchFields = getAiSearchFields(className, LocaleContextHolder.getLocale());
+        aiInfo.setSearchFields(searchFields)
+                .setSearch(!searchFields.isEmpty());
         return aiInfo;
+    }
+
+    /**
+     * 获取 AI 可搜索字段清单（与 AI 解析词表同源）
+     *
+     * @param className 类名
+     * @param locale    语言
+     * @return AI 可搜索字段
+     */
+    public static List<AiSearchFieldInfo> getAiSearchFields(String className, Locale locale) {
+        NovaApplication.ScanNova scanNova = getScanNova(className);
+        Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        List<AiSearchFieldInfo> result = new ArrayList<>();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            Edit.Type type = novaFieldInfo.getType();
+            // 集合引用(APPENDAGES)不支持 AI 搜索
+            if (!isQueryType(type) || type == Edit.Type.APPENDAGES) {
+                return;
+            }
+            NovaField novaField = novaFieldInfo.getNovaField();
+            AiField.Search search = novaField.edit().ai().search();
+            if (!search.enable()) {
+                return;
+            }
+            // 引用/附属：展开声明的 @View，views 为空表示全部，用「字段.column」命名
+            if (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE) {
+                Map<String, NovaApplication.ScanNova.NovaFieldInfo> refFields =
+                        scanNovas.get(novaFieldInfo.getFieldClass().getSimpleName()).getNovaFields();
+                Set<String> views = new HashSet<>(List.of(search.views()));
+                for (View view : novaField.views()) {
+                    if (!views.isEmpty() && !views.contains(view.column())) {
+                        continue;
+                    }
+                    result.add(new AiSearchFieldInfo()
+                            .setField(field + "." + view.column())
+                            .setTitle(NovaI18nUtils.get(view.title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
+                            .setType(refFields.get(view.column()).getType()));
+                }
+                return;
+            }
+            result.add(new AiSearchFieldInfo()
+                    .setField(field)
+                    .setTitle(NovaI18nUtils.get(novaField.edit().title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
+                    .setType(type));
+        });
+        return result;
     }
 
     /**
@@ -1253,6 +1300,24 @@ public class NovaFieldUtils {
 
         @Comment("开启搜索")
         private Boolean search;
+
+        @Comment("可搜索字段")
+        private List<AiSearchFieldInfo> searchFields;
+
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class AiSearchFieldInfo {
+
+        @Comment("属性名")
+        private String field;
+
+        @Comment("名称")
+        private String title;
+
+        @Comment("类型")
+        private Edit.Type type;
 
     }
 }

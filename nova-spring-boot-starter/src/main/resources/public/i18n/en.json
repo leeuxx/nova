@@ -119,6 +119,7 @@
   "table.searching": "Searching...",
   "table.ai_search_label": "Prompt",
   "table.ai_search_placeholder": "Describe in natural language",
+  "table.ai_search_fields_title": "Searchable fields",
   "table.ai_parsed_prefix": "AI understood as",
   "table.ai_op_eq": "equals",
   "table.ai_op_ne": "not equals",

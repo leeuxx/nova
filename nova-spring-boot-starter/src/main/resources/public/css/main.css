@@ -754,6 +754,70 @@ html.theme-transitioning.to-light::view-transition-new(root) {
   border: 1px solid rgba(162, 99, 26, 0.2);
   border-radius: 999px;
 }
+/* AI 可搜索字段清单下拉 */
+.ai-fields-trigger {
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  transition: color 0.22s ease, background 0.22s ease,
+    border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+}
+/* 悬浮时掠过的高光 */
+.ai-fields-trigger::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%,
+    rgba(226, 160, 90, 0.5) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.45s ease;
+  pointer-events: none;
+}
+.ai-fields-trigger:hover {
+  color: #92400E;
+  background: rgba(162, 99, 26, 0.2);
+  border-color: rgba(162, 99, 26, 0.45);
+  box-shadow: 0 1px 6px rgba(162, 99, 26, 0.28);
+}
+.ai-fields-trigger:hover::before {
+  transform: translateX(100%);
+}
+.ai-fields-trigger:active {
+  transform: scale(0.94);
+}
+.ai-fields-pop {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ai-fields-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+}
+.ai-fields-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.ai-fields-item {
+  display: flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  font-size: 13px;
+  color: #B45309;
+  background: rgba(162, 99, 26, 0.08);
+  border: 1px solid rgba(162, 99, 26, 0.2);
+  border-radius: 6px;
+}
+.ai-fields-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .dark .ai-search-field {
   background: #231A12;
   box-shadow: 0 0 0 1px rgba(162, 99, 26, 0.45);
@@ -769,6 +833,20 @@ html.theme-transitioning.to-light::view-transition-new(root) {
   border-right-color: rgba(162, 99, 26, 0.32);
 }
 .dark .ai-search-tag {
+  color: #E3AC72;
+  background: rgba(162, 99, 26, 0.16);
+  border-color: rgba(162, 99, 26, 0.3);
+}
+.dark .ai-fields-trigger {
+  color: #E3AC72;
+}
+.dark .ai-fields-trigger:hover {
+  color: #F2C08A;
+  background: rgba(162, 99, 26, 0.32);
+  border-color: rgba(226, 160, 90, 0.5);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+.dark .ai-fields-item {
   color: #E3AC72;
   background: rgba(162, 99, 26, 0.16);
   border-color: rgba(162, 99, 26, 0.3);

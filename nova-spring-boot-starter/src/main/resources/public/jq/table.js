@@ -193,6 +193,7 @@ window.NovaTableJQ = (function ($) {
     // AI 自然语言搜索：buildVo.ai.search === true，作为第一个条件项塞进 searchFields
     var aiSearchEnabled = !!(resp.data.ai && resp.data.ai.search === true)
     target.aiSearchEnabled = aiSearchEnabled
+    target.aiSearchFields = (resp.data.ai && resp.data.ai.fields) || []
     target.aiPrompt = ''
     target.aiExprs = null
     var fields = resp.data.search || []
