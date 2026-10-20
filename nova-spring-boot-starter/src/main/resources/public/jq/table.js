@@ -1219,7 +1219,17 @@ window.NovaTableJQ = (function ($) {
         target.linkMap       = resp.data.link        || {}
         target.drillMap      = resp.data.drill       || {}
         target.tipHtml       = (resp.data.tooltip && resp.data.tooltip.value) || ''   // 顶部提示面板内容；picker 不显示，但保持字段一致
-        var fields = resp.data.search || []
+        // AI 自然语言搜索：与主表一致，开启时作为第一个条件项
+        var aiSearchEnabled = !!(resp.data.ai && resp.data.ai.search === true)
+        target.aiSearchEnabled = aiSearchEnabled
+        target.aiSearchFields = (resp.data.ai && resp.data.ai.fields) || []
+        target.aiPrompt = ''
+        target.aiExprs = null
+        target._appliedPrompt = null
+        var fields = (resp.data.search || []).slice()
+        if (aiSearchEnabled) {
+          fields.unshift({ field: '__ai_search__', title: 'AI 搜索', type: 'AI_SEARCH' })
+        }
         target.searchFields = fields
         var form = {}
         fields.forEach(function (f) {
