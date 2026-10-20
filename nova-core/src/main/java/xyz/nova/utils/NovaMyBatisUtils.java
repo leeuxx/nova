@@ -355,19 +355,18 @@ public class NovaMyBatisUtils {
             throw new NovaException("Invalid boolean AI expression value: '" + value + "'");
         }
         if (Edit.Type.DATE.equals(type)) {
-            LocalDate date;
+            String dateType = novaFieldInfo.getNovaField().edit().dateType().type().name();
             try {
-                date = LocalDate.parse(value);
+                return switch (dateType) {
+                    case "DATE" -> LocalDate.parse(value).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    case "YEAR_MONTH" -> YearMonth.parse(value).format(DateTimeFormatter.ofPattern("yyyy-MM"));
+                    case "YEAR" -> Year.parse(value).format(DateTimeFormatter.ofPattern("yyyy"));
+                    default -> LocalDateTime.parse(value, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                };
             } catch (DateTimeParseException e) {
                 throw new NovaException("Invalid date AI expression value: '" + value + "'");
             }
-            String dateType = novaFieldInfo.getNovaField().edit().dateType().type().name();
-            return switch (dateType) {
-                case "DATE" -> date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                case "YEAR_MONTH" -> date.format(DateTimeFormatter.ofPattern("yyyy-MM"));
-                case "YEAR" -> date.format(DateTimeFormatter.ofPattern("yyyy"));
-                default -> date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            };
         }
         return value;
     }

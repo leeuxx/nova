@@ -774,6 +774,10 @@ public class NovaFieldUtils {
             if (!search.enable()) {
                 return;
             }
+            // 操作符：声明为空表示全部
+            List<NovaExpr.Op> ops = search.ops().length == 0
+                    ? List.of(NovaExpr.Op.values())
+                    : List.of(search.ops());
             // 引用/附属：展开声明的 @View，views 为空表示全部，用「字段.column」命名
             if (type == Edit.Type.REFERENCE || type == Edit.Type.APPENDAGE) {
                 Map<String, NovaApplication.ScanNova.NovaFieldInfo> refFields =
@@ -783,17 +787,23 @@ public class NovaFieldUtils {
                     if (!views.isEmpty() && !views.contains(view.column())) {
                         continue;
                     }
+                    NovaApplication.ScanNova.NovaFieldInfo viewField = refFields.get(view.column());
                     result.add(new AiSearchFieldInfo()
                             .setField(field + "." + view.column())
                             .setTitle(NovaI18nUtils.get(view.title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
-                            .setType(refFields.get(view.column()).getType()));
+                            .setType(viewField.getType())
+                            .setOps(ops)
+                            .setDateType(viewField.getType() == Edit.Type.DATE
+                                    ? viewField.getNovaField().edit().dateType().type() : null));
                 }
                 return;
             }
             result.add(new AiSearchFieldInfo()
                     .setField(field)
                     .setTitle(NovaI18nUtils.get(novaField.edit().title(), locale, NovaI18nUtils.SourceType.ANNOTATE))
-                    .setType(type));
+                    .setType(type)
+                    .setOps(ops)
+                    .setDateType(type == Edit.Type.DATE ? novaField.edit().dateType().type() : null));
         });
         return result;
     }
@@ -1318,6 +1328,12 @@ public class NovaFieldUtils {
 
         @Comment("类型")
         private Edit.Type type;
+
+        @Comment("允许的操作符")
+        private List<NovaExpr.Op> ops;
+
+        @Comment("日期格式")
+        private DateType.Type dateType;
 
     }
 }

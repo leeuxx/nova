@@ -1,6 +1,7 @@
 package xyz.nova.annotation.sub.nova.field.edit;
 
 import xyz.nova.annotation.comment.Comment;
+import xyz.nova.entity.data.NovaExpr;
 
 public @interface AiField {
 
@@ -27,6 +28,9 @@ public @interface AiField {
 
         @Comment("可搜索的view列,为空表示全部")
         String[] views() default {};
+
+        @Comment("允许的操作符,为空表示全部")
+        NovaExpr.Op[] ops() default {};
 
     }
 

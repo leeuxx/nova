@@ -23,10 +23,15 @@ import xyz.nova.utils.NovaFieldUtils;
 import xyz.nova.utils.NovaUtils;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -229,16 +234,23 @@ public class NovaAiServiceImpl implements NovaAiService {
         Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
         // 词表：字段级 @AiField.Search 声明的可搜字段（与表头下拉提示同源）
         JSONArray fields = new JSONArray();
-        NovaFieldUtils.getAiSearchFields(novaName, locale).forEach(f ->
-                fields.put(new JSONObject()
-                        .set("field", f.getField())
-                        .set("title", f.getTitle())
-                        .set("type", f.getType().name())
-                )
-        );
+        Map<String, Set<NovaExpr.Op>> allowedOps = new HashMap<>();
+        for (NovaFieldUtils.AiSearchFieldInfo f : NovaFieldUtils.getAiSearchFields(novaName, locale)) {
+            // ops 不下发：模型只做语义映射，可用性由 Java 按白名单判定，避免模型为凑白名单翻转关系
+            JSONObject fieldJson = new JSONObject()
+                    .set("field", f.getField())
+                    .set("title", f.getTitle())
+                    .set("type", f.getType().name());
+            if (f.getDateType() != null) {
+                fieldJson.set("dateType", f.getDateType().name());
+            }
+            fields.put(fieldJson);
+            allowedOps.put(f.getField(), new HashSet<>(f.getOps()));
+        }
         // 组装输入
         JSONObject input = new JSONObject()
                 .set("prompt", prompt)
+                .set("today", LocalDate.now().toString())
                 .set("fields", fields);
         // 模型配置
         Map<String, NovaAiConfig.OpenAiConfig> openAis = novaAiConfig.getOpenAis();
@@ -303,6 +315,12 @@ public class NovaAiServiceImpl implements NovaAiService {
                 type = novaFieldInfo.getType();
                 title = NovaI18nUtils.get(novaFieldInfo.getNovaField().edit().title(), locale, NovaI18nUtils.SourceType.ANNOTATE);
             }
+            Set<NovaExpr.Op> allowed = allowedOps.get(field);
+            if (allowed == null) {
+                throw aiParseFail("AI returned field not enabled for search: " + field);
+            }
+            List<NovaExpr> fieldExprs = new ArrayList<>();
+            boolean dropped = false;
             for (Object element : array) {
                 JSONObject expr = JSONUtil.parseObj(element);
                 String opStr = expr.getStr("op", "eq");
@@ -311,6 +329,10 @@ public class NovaAiServiceImpl implements NovaAiService {
                     op = NovaExpr.Op.valueOf(opStr.trim().toUpperCase());
                 } catch (IllegalArgumentException e) {
                     throw aiParseFail("AI returned unknown operator: " + field + "=" + opStr);
+                }
+                if (!allowed.contains(op)) {
+                    dropped = true;
+                    break;
                 }
                 JSONArray valueArr = expr.getJSONArray("values");
                 // 值原样透传，仅顶层 CHOICE 需要标签转值以匹配存储值；引用/附属子属性的值由开发者自行解析
@@ -354,8 +376,15 @@ public class NovaAiServiceImpl implements NovaAiService {
                     // 其余操作符：恰好 1 个
                     throw aiParseFail("Field " + field + " operator " + op.name().toLowerCase() + " requires exactly 1 value");
                 }
-                exprs.add(new NovaExpr().setField(field).setTitle(title).setOp(op).setValues(values));
+                fieldExprs.add(new NovaExpr().setField(field).setTitle(title).setOp(op).setValues(values));
             }
+            if (!dropped) {
+                exprs.addAll(fieldExprs);
+            }
+        }
+        // 条件全部因操作符不可用被丢弃时按解析失败处理，避免静默退化成全量查询
+        if (exprs.isEmpty()) {
+            throw aiParseFail("No query condition parsed from prompt");
         }
         return exprs;
     }
