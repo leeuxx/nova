@@ -1986,6 +1986,7 @@ const NovaTable = {
         this.aiExprs = null
         this._appliedConditions = null
         this._appliedExprs = null
+        this._appliedPrompt = null
         window.NovaTableJQ.loadData(this._vmKey)
       } else {
         window.NovaTableJQ.handleReset()
@@ -1994,22 +1995,36 @@ const NovaTable = {
     onTapSelect(val) {
       this.tapSearchValue = (val === '__all__' ? null : val)
       const self = this
-      setTimeout(function() { self.handleQuery() }, 100)
+      setTimeout(function() { self.handleQuery('tab') }, 100)
     },
-    handleQuery() {
+    handleQuery(source) {
       const t = this
       if (t.isTree) {
         t.applyTreeSearch()
         return
       }
-      const snapshot = JSON.stringify([t.filterForm, t.aiPrompt])
+      const snapshot = JSON.stringify([t.filterForm, t.aiPrompt, t.tapSearchValue])
       if (snapshot !== t._lastFilterSnapshot) {
         t.paginationConfig.page = 1
         t._lastFilterSnapshot = snapshot
       }
       const key = (t.pickerMode || t.embeddedMode || t.dualMode) ? t._vmKey : t.novaName
       // 有提示词则携带，交由后端解析；翻页时不再重复解析
-      const usePrompt = !!(t.aiSearchEnabled && t.aiPrompt && t.aiPrompt.trim())
+      const hasPrompt = !!(t.aiSearchEnabled && t.aiPrompt && t.aiPrompt.trim())
+      let usePrompt
+      if (source === 'tab') {
+        // 切 tab 只改变手选条件，提示词未变且已有解析结果时复用表达式，避免重复解析
+        usePrompt = hasPrompt
+          ? ((t._appliedExprs && t._appliedPrompt === t.aiPrompt) ? 'reuse' : true)
+          : false
+      } else {
+        usePrompt = hasPrompt
+      }
+      if (usePrompt === true) {
+        t._appliedPrompt = t.aiPrompt
+      } else if (!hasPrompt) {
+        t._appliedPrompt = null
+      }
       window.NovaTableJQ.loadData(key, usePrompt)
     },
     // AI 解析出的查询条件展示文本：字段标题 + 操作符 + 值（CHOICE 转选项标签，BOOLEAN 转是/否）

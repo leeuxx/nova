@@ -392,16 +392,18 @@ public class NovaTableServiceImpl implements NovaTableService {
         // 搜索条件（conditions 值已为 JSON 数组字符串，直接透传给 mapToSearchObj）
         Map<String, String> requestConditions = novaTableData.getConditions();
         String searchPrompt = novaTableData.getSearchPrompt();
-        // AI表达式条件：首次由提示词解析，翻页复用前端回传的 exprs
+        // AI表达式条件：首次由提示词解析，翻页/切换tab复用前端回传的 exprs
         List<NovaExpr> exprs;
         if (searchPrompt != null && !searchPrompt.isBlank()) {
             exprs = novaAiService.parseSearch(novaName, searchPrompt);
-            // 手选已有该字段则移除对应 AI 表达式（手选优先）
-            if (requestConditions != null && !requestConditions.isEmpty()) {
-                exprs.removeIf(expr -> requestConditions.containsKey(expr.getField()));
-            }
         } else {
             exprs = pageBean.getExprs();
+        }
+        // 手选已有该字段则本次查询不使用对应 AI 表达式（手选优先）；exprs 保持完整，供前端跨 tab/翻页复用
+        List<NovaExpr> queryExprs = exprs;
+        if (exprs != null && requestConditions != null && !requestConditions.isEmpty()) {
+            queryExprs = new ArrayList<>(exprs);
+            queryExprs.removeIf(expr -> requestConditions.containsKey(expr.getField()));
         }
         // 排序
         List<OrderItemBean> requestOrders = new ArrayList<>();
@@ -414,7 +416,7 @@ public class NovaTableServiceImpl implements NovaTableService {
         Fetch queryRequest = new Fetch()
                 .setCurrent(pageBean.getCurrent())
                 .setSize(pageBean.getSize())
-                .setCondition(DataProxyUtils.mapToSearchObj(novaName, requestConditions, exprs))
+                .setCondition(DataProxyUtils.mapToSearchObj(novaName, requestConditions, queryExprs))
                 .setOrders(requestOrders)
                 .setNovaName(novaTableData.getSourceNovaName())
                 .setContext(novaTableData.getSourceFields());

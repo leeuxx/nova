@@ -459,9 +459,10 @@ window.NovaTableJQ = (function ($) {
 
   // ── 加载表格数据 ──────────────────────────────────────────────
   // vmKey: vmMap 中的 key（普通表格 = novaName，picker = __picker_xxx）
-  // usePrompt: true  → 新查询，携带 AI 提示词交由后端解析
-  //            false → 新查询，不带提示词（清空缓存重建条件）
-  //            缺省  → 翻页/排序等，复用后端上次返回的最终条件（含 AI 解析结果），避免重复解析
+  // usePrompt: true    → 新查询，携带 AI 提示词交由后端解析
+  //            'reuse' → 重建条件，复用已解析的 AI 表达式（如切换 tapSearch tab）
+  //            false   → 新查询，不带提示词（清空缓存重建条件）
+  //            缺省    → 翻页/排序等，复用后端上次返回的最终条件（含 AI 解析结果），避免重复解析
   function loadData(vmKey, usePrompt) {
     var target = window.vmMap && window.vmMap[vmKey]
     if (!target) return
@@ -482,8 +483,13 @@ window.NovaTableJQ = (function ($) {
       conditions = target._appliedConditions || {}
       exprs = target._appliedExprs || null
     } else {
+      // 复用模式下先取出已解析表达式，重建条件时不清空它
+      if (usePrompt === 'reuse') {
+        exprs = target._appliedExprs || null
+      } else {
+        target._appliedExprs = null
+      }
       target._appliedConditions = null
-      target._appliedExprs = null
       // 过滤空值条件，按后端结构组装
       var form = target.filterForm || {}
       var searchFields = target.searchFields || []
@@ -544,6 +550,10 @@ window.NovaTableJQ = (function ($) {
       // AI 搜索：携带提示词，由后端解析为查询条件
       if (usePrompt === true && target.aiSearchEnabled && target.aiPrompt && target.aiPrompt.trim()) {
         searchPrompt = target.aiPrompt.trim()
+      }
+      // 复用模式：请求期间翻页/排序需拿到本次重建的条件
+      if (usePrompt === 'reuse') {
+        target._appliedConditions = conditions
       }
     }
     var pageBean = {
@@ -833,6 +843,7 @@ window.NovaTableJQ = (function ($) {
     target.aiExprs = null
     target._appliedConditions = null
     target._appliedExprs = null
+    target._appliedPrompt = null
   }
 
   // ── 翻译 formInfo 为显示值（CHOICE/BOOLEAN/REFERENCE） ──────────
