@@ -120,6 +120,7 @@
   "table.ai_search_label": "프롬프트",
   "table.ai_search_placeholder": "자연어로 설명",
   "table.ai_search_fields_title": "검색 가능한 필드",
+  "table.ai_searchable_tip": "AI 검색 지원",
   "table.ai_parsed_prefix": "AI 해석",
   "table.ai_op_eq": "같음",
   "table.ai_op_ne": "같지 않음",

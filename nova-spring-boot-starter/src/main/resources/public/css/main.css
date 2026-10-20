@@ -754,6 +754,30 @@ html.theme-transitioning.to-light::view-transition-new(root) {
   border: 1px solid rgba(162, 99, 26, 0.2);
   border-radius: 999px;
 }
+/* 表头：支持 AI 搜索的列标记 */
+.ai-col-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 14px;
+  padding: 0 4px;
+  margin-right: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  color: #B45309;
+  background: rgba(162, 99, 26, 0.08);
+  border: 1px solid rgba(162, 99, 26, 0.2);
+  border-radius: 999px;
+  cursor: default;
+}
+.dark .ai-col-badge {
+  color: #E3AC72;
+  background: rgba(162, 99, 26, 0.16);
+  border-color: rgba(162, 99, 26, 0.3);
+}
 /* AI 可搜索字段清单下拉 */
 .ai-fields-trigger {
   position: relative;

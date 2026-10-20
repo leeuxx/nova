@@ -841,6 +841,7 @@ const NovaTable = {
         cols.push({ type: 'selection', title: '', key: 'selection', width: 50 })
       }
 
+      const aiSearchFieldSet = new Set(vm.aiSearchFields.map(f => f.field))
       this.tableColumns.forEach((col, index) => {
         const isTreeTable = vm.isTree
         const colDef = {
@@ -870,9 +871,22 @@ const NovaTable = {
           }
         }
 
-        if (col.desc || col.sortable) {
+        const aiSearchable = aiSearchFieldSet.has(col.field)
+        if (aiSearchable || col.desc || col.sortable) {
           colDef.title = () => {
-            const parts = [h('span', col.title)]
+            const parts = []
+            if (aiSearchable) {
+              parts.push(
+                h(NTooltip, { trigger: 'hover', placement: 'top' }, {
+                  default: () => window.__t('table.ai_searchable_tip'),
+                  trigger: () => h('span', {
+                    class: 'ai-col-badge',
+                    onClick: (e) => e.stopPropagation()
+                  }, 'AI')
+                })
+              )
+            }
+            parts.push(h('span', col.title))
             if (col.desc) {
               parts.push(
                 h(NTooltip, { trigger: 'hover', placement: 'top' }, {

@@ -120,6 +120,7 @@
   "table.ai_search_label": "プロンプト",
   "table.ai_search_placeholder": "自然言語で記述",
   "table.ai_search_fields_title": "検索可能な項目",
+  "table.ai_searchable_tip": "AI検索に対応",
   "table.ai_parsed_prefix": "AI の解釈",
   "table.ai_op_eq": "等しい",
   "table.ai_op_ne": "等しくない",
