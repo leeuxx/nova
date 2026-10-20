@@ -696,17 +696,28 @@ html.theme-transitioning.to-light::view-transition-new(root) {
 }
 /* AI 搜索：两段式 input-group —— 外层统一框，左 label 前缀块 + 右输入区 */
 .ai-search-field {
+  position: relative;
   gap: 0 !important;
-  border-radius: 999px !important;
+  border-radius: 6px !important;
   background: #FFFCF8;
   overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(162, 99, 26, 0.28);
-  transition: box-shadow 0.2s ease;
+  transition: background 0.2s ease;
+}
+/* 描边用覆盖层绘制：画在子元素背景之上，且不占用布局尺寸 */
+.ai-search-field::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(162, 99, 26, 0.28);
+  border-radius: inherit;
+  pointer-events: none;
+  transition: border-color 0.2s ease;
 }
 .ai-search-field:focus-within {
-  box-shadow:
-    0 0 0 1px rgba(162, 99, 26, 0.5),
-    0 0 0 4px rgba(162, 99, 26, 0.12);
+  background: #FFF9F2;
+}
+.ai-search-field:focus-within::after {
+  border-color: rgba(162, 99, 26, 0.55);
 }
 /* 左侧前缀块 */
 .ai-search-field .form-label {
@@ -844,12 +855,15 @@ html.theme-transitioning.to-light::view-transition-new(root) {
 }
 .dark .ai-search-field {
   background: #231A12;
-  box-shadow: 0 0 0 1px rgba(162, 99, 26, 0.45);
+}
+.dark .ai-search-field::after {
+  border-color: rgba(162, 99, 26, 0.45);
 }
 .dark .ai-search-field:focus-within {
-  box-shadow:
-    0 0 0 1px rgba(226, 160, 90, 0.6),
-    0 0 0 4px rgba(162, 99, 26, 0.22);
+  background: #2A1F15;
+}
+.dark .ai-search-field:focus-within::after {
+  border-color: rgba(226, 160, 90, 0.65);
 }
 .dark .ai-search-field .form-label {
   color: #E3AC72;
