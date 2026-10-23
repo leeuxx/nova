@@ -1,22 +1,27 @@
-
-
-<h1 align="center">🚀 Nova 全栈框架</h1>
+<h1 align="center">🚀 Nova</h1>
 
 <p align="center">
-  <strong>JDK 21 · Spring Boot 3.3.4 · Naive UI · 零前端实现管理系统搭建</strong>
+  <strong>注解驱动的全栈后台协议框架 · JDK 21 · Spring Boot 3.3.4 · Naive UI</strong>
 </p>
 
 <p align="center">
-  📖 <strong>使用文档：</strong><a href="https://www.yuque.com/laoshiren-bne7g/nova">https://www.yuque.com/laoshiren-bne7g/nova</a>
+  <em>你写的不是页面，是页面的元数据。</em>
 </p>
+
 <p align="center">
-  🔑 <strong>演示账号：</strong>show / 123456
+  📖 <a href="https://www.yuque.com/laoshiren-bne7g/nova"><strong>使用文档</strong></a>
+  &nbsp;·&nbsp;
+  🧪 <a href="http://182.43.87.39:8989"><strong>在线体验</strong></a>
+  &nbsp;·&nbsp;
+  🔑 演示账号：<code>show / 123456</code>
 </p>
 
 <p align="center">
   <a href="https://www.yuque.com/laoshiren-bne7g/nova"><img src="https://img.shields.io/badge/📚-使用文档-4A90D9?style=flat-square" alt="文档"></a>
   <a href="http://182.43.87.39:8989"><img src="https://img.shields.io/badge/🧪-在线体验-28f439?style=flat-square" alt="体验"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/📄-Apache%202.0-blue?style=flat-square" alt="License"></a>
+  <img src="https://img.shields.io/badge/JDK-21-orange?style=flat-square" alt="JDK 21">
+  <img src="https://img.shields.io/badge/Spring%20Boot-3.3.4-6DB33F?style=flat-square" alt="Spring Boot 3.3.4">
 </p>
 
 ---
@@ -29,9 +34,17 @@
 
 > **后端定义视图，前端只负责渲染。**
 
-❌ **不绑定任何数据源** (MyBatis, MyBatis-Plus, JPA 皆可接入)  
-❌ **不生成任何代码文件** (运行期动态解析)  
-❌ **不提供 CRUD 模板** (一切皆协议)
+❌ **不绑定任何数据源**（MyBatis、MyBatis-Plus、JPA 等皆可接入）  
+❌ **不生成任何代码文件**（运行期动态解析）  
+❌ **不提供 CRUD 模板**（一切皆协议）
+
+### 它解决什么问题
+
+传统低代码框架要么**绑定数据源**（根本无法做商业级复杂业务），要么**纯代码生成器**（简单的用不上、复杂的做不了）。Nova 选择另一条路：
+
+- **只描述协议，不碰数据** —— 数据由 `DataProxy` 实现，MySQL、Redis、ES、甚至http请求老系统等，自由组合，想怎么做操作数据完全由开发自行管理
+- **运行期解析，零代码生成** —— 改注解即改页面，没有生成物需要维护
+- **内置覆盖常规，逃逸口覆盖复杂** —— 复杂页面通过 TPL / Custom JS 无缝接入
 
 ---
 
@@ -39,26 +52,23 @@
 
 | 特性 | 描述 |
 |:---|:---|
-| 🧬 **现代技术底座** | 基于 JDK 21 + Spring Boot 3.x + Naive UI 构建 |
-| 📡 **视图全协议驱动** | 后端通过注解定义界面元素，全程 0 前端代码参与绑定 |
-| 🧩 **多形态布局** | 原生支持表格、树形、左右双表、Tab 页签等多种复杂布局 |
-| 🔐 **后端权限管控** | 菜单、操作按钮、字段级权限均由后端统一裁剪返回 |
-| 🔗 **上下文联动** | 支持主从数据联动、交互状态传递与穿透 |
-| 🚪 **灵活可扩展** | 提供 Custom View (Tpl) 和 Custom JS，无缝接入自定义业务逻辑 |
+| 🧬 **现代技术底座** | JDK 21 + Spring Boot 3.x + Naive UI |
+| 📡 **视图全协议驱动** | 后端注解定义界面元素，全程 0 前端代码参与绑定 |
+| 🧩 **多形态布局** | 表格、树形、左右双表、Tab 页签等复杂布局 |
+| 🔐 **后端权限管控** | 菜单、操作按钮、字段级权限均由后端统一裁剪 |
+| 🔗 **上下文联动** | 主从数据联动、交互状态传递与穿透 |
+| 🚪 **灵活可扩展** | Custom View (Tpl) 与 Custom JS，无缝接入自定义逻辑 |
+| 🤖 **AI 深度融入** | 字段级 AI 审查与自然语言搜索，非割裂的外挂对话框 |
 
 ---
 
-## 📦 代码示例
-
-只需定义实体类并实现 `DataProxy` 接口，即可自动生成管理页面：
+## 📦 注解预览
 
 ```java
 @Data
 @Accessors(chain = true)
 @Nova(
-        name = "用户管理",
-        dataProxy = UserServiceImpl.class,
-        conditionClass = UserCondition.class
+        name = "用户管理"
 )
 public class UserNova {
 
@@ -91,7 +101,6 @@ public class UserNova {
     )
     private Integer sex;
 
-    // 复杂组件演示：多选标签
     @NovaField(
             views = @View(title = "技术栈"),
             edit = @Edit(
@@ -111,10 +120,7 @@ public class UserNova {
 }
 ```
 
----
-
 ## 🖥️ 页面预览
-
 <p align="center">
   <img src="images/1.png" width="40%" style="margin: 12px;">
   <img src="images/2.png" width="40%" style="margin: 12px;">
