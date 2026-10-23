@@ -24,8 +24,6 @@
   <img src="https://img.shields.io/badge/Spring%20Boot-3.3.4-6DB33F?style=flat-square" alt="Spring Boot 3.3.4">
 </p>
 
----
-
 ## ✨ 简介
 
 Nova 是一款基于注解驱动的后台协议框架。**你写注解，它出界面**：开发者只需用 Java 注解描述数据与视图，Nova 在运行期编译为前端渲染协议（JSON），由 Naive UI 实时解析，直接渲染出完整的增删改查管理界面，全程无需编写前端代码。
@@ -50,7 +48,6 @@ Nova 是一款基于注解驱动的后台协议框架。**你写注解，它出�
 - **一人全栈交付** —— 常规页面由 Nova 注解生成，复杂页面用 Nova TPL 承载，TPL 开发可借助 AI 编写，后端一人即可完成从数据到界面的全链路
 
 > 一句话：**传统框架替你管数据，Nova 只替你管协议**——数据复杂度留给你，页面重复劳动交给框架。
----
 
 ## 🧩 核心特性
 
@@ -64,8 +61,6 @@ Nova 是一款基于注解驱动的后台协议框架。**你写注解，它出�
 | 🚪 **灵活可扩展** | Custom View (Tpl) 与 Custom JS，无缝接入自定义逻辑 |
 | 🌐 **微服务适配** | 一主 N 从架构，跨服务引用 / 附属 / 多对多组件照常声明，不因服务拆分退化任何功能 |
 | 🤖 **AI 深度融入** | 字段级 AI 审查、自然语言搜索深度融合框架，不另开对话框，用户无感 |
-
----
 
 ## 📦 注解预览
 
@@ -125,8 +120,6 @@ public class UserNova {
 }
 ```
 
----
-
 ## 🖥️ 页面预览
 <p align="center">
   <img src="images/1.png" width="40%" style="margin: 12px;">
@@ -136,8 +129,6 @@ public class UserNova {
   <img src="images/3.png" width="40%" style="margin: 12px;">
   <img src="images/4.png" width="40%" style="margin: 12px;">
 </p>
-
----
 
 ## 📄 许可证
 
