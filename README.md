@@ -125,6 +125,8 @@ public class UserNova {
 }
 ```
 
+---
+
 ## 🖥️ 页面预览
 <p align="center">
   <img src="images/1.png" width="40%" style="margin: 12px;">
@@ -135,6 +137,7 @@ public class UserNova {
   <img src="images/4.png" width="40%" style="margin: 12px;">
 </p>
 
+---
 
 ## 📄 许可证
 
