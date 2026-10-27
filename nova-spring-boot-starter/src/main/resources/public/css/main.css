@@ -2245,3 +2245,17 @@ body.dark .nova-tiptap-content .ProseMirror p.is-editor-empty:first-child::befor
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* ─── 嵌入视图：只渲染表格，无侧边栏/头部/面包屑/tab ─── */
+.nova-embed-root {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: #f5f7fa;
+}
+.nova-embed-root > div {
+  height: 100%;
+}
+.dark .nova-embed-root {
+  background: #151515;
+}
+

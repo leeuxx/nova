@@ -661,9 +661,9 @@ window.NovaTableJQ = (function ($) {
     var $wrapper = $('#main-table-wrapper')
     if (!$wrapper.length) return
     var winH       = $(window).height()
-    var headerH    = $('.n-layout-header').outerHeight(true) || 50
-    var tabBarH    = $('.tab-bar').outerHeight(true)         || 41
-    var outerPad   = 32
+    var headerH    = window.__novaEmbedMode ? 0 : ($('.n-layout-header').outerHeight(true) || 50)
+    var tabBarH    = window.__novaEmbedMode ? 0 : ($('.tab-bar').outerHeight(true)         || 41)
+    var outerPad   = window.__novaEmbedMode ? 0 : 32
     var filterH    = $('.filter-card').outerHeight(true)     || 0
     var tblHeaderH = $('.table-card-header').outerHeight(true) || 50
     var cardPad    = 68

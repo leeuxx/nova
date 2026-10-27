@@ -7,6 +7,17 @@
     return { 'Accept-Language': loc }
   }
 
+  // 嵌入模式：URL 显式 token 优先；没有显式 token 时允许复用当前源已有登录态。
+  // 显式 token 失效不会退回 localStorage，避免宿主以为传的账号在生效、实际用了另一个会话。
+  function getToken() {
+    if (!window.__novaEmbedMode) return localStorage.getItem('nova_token') || ''
+    if (window.__novaEmbedToken) return window.__novaEmbedToken
+    var st = sessionStorage.getItem('nova_embed_token')
+    if (st) return st
+    if (window.__novaEmbedExplicitToken) return ''
+    return localStorage.getItem('nova_token') || ''
+  }
+
   // 顶部加载条：调用 __novaPageLoading，它内部用 ref 计数（app.js 定义）
   // 写操作默认开启；个别调用方传 { withLoading: false } 关闭（如键入触发的 promptSearch、认证流程）
   // build 接口（/nova/table/build）耗时短（百毫秒级），native-ui 加载条 0.3s 入场淡入还没完成就被 finish，
@@ -30,7 +41,7 @@ window.fetchApi = {
     headers = headers || {}
     options = options || {}
     var useLoading = options.withLoading !== false
-    var token = localStorage.getItem('nova_token') || ''
+    var token = getToken()
     var allHeaders = Object.assign(
       { 'Content-Type': 'application/json' },
       token ? { 'token': token } : {},
@@ -66,7 +77,7 @@ window.fetchApi = {
   upload: function (url, formData, options) {
     options = options || {}
     var useLoading = options.withLoading !== false
-    var token = localStorage.getItem('nova_token') || ''
+    var token = getToken()
     var allHeaders = Object.assign(
       token ? { 'token': token } : {},
       currentLocaleHeader()
@@ -100,6 +111,11 @@ window.fetchApi = {
 function errorHandle(resp) {
     // token无效，清空本地并跳登录页
     if (resp.code === 520) {
+      if (window.__novaEmbedMode) {
+        if (window.$message) window.$message.error(resp.msg || window.__t('dialog.token_expired'))
+        if (window.__novaEmbedNotify) window.__novaEmbedNotify('token-expired')
+        return true
+      }
       window.modal.confirm(window.__t('dialog.token_expired'), {
         title: window.__t('dialog.system_tip'),
         positiveText: window.__t('dialog.token_expired_action'),
@@ -117,6 +133,11 @@ function errorHandle(resp) {
     }
     // 用户权限校验未通过
     if (resp.code === 521) {
+        if (window.__novaEmbedMode) {
+            if (window.$message) window.$message.error(resp.msg || window.__t('common.request_failed'))
+            if (window.__novaEmbedNotify) window.__novaEmbedNotify('no-permission')
+            return true
+        }
         history.replaceState(null, '', '#/404')
         window.location.reload()
     }

@@ -52,6 +52,15 @@ const TplPage = {
   template: '<div style="height:calc(100vh - 130px);padding:16px;box-sizing:border-box"><iframe :src="iframeUrl" style="width:100%;height:100%;border:none;border-radius:4px"></iframe></div>'
 }
 
+// ─── 可嵌入视图：只渲染表格，无侧边栏/头部/面包屑/tab ────────────────
+const EmbedPage = {
+  name: 'EmbedPage',
+  computed: {
+    novaTable() { return window.NovaTable }
+  },
+  template: '<div class="nova-embed-root page-content"><component :is="novaTable" /></div>'
+}
+
 // ─── 图标辅助 ────────────────────────────────────────────────────
 function iconNode(iconName) {
   return () => h(NIcon, { size: 18 }, {
@@ -198,13 +207,54 @@ window.__bootFadingOut = function () {
   return !!el && el.classList.contains('hidden')
 }
 
+// ─── 嵌入模式：/#/embed/:novaName ───────────────────────────────
+// 显式传 token 时只认 URL 里的 token；失效就明确报错，不静默退回 localStorage 会话。
+function _isEmbedHash() {
+  return /^#\/embed\//.test(window.location.hash || '')
+}
+function _embedNovaName() {
+  var m = /^#\/embed\/([^/?#]+)/.exec(window.location.hash || '')
+  return m ? decodeURIComponent(m[1]) : ''
+}
+window.__novaEmbedMode          = _isEmbedHash()
+window.__novaEmbedNovaName      = _embedNovaName()
+window.__novaEmbedToken         = ''
+window.__novaEmbedExplicitToken = false
+if (window.__novaEmbedMode) {
+  var _embedHash = window.location.hash || ''
+  var _embedQ    = _embedHash.indexOf('?')
+  if (_embedQ > -1) {
+    var _embedParams = new URLSearchParams(_embedHash.slice(_embedQ + 1))
+    var _urlToken    = _embedParams.get('token') || ''
+    if (_urlToken) {
+      window.__novaEmbedToken         = _urlToken
+      window.__novaEmbedExplicitToken = true
+      sessionStorage.setItem('nova_embed_token', _urlToken)
+      // token 不留在地址栏/历史记录里
+      _embedParams.delete('token')
+      var _embedRest = _embedParams.toString()
+      history.replaceState(null, '', _embedHash.slice(0, _embedQ) + (_embedRest ? '?' + _embedRest : ''))
+    }
+  }
+  if (!window.__novaEmbedToken) {
+    window.__novaEmbedToken = sessionStorage.getItem('nova_embed_token') || ''
+  }
+}
+// 子页 → 父页信号；消息里不含任何凭证
+window.__novaEmbedNotify = function (type, payload) {
+  if (!window.__novaEmbedMode || window.parent === window) return
+  window.parent.postMessage(Object.assign({ source: 'nova-embed', type: type }, payload || {}), '*')
+}
+
 // ─── 挂载入口：未登录直接挂载（显示登录页），有 token 才拉菜单 ──
 // 404 页面纯静态展示，不依赖菜单数据：直达 404 时跳过 getMenu，避免无谓请求
 function _isDirect404() {
   var h = window.location.hash || ''
   return h === '#/404' || /^#\/404([/?#]|$)/.test(h)
 }
-var _startToken = localStorage.getItem('nova_token')
+var _startToken = window.__novaEmbedMode
+  ? (window.__novaEmbedToken || (window.__novaEmbedExplicitToken ? '' : (localStorage.getItem('nova_token') || '')))
+  : localStorage.getItem('nova_token')
 if (_startToken && !_isDirect404()) {
   window.fetchApi.post('/nova/authority/getMenu', {}).then(function (resp) {
     mountApp(resp.data || [], window.nova.config)
@@ -322,7 +372,7 @@ function mountApp(menuList, config, loginExpired) {
             ? { locale: koKR, dateLocale: dateKoKR }
             : { locale: zhCN, dateLocale: dateZhCN }
       // 是否为独立页面（登录/注册/404 等，无布局）
-      const isStandaloneRoute = computed(() => route.path === '/login' || route.path === '/register' || route.path === '/404')
+      const isStandaloneRoute = computed(() => route.path === '/login' || route.path === '/register' || route.path === '/404' || route.path.indexOf('/embed/') === 0)
       // 刷新按钮仅在有 tab 的页面显示（home 等 noTab 路由不显示）
       const showRefreshBtn = computed(() => !isStandaloneRoute.value && !(route.meta && route.meta.noTab))
 
@@ -361,7 +411,8 @@ function mountApp(menuList, config, loginExpired) {
       // 监听路由变化，维护 tab 列表
       watch(() => route.fullPath, (fullPath) => {
         const path = route.path
-        if (path === '/' || path === '/login') return
+        // 根路径在启动阶段会先出现一次（随后重定向到 /home），不能生成 tab
+        if (path === '/' || isStandaloneRoute.value) return
         // noTab 路由（如首页）：仅切换显示，不生成 tab，不展开菜单
         if (route.meta && route.meta.noTab) {
           activeTab.value = path
@@ -391,6 +442,16 @@ function mountApp(menuList, config, loginExpired) {
           expandedKeys.value = [...new Set([...expandedKeys.value, ...ancestors])]
         }
       }, { immediate: true })
+
+      // embed 标记随路由切换（直接打开 URL 时已在启动阶段设置，这里覆盖 SPA 内部跳转）
+      watch(() => route.path, (p) => {
+        var embed = p.indexOf('/embed/') === 0
+        window.__novaEmbedMode = embed
+        window.__novaEmbedNovaName = embed ? (route.params.novaName || '') : ''
+        if (embed && !window.__novaEmbedToken) {
+          window.__novaEmbedToken = sessionStorage.getItem('nova_embed_token') || ''
+        }
+      })
 
       // 面包屑
       const breadcrumbItems = computed(() => {
@@ -1026,6 +1087,7 @@ function mountApp(menuList, config, loginExpired) {
       { path: '/404',                 component: NotFoundPage, meta: { loginRequired: false } },
       { path: '/tpl/:code',           component: TplPage },
       { path: '/nova/:novaName',      component: window.NovaTable },
+      { path: '/embed/:novaName',     component: EmbedPage, meta: { noTab: true, embed: true } },
       { path: '/:pathMatch(.*)*',     redirect: '/404' },
     ]
   })
@@ -1045,8 +1107,11 @@ function mountApp(menuList, config, loginExpired) {
     if (to.path !== '/login' && to.path !== '/register' && to.path !== '/404') {
       if (window.__novaPageLoading) window.__novaPageLoading.start()
     }
-    var token = localStorage.getItem('nova_token')
-    if (to.path !== '/login' && to.path !== '/register' && to.path !== '/404' && !token) {
+    var isEmbed = to.path.indexOf('/embed/') === 0
+    var token = isEmbed
+      ? (window.__novaEmbedToken || sessionStorage.getItem('nova_embed_token') || (window.__novaEmbedExplicitToken ? '' : (localStorage.getItem('nova_token') || '')))
+      : localStorage.getItem('nova_token')
+    if (to.path !== '/login' && to.path !== '/register' && to.path !== '/404' && !isEmbed && !token) {
       next('/login')
     } else {
       next()
@@ -1055,7 +1120,7 @@ function mountApp(menuList, config, loginExpired) {
 
   // 页面切换顶部加载条：表格页由 build 完成触发 finish；非表格页（home/TPL 等无 build）兜底结束
   router.afterEach((to) => {
-    if (!to.path || to.path.indexOf('/nova/') !== 0) {
+    if (!to.path || (to.path.indexOf('/nova/') !== 0 && to.path.indexOf('/embed/') !== 0)) {
       if (window.__novaPageLoading) {
         setTimeout(function () { window.__novaPageLoading.finish() }, 300)
       }
@@ -1074,6 +1139,9 @@ function mountApp(menuList, config, loginExpired) {
     // 暴露 router 供 LoginPage 等独立组件使用
     window.__novaRouter = router
     app.mount('#app')
+    if (window.__novaEmbedMode) {
+      window.__novaEmbedNotify('ready', { novaName: window.__novaEmbedNovaName })
+    }
     // 挂载完成后淡出首屏 loading：此时主线程空闲，过渡动画不被打断；淡出完成后触发 startup 生命周期
     hideBootLoading(false, triggerStartup)
   })
