@@ -2305,6 +2305,25 @@ const NovaTable = {
         }
       }).catch(function() { if (window.$message) window.$message.error(window.__t('table.template_load_failed')) })
     },
+    // TPL 弹窗内容与主系统保持一致：给同源 iframe 文档注入细滚动条样式（远程 url 无法访问文档，跳过）
+    normalizeTplFrameScrollbar(e) {
+      var doc = e.target.contentDocument
+      if (!doc || !doc.head) return
+      if (doc.getElementById('__nova_tpl_scrollbar__')) return
+      var dark = !!(window.__appDarkMode && window.__appDarkMode.value)
+      var thumb = dark ? '#555' : '#c0c4cc'
+      var thumbHover = dark ? '#777' : '#909399'
+      var track = dark ? '#151515' : '#f5f7fa'
+      var style = doc.createElement('style')
+      style.id = '__nova_tpl_scrollbar__'
+      style.textContent =
+        'html,body{scrollbar-width:thin;scrollbar-color:' + thumb + ' ' + track + '}' +
+        'html::-webkit-scrollbar,body::-webkit-scrollbar{width:6px;height:6px}' +
+        'html::-webkit-scrollbar-track,body::-webkit-scrollbar-track{background:' + track + '}' +
+        'html::-webkit-scrollbar-thumb,body::-webkit-scrollbar-thumb{background:' + thumb + ';border-radius:3px}' +
+        'html::-webkit-scrollbar-thumb:hover,body::-webkit-scrollbar-thumb:hover{background:' + thumbHover + '}'
+      doc.head.appendChild(style)
+    },
     // 百分比转 vh（后端配 '80%' → '80vh'，fixed 元素百分比高度失效，改用视口单位）
     _pctToVh(value) {
       if (!value) return value
@@ -5384,13 +5403,13 @@ const NovaTable = {
 
       <!-- TPL 对话框模式：宽高为 vw/vh 视口单位，100% = 撑满页面 -->
       <n-modal v-model:show="tplModalShow" display-directive="if" preset="card" :title="tplTitle" :style="'width:' + tplWidth + ';height:' + tplHeight + ';display:flex;flex-direction:column'" :content-style="{padding:'0',overflow:'hidden',flex:'1',minHeight:'0'}" :header-style="{paddingBottom:'8px'}" :z-index="tplModalZIndex">
-        <iframe v-if="tplUrl" :src="tplUrl" style="width:100%;height:100%;border:none;flex:1"></iframe>
+        <iframe v-if="tplUrl" :src="tplUrl" @load="normalizeTplFrameScrollbar" style="width:100%;height:100%;border:none;flex:1"></iframe>
       </n-modal>
 
       <!-- TPL 抽屉模式 -->
       <n-drawer v-model:show="tplDrawerShow" :placement="tplDrawerPlacement" display-directive="if" :style="tplDrawerPlacement === 'top' || tplDrawerPlacement === 'bottom' ? 'height:' + tplDrawerSize : 'width:' + tplDrawerSize" :z-index="tplDrawerZIndex">
         <n-drawer-content :title="tplTitle" :header-style="{borderBottom:'none'}" :body-content-style="{padding:'0',overflow:'hidden',display:'flex',flexDirection:'column'}">
-          <iframe v-if="tplUrl" :src="tplUrl" style="width:100%;height:100%;border:none;flex:1"></iframe>
+          <iframe v-if="tplUrl" :src="tplUrl" @load="normalizeTplFrameScrollbar" style="width:100%;height:100%;border:none;flex:1"></iframe>
         </n-drawer-content>
       </n-drawer>
 
