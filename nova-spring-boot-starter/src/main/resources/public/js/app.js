@@ -39,6 +39,10 @@ const HomePage = window.HomePage
 // ─── TPL 嵌入页组件 ───────────────────────────────────────────────
 const TplPage = {
   name: 'TplPage',
+  data() {
+    // 主题取打开 TPL 时的快照，不做实时监听
+    return { theme: window.__appDarkMode.value ? 'night' : 'daytime' }
+  },
   computed: {
     iframeUrl() {
       const info = window.__tplMeta && window.__tplMeta[this.$route.params.code]
@@ -46,7 +50,7 @@ const TplPage = {
       if (!url) return ''
       const token = localStorage.getItem('nova_token') || ''
       const sep = url.includes('?') ? '&' : '?'
-      return url + sep + 'token=' + encodeURIComponent(token)
+      return url + sep + 'token=' + encodeURIComponent(token) + '&theme=' + this.theme
     }
   },
   template: '<div style="height:calc(100vh - 130px);padding:16px;box-sizing:border-box"><iframe :src="iframeUrl" style="width:100%;height:100%;border:none;border-radius:4px"></iframe></div>'

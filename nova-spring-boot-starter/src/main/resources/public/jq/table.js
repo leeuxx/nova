@@ -547,6 +547,17 @@ window.NovaTableJQ = (function ($) {
           conditions[rf.referenceField] = JSON.stringify([String(rf.value)])
         }
       })
+      // URL 隐式条件（#/nova/X?a=1&b=2）：仅路由级主表（正常 / embed）生效，条件栏不体现。
+      // 常驻且强制：每次重建条件都注入，同名字段直接覆盖（条件栏同 key 条件舍弃）。
+      if (!target.pickerMode && !target.viewMode && !target.embeddedMode && !target.dualMode) {
+        var urlQuery = target.$route.query
+        Object.keys(urlQuery).forEach(function(k) {
+          if (k === 'token' || k === 'novaName' || k === 'novaIds' || k === 'param') return
+          var v = urlQuery[k]
+          if (v === null || v === undefined || v === '') return
+          conditions[k] = JSON.stringify(Array.isArray(v) ? v.map(function(x) { return String(x) }) : [String(v)])
+        })
+      }
       // AI 搜索：携带提示词，由后端解析为查询条件
       if (usePrompt === true && target.aiSearchEnabled && target.aiPrompt && target.aiPrompt.trim()) {
         searchPrompt = target.aiPrompt.trim()

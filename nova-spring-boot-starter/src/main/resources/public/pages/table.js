@@ -2285,7 +2285,8 @@ const NovaTable = {
         path: tpl.path || '',
         operationParam: btn.operationParam || ''
       }).then(function(resp) {
-        var url = resp.data
+        // 主题取打开 TPL 时的快照，不做实时监听
+        var url = resp.data + '&theme=' + (window.__appDarkMode.value ? 'night' : 'daytime')
         if (tpl.openWay === 'DRAWER') {
           self.tplUrl = url
           self.tplTitle = btn.title || ''
