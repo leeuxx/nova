@@ -219,6 +219,7 @@
   "table.delete_unavailable": "Cannot delete",
   "table.confirm_delete_n_items": "Are you sure you want to delete these {n} items?",
   "table.preview_rich": "Preview",
+  "table.preview_code": "View code",
   "table.no_file": "No files",
   "table.data_nodes": "Nodes",
   "table.items_per_page": "{n}/page",

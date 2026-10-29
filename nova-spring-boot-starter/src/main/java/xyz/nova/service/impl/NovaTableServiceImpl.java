@@ -381,6 +381,15 @@ public class NovaTableServiceImpl implements NovaTableService {
                 .setSearch(aiInfo.getSearch())
                 .setFields(aiInfo.getSearchFields());
         vo.setAi(ai);
+        // 获取代码编辑器信息
+        Map<String, NovaFieldUtils.CodeInfo> codeInfo = NovaFieldUtils.getCodeInfo(novaTableBuild.getNovaName());
+        Map<String, NovaTableBuild.Vo.Code> code = new LinkedHashMap<>();
+        codeInfo.forEach((field, codeInfoObj) -> {
+            NovaTableBuild.Vo.Code codeObj = new NovaTableBuild.Vo.Code()
+                    .setType(codeInfoObj.getType());
+            code.put(field, codeObj);
+        });
+        vo.setCode(code);
         return vo;
     }
 

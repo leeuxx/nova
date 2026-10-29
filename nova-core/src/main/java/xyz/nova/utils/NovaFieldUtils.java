@@ -3,7 +3,6 @@ package xyz.nova.utils;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.context.i18n.LocaleContextHolder;
-import xyz.nova.annotation.Nova;
 import xyz.nova.annotation.NovaField;
 import xyz.nova.annotation.comment.Comment;
 import xyz.nova.annotation.sub.nova.SysBtnHide;
@@ -865,6 +864,27 @@ public class NovaFieldUtils {
         return !SEARCH_SKIP_TYPES.contains(type);
     }
 
+    /**
+     * 获取代码编辑器信息
+     *
+     * @param className 类名
+     * @return 代码编辑器信息
+     */
+    public static Map<String, CodeInfo> getCodeInfo(String className) {
+        Map<String, CodeInfo> result = new HashMap<>();
+        NovaApplication.ScanNova scanNova = getScanNova(className);
+        Map<String, NovaApplication.ScanNova.NovaFieldInfo> novaFields = scanNova.getNovaFields();
+        novaFields.forEach((field, novaFieldInfo) -> {
+            NovaField novaField = novaFieldInfo.getNovaField();
+            Edit edit = novaField.edit();
+            if (novaFieldInfo.getType() == Edit.Type.CODE) {
+                CodeType codeType = edit.codeType();
+                result.put(field, new CodeInfo().setType(codeType.type().name()));
+            }
+        });
+        return result;
+    }
+
     private static NovaApplication.ScanNova getScanNova(String className) {
         Map<String, NovaApplication.ScanNova> scanNovas = NovaApplication.getScanNovas();
         NovaApplication.ScanNova scanNova = scanNovas.get(className);
@@ -1334,6 +1354,15 @@ public class NovaFieldUtils {
 
         @Comment("日期格式")
         private DateType.Type dateType;
+
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class CodeInfo {
+
+        @Comment("类型")
+        private String type;
 
     }
 }

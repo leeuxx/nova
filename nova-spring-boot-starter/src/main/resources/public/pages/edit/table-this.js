@@ -20,6 +20,7 @@ window.NovaFieldThis = {
     tagMap:        { type: Object, default: function() { return {} } },
     attachmentMap: { type: Object, default: function() { return {} } },
     booleanMap:    { type: Object, default: function() { return {} } },
+    codeMap:       { type: Object, default: function() { return {} } },
     buttons:       { type: Object, default: function() { return {} } },
     formMode:      { type: String, default: 'add' },
     editLayout:    { type: String, default: 'DEFAULT' },
@@ -35,7 +36,12 @@ window.NovaFieldThis = {
       _editor: null,
       _toolbar: null,
       _editorReady: false,
-      _editorLastSyncedHtml: ''
+      _editorLastSyncedHtml: '',
+      _codeHost: null,
+      _codeEditor: null,
+      _codeReady: false,
+      _codeMounting: false,
+      _codeLastValue: ''
     }
   },
 
@@ -93,6 +99,50 @@ window.NovaFieldThis = {
       this._editor = null
       this._editorReady = false
       this._editorLastSyncedHtml = ''
+    },
+
+    // ── 代码编辑器：注册 host + 挂载/同步/销毁 ───────────────────
+    registerCodeHost(el) {
+      this._codeHost = el
+      if (!el) return
+      this.maybeMountCodeEditor()
+    },
+    maybeMountCodeEditor() {
+      if (this._codeReady || this._codeMounting) return
+      if (!this._codeHost) return
+      if (!this.f || this.f.type !== 'CODE') return
+      var cfg = this.codeMap[this.f.field]
+      if (!cfg) return
+      if (!window.NovaJsonEditor) return
+      var self = this
+      self._codeMounting = true
+      var initialValue = (self.formData && self.formData[self.f.field] != null) ? String(self.formData[self.f.field]) : ''
+      window.NovaJsonEditor.ensureLanguage(cfg.type).then(function () {
+        self._codeMounting = false
+        if (self._codeReady) return
+        if (!self._codeHost || !self._codeHost.isConnected) return
+        self._codeEditor = window.NovaJsonEditor.create(self._codeHost, initialValue, {
+          language: cfg.type,
+          dark: !!(window.__appDarkMode && window.__appDarkMode.value),
+          readOnly: self.isReadonly(self.f),
+          onChange: function (value) {
+            self._codeLastValue = value
+            self.$emit('field-change', { field: self.f.field, value: value })
+          }
+        })
+        self._codeLastValue = initialValue
+        self._codeReady = true
+      }).catch(function (err) {
+        self._codeMounting = false
+        console.error('[NovaFieldThis] code editor mount failed:', err)
+      })
+    },
+    destroyCodeEditor() {
+      if (this._codeEditor && window.NovaJsonEditor) window.NovaJsonEditor.destroy(this._codeEditor)
+      this._codeEditor = null
+      this._codeReady = false
+      this._codeMounting = false
+      this._codeLastValue = ''
     },
 
     // ── 字段辅助方法 ──────────────────────────────────────────────
@@ -195,17 +245,29 @@ window.NovaFieldThis = {
   // ── 生命周期 ──────────────────────────────────────────────────
   mounted() {
     this.maybeMountEditor()
+    this.maybeMountCodeEditor()
     var self = this
     if (window.__appDarkMode && window.Vue && typeof window.Vue.watch === 'function') {
       this._stopThemeWatch = window.Vue.watch(function () { return window.__appDarkMode.value }, function (val) {
         if (self._editor && window.NovaAiEditor) {
           window.NovaAiEditor.changeTheme(self._editor, val ? 'dark' : 'light')
         }
+        if (self._codeEditor && window.NovaJsonEditor) {
+          window.NovaJsonEditor.changeTheme(self._codeEditor, val)
+        }
       })
     }
   },
   updated() {
-    if (!this._editor || !this.f || this.f.type !== 'EDITOR') return
+    if (!this.f) return
+    if (this.f.type === 'CODE' && this._codeEditor) {
+      var externalCode = (this.formData && this.formData[this.f.field] != null) ? String(this.formData[this.f.field]) : ''
+      if (externalCode !== this._codeLastValue) {
+        window.NovaJsonEditor.setValue(this._codeEditor, externalCode)
+        this._codeLastValue = externalCode
+      }
+    }
+    if (!this._editor || this.f.type !== 'EDITOR') return
     var editorApi = this._editor.editor
     if (!editorApi || typeof editorApi.commands.setContent !== 'function') return
     var external = (this.formData && this.formData[this.f.field]) || ''
@@ -217,6 +279,7 @@ window.NovaFieldThis = {
   beforeUnmount() {
     if (this._stopThemeWatch) { try { this._stopThemeWatch() } catch (e) {} this._stopThemeWatch = null }
     this.destroyEditor()
+    this.destroyCodeEditor()
   },
 
   template: `
@@ -229,7 +292,7 @@ window.NovaFieldThis = {
       {{ f.title }}
     </n-button>
   </div>
-  <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON'" v-show="visible" :style="'display:flex;flex-direction:column;gap:4px' + ((f.type === 'TEXTAREA' || f.type === 'EDITOR') ? ';grid-column:1/-1' : '')"
+  <div v-else-if="f.type !== 'DIVIDE' && f.type !== 'EMPTY' && f.type !== 'BUTTON'" v-show="visible" :style="'display:flex;flex-direction:column;gap:4px' + ((f.type === 'TEXTAREA' || f.type === 'EDITOR' || f.type === 'CODE') ? ';grid-column:1/-1' : '')"
        :aria-hidden="!visible ? 'true' : undefined">
     <span class="edit-form-label">
       <span v-if="f.notNull && !isReadonly(f)" class="form-label-required">*</span>{{ f.title }}
@@ -371,6 +434,10 @@ window.NovaFieldThis = {
       :class="formErrors[f.field] ? 'has-error' : ''">
       <div :ref="el => registerEditorHost(el)" :data-editor-field="f.field" class="nova-aieditor-host"></div>
     </div>
+    <div v-else-if="f.type === 'CODE' && codeMap[f.field]" class="form-field-editor"
+      :class="formErrors[f.field] ? 'has-error' : ''">
+      <div :ref="el => registerCodeHost(el)" class="nova-code-edit"></div>
+    </div>
     <n-input
       v-else
       :value="formData[f.field]"
@@ -405,6 +472,7 @@ window.NovaFormThis = {
     attachmentMap:  { type: Object, default: function() { return {} } },
     buttons:        { type: Object, default: function() { return {} } },
     booleanMap:     { type: Object, default: function() { return {} } },
+    codeMap:        { type: Object, default: function() { return {} } },
     novaName:       { type: String, default: '' },
     formMode:       { type: String, default: 'add' },
     formTab:        { type: String, default: 'form' }
@@ -463,7 +531,7 @@ window.NovaFormThis = {
         :form-data="formData" :form-errors="formErrors"
         :choice-map="choiceMap" :reference-map="referenceMap"
         :number-map="numberMap" :date-map="dateMap" :tag-map="tagMap"
-        :attachment-map="attachmentMap" :boolean-map="booleanMap"
+        :attachment-map="attachmentMap" :boolean-map="booleanMap" :code-map="codeMap"
         :buttons="buttons" :form-mode="formMode" :edit-layout="editLayout" :nova-name="novaName"
         @field-change="$emit('field-change', $event)"
         @reference-click="$emit('reference-click', $event)"

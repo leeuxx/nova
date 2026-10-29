@@ -353,6 +353,7 @@ const NovaTable = {
       numberMap:      {},
       booleanMap:     {},
       attachmentMap:  {},
+      codeMap:        {},   // 代码编辑器字段配置：field → { type }
       referenceMap:   {},
       refBuildMeta:       {},   // 嵌套字段子表元数据缓存：refNovaName → /build 响应
       refBuildMetaLoading: {}, // 嵌套字段子表元数据加载中标记
@@ -521,6 +522,12 @@ const NovaTable = {
       tableAttachPreviewUrls: [],
       tableAttachPreviewType: null,
       tableAttachPreviewIndex: 0,
+      // 表格代码预览弹窗
+      tableCodePreviewShow: false,
+      tableCodePreviewZIndex: 9999,
+      tableCodePreviewTitle: '',
+      tableCodePreviewValue: '',
+      tableCodePreviewType: 'json',
       videoHoverIdx: -1,
       refSelectOptions:  {},   // { [field]: [{label, value}] }
       refSelectLoading:  {},   // { [field]: bool }
@@ -1165,6 +1172,29 @@ const NovaTable = {
           }
         }
 
+        // 代码字段：单元格显示可点击的代码图标，点击弹窗只读查看。
+        // 仅 build 返回了该字段的 code 配置时才启用（嵌套引用子表的 CODE 列没有顶层配置，按普通文本展示）
+        const codeCfg = vm.codeMap && vm.codeMap[col.field]
+        if (col.type === 'CODE' && codeCfg) {
+          colDef.render = (row) => {
+            const val = getFieldValue(row, col.field)
+            if (val === null || val === undefined || val === '') return ''
+            return h(NTooltip, { trigger: 'hover', placement: 'top' }, {
+              default: () => window.__t('table.preview_code'),
+              trigger: () => h('span', {
+                class: 'cell-code-preview',
+                style: 'cursor:pointer;display:inline-flex;align-items:center;color:#2563eb',
+                onClick: (e) => {
+                  e.stopPropagation()
+                  vm.openTableCodePreview(col.title, val, codeCfg.type)
+                }
+              }, [
+                h('iconify-icon', { icon: 'lucide:code-xml', width: 18 })
+              ])
+            })
+          }
+        }
+
         if (col.type === 'NUMBER') {
           const numInfo = vm.numberMap[col.field] || {}
           // roll=true：加载时滚动动画，挂载/值变化时从 0 递增到目标值
@@ -1339,6 +1369,9 @@ const NovaTable = {
     },
 
   watch: {
+    isDark(val) {
+      if (this._codePreviewEditor) window.NovaJsonEditor.changeTheme(this._codePreviewEditor, val)
+    },
     striped(val) {
       localStorage.setItem('nova-table-striped', val ? 'true' : 'false')
     },
@@ -3002,6 +3035,40 @@ const NovaTable = {
         title: title || window.__t('table.rich_preview'),
         size: '30%'
       })
+    },
+    // 打开表格代码预览弹窗（语言按需懒加载，弹窗动画结束后再挂载编辑器）
+    openTableCodePreview(title, value, type) {
+      var self = this
+      window.NovaJsonEditor.ensureLanguage(type).then(function () {
+        self.tableCodePreviewTitle = title || ''
+        self.tableCodePreviewValue = value == null ? '' : String(value)
+        self.tableCodePreviewType = String(type || 'json').toLowerCase()
+        self.tableCodePreviewZIndex = window.NovaZIndex ? window.NovaZIndex.acquire() : 9999
+        self.tableCodePreviewShow = true
+      }).catch(function (err) {
+        if (window.$message) window.$message.error(err && err.message ? err.message : String(err))
+      })
+    },
+    mountCodePreview() {
+      var host = this.$refs.codePreviewHost
+      if (!host) return
+      if (this._codePreviewEditor) {
+        window.NovaJsonEditor.destroy(this._codePreviewEditor)
+        this._codePreviewEditor = null
+      }
+      this._codePreviewEditor = window.NovaJsonEditor.create(host, this.tableCodePreviewValue, {
+        language: this.tableCodePreviewType,
+        dark: this.isDark,
+        readOnly: true
+      })
+    },
+    closeTableCodePreview() {
+      if (this._codePreviewEditor) {
+        window.NovaJsonEditor.destroy(this._codePreviewEditor)
+        this._codePreviewEditor = null
+      }
+      this.tableCodePreviewShow = false
+      this.tableCodePreviewValue = ''
     },
     // ── 操作表单 EDITOR (Tiptap) 生命周期 ──
     registerOpEditorHost(section, field, el) {
@@ -4951,6 +5018,7 @@ const NovaTable = {
               :attachment-map="attachmentMap"
               :buttons="buttons"
               :boolean-map="booleanMap"
+              :code-map="codeMap"
               :nova-name="novaName"
               :form-mode="formMode"
               :form-tab="formTab"
@@ -5534,6 +5602,14 @@ const NovaTable = {
       <NovaFileList
         v-else
         :file-list="tableAttachPreviewUrls" />
+    </n-modal>
+
+    <!-- 表格代码预览弹窗 -->
+    <n-modal v-model:show="tableCodePreviewShow" preset="card" style="width:900px;max-width:92vw;padding:0" :z-index="tableCodePreviewZIndex" @after-enter="mountCodePreview" @update:show="(v) => { if (!v) closeTableCodePreview() }">
+      <template #header>
+        <span>{{ tableCodePreviewTitle }}</span>
+      </template>
+      <div ref="codePreviewHost" class="nova-code-preview"></div>
     </n-modal>
 
   </div>

@@ -1,0 +1,213 @@
+/* Nova JSON 编辑器主题（CodeMirror 5） */
+
+/* 表格代码预览弹窗宿主：CodeMirror height:100% 依赖宿主有确定高度 */
+.nova-code-preview { height: 62vh; }
+.nova-code-preview .CodeMirror { height: 100%; font-size: 13.5px; line-height: 1.3; }
+
+/* 新增/编辑表单代码字段宿主 */
+.nova-code-edit { height: 300px; }
+.nova-code-edit .CodeMirror { height: 100%; font-size: 13px; line-height: 1.3; }
+
+/* 光标高度对齐行高：空文档时 CodeMirror 按无文本行测量，光标只有 11px 左右 */
+.nova-code-edit .CodeMirror-cursor,
+.nova-code-preview .CodeMirror-cursor {
+  height: 1.3em !important;
+}
+
+/* 滚动条：与项目主题一致（6px 细滚动条），CodeMirror 的滚动条容器默认是浏览器原生样式 */
+.CodeMirror-vscrollbar,
+.CodeMirror-hscrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #c0c4cc #f5f7fa;
+}
+.CodeMirror-vscrollbar::-webkit-scrollbar,
+.CodeMirror-hscrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.CodeMirror-vscrollbar::-webkit-scrollbar-track,
+.CodeMirror-hscrollbar::-webkit-scrollbar-track {
+  background: #f5f7fa;
+  border-radius: 3px;
+}
+.CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+.CodeMirror-hscrollbar::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 3px;
+}
+.CodeMirror-vscrollbar::-webkit-scrollbar-thumb:hover,
+.CodeMirror-hscrollbar::-webkit-scrollbar-thumb:hover {
+  background: #909399;
+}
+/* 自定义 ::-webkit-scrollbar 会带出原生箭头按钮，去掉以对齐项目滚动条 */
+.CodeMirror-vscrollbar::-webkit-scrollbar-button,
+.CodeMirror-hscrollbar::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+.dark .CodeMirror-vscrollbar,
+.dark .CodeMirror-hscrollbar {
+  scrollbar-color: #555 #18181c;
+}
+.dark .CodeMirror-vscrollbar::-webkit-scrollbar-track,
+.dark .CodeMirror-hscrollbar::-webkit-scrollbar-track {
+  background: #18181c;
+}
+.dark .CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+.dark .CodeMirror-hscrollbar::-webkit-scrollbar-thumb {
+  background: #555;
+}
+.dark .CodeMirror-vscrollbar::-webkit-scrollbar-thumb:hover,
+.dark .CodeMirror-hscrollbar::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+/* 横竖滚动条交汇处的小方块（CodeMirror 默认白色） */
+.cm-s-nova-dark .CodeMirror-scrollbar-filler,
+.cm-s-nova-dark .CodeMirror-gutter-filler {
+  background-color: #18181c;
+}
+
+.cm-s-nova-light.CodeMirror {
+  background: #ffffff;
+  color: #24292f;
+}
+.cm-s-nova-light .CodeMirror-gutters {
+  background: #f6f8fa;
+  border-right: 1px solid #e5e7eb;
+}
+.cm-s-nova-light .CodeMirror-linenumber {
+  color: #8b949e;
+}
+.cm-s-nova-light .CodeMirror-foldgutter-folded,
+.cm-s-nova-light .CodeMirror-foldgutter-open {
+  color: #8b949e;
+}
+.cm-s-nova-light .CodeMirror-cursor {
+  border-left: 2px solid #18a058;
+}
+.cm-s-nova-light .CodeMirror-selected {
+  background: rgba(24, 160, 88, 0.18);
+}
+.cm-s-nova-light .CodeMirror-focused .CodeMirror-selected {
+  background: rgba(24, 160, 88, 0.22);
+}
+.cm-s-nova-light .CodeMirror-activeline-background {
+  background: #f2fbf6;
+}
+.cm-s-nova-light .cm-property {
+  color: #0451a5;
+}
+.cm-s-nova-light .cm-string {
+  color: #a31515;
+}
+.cm-s-nova-light .cm-number {
+  color: #098658;
+}
+.cm-s-nova-light .cm-atom {
+  color: #0000ff;
+}
+.cm-s-nova-light .cm-keyword {
+  color: #af00db;
+}
+.cm-s-nova-light .cm-punctuation,
+.cm-s-nova-light .cm-operator {
+  color: #24292f;
+}
+.cm-s-nova-light .cm-invalidjson {
+  color: #d13438;
+}
+.cm-s-nova-light .cm-comment { color: #6a737d; }
+.cm-s-nova-light .cm-tag { color: #22863a; }
+.cm-s-nova-light .cm-attribute { color: #6f42c1; }
+.cm-s-nova-light .cm-variable { color: #24292f; }
+.cm-s-nova-light .cm-variable-2 { color: #005cc5; }
+.cm-s-nova-light .cm-variable-3 { color: #0086b3; }
+.cm-s-nova-light .cm-def { color: #6f42c1; }
+.cm-s-nova-light .cm-type { color: #d73a49; }
+.cm-s-nova-light .cm-builtin { color: #005cc5; }
+.cm-s-nova-light .cm-qualifier { color: #0086b3; }
+.cm-s-nova-light .cm-bracket { color: #57606a; }
+.cm-s-nova-light .cm-string-2 { color: #032f62; }
+.cm-s-nova-light .cm-meta { color: #6a737d; }
+.cm-s-nova-light .cm-link { color: #032f62; }
+.cm-s-nova-light .cm-url,
+.cm-s-nova-light .cm-formatting { color: #6a737d; }
+.cm-s-nova-light .cm-header { color: #6f42c1; }
+.cm-s-nova-light .cm-quote { color: #6a737d; }
+.cm-s-nova-light .cm-hr { color: #d1d5da; }
+.cm-s-nova-light .cm-strong { font-weight: 600; }
+.cm-s-nova-light .cm-em { font-style: italic; }
+.cm-s-nova-light .cm-error { color: #d13438; }
+
+.cm-s-nova-dark.CodeMirror {
+  background: #18181c;
+  color: #d4d4d4;
+}
+.cm-s-nova-dark .CodeMirror-gutters {
+  background: #18181c;
+  border-right: 1px solid #2b2b31;
+}
+.cm-s-nova-dark .CodeMirror-linenumber {
+  color: #5c5c66;
+}
+.cm-s-nova-dark .CodeMirror-foldgutter-folded,
+.cm-s-nova-dark .CodeMirror-foldgutter-open {
+  color: #6b6b76;
+}
+.cm-s-nova-dark .CodeMirror-cursor {
+  border-left: 2px solid #63e2b7;
+}
+.cm-s-nova-dark .CodeMirror-selected {
+  background: rgba(99, 226, 183, 0.16);
+}
+.cm-s-nova-dark .CodeMirror-focused .CodeMirror-selected {
+  background: rgba(99, 226, 183, 0.2);
+}
+.cm-s-nova-dark .CodeMirror-activeline-background {
+  background: #1f1f25;
+}
+.cm-s-nova-dark .cm-property {
+  color: #9cdcfe;
+}
+.cm-s-nova-dark .cm-string {
+  color: #ce9178;
+}
+.cm-s-nova-dark .cm-number {
+  color: #b5cea8;
+}
+.cm-s-nova-dark .cm-atom {
+  color: #569cd6;
+}
+.cm-s-nova-dark .cm-keyword {
+  color: #c586c0;
+}
+.cm-s-nova-dark .cm-punctuation,
+.cm-s-nova-dark .cm-operator {
+  color: #d4d4d4;
+}
+.cm-s-nova-dark .cm-invalidjson {
+  color: #f48771;
+}
+.cm-s-nova-dark .cm-comment { color: #6a9955; }
+.cm-s-nova-dark .cm-tag { color: #569cd6; }
+.cm-s-nova-dark .cm-attribute { color: #9cdcfe; }
+.cm-s-nova-dark .cm-variable { color: #d4d4d4; }
+.cm-s-nova-dark .cm-variable-2 { color: #9cdcfe; }
+.cm-s-nova-dark .cm-variable-3 { color: #4ec9b0; }
+.cm-s-nova-dark .cm-def { color: #dcdcaa; }
+.cm-s-nova-dark .cm-type { color: #4ec9b0; }
+.cm-s-nova-dark .cm-builtin { color: #4ec9b0; }
+.cm-s-nova-dark .cm-qualifier { color: #569cd6; }
+.cm-s-nova-dark .cm-bracket { color: #d4d4d4; }
+.cm-s-nova-dark .cm-string-2 { color: #ce9178; }
+.cm-s-nova-dark .cm-meta { color: #c586c0; }
+.cm-s-nova-dark .cm-link { color: #3794ff; }
+.cm-s-nova-dark .cm-url,
+.cm-s-nova-dark .cm-formatting { color: #6b6b76; }
+.cm-s-nova-dark .cm-header { color: #569cd6; }
+.cm-s-nova-dark .cm-quote { color: #6a9955; }
+.cm-s-nova-dark .cm-hr { color: #444444; }
+.cm-s-nova-dark .cm-strong { font-weight: 600; }
+.cm-s-nova-dark .cm-em { font-style: italic; }
+.cm-s-nova-dark .cm-error { color: #f48771; }

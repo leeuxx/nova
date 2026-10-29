@@ -219,6 +219,7 @@
   "table.delete_unavailable": "不可删除",
   "table.confirm_delete_n_items": "确定要删除这 {n} 条数据吗？",
   "table.preview_rich": "点击查看富文本",
+  "table.preview_code": "点击查看代码",
   "table.no_file": "暂无文件",
   "table.data_nodes": "数据节点",
   "table.items_per_page": "{n} 条/页",

@@ -56,6 +56,9 @@ public @interface Edit {
     @Comment("文件上传组件配置")
     AttachmentType attachmentType() default @AttachmentType;
 
+    @Comment("代码编辑器配置")
+    CodeType codeType() default @CodeType;
+
     @Comment("对象引用组件配置")
     ReferenceType referenceType() default @ReferenceType(ref = "");
 
@@ -102,6 +105,9 @@ public @interface Edit {
 
         @Comment("富文本编辑器")
         EDITOR,
+
+        @Comment("代码编辑器")
+        CODE,
 
 
         @Comment("对象引用组件")

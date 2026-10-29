@@ -176,6 +176,7 @@ window.NovaTableJQ = (function ($) {
     target.numberMap  = resp.data.number  || {}
     target.booleanMap = resp.data.booleanInfo || {}
     target.attachmentMap  = resp.data.attachment  || {}
+    target.codeMap        = resp.data.code        || {}
     target.referenceMap   = resp.data.reference   || {}
     target.appendageMap   = resp.data.appendage   || {}
     target.linkMap        = resp.data.link        || {}

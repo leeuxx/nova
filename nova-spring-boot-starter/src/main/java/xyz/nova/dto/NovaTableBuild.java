@@ -91,6 +91,9 @@ public class NovaTableBuild {
         @Comment("ai信息")
         private Ai ai;
 
+        @Comment("代码编辑器信息")
+        private Map<String, Code> code;
+
         @Data
         @Accessors(chain = true)
         public static class Search {
@@ -664,6 +667,15 @@ public class NovaTableBuild {
 
             @Comment("可搜索字段")
             private List<NovaFieldUtils.AiSearchFieldInfo> fields;
+
+        }
+
+        @Data
+        @Accessors(chain = true)
+        public static class Code {
+
+            @Comment("类型")
+            private String type;
 
         }
 
