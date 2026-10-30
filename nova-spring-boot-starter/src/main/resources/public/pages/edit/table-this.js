@@ -121,7 +121,8 @@ window.NovaFieldThis = {
         self._codeMounting = false
         if (self._codeReady) return
         if (!self._codeHost || !self._codeHost.isConnected) return
-        self._codeEditor = window.NovaJsonEditor.create(self._codeHost, initialValue, {
+        // CodeMirror 实例不能存进响应式 data：Vue Proxy 会破坏插件内部的对象引用相等判断（如 matchBrackets 的 marker 查找）
+        self._codeEditor = window.Vue.markRaw(window.NovaJsonEditor.create(self._codeHost, initialValue, {
           language: cfg.type,
           dark: !!(window.__appDarkMode && window.__appDarkMode.value),
           readOnly: self.isReadonly(self.f),
@@ -129,7 +130,7 @@ window.NovaFieldThis = {
             self._codeLastValue = value
             self.$emit('field-change', { field: self.f.field, value: value })
           }
-        })
+        }))
         self._codeLastValue = initialValue
         self._codeReady = true
       }).catch(function (err) {

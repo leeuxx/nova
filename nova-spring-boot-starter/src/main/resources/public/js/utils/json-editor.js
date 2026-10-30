@@ -105,6 +105,41 @@
     return !!languageLoaded[key]
   }
 
+  // 全文档替换，保留撤销栈（setValue 会清空历史）
+  function replaceAll(editor, text) {
+    var lastLine = editor.lastLine()
+    var lastCh = editor.getLine(lastLine).length
+    var cursor = editor.getCursor()
+    editor.operation(function () {
+      editor.replaceRange(text, { line: 0, ch: 0 }, { line: lastLine, ch: lastCh })
+    })
+    var line = Math.min(cursor.line, editor.lastLine())
+    editor.setCursor({ line: line, ch: Math.min(cursor.ch, editor.getLine(line).length) })
+  }
+
+  // JSON 悬浮操作按钮（格式化 / 压缩），表单与只读预览共用
+  function bindJsonActions(el, editor) {
+    var old = el.querySelector('.nova-code-actions')
+    if (old) old.parentNode.removeChild(old)
+    var box = document.createElement('div')
+    box.className = 'nova-code-actions'
+    function addButton(label, action) {
+      var btn = document.createElement('button')
+      btn.type = 'button'
+      btn.textContent = label
+      btn.addEventListener('mousedown', function (e) { e.preventDefault() })
+      btn.addEventListener('click', function () {
+        // 空内容或非法 JSON 时静默不处理，避免打断预览/编辑
+        if (!validate(editor.getValue()).ok) return
+        action(editor)
+      })
+      box.appendChild(btn)
+    }
+    addButton('格式化', format)
+    addButton('压缩', minify)
+    el.appendChild(box)
+  }
+
   function create(el, value, options) {
     var opts = options || {}
     var entry = getSpec(opts.language)
@@ -127,6 +162,7 @@
       autoCloseBrackets: true,
       foldGutter: true
     })
+    if (entry.key === 'json') bindJsonActions(el, editor)
     if (opts.onChange) {
       editor.on('change', function () {
         opts.onChange(editor.getValue())
@@ -154,11 +190,11 @@
   }
 
   function format(editor) {
-    editor.setValue(JSON.stringify(JSON.parse(editor.getValue()), null, 2))
+    replaceAll(editor, JSON.stringify(JSON.parse(editor.getValue()), null, 2))
   }
 
   function minify(editor) {
-    editor.setValue(JSON.stringify(JSON.parse(editor.getValue())))
+    replaceAll(editor, JSON.stringify(JSON.parse(editor.getValue())))
   }
 
   function validate(value) {
