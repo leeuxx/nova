@@ -2,6 +2,7 @@ xyz.nova.config.NovaBootAutoConfiguration
 xyz.nova.annotation.aspect.NovaRouterAspect
 xyz.nova.controller.NovaAuthorityController
 xyz.nova.controller.NovaMessageController
+xyz.nova.controller.NovaIconController
 xyz.nova.error.NovaExceptionAdvice
 xyz.nova.service.impl.NovaTableServiceImpl
 xyz.nova.service.impl.NovaTplServiceImpl

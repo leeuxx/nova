@@ -114,4 +114,34 @@
 
   // 生命周期回调 { startup(route) 页面加载完成后回调 }
   window.nova.event = window.nova.event || {}
+
+  // ── 业务离线图标 ────────────────────────────────────────────
+  // config.js 的 icons 支持两种写法：
+  //   array  → 内联 IconifyJSON 集合（单个集合直接放对象，多个放数组）
+  //   string → JSON 文件路径（相对 public 根），文件内容同上
+  // config.js 在 iconify-icon.min.js 之后加载，IconifyPreload 已消费完，
+  // 所以走组件类暴露的运行时接口 addCollection，由 app.js 在挂载前等待就绪。
+  function registerIconSets(list) {
+    var addCollection = window.customElements.get('iconify-icon').addCollection
+    ;(Array.isArray(list) ? list : [list]).forEach(function (set) {
+      addCollection(set)
+    })
+  }
+
+  function loadIcons(value) {
+    if (value == null) return Promise.resolve()
+    if (Array.isArray(value)) {
+      registerIconSets(value)
+      return Promise.resolve()
+    }
+    if (typeof value === 'string' && value) {
+      return fetch(value).then(function (resp) {
+        if (!resp.ok) throw new Error('图标配置加载失败: ' + value + ' HTTP ' + resp.status)
+        return resp.json()
+      }).then(registerIconSets)
+    }
+    throw new Error('icons 配置必须是数组或 JSON 文件路径')
+  }
+
+  window.__novaIconsReady = loadIcons(userCfg.icons)
 })()

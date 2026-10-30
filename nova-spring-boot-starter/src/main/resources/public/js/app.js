@@ -259,16 +259,19 @@ function _isDirect404() {
 var _startToken = window.__novaEmbedMode
   ? (window.__novaEmbedToken || (window.__novaEmbedExplicitToken ? '' : (localStorage.getItem('nova_token') || '')))
   : localStorage.getItem('nova_token')
-if (_startToken && !_isDirect404()) {
-  window.fetchApi.post('/nova/authority/getMenu', {}).then(function (resp) {
-    mountApp(resp.data || [], window.nova.config)
-  }).catch(function () { mountApp([], window.nova.config) })
-} else {
-  // 无 token：登录页直接显示，不需要加载动画，直接移除 boot（index.html 内联已移除，此处兜底）
-  var bootEl0 = document.getElementById('__nova-boot-loading__')
-  if (bootEl0 && bootEl0.parentNode) bootEl0.parentNode.removeChild(bootEl0)
-  mountApp([], window.nova.config)
-}
+// 业务离线图标（config.icons）注册完成后才能挂载，否则页面上先渲染的图标会走 CDN
+window.__novaIconsReady.then(function () {
+  if (_startToken && !_isDirect404()) {
+    window.fetchApi.post('/nova/authority/getMenu', {}).then(function (resp) {
+      mountApp(resp.data || [], window.nova.config)
+    }).catch(function () { mountApp([], window.nova.config) })
+  } else {
+    // 无 token：登录页直接显示，不需要加载动画，直接移除 boot（index.html 内联已移除，此处兜底）
+    var bootEl0 = document.getElementById('__nova-boot-loading__')
+    if (bootEl0 && bootEl0.parentNode) bootEl0.parentNode.removeChild(bootEl0)
+    mountApp([], window.nova.config)
+  }
+})
 
 function mountApp(menuList, config, loginExpired) {
   // 系统名称（config.js name）：供网页标题、左上角 logo、加载动画标题、home 页读取
