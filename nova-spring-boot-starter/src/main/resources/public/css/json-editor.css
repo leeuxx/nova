@@ -29,10 +29,8 @@
   gap: 2px;
   padding: 2px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
-  backdrop-filter: blur(4px);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   user-select: none;
 }
 .nova-code-actions button {
@@ -57,9 +55,8 @@
   background: rgba(37, 99, 235, 0.16);
 }
 .dark .nova-code-actions {
-  background: rgba(26, 26, 30, 0.94);
-  border-color: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  background: #232327;
+  border-color: #333339;
 }
 .dark .nova-code-actions button {
   color: #b4b4be;
