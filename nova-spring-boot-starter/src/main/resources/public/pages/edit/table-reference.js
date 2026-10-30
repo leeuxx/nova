@@ -25,7 +25,8 @@ var NovaRefForm = {
       choiceMap: {},
       dateMap: {},
       attachmentMap: {},
-      referenceMap: {}
+      referenceMap: {},
+      codeMap: {}
     }
   },
 
@@ -81,6 +82,7 @@ var NovaRefForm = {
           self.dateMap       = resp.data.date       || {}
           self.attachmentMap = resp.data.attachment  || {}
           self.referenceMap  = resp.data.reference   || {}
+          self.codeMap       = resp.data.code        || {}
         }
       })
 
@@ -329,6 +331,14 @@ var NovaRefForm = {
       })
     },
 
+    // 打开代码预览弹窗（弹窗挂在页面组件，由父级处理）
+    openCodePreview: function(f) {
+      var val = (this.viewData || {})[f.field]
+      if (val === null || val === undefined || val === '') return
+      var cfg = (this.codeMap || {})[f.field] || {}
+      this.$emit('code-preview', { title: f.title || f.field, value: val, type: cfg.type })
+    },
+
     // 日期格式化
     _formatDateTs: function(ts, type) {
       var d = new Date(ts)
@@ -372,7 +382,7 @@ var NovaRefForm = {
           <n-divider v-if="item.field.type === 'DIVIDE' && editLayout !== 'FULL_LINE'" style="grid-column:1/-1;margin:0">{{ item.field.title }}</n-divider>
           <div v-else-if="item.field.type === 'EMPTY' && editLayout !== 'FULL_LINE'"></div>
           <div v-else-if="item.field.type !== 'DIVIDE' && item.field.type !== 'EMPTY' && item.field.type !== 'BUTTON'"
-            :style="'display:flex;align-items:' + (item.field.type === 'BOOLEAN' ? 'center' : 'baseline') + ';gap:8px;min-width:0;overflow:hidden;padding:6px;border-radius:4px' + (item.field.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
+            :style="'display:flex;align-items:' + ((item.field.type === 'BOOLEAN' || item.field.type === 'CODE' || item.field.type === 'EDITOR') ? 'center' : 'baseline') + ';gap:8px;min-width:0;overflow:hidden;padding:6px;border-radius:4px' + (item.field.type === 'TEXTAREA' ? ';grid-column:1/-1' : '')">
             <span class="ref-desc-label">{{ item.field.title }}:</span>
             <n-button-group v-if="item.field.type === 'BOOLEAN' && displayText(item.field) !== ''" size="small" style="pointer-events:none">
               <n-button :type="booleanValue(item.field) ? 'primary' : 'default'">{{ __t('common.yes') }}</n-button>
@@ -381,11 +391,21 @@ var NovaRefForm = {
             <div v-else-if="item.field.type === 'ATTACHMENT' && isImageAttach(item.field) && getAttachUrls(item.field, viewData).length > 0" class="ref-attach-wrap" style="display:inline-flex;gap:6px;align-items:center">
               <NovaImagePreview :src-list="getAttachUrls(item.field, viewData)" :width="36" :height="36" :showAll="true" />
             </div>
-            <div v-else-if="item.field.type === 'EDITOR' && displayText(item.field) !== ''" class="ref-desc-value">
+            <div v-else-if="item.field.type === 'EDITOR' && displayText(item.field) !== ''" class="ref-desc-value" style="display:inline-flex;align-items:center">
               <span class="cell-editor-preview" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:#2563eb;font-size:13px" @click="openEditorPreview(item.field)">
                 <iconify-icon icon="bi:filetype-html" style="font-size:16px"></iconify-icon>
                 <span>{{ __t('common.preview') }}</span>
               </span>
+            </div>
+            <div v-else-if="item.field.type === 'CODE' && codeMap[item.field.field] && displayText(item.field) !== ''" class="ref-desc-value" style="display:inline-flex;align-items:center">
+              <n-tooltip trigger="hover" placement="top">
+                <template #trigger>
+                  <span class="cell-code-preview" style="cursor:pointer;display:inline-flex;align-items:center;color:#2563eb" @click="openCodePreview(item.field)">
+                    <iconify-icon icon="lucide:code-xml" style="font-size:18px"></iconify-icon>
+                  </span>
+                </template>
+                {{ __t('table.preview_code') }}
+              </n-tooltip>
             </div>
             <div v-else class="ref-desc-value" :style="item.field.type === 'TEXTAREA' ? 'display:block;width:100%;min-width:0' : ''">
               <div v-if="item.field.type === 'TEXTAREA'" class="ref-textarea-box" style="background:rgba(0,0,0,0.02);border-left:3px solid #2563eb;padding:8px 12px;border-radius:4px;font-family:monospace;font-size:13px;white-space:pre-wrap;word-break:break-word;line-height:1.6;max-height:150px;overflow-y:auto">{{ displayText(item.field) || '-' }}</div>

@@ -5046,6 +5046,7 @@ const NovaTable = {
             :source-reference-map="referenceMap"
             :source-raw-detail-row="rawDetailRow"
             :loading-style="loadingStyle"
+            @code-preview="(p) => openTableCodePreview(p.title, p.value, p.type)"
           />
 
           <!-- appendageForm 内容 -->
