@@ -651,7 +651,7 @@ html.theme-transitioning.to-light::view-transition-new(root) {
   margin-bottom: 16px;
 }
 .table-card {
-  margin-bottom: 4px;
+  margin-bottom: 0;
 }
 .filter-card {
   margin-bottom: 12px;
@@ -1427,7 +1427,7 @@ body.dark { background: #151515 !important; }
 /* picker 弹窗内容区底色：让搜索卡片和表格卡片凸显，和主页面风格一致 */
 .ref-picker-body {
   background: #f5f7fa;
-  padding: 16px 16px 0 16px;
+  padding: 16px 16px 4px 16px;
   box-sizing: border-box;
 }
 .dark .ref-picker-body {
