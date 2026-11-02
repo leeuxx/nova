@@ -102,10 +102,6 @@ html.theme-transitioning.to-light::view-transition-new(root) {
   from { opacity: 0; transform: translate(-50%, -4px); }
   to   { opacity: 1; transform: translate(-50%, 0); }
 }
-.theme-switch {
-  height: 24px;
-  gap: 6px;
-}
 /* 消息中心抽屉 */
 .msg-drawer .n-drawer-body-content-wrapper { scrollbar-width: thin; scrollbar-color: #bbb #fafafa; background: #f5f7fa; scrollbar-gutter: stable; }
 .msg-drawer .n-drawer-body-content-wrapper::-webkit-scrollbar { width: 6px; }

@@ -21,7 +21,7 @@ const { createApp, ref, h, computed, watch, nextTick } = Vue
 const { createRouter, createWebHashHistory, useRoute, useRouter } = VueRouter
 const {
   NConfigProvider, NLayout, NLayoutSider, NLayoutHeader, NLayoutContent,
-  NMenu, NIcon, NDropdown, NSpace, NTabs, NTab, NSpin, NSwitch,
+  NMenu, NIcon, NDropdown, NSpace, NTabs, NTab, NSpin,
   NBreadcrumb, NBreadcrumbItem, NBadge,
   NMessageProvider, NDialogProvider, NNotificationProvider, NAvatar,
   useDialog, useMessage, useLoadingBar,
@@ -965,9 +965,7 @@ function mountApp(menuList, config, loginExpired) {
                           </div>
                         </n-dropdown>
                         <div class="header-action theme-switch" :data-tip="__t('tabs.theme_tip')" style="cursor:pointer" @click="isDark = !isDark">
-                          <n-icon size="18"><iconify-icon icon="material-symbols:dark-mode-outline"></iconify-icon></n-icon>
-                          <n-switch v-model:value="isDark" @click.stop />
-                          <n-icon size="18"><iconify-icon icon="material-symbols:light-mode-outline"></iconify-icon></n-icon>
+                          <n-icon size="20"><iconify-icon :icon="isDark ? 'material-symbols:light-mode-outline' : 'material-symbols:dark-mode-outline'"></iconify-icon></n-icon>
                         </div>
                         <n-dropdown :options="userDropdown" trigger="hover" @select="handleUserMenuSelect">
                           <div class="header-action user-info">
