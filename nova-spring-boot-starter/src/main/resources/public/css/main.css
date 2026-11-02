@@ -1419,6 +1419,27 @@ body.dark { background: #151515 !important; }
 }
 .n-pagination-quick-jumper .n-input { margin-left: 6px !important; }
 
+/* 每页条数 / 跳页输入：无边框 + 浅灰填充；hover 出浅描边，focus 出主色描边 */
+.n-pagination .n-base-selection {
+  --n-color: #f5f6f8 !important;
+  --n-color-active: #f5f6f8 !important;
+  --n-border: 1px solid transparent !important;
+  --n-border-hover: 1px solid #d7dbe2 !important;
+  --n-border-active: 1px solid #3b82f6 !important;
+  --n-border-focus: 1px solid #3b82f6 !important;
+  --n-box-shadow-hover: none !important;
+  --n-box-shadow-active: 0 0 0 2px rgba(59, 130, 246, .15) !important;
+  --n-box-shadow-focus: 0 0 0 2px rgba(59, 130, 246, .15) !important;
+}
+.n-pagination-quick-jumper .n-input {
+  --n-color: #f5f6f8 !important;
+  --n-color-focus: #f5f6f8 !important;
+  --n-border: 1px solid transparent !important;
+  --n-border-hover: 1px solid #d7dbe2 !important;
+  --n-border-focus: 1px solid #3b82f6 !important;
+  --n-box-shadow-focus: 0 0 0 2px rgba(59, 130, 246, .15) !important;
+}
+
 .dark .n-pagination      { color: #e0e0e0; }
 .dark .n-pagination-item { color: #e0e0e0; }
 .dark .n-pagination-item:not(.n-pagination-item--active):not(.n-pagination-item--disabled):hover { background: #2a2a2e !important; color: #e5e7eb !important; }
@@ -1426,6 +1447,22 @@ body.dark { background: #151515 !important; }
 .dark .n-pagination-item--active:hover { background: #52525b !important; color: #fff !important; }
 .dark .n-pagination-item--disabled { color: #5a5e66 !important; }
 .dark .n-pagination-suffix { color: #8b909a; }
+.dark .n-pagination .n-base-selection {
+  --n-color: #2a2a2e !important;
+  --n-color-active: #2a2a2e !important;
+  --n-border-hover: 1px solid #4a4a52 !important;
+  --n-border-active: 1px solid #3b82f6 !important;
+  --n-border-focus: 1px solid #3b82f6 !important;
+  --n-text-color: #e5e7eb !important;
+  --n-arrow-color: #9aa0aa !important;
+}
+.dark .n-pagination-quick-jumper .n-input {
+  --n-color: #2a2a2e !important;
+  --n-color-focus: #2a2a2e !important;
+  --n-border-hover: 1px solid #4a4a52 !important;
+  --n-border-focus: 1px solid #3b82f6 !important;
+  --n-text-color: #e5e7eb !important;
+}
 
 /* ─── 页面切换动画 ──────────────────────────────────────── */
 
