@@ -1372,11 +1372,60 @@ body.dark { background: #151515 !important; }
 .dark .n-tab--active     { color: #2563eb !important; }
 .dark .menu-tabs .n-tabs-bar { background: #2563eb !important; }
 .dark .n-form-item-label { color: #e0e0e0; }
+
+/* ─── 分页栏统一样式（主表 / 双表 / 嵌入 / picker 共用） ─────── */
+/* 铺满整行，才能把总数放最左、其余控件推到最右 */
+.n-pagination {
+  width: 100%;
+  align-items: center;
+}
+/* 总数靠左，其余控件靠右 */
+.n-pagination-suffix {
+  order: -1;
+  margin: 0 auto 0 0 !important;
+  font-size: 13px;
+  color: #8b909a;
+}
+/* 页码 / 箭头：去掉方框，改为文字按钮 */
+.n-pagination-item {
+  min-width: 28px;
+  height: 28px;
+  margin-left: 6px !important;
+  padding: 0 6px;
+  border: none !important;
+  border-radius: 6px;
+  background: transparent !important;
+  transition: background-color .15s, color .15s;
+}
+.n-pagination-item:not(.n-pagination-item--active):not(.n-pagination-item--disabled):hover {
+  background: #eef2ff !important;
+  color: #3b82f6 !important;
+}
+.n-pagination-item--active {
+  background: #dbeafe !important;
+  color: #3b82f6 !important;
+  font-weight: 500;
+}
+.n-pagination-item--active:hover {
+  background: #bfdbfe !important;
+  color: #2563eb !important;
+}
+.n-pagination-item--disabled { color: #c8ccd4 !important; }
+/* 每页条数、跳页输入：统一间距 */
+.n-pagination > .n-select { margin-left: 12px !important; }
+.n-pagination-quick-jumper {
+  margin-left: 12px;
+  font-size: 13px;
+}
+.n-pagination-quick-jumper .n-input { margin-left: 6px !important; }
+
 .dark .n-pagination      { color: #e0e0e0; }
-.dark .n-pagination-item { background: #252525; color: #e0e0e0; }
-.dark .n-pagination-item--active { background: #2563eb !important; color: #fff !important; border-color: transparent !important; }
-.dark .n-pagination-item--active:hover { background: #3b82f6 !important; }
-.dark .n-pagination-item--button:not(.n-pagination-item--disabled):hover { background: #333 !important; }
+.dark .n-pagination-item { color: #e0e0e0; }
+.dark .n-pagination-item:not(.n-pagination-item--active):not(.n-pagination-item--disabled):hover { background: #2a2a2e !important; color: #e5e7eb !important; }
+.dark .n-pagination-item--active { background: #3f3f46 !important; color: #f4f4f5 !important; }
+.dark .n-pagination-item--active:hover { background: #52525b !important; color: #fff !important; }
+.dark .n-pagination-item--disabled { color: #5a5e66 !important; }
+.dark .n-pagination-suffix { color: #8b909a; }
 
 /* ─── 页面切换动画 ──────────────────────────────────────── */
 
