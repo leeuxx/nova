@@ -82,6 +82,10 @@
   "tabs.close_other": "다른 탭 닫기",
   "tabs.theme_tip": "테마 전환",
   "tabs.message_center": "메시지",
+  "tabs.menu_search": "검색",
+  "tabs.menu_search_placeholder": "메뉴 이름 입력",
+  "tabs.menu_search_empty": "일치하는 메뉴가 없습니다",
+  "tabs.menu_search_hint": "메뉴 이름을 입력해 검색하세요",
 
   "profile.title": "프로필",
   "profile.token": "토큰",

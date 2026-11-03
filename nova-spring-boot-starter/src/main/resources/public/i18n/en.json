@@ -82,6 +82,10 @@
   "tabs.close_other": "Close others",
   "tabs.theme_tip": "Switch theme",
   "tabs.message_center": "Messages",
+  "tabs.menu_search": "Search",
+  "tabs.menu_search_placeholder": "Enter menu name",
+  "tabs.menu_search_empty": "No matching menus",
+  "tabs.menu_search_hint": "Type a menu name to search",
 
   "profile.title": "My Profile",
   "profile.token": "Token",

@@ -82,6 +82,10 @@
   "tabs.close_other": "他を閉じる",
   "tabs.theme_tip": "テーマ切替",
   "tabs.message_center": "メッセージ",
+  "tabs.menu_search": "検索",
+  "tabs.menu_search_placeholder": "メニュー名を入力",
+  "tabs.menu_search_empty": "一致するメニューがありません",
+  "tabs.menu_search_hint": "メニュー名を入力して検索",
 
   "profile.title": "プロフィール",
   "profile.token": "トークン",

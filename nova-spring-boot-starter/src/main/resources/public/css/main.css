@@ -1488,6 +1488,45 @@ body.dark { background: #151515 !important; }
 .dark .header-action:hover { background-color: rgba(37,99,235,0.25); }
 .dark .form-label          { color: #e0e0e0; }
 
+/* 菜单搜索触发框 */
+.menu-search-trigger {
+  width: 104px;
+  height: 32px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  padding: 0 12px;
+  justify-content: flex-start;
+  border: none;
+  background: #f4f4f5;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+}
+.menu-search-trigger:hover {
+  background: #ececee;
+}
+.menu-search-trigger-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.menu-search-result {
+  height: 40vh;
+  overflow-y: auto;
+  margin-top: 12px;
+  scrollbar-width: thin;
+}
+.dark .menu-search-trigger {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+}
+.dark .menu-search-trigger:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+@media (max-width: 1280px) {
+  .menu-search-trigger { width: 36px; padding: 0; justify-content: center; }
+  .menu-search-trigger-text { display: none; }
+}
+
 .tabs-nav-hidden .menu-tabs .n-tabs-nav { display: none; }
 .n-modal-body-wrapper .menu-tabs .n-tabs-nav { position: sticky; top: 0; z-index: 10; background: var(--n-color); }
 /* 非菜单 tab（弹窗/查询条件等原生 tab）增加点击区域，去掉多余 pad */

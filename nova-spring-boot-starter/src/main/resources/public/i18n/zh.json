@@ -82,6 +82,10 @@
   "tabs.close_other": "关闭其他标签页",
   "tabs.theme_tip": "切换主题",
   "tabs.message_center": "消息中心",
+  "tabs.menu_search": "搜索",
+  "tabs.menu_search_placeholder": "输入菜单名称",
+  "tabs.menu_search_empty": "没有匹配的菜单",
+  "tabs.menu_search_hint": "请输入菜单名查找",
 
   "profile.title": "个人中心",
   "profile.token": "Token",

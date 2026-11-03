@@ -153,6 +153,48 @@ function processMenus(list) {
   return { menuTree: roots, routeMeta: routeMeta, bcIconMap: bcIconMap, defaultPath: defaultPath, parentKeyMap: parentKeyMap, tplMeta: tplMeta }
 }
 
+// ─── 菜单搜索：按名称过滤可打开菜单，保留命中项的祖先链 ─────────────
+function filterMenuTree(nodes, kw) {
+  var out = []
+  nodes.forEach(function (node) {
+    var raw = node._raw
+    var openable = !!raw && (raw.type === 'NOVA' || raw.type === 'TPL') && !!raw.value
+    var children = node.children ? filterMenuTree(node.children, kw) : []
+    var hit = openable && String(node.label).toLowerCase().indexOf(kw) > -1
+    if (hit || children.length) {
+      var copy = {
+        label: node.label,
+        key: node.key,
+        icon: node.icon,
+        _raw: raw,
+        _openable: openable
+      }
+      if (children.length) copy.children = children
+      out.push(copy)
+    }
+  })
+  return out
+}
+
+function collectMenuDirKeys(nodes) {
+  var keys = []
+  nodes.forEach(function (node) {
+    if (node.children && node.children.length) {
+      keys.push(node.key)
+      collectMenuDirKeys(node.children).forEach(function (k) { keys.push(k) })
+    }
+  })
+  return keys
+}
+
+function renderMenuSearchLabel(info) {
+  const option = info.option
+  return h('div', { style: 'display:flex;align-items:center;gap:8px;min-width:0' }, [
+    option.icon ? option.icon() : null,
+    h('span', { style: 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, option.label)
+  ])
+}
+
 // ─── themeOverrides ──────────────────────────────────────────────
 const themeOverrides = {
   common: {
@@ -510,6 +552,27 @@ function mountApp(menuList, config, loginExpired) {
         } else if (key.startsWith('/')) {
           router.push(key)
         }
+      }
+
+      // ── 菜单搜索：纯前端匹配可打开的 NOVA/TPL 菜单，保留祖先目录 ──
+      const menuSearchVisible = ref(false)
+      const menuSearchKeyword = ref('')
+      const menuSearchSelectedKeys = ref([])
+      const menuSearchExpandedKeys = ref([])
+      const menuSearchTree = computed(() => {
+        const kw = menuSearchKeyword.value.trim().toLowerCase()
+        if (!kw) return []
+        return filterMenuTree(menuTree, kw)
+      })
+      watch(menuSearchTree, (tree) => {
+        menuSearchExpandedKeys.value = collectMenuDirKeys(tree)
+      }, { immediate: true })
+
+      const handleMenuSearchSelect = (keys, options) => {
+        const node = options && options[0]
+        if (!node || !node._openable) return
+        menuSearchVisible.value = false
+        handleMenuSelect(node.key, node)
       }
 
       const tabVersions = Vue.ref({})
@@ -880,6 +943,7 @@ function mountApp(menuList, config, loginExpired) {
         menuTree, breadcrumbItems, naiveLocale, routeKey, isStandaloneRoute, showRefreshBtn, pageTransitionName, menuSelectedKey, route,
         pageComponent, cachedNames,
         handleMenuSelect, handleTabClose, handleTabClick, showRightSeparator, goHome, handleRefresh, userDropdown, userToolButtons, handleUserMenuSelect,
+        menuSearchVisible, menuSearchKeyword, menuSearchTree, menuSearchSelectedKeys, menuSearchExpandedKeys, handleMenuSearchSelect, renderMenuSearchLabel,
         localeDropdown, handleLocaleSelect, currentLocale, localeNodeProps,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
         tabScrollRef, tabsRef, showTabArrows, canScrollLeft, canScrollRight, scrollTabBy,
@@ -953,6 +1017,10 @@ function mountApp(menuList, config, loginExpired) {
                         </n-breadcrumb>
                       </div>
                       <n-space align="center" :size="4">
+                        <div class="header-action menu-search-trigger" @click="menuSearchVisible = true">
+                          <n-icon size="16"><iconify-icon icon="material-symbols:search"></iconify-icon></n-icon>
+                          <span class="menu-search-trigger-text">{{ __t('tabs.menu_search') }}</span>
+                        </div>
                         <template v-for="btn in userToolButtons" :key="'ub' + btn._idx">
                           <div class="header-action" style="cursor:pointer" :data-tip="btn.name || undefined" @click="btn.click">
                             <n-icon size="20"><iconify-icon :icon="btn.icon"></iconify-icon></n-icon>
@@ -1034,6 +1102,24 @@ function mountApp(menuList, config, loginExpired) {
           </n-dialog-provider>
         </n-message-provider>
         </n-loading-bar-provider>
+
+        <!-- 菜单搜索弹窗 -->
+        <n-modal v-model:show="menuSearchVisible" preset="card" :title="__t('tabs.menu_search')" style="width:480px;margin-top:80px" :bordered="false">
+          <n-input v-model:value="menuSearchKeyword" clearable autofocus :placeholder="__t('tabs.menu_search_placeholder')" />
+          <div class="menu-search-result">
+            <n-tree
+              v-if="menuSearchTree.length"
+              :data="menuSearchTree"
+              :selected-keys="menuSearchSelectedKeys"
+              :expanded-keys="menuSearchExpandedKeys"
+              :render-label="renderMenuSearchLabel"
+              block-line
+              @update:expanded-keys="menuSearchExpandedKeys = $event"
+              @update:selected-keys="handleMenuSearchSelect"
+            />
+            <n-empty v-else :description="menuSearchKeyword.trim() ? __t('tabs.menu_search_empty') : __t('tabs.menu_search_hint')" style="margin-top:40px" />
+          </div>
+        </n-modal>
 
         <!-- 个人中心弹窗 -->
         <n-modal v-model:show="showProfile" preset="card" :title="__t('profile.title')" style="width:420px;margin-top:60px">
