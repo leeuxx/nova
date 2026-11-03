@@ -1375,18 +1375,10 @@ body.dark { background: #151515 !important; }
   width: 100%;
   align-items: center;
 }
-/* 首次数据到达前隐藏空分页，避免先闪出“共 0 条”再淡入 */
+/* 首次数据到达前隐藏空分页：加载期间不闪出“共 0 条”，
+   数据到达后与表格同帧出现，整块一起呈现 */
 .pager-hide .n-pagination {
   opacity: 0;
-}
-/* 数据总量变化导致页码数量突变时，整组分页淡入，柔化“弹开”；
-   翻页不会改变总数，因此不会触发 */
-.pager-fade .n-pagination {
-  animation: pager-fade-in 0.18s ease both;
-}
-@keyframes pager-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 /* 总数靠左，其余控件靠右 */
 .n-pagination-suffix {

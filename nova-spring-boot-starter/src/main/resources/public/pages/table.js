@@ -507,7 +507,6 @@ const NovaTable = {
       pageSize:       10,
       pageSizes:      [10, 20, 50, 100],
       loading:          false,
-      pagerFade:        false,   // 数据总量变化时短暂触发分页整组淡入
       pagerReady:       false,   // 首次数据到达标记：之前隐藏空分页，避免闪出“共 0 条”
       buildLoading:       true,   // 主表 /build 构建中，显示 loading 覆盖层（首帧即遮住表格；整页加载阶段由 setBuildLoading 关闭，避免与首屏 loading 重叠）
       previewModalShow: false,
@@ -1372,17 +1371,8 @@ const NovaTable = {
     },
 
   watch: {
-    'paginationConfig.itemCount'(val) {
+    'paginationConfig.itemCount'() {
       this.pagerReady = true
-      if (!val) return
-      if (this.pagerFade) {
-        this.pagerFade = false
-        this.$nextTick(() => { this.pagerFade = true })
-      } else {
-        this.pagerFade = true
-      }
-      clearTimeout(this._pagerFadeTimer)
-      this._pagerFadeTimer = setTimeout(() => { this.pagerFade = false }, 240)
     },
     isDark(val) {
       if (this._codePreviewEditor) window.NovaJsonEditor.changeTheme(this._codePreviewEditor, val)
@@ -4987,7 +4977,7 @@ const NovaTable = {
             :scroll-x="scrollX"
             :virtual-scroll="true"
             :flex-height="true"
-            :class="{ 'tree-cell-overflow-ellipsis': isTree && cellOverflow === 'ellipsis', 'pager-hide': !pagerReady, 'pager-fade': pagerFade }"
+            :class="{ 'tree-cell-overflow-ellipsis': isTree && cellOverflow === 'ellipsis', 'pager-hide': !pagerReady }"
             style="width:100%;height:100%"
           >
             <template #loading v-if="loadingStyle !== 'spinner'">
