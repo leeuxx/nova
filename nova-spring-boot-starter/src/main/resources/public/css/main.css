@@ -1369,6 +1369,9 @@ body.dark { background: #151515 !important; }
 .dark .menu-tabs .n-tabs-bar { background: #2563eb !important; }
 .dark .n-form-item-label { color: #e0e0e0; }
 
+/* 代码预览弹窗：icon 传 null 后仍会渲染空容器，隐藏避免标题左侧留白 */
+.n-dialog__icon:empty { display: none; }
+
 /* ─── 分页栏统一样式（主表 / 双表 / 嵌入 / picker 共用） ─────── */
 /* 铺满整行，才能把总数放最左、其余控件推到最右 */
 .n-pagination {

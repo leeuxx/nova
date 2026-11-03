@@ -97,6 +97,75 @@
           negativeButtonProps: { size: 'medium' },
           onPositiveClick: options.onConfirm
         })
+      },
+      // 代码纯预览弹窗（只读 CodeMirror）
+      //   window.modal.code({ title, value, language })
+      code: function (opts) {
+        opts = opts || {}
+        var language = opts.language || 'json'
+        var hostEl = null
+        var editor = null
+        var enterDone = false
+        var langReady = false
+        var langError = null
+
+        function mountIfReady() {
+          if (!langReady || !enterDone || !hostEl || editor) return
+          hostEl.textContent = ''
+          editor = window.NovaJsonEditor.create(hostEl, opts.value == null ? '' : String(opts.value), {
+            language: language,
+            dark: !!(window.__appDarkMode && window.__appDarkMode.value),
+            readOnly: true
+          })
+        }
+
+        function cleanup() {
+          if (editor && window.NovaJsonEditor) {
+            window.NovaJsonEditor.destroy(editor)
+            editor = null
+          }
+        }
+
+        if (!window.NovaJsonEditor) {
+          var noEditor = 'NovaJsonEditor 未加载，无法打开代码预览'
+          console.error(noEditor)
+          if (window.$message) window.$message.error(noEditor)
+          return
+        }
+
+        var content = function () {
+          return window.Vue.h('div', {
+            class: 'nova-code-preview',
+            ref: function (el) { hostEl = el }
+          }, window.__t('common.loading'))
+        }
+
+        openDialog({
+          title: opts.title || '',
+          content: content,
+          icon: function () { return null },
+          style: 'margin-top:80px;width:900px;max-width:92vw',
+          onAfterEnter: function () {
+            enterDone = true
+            if (langError) {
+              hostEl.textContent = langError
+              return
+            }
+            mountIfReady()
+          },
+          onClose: cleanup,
+          onNegativeClick: cleanup,
+          onAfterLeave: cleanup
+        })
+
+        window.NovaJsonEditor.ensureLanguage(language).then(function () {
+          langReady = true
+          mountIfReady()
+        }).catch(function (err) {
+          langError = err && err.message ? err.message : String(err)
+          if (hostEl) hostEl.textContent = langError
+          if (window.$message) window.$message.error(langError)
+        })
       }
     }
 })()
