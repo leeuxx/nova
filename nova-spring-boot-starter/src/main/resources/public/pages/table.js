@@ -973,10 +973,11 @@ const NovaTable = {
                 const segSet = disabled ? undefined : (newVal) => {
                   window.fetchApi.post('/nova/table/update', { novaName, formInfo: [{ field: novaIdField, value: String(row[novaIdField]), type: '' }, { field: col.field, value: newVal, type: 'BOOLEAN' }] }).then((resp) => { if (window.$message) window.$message.success(window.__t('table.op_success')); window.NovaTableJQ.loadData(loadKey) })
                 }
-                return h(NButtonGroup, { size: 'small' }, {
+                const segBtnStyle = 'height:24px;padding:0 10px;min-width:0;font-size:12px'
+                return h(NButtonGroup, { size: 'tiny' }, {
                   default: () => [
-                    h(NButton, { type: isTrue ? 'primary' : 'default', disabled, onClick: () => segSet && segSet('true') }, { default: () => window.__t('common.yes') }),
-                    h(NButton, { type: isTrue ? 'default' : 'primary', disabled, onClick: () => segSet && segSet('false') }, { default: () => window.__t('common.no') })
+                    h(NButton, { type: isTrue ? 'primary' : 'default', style: segBtnStyle, disabled, onClick: () => segSet && segSet('true') }, { default: () => window.__t('common.yes') }),
+                    h(NButton, { type: isTrue ? 'default' : 'primary', style: segBtnStyle, disabled, onClick: () => segSet && segSet('false') }, { default: () => window.__t('common.no') })
                   ]
                 })
               }
