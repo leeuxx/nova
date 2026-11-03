@@ -1510,7 +1510,7 @@ body.dark { background: #151515 !important; }
   text-overflow: ellipsis;
 }
 .menu-search-result {
-  height: 40vh;
+  height: 30vh;
   overflow-y: auto;
   margin-top: 12px;
   scrollbar-width: thin;
