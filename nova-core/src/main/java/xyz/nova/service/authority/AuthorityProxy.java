@@ -25,6 +25,11 @@ public interface AuthorityProxy {
     @Comment("菜单权限验证")
     boolean menuPermission(String token, String code);
 
+    @Comment("获取用户信息")
+    default Login.User getUser(String token) {
+        throw new NovaException("AuthorityProxy.getUser未实现");
+    }
+
     @Comment("修改用户信息")
     default void editUser(Login.User user) {
         throw new NovaException("AuthorityProxy.editUser未实现");

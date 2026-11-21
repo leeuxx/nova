@@ -102,6 +102,13 @@ public class NovaAuthorityController {
         return R.ok(menus);  // 返回所有菜单，但隐藏的已标记为 false
     }
 
+    @Comment("获取用户信息")
+    @PostMapping("getUser")
+    @NovaRouter
+    public R<Login.User> getUser() {
+        return R.ok(authorityProxy.getUser(AuthorityUtils.getToken()));
+    }
+
     @Comment("修改用户信息")
     @PostMapping("editUser")
     @NovaRouter
