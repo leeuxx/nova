@@ -124,9 +124,11 @@ function errorHandle(resp) {
           localStorage.removeItem('nova_user')
           localStorage.removeItem('nova_alias')
           localStorage.removeItem('nova_avatar')
-          // replaceState 改 hash 不触发 SPA 导航，避免跳登录页时先闪页面元素再出动画
-          history.replaceState(null, '', '#/login')
-          window.location.reload()
+          // 跳到登录页：配置了自定义登录页则整页跳转，否则回内置登录页并刷新
+          if (!window.__novaGoLogin()) {
+            history.replaceState(null, '', '#/login')
+            window.location.reload()
+          }
         }
       })
       return true

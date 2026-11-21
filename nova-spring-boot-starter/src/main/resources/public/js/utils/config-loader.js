@@ -26,6 +26,11 @@
     },
     // 右上角用户自定义项：{ type（fold（下拉菜单内）/ button（铃铛左侧图标按钮，悬浮展示 name））, name, icon, click }
     tools: [],
+    // 自定义登录页
+    login: {
+        // 登录页地址（远程完整 URL 或同域路径），空 = 使用内置登录页
+        page: ''
+    },
     // 国际化配置
     i18n: {
         // 支持语言列表 zh=中文 en=英语 ja=日语 ko=韩语
@@ -75,6 +80,9 @@
     user: {
         register: userCfgUser.register || DEFAULTS.user.register,
         edit: userCfgUser.edit || DEFAULTS.user.edit
+    },
+    login: {
+        page: userCfg.login ? userCfg.login.page : DEFAULTS.login.page
     },
     i18n: userCfg.i18n || DEFAULTS.i18n
   }

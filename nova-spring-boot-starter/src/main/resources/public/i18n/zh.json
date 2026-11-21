@@ -28,6 +28,8 @@
   "common.upload_success": "上传成功",
   "common.upload_failed": "上传失败",
   "common.request_failed": "请求失败",
+  "common.user_info_failed": "获取用户信息失败",
+  "common.not_logged_in": "未登录",
   "common.fetch_unavailable": "fetchApi 未就绪",
   "common.copied": "已复制",
   "common.actions": "操作",

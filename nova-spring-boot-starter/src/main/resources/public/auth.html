@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nova Auth</title>
+  <style>
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#666;font-size:14px;white-space:pre-wrap;padding:24px;box-sizing:border-box}
+  </style>
+</head>
+<body>
+<div id="nova-auth-msg"></div>
+<script>
+(function () {
+  // 从地址栏取 token 后立即清除，避免 token 留在地址栏/历史记录
+  var token = new URLSearchParams(location.search).get('token')
+  if (!token) {
+    document.getElementById('nova-auth-msg').textContent = 'auth.html: 缺少 token 参数'
+    return
+  }
+  history.replaceState(null, '', location.pathname)
+  localStorage.setItem('nova_token', token)
+  // 清掉上一个账号的缓存，首页挂载后按 token 异步补拉用户信息
+  localStorage.removeItem('nova_user')
+  localStorage.removeItem('nova_alias')
+  localStorage.removeItem('nova_avatar')
+  location.replace('./#/home')
+})()
+</script>
+</body>
+</html>

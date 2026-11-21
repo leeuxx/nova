@@ -228,6 +228,7 @@ window.RegisterPage = {
           window.location.reload()
         } else {
           this.clearAuth()
+          window.__novaGoLogin()
         }
       }).catch(() => {})
     },
@@ -254,7 +255,7 @@ window.RegisterPage = {
             window.location.reload()
           } else {
             if (window.$message) window.$message.warning(resp.message || window.__t('register.invalid_response'))
-            this.$router.push('/login')
+            if (!window.__novaGoLogin()) this.$router.push('/login')
           }
         }).finally(() => {
           this.loading = false
@@ -269,7 +270,7 @@ window.RegisterPage = {
     },
 
     goLogin() {
-      this.$router.push('/login')
+      if (!window.__novaGoLogin()) this.$router.push('/login')
     }
   },
 

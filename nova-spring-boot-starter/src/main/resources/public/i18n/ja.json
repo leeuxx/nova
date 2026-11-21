@@ -28,6 +28,8 @@
   "common.upload_success": "アップ成功",
   "common.upload_failed": "アップ失敗",
   "common.request_failed": "リクエスト失敗",
+  "common.user_info_failed": "ユーザー情報の取得に失敗しました",
+  "common.not_logged_in": "未ログイン",
   "common.fetch_unavailable": "FetchAPI 利用不可",
   "common.copied": "コピーしました",
   "common.actions": "操作",

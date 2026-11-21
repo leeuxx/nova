@@ -738,15 +738,19 @@
                     localStorage.removeItem('nova_user')
                     localStorage.removeItem('nova_alias')
                     localStorage.removeItem('nova_avatar')
-                    history.replaceState(null, '', '#/login')
-                    window.location.reload()
+                    if (!window.__novaGoLogin()) {
+                      history.replaceState(null, '', '#/login')
+                      window.location.reload()
+                    }
                   }
                 }
               )
             } else {
               localStorage.removeItem('nova_token')
-              history.replaceState(null, '', '#/login')
-              window.location.reload()
+              if (!window.__novaGoLogin()) {
+                history.replaceState(null, '', '#/login')
+                window.location.reload()
+              }
             }
           } else if (code === 521) {
             history.replaceState(null, '', '#/404')

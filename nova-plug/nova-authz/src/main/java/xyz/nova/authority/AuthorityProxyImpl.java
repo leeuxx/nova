@@ -197,6 +197,12 @@ public class AuthorityProxyImpl implements AuthorityProxy {
         return redisTemplate.opsForHash().hasKey(redisKeyMenu + token, code);
     }
 
+    @Override
+    public Login.User getUser(String token) {
+        String user = redisTemplate.opsForValue().get(redisKeyUser + token);
+        return JSONUtil.parseObj(user).toBean(Login.User.class);
+    }
+
     public JSONObject getUser() {
         String user = redisTemplate.opsForValue().get(redisKeyUser + AuthorityUtils.getToken());
         return JSONUtil.parseObj(user);

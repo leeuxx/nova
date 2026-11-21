@@ -303,6 +303,8 @@ var _startToken = window.__novaEmbedMode
   : localStorage.getItem('nova_token')
 // 业务离线图标（config.icons）注册完成后才能挂载，否则页面上先渲染的图标会走 CDN
 window.__novaIconsReady.then(function () {
+  // 无 token 且配置了自定义登录页：挂载前直接整页跳转，避免先渲染 SPA
+  if (!_startToken && !_isDirect404() && !window.__novaEmbedMode && window.__novaGoLogin()) return
   if (_startToken && !_isDirect404()) {
     window.fetchApi.post('/nova/authority/getMenu', {}).then(function (resp) {
       mountApp(resp.data || [], window.nova.config)
@@ -698,9 +700,31 @@ function mountApp(menuList, config, loginExpired) {
         tabVersions.value = { ...tabVersions.value, [path]: (tabVersions.value[path] || 0) + 1 }
       }
       // 用户信息（从 localStorage 读取）
-      const userName   = ref(localStorage.getItem('nova_user') || '未登录')
+      const userName   = ref(localStorage.getItem('nova_user') || window.__t('common.not_logged_in'))
       const userAlias  = ref(localStorage.getItem('nova_alias') || '')
       const userAvatar = ref(localStorage.getItem('nova_avatar') || '')
+      // 自定义登录（auth.html 只写 token 跳首页）：挂载后异步补拉用户信息，拉取期间顶部显示骨架
+      const userLoading = ref(!!(_startToken && !localStorage.getItem('nova_user')))
+      if (userLoading.value) {
+        window.fetchApi.post('/nova/authority/getUser', {}, {}, { withLoading: false }).then(function (resp) {
+          userLoading.value = false
+          if (!resp.data || !resp.data.name) {
+            userName.value = '-'
+            window.$message.error(window.__t('common.user_info_failed'))
+            return
+          }
+          localStorage.setItem('nova_user', resp.data.name)
+          localStorage.setItem('nova_alias', resp.data.alias || '')
+          localStorage.setItem('nova_avatar', resp.data.avatar || '')
+          userName.value = resp.data.name
+          userAlias.value = resp.data.alias || ''
+          userAvatar.value = resp.data.avatar || ''
+        }).catch(function () {
+          userLoading.value = false
+          userName.value = '-'
+          // 失败提示已由 fetchApi 的 errorHandle 统一处理（520/500/网络错误）
+        })
+      }
 
       // 右上角用户下拉：用户信息头 + tools(fold 类型) 自定义项 + 个人中心/退出登录
       const tools = (config.tools || []).map(function (t, i) { return Object.assign({}, t, { _idx: i }) })
@@ -804,9 +828,11 @@ function mountApp(menuList, config, loginExpired) {
                 localStorage.removeItem('nova_user')
                 localStorage.removeItem('nova_alias')
                 localStorage.removeItem('nova_avatar')
-                // 跳到登录页并刷新（replaceState 改 hash 不触发 SPA 导航，避免先闪页面元素再出动画）
-                history.replaceState(null, '', '#/login')
-                window.location.reload()
+                // 跳到登录页：配置了自定义登录页则整页跳转，否则回内置登录页并刷新
+                if (!window.__novaGoLogin()) {
+                  history.replaceState(null, '', '#/login')
+                  window.location.reload()
+                }
               })
             }
           })
@@ -947,7 +973,7 @@ function mountApp(menuList, config, loginExpired) {
         localeDropdown, handleLocaleSelect, currentLocale, localeNodeProps,
         contextMenuShow, contextMenuInner, contextMenuX, contextMenuY, contextMenuOptions, handleTabContextMenu, handleContextMenuSelect, hideContextMenu,
         tabScrollRef, tabsRef, showTabArrows, canScrollLeft, canScrollRight, scrollTabBy,
-        userName, userAlias, userAvatar, logoText, logoImg,
+        userName, userAlias, userAvatar, userLoading, logoText, logoImg,
         showProfile, profileSaving, profileFormRef, profileForm, profileRules, submitProfile,
         userEdit: config.user.edit,
         avatarFileList, handleAvatarUpload, onAvatarRemove
@@ -1037,15 +1063,18 @@ function mountApp(menuList, config, loginExpired) {
                         </div>
                         <n-dropdown :options="userDropdown" trigger="hover" @select="handleUserMenuSelect">
                           <div class="header-action user-info">
-                            <n-avatar
-                              v-if="userAvatar"
-                              :src="userAvatar"
-                              size="small"
-                              round
-                              style="width:28px;height:28px"
-                            />
-                            <n-icon v-else size="22"><iconify-icon icon="la:user-circle"></iconify-icon></n-icon>
-                            <span style="font-size:14px">{{ userName }}</span>
+                            <n-spin v-if="userLoading" :size="14" />
+                            <template v-else>
+                              <n-avatar
+                                v-if="userAvatar"
+                                :src="userAvatar"
+                                size="small"
+                                round
+                                style="width:28px;height:28px"
+                              />
+                              <n-icon v-else size="22"><iconify-icon icon="la:user-circle"></iconify-icon></n-icon>
+                              <span style="font-size:14px">{{ userName }}</span>
+                            </template>
                           </div>
                         </n-dropdown>
                       </n-space>
@@ -1185,16 +1214,18 @@ function mountApp(menuList, config, loginExpired) {
 
   // 登录过期：挂载后立即跳到登录页
   if (loginExpired) {
-    router.push('/login')
+    if (!window.__novaGoLogin()) router.push('/login')
   }
 
   // 路由守卫：未登录拦截；独立页面（登录/注册/404）不显示顶部加载条
   router.beforeEach((to, from, next) => {
     // 未开放注册时，直接访问注册页强制跳回登录页
     if (to.path === '/register' && window.nova.config.user.register === false) {
-      next('/login')
+      if (!window.__novaGoLogin()) next('/login')
       return
     }
+    // 配置了自定义登录页时，内置登录页让位（有 token 时仍走登录页自身的校验跳转）
+    if (to.path === '/login' && !localStorage.getItem('nova_token') && window.__novaGoLogin()) return
     if (to.path !== '/login' && to.path !== '/register' && to.path !== '/404') {
       if (window.__novaPageLoading) window.__novaPageLoading.start()
     }
@@ -1203,7 +1234,7 @@ function mountApp(menuList, config, loginExpired) {
       ? (window.__novaEmbedToken || sessionStorage.getItem('nova_embed_token') || (window.__novaEmbedExplicitToken ? '' : (localStorage.getItem('nova_token') || '')))
       : localStorage.getItem('nova_token')
     if (to.path !== '/login' && to.path !== '/register' && to.path !== '/404' && !isEmbed && !token) {
-      next('/login')
+      if (!window.__novaGoLogin()) next('/login')
     } else {
       next()
     }

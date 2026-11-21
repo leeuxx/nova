@@ -28,6 +28,8 @@
   "common.upload_success": "업로드 성공",
   "common.upload_failed": "업로드 실패",
   "common.request_failed": "요청 실패",
+  "common.user_info_failed": "사용자 정보를 가져오지 못했습니다",
+  "common.not_logged_in": "로그인되지 않음",
   "common.fetch_unavailable": "FetchAPI 사용 불가",
   "common.copied": "복사되었습니다",
   "common.actions": "작업",

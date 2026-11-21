@@ -232,6 +232,7 @@ window.LoginPage = {
           window.location.reload()
         } else {
           this.clearAuth()
+          window.__novaGoLogin()
         }
       }).catch(() => {})
     },

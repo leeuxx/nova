@@ -28,6 +28,8 @@
   "common.upload_success": "Uploaded",
   "common.upload_failed": "Upload failed",
   "common.request_failed": "Request failed",
+  "common.user_info_failed": "Failed to get user info",
+  "common.not_logged_in": "Not logged in",
   "common.fetch_unavailable": "Fetch API not ready",
   "common.copied": "Copied!",
   "common.actions": "Actions",
