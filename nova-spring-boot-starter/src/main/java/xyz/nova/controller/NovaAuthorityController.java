@@ -107,6 +107,7 @@ public class NovaAuthorityController {
     @NovaRouter
     public R editUser(@RequestBody @Validated EditUser editUser) {
         authorityProxy.editUser(new Login.User()
+                .setToken(AuthorityUtils.getToken())
                 .setName(editUser.getName())
                 .setAlias(editUser.getAlias())
                 .setAvatar(editUser.getAvatar())

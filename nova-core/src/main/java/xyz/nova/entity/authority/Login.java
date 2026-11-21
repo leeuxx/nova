@@ -1,8 +1,8 @@
 package xyz.nova.entity.authority;
 
-import xyz.nova.annotation.comment.Comment;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import xyz.nova.annotation.comment.Comment;
 
 @Data
 @Accessors(chain = true)
@@ -21,9 +21,6 @@ public class Login {
         @Comment("token,必填")
         private String token;
 
-        @Comment("用户ID")
-        private Long id;
-
         @Comment("名称,必填")
         private String name;
 
@@ -32,12 +29,6 @@ public class Login {
 
         @Comment("头像")
         private String avatar;
-
-        @Comment("是否管理员")
-        private Boolean isAdmin;
-
-        @Comment("组织ID")
-        private Long orgId;
 
     }
 
