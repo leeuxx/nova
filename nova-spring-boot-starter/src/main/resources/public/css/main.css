@@ -247,7 +247,7 @@ html.theme-transitioning.to-light::view-transition-new(root) {
 .menu-tabs .n-tabs-tab {
   padding: 8px 14px 6px 14px !important;
   box-sizing: border-box;
-  border-radius: 6px 6px 0 0 !important;
+  border-radius: 10px 10px 0 0 !important;
   font-size: 13px;
   position: relative;
   z-index: 1;
