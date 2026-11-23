@@ -826,10 +826,10 @@ const NovaTable = {
 
       if (vm.pickerMode) {
         if (vm.pickerMulti) {
-          cols.push({ type: 'selection', title: '', key: 'selection', width: 50, disabled: (row) => vm.isRowSelectDisabled(row) })
+          cols.push({ type: 'selection', title: '', key: 'selection', width: 50, fixed: 'left', disabled: (row) => vm.isRowSelectDisabled(row) })
         } else {
           cols.push({
-            key: '__radio__', width: 50, title: '',
+            key: '__radio__', width: 50, title: '', fixed: 'left',
             render(row) {
               return h('div', { style: 'display:flex;align-items:center;justify-content:center;width:100%;height:100%' }, [
                 h(NRadio, {
@@ -844,9 +844,9 @@ const NovaTable = {
         }
       } else if (!vm.readonly) {
         // dualMode 下即使 readonly 也保留复选框列，保持与 appendages 等子表格式统一（纯展示无实际操作）
-        cols.push({ type: 'selection', title: '', key: 'selection', width: 50, disabled: (row) => vm.isRowSelectDisabled(row) })
+        cols.push({ type: 'selection', title: '', key: 'selection', width: 50, fixed: 'left', disabled: (row) => vm.isRowSelectDisabled(row) })
       } else if (vm.dualMode && !vm.linkMode) {
-        cols.push({ type: 'selection', title: '', key: 'selection', width: 50 })
+        cols.push({ type: 'selection', title: '', key: 'selection', width: 50, fixed: 'left' })
       }
 
       const aiSearchFieldSet = new Set(vm.aiSearchFields.map(f => f.field))
