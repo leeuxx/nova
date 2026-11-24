@@ -83,7 +83,9 @@ window.NovaDualAppendagesJQ = (function () {
         var target = window.vmMap && window.vmMap[r._vmKey]
         if (target) {
           applySourceFields(self, target)
-          window.NovaTableJQ.loadData(r._vmKey)
+          // 传 false 走重建分支：选中新行必须用新的 _sourceRefFields 重建条件，
+          // 否则无参调用会复用上一次的 _appliedConditions，始终查第一条数据
+          window.NovaTableJQ.loadData(r._vmKey, false)
         }
       }
     })

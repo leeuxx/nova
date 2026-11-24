@@ -23,7 +23,7 @@ public @interface ChoiceType {
     String param() default "";
 
     @Comment("tap级搜索项（注：一个table页面只能有一个tap级搜索项！）")
-    TapSearch tapSearch() default @TapSearch(showAll = false);
+    TapSearch tapSearch() default @TapSearch(value = false, showAll = false);
 
     enum ShowType {
         @Comment("下拉列表")
