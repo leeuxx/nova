@@ -31,6 +31,11 @@
         // 登录页地址（远程完整 URL 或同域路径），空 = 使用内置登录页
         page: ''
     },
+    // 自定义首页
+    home: {
+        // 首页地址（远程完整 URL 或同域路径），空 = 使用内置欢迎页
+        page: ''
+    },
     // 国际化配置
     i18n: {
         // 支持语言列表 zh=中文 en=英语 ja=日语 ko=韩语
@@ -83,6 +88,9 @@
     },
     login: {
         page: userCfg.login ? userCfg.login.page : DEFAULTS.login.page
+    },
+    home: {
+        page: userCfg.home ? userCfg.home.page : DEFAULTS.home.page
     },
     i18n: userCfg.i18n || DEFAULTS.i18n
   }
