@@ -37,7 +37,7 @@ public class AttachmentController {
                 .filter(file -> !file.isEmpty())
                 .map(file -> {
                     try (InputStream inputStream = file.getInputStream()) {
-                        return attachmentProxy.upLoad(attachmentUpload.getNovaName(), inputStream);
+                        return attachmentProxy.upLoad(attachmentUpload.getNovaName(), file.getOriginalFilename(), inputStream);
                     } catch (IOException e) {
                         log.error("File upload failed: {}", file.getOriginalFilename(), e);
                         return null;
