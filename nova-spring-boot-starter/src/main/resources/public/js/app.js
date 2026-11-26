@@ -1013,6 +1013,7 @@ function mountApp(menuList, config, loginExpired) {
                       :collapsed="collapsed"
                       :collapsed-width="64"
                       :collapsed-icon-size="22"
+                      :indent="24"
                       :expanded-keys="expandedKeys"
                       @update:expanded-keys="expandedKeys = $event"
                       @update:value="handleMenuSelect"
