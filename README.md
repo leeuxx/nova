@@ -1,7 +1,7 @@
 <h1 align="center">🚀 Nova</h1>
 
 <p align="center">
-  <strong>注解驱动的全栈后台协议框架 · JDK 21 · Spring Boot 3.3.4 · Naive UI</strong>
+  <strong>注解驱动的全栈后台协议框架 · JDK 21 · Spring Boot 3.5+ · Naive UI</strong>
 </p>
 
 <p align="center">
