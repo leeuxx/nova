@@ -64,6 +64,8 @@ window.NovaAppForm = {
       }
       return false
     },
+    // 附件上传中（table.js 维护的全局状态），用于按钮 loading/禁用/文案
+    isUploading(field) { return !!(window.__novaUploading && window.__novaUploading['app::' + this.appNovaName + '::' + field]) },
 
     // ── 字段辅助方法 ──────────────────────────────────────────────
     fieldOptions(f) {
@@ -340,10 +342,11 @@ window.NovaAppForm = {
       </div>
       <div v-else-if="f.type === 'ATTACHMENT'" style="display:flex;flex-direction:column;gap:4px">
         <n-button-group>
-          <n-button style="flex:1"
-            :disabled="isReadonly(f) || ((buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].maxLimit && (formData[f.field]||[]).length >= (buildData.attachmentMap||{})[f.field].maxLimit)"
+          <n-button :class="{ 'nova-uploading': isUploading(f.field) }" style="flex:1"
+            :disabled="isUploading(f.field) || isReadonly(f) || ((buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].maxLimit && (formData[f.field]||[]).length >= (buildData.attachmentMap||{})[f.field].maxLimit)"
             @click="triggerFileUpload(f.field)">
-            <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
+            <iconify-icon v-show="!isUploading(f.field)" icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
+            <span v-show="isUploading(f.field)" class="nova-upload-spin"></span>
             {{ __t('common.upload') }}<span style="font-size:12px;opacity:0.7">{{ (buildData.attachmentMap||{})[f.field] && (buildData.attachmentMap||{})[f.field].maxLimit ? __t('common.count_n', { n: Math.max(0, (buildData.attachmentMap||{})[f.field].maxLimit-(formData[f.field]||[]).length) }) : __t('common.count_n', { n: 0 }) }}</span>
           </n-button>
           <n-button style="flex:1" :disabled="!(formData[f.field]||[]).length" @click="$emit('preview-click', f)">

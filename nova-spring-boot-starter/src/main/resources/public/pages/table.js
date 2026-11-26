@@ -4,6 +4,10 @@ const { h } = Vue
 const { NPopconfirm, NSpace, NTooltip, NTag, NRadio, NDropdown, NButtonGroup, NButton } = naive
 const NovaImagePreview = window.NovaImagePreview
 
+// 附件上传进行中状态（跨组件共享，reactive 保证按钮模板跟随刷新）
+// key：this::<field> / app::<appNovaName>::<field> / op::<field> / opapp::<appNovaName>::<field>
+window.__novaUploading = window.__novaUploading || Vue.reactive({})
+
 // 点路径取值，row 为普通 Map 时按 'a.b.c' 逐层下钻
 function getFieldValue(row, path) {
   if (row == null) return undefined
@@ -1821,8 +1825,10 @@ const NovaTable = {
       })
     },
     handleOpAppAttachmentChange(appNovaName, f, event) {
+      var upKey = 'opapp::' + appNovaName + '::' + f.field
       var files = Array.from(event.target.files || [])
       event.target.value = ''
+      if (window.__novaUploading[upKey]) return
       if (!files.length) return
       var build = this.opFormAppTabBuild[appNovaName] || {}
       var cfg = (build.attachmentMap || {})[f.field] || {}
@@ -1853,12 +1859,13 @@ const NovaTable = {
       toUpload.forEach(function(file) { formData.append('files', file) })
       var self = this
       var field = f.field
+      window.__novaUploading[upKey] = true
       window.fetchApi.upload('/nova/attachment/upload', formData).then(function(resp) {
         if (!self.opFormAppFormData[appNovaName]) self.opFormAppFormData[appNovaName] = {}
         if (!self.opFormAppFormData[appNovaName][field]) self.opFormAppFormData[appNovaName][field] = []
         ;(resp.data || []).forEach(function(url) { self.opFormAppFormData[appNovaName][field].push(url) })
         if (window.$message) window.$message.success(window.__t('table.upload_success'))
-      }).catch(function() {})
+      }).catch(function() {}).finally(function() { window.__novaUploading[upKey] = false })
     },
     // ── appendageForm helpers ───────────────────────────────────
     appBuild(n)        { return this.appendageTabBuild[n] || {} },
@@ -2865,8 +2872,10 @@ const NovaTable = {
       })
     },
     handleOpAttachmentChange(f, event) {
+      var upKey = 'op::' + f.field
       var files = Array.from(event.target.files || [])
       event.target.value = ''
+      if (window.__novaUploading[upKey]) return
       if (!files.length) return
       var cfg = this.opFormAttachmentMap[f.field] || {}
       var currentList = this.opFormData[f.field] || []
@@ -2896,11 +2905,12 @@ const NovaTable = {
       toUpload.forEach(function(file) { formData.append('files', file) })
       var self = this
       var field = f.field
+      window.__novaUploading[upKey] = true
       window.fetchApi.upload('/nova/attachment/upload', formData).then(function(resp) {
         if (!self.opFormData[field]) self.opFormData[field] = []
         ;(resp.data || []).forEach(function(url) { self.opFormData[field].push(url) })
         if (window.$message) window.$message.success(window.__t('table.upload_success'))
-      }).catch(function() {})
+      }).catch(function() {}).finally(function() { window.__novaUploading[upKey] = false })
     },
     handleFormSubmit(opts)  {
       const o = opts || {}
@@ -2908,8 +2918,10 @@ const NovaTable = {
       else                                       window.NovaTableJQ.handleFormSubmit(null, o)
     },
     handleAttachmentChange(f, event, appNovaName) {
+      const upKey = appNovaName ? ('app::' + appNovaName + '::' + f.field) : ('this::' + f.field)
       const files = Array.from(event.target.files || [])
       event.target.value = ''
+      if (window.__novaUploading[upKey]) return
       if (!files.length) return
       const cfg = appNovaName ? ((this.appBuild(appNovaName).attachmentMap || {})[f.field] || {}) : (this.attachmentMap[f.field] || {})
       const currentList = appNovaName ? (this.appFd(appNovaName)[f.field] || []) : (this.formData[f.field] || [])
@@ -2938,6 +2950,7 @@ const NovaTable = {
       toUpload.forEach(file => formData.append('files', file))
       const field = f.field
       const vm = this
+      window.__novaUploading[upKey] = true
       window.fetchApi.upload('/nova/attachment/upload', formData).then(resp => {
         if (appNovaName) {
           if (!vm.appendageFormData[appNovaName]) return
@@ -2949,7 +2962,7 @@ const NovaTable = {
         }
         if (window.$message) window.$message.success(window.__t('table.upload_success'))
         vm.openPreview(f, appNovaName || null)
-      }).catch(() => {})
+      }).catch(() => {}).finally(function () { window.__novaUploading[upKey] = false })
     },
     openPreview(f, appNovaName, isOpForm) {
       this.previewField = f
@@ -3015,6 +3028,8 @@ const NovaTable = {
       var input = document.getElementById('upload-opApp-' + appNovaName + '-' + fieldKey)
       if (input) input.click()
     },
+    opUploading(field) { return !!window.__novaUploading['op::' + field] },
+    opAppUploading(appNovaName, field) { return !!window.__novaUploading['opapp::' + appNovaName + '::' + field] },
     // 打开表格附件预览弹窗
     openTableAttachPreview(field, urls, type) {
       this.tableAttachPreviewField = field
@@ -5284,10 +5299,11 @@ const NovaTable = {
                 </div>
                 <div v-else-if="f.type === 'ATTACHMENT'" style="display:flex;flex-direction:column;gap:4px">
                   <n-button-group>
-                    <n-button style="flex:1"
-                      :disabled="opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit && (opFormData[f.field] || []).length >= opFormAttachmentMap[f.field].maxLimit"
+                    <n-button :class="{ 'nova-uploading': opUploading(f.field) }" style="flex:1"
+                      :disabled="opUploading(f.field) || (opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit && (opFormData[f.field] || []).length >= opFormAttachmentMap[f.field].maxLimit)"
                       @click="triggerOpFileUpload(f.field)">
-                      <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
+                      <iconify-icon v-show="!opUploading(f.field)" icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
+                      <span v-show="opUploading(f.field)" class="nova-upload-spin"></span>
                       {{ __t('table.uploading') }}<span style="font-size:12px;opacity:0.7">{{ opFormAttachmentMap[f.field] && opFormAttachmentMap[f.field].maxLimit ? __t('common.count_n', { n: Math.max(0, opFormAttachmentMap[f.field].maxLimit - (opFormData[f.field] || []).length) }) : __t('common.count_n', { n: 0 }) }}</span>
                     </n-button>
                     <n-button style="flex:1" :disabled="!(opFormData[f.field] || []).length" @click="openPreview(f, null, true)">
@@ -5432,10 +5448,11 @@ const NovaTable = {
                   </div>
                   <div v-else-if="f.type === 'ATTACHMENT'" style="display:flex;flex-direction:column;gap:4px;grid-column:1/-1">
                     <n-button-group>
-                      <n-button style="flex:1"
-                        :disabled="((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit && (opFormAppData(tab.tapNovaName)[f.field] || []).length >= ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit"
+                      <n-button :class="{ 'nova-uploading': opAppUploading(tab.tapNovaName, f.field) }" style="flex:1"
+                        :disabled="opAppUploading(tab.tapNovaName, f.field) || (((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit && (opFormAppData(tab.tapNovaName)[f.field] || []).length >= ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit)"
                         @click="triggerOpAppFileUpload(tab.tapNovaName, f.field)">
-                        <iconify-icon icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
+                        <iconify-icon v-show="!opAppUploading(tab.tapNovaName, f.field)" icon="mdi:upload" style="font-size:14px;margin-right:4px;color:#2563eb"></iconify-icon>
+                        <span v-show="opAppUploading(tab.tapNovaName, f.field)" class="nova-upload-spin"></span>
                         {{ __t('table.uploading') }}<span style="font-size:12px;opacity:0.7">{{ ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]) && ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit ? __t('common.count_n', { n: Math.max(0, ((opFormAppBuild(tab.tapNovaName).attachmentMap || {})[f.field]).maxLimit - (opFormAppData(tab.tapNovaName)[f.field] || []).length) }) : __t('common.count_n', { n: 0 }) }}</span>
                       </n-button>
                       <n-button style="flex:1" :disabled="!(opFormAppData(tab.tapNovaName)[f.field] || []).length" @click="openPreview(f, tab.tapNovaName, true)">

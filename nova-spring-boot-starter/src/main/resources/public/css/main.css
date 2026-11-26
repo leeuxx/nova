@@ -1478,6 +1478,26 @@ body.dark { background: #151515 !important; }
   transform: scale(1.20);
 }
 
+/* 附件上传按钮上传中的转圈：与 mdi:upload 图标同尺寸/同间距，避免按钮宽度跳动 */
+@keyframes nova-upload-spin { to { transform: rotate(360deg); } }
+.nova-upload-spin {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: -0.125em;
+  animation: nova-upload-spin .7s linear infinite;
+}
+/* 上传中：鼠标悬停显示等待光标（覆盖 Naive disabled 的 not-allowed） */
+.nova-uploading,
+.nova-uploading * {
+  cursor: wait !important;
+}
+
 .page-fade-enter-active {
   animation: pageFadeIn 0.22s ease;
 }
